@@ -1,0 +1,18 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile 'com.squareup:javapoet:1.5.1'
+    compile 'org.eclipse.persistence:javax.persistence:2.1.1'
+    compile project(':requery')
+}
+
+// set idea language level
+idea.module.iml {
+    withXml {
+        it.asNode().component.find { it.@name == 'NewModuleRootManager' }.@LANGUAGE_LEVEL = "JDK_1_8"
+    }
+}

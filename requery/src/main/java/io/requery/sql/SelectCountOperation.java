@@ -1,0 +1,48 @@
+/*
+ * Copyright 2016 requery.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.requery.sql;
+
+import io.requery.query.Tuple;
+import io.requery.query.Result;
+import io.requery.query.Scalar;
+import io.requery.query.SuppliedScalar;
+import io.requery.query.element.QueryElement;
+import io.requery.query.element.QueryOperation;
+import io.requery.util.function.Supplier;
+
+class SelectCountOperation implements QueryOperation<Scalar<Integer>> {
+
+    private final RuntimeConfiguration configuration;
+    private final TupleResultReader reader;
+
+    SelectCountOperation(RuntimeConfiguration configuration) {
+        this.configuration = configuration;
+        this.reader = new TupleResultReader(configuration);
+    }
+
+    @Override
+    public Scalar<Integer> execute(final QueryElement<Scalar<Integer>> query) {
+        return new SuppliedScalar<>(new Supplier<Integer>() {
+            @Override
+            public Integer get() {
+                try (Result<Tuple> result = new SelectResult<>(configuration, query, reader)) {
+                    return result.first().get(0);
+                }
+            }
+        }, configuration.writeExecutor());
+    }
+}
