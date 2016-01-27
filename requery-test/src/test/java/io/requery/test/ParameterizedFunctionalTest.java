@@ -39,10 +39,6 @@ public class ParameterizedFunctionalTest extends FunctionalTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Platform> data() {
-        if (true) {
-            return Arrays.<Platform>asList(
-                new PostgresSQL(), new H2(), new HSQL(), new Derby(), new SQLite());
-        }
         return Arrays.<Platform>asList(
             new Oracle(),
             new SQLServer(),
