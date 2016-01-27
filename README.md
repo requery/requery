@@ -56,7 +56,7 @@ List<Person> query = data
     .where(Person.NAME.lower().like("b%"))
     .orderBy(Person.AGE.desc())
     .limit(5)
-    .execute().list();
+    .get().list();
 ```
 
 Relationships: rather than collections such as sets, and lists which have to be materialized with
@@ -85,7 +85,7 @@ Java 8 streams:
 List<Person> query = data
     .select(Person.class)
     .orderBy(Person.AGE.desc())
-    .execute()
+    .get()
     .stream().forEach(System.out::println);
 ```
 
@@ -95,7 +95,7 @@ RxJava Observables:
 Observable<Person> query = data
     .select(Person.class)
     .orderBy(Person.AGE.desc())
-    .execute()
+    .get()
     .toObservable();
 ```
 
@@ -105,7 +105,7 @@ RxJava observe query on table changes:
 Observable<Person> query = data
     .select(Person.class)
     .orderBy(Person.AGE.desc())
-    .execute()
+    .get()
     .toSelfObservable().subscribe(::updateFromResult);
 ```
 
@@ -116,7 +116,7 @@ Optional Read/write separation. If you prefer separating read from writes mark t
 data.update(Person.class)
     .set(Person.ABOUT, "nothing")
     .set(Person.AGE, 50)
-    .where(Person.AGE.equal(100)).execute();
+    .where(Person.AGE.equal(100)).get();
 ```
 
 Features
