@@ -42,6 +42,9 @@ dependencies {
     androidTestCompile 'com.android.support.test:rules:0.4'
 }
 
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
 android.libraryVariants
 publishing {
     publications {
@@ -53,6 +56,16 @@ publishing {
             artifact(javadocJar) {
                 classifier 'javadoc'
             }
+        }
+    }
+
+    repositories {
+        maven {
+            credentials {
+                username = properties.getProperty('bintray.user')
+                password = properties.getProperty('bintray.apikey')
+            }
+            url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
         }
     }
 }
