@@ -1,9 +1,9 @@
 requery
 =======
 
-Micro object relationship mapper for Java/Android.
+A micro ORM for Java/Android.
 
-Entities:
+Defining entities:
 
 ```java
 @Entity
@@ -59,8 +59,8 @@ List<Person> query = data
     .execute().list();
 ```
 
-Relationships: rather than sets, lists which have to be materialized with all the results,
-you can alternatively use query results directly: (of course sets and lists are supported to)
+Relationships: rather than collections such as sets, and lists which have to be materialized with
+all the results, you can alternatively use query results directly: (sets and lists are supported to)
 
 ```java
 @Entity
@@ -126,33 +126,22 @@ Features
 - Fast startup
 - Typed query language
 - Table generation
-- Supports JDBC and most popular databases
-- Supports Android (RecyclerView, Databinding, Parcelable)
+- Supports JDBC and many popular databases
+- Supports Android (SQLite, RecyclerView, Databinding)
 - RxJava support
 - Blocking and non-blocking API
 - Partial objects/refresh
 - Caching
 - Lifecycle callbacks
 - Custom type converters
-- JPA annotations (requery is not a JPA provider)
-
-Motivation
-----------
-
-There are definitely some similar in concept compile time libraries (for Android) however
-most of these omit the 'relational' part of object relational mapping. And generally only work for
-SQLite and have a very small number of features.
-
-The idea is to bring over those some of those ideas but to everywhere Java is used. At the same
-time support real relationships, both blocking and non-blocking APIs, multiple databases and
-much more.
+- JPA annotations support (requery is not a JPA provider)
 
 Reflection free
 ---------------
 
 requery uses compile time annotation processing to generate your entity model classes. On Android
-this means you get about the same performance reading objects from a query as if you populated it
-directly using the standard Cursor and ContentValues API.
+this means you get about the same performance reading objects from a query as if it was populated
+using the standard Cursor and ContentValues API.
 
 Type safe query
 ---------------
@@ -167,13 +156,12 @@ You can define One-to-One, One-to-Many, Many-to-One, and Many-to-Many relations 
 annotations. Relationships can be navigated in both directions. Of many type relations can be loaded
 into standard java collection objects or into a more efficient iterable only object. Many-to-Many
 junction tables can be generated automatically. Additionally the relation model is validated at
-compile time eliminating many runtime issues.
+compile time eliminating runtime errors.
 
 Android
 -------
 
-Designed specifically with Android support in mind. Easily use query results into recycler views.
-Easily make your objects Data bindable.
+Designed specifically with Android support in mind.
 
 Comparison to similar Android libraries:
 
@@ -218,35 +206,33 @@ JPA Annotations
 
 Only a subset of the JPA annotations are supported. These annotations are supported:
 
-JPA Annotation      |
---------------------|
-Basic               |
-Cacheable           |
-Column              |
-Entity              |
-Enumerated          |
-GeneratedValue      |
-Id                  |
-JoinColumn          |
-JoinTable           |
-ManyToMany          |
-ManyToOne           |
-OneToMany           |
-OneToOne            |
-PostLoad            |
-PostPersist         |
-PostRemove          |
-PostUpdate          |
-PrePersist          |
-PreRemove           |
-PreUpdate           |
-Table               |
-Transient           |
-Version             |
+- Basic
+- Cacheable
+- Column
+- Entity
+- Enumerated
+- GeneratedValue
+- Id
+- JoinColumn
+- JoinTable
+- ManyToMany
+- ManyToOne
+- OneToMany
+- OneToOne
+- PostLoad
+- PostPersist
+- PostRemove
+- PostUpdate
+- PrePersist
+- PreRemove
+- PreUpdate
+- Table
+- Transient
+- Version
 
 There is no support for embedded types or mapped superclasses. Unique/index constraints must
-be placed on the field/method level. Some advanced JPA features are not yet supported such as
-mapping to JoinTable or secondary tables to define relationships outside of ManyToMany.
+be placed on the field/method level. Advanced JPA features are not yet supported such as
+mapping via @JoinTable to secondary tables to define relationships (outside of ManyToMany).
 
 License
 -------
