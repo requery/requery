@@ -234,6 +234,26 @@ There is no support for embedded types or mapped superclasses. Unique/index cons
 be placed on the field/method level. Advanced JPA features are not yet supported such as
 mapping via @JoinTable to secondary tables to define relationships (outside of ManyToMany).
 
+Using it
+--------
+
+Currently SNAPSHOT versions are available on http://oss.jfrog.org.
+
+```gradle
+repositories {
+    jcenter()
+    maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local' }
+}
+
+dependencies {
+    compile 'io.requery:requery:1.0-SNAPSHOT'
+    compile 'io.requery:requery-android:1.0-SNAPSHOT' // for android
+    apt 'io.requery:requery-processor:1.0-SNAPSHOT'   // prefer an APT plugin
+}
+```
+
+Feedback and suggestions are welcome.
+
 License
 -------
 
