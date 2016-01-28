@@ -132,17 +132,20 @@ class EntityGraph {
     /**
      * Given an association in an entity find the attributes it maps onto in the referenced entity.
      *
+     * @param entity     entity owning the attribute
      * @param attribute  association attribute
      * @param referenced type being referenced
      * @return set of mapped attributes
      */
-    Set<AttributeDescriptor> mappedAttributes(AttributeDescriptor attribute,
+    Set<AttributeDescriptor> mappedAttributes(EntityDescriptor entity,
+                                              AttributeDescriptor attribute,
                                               EntityDescriptor referenced) {
         String mappedBy = attribute.mappedBy();
         if (Names.isEmpty(mappedBy)) {
             return referenced.attributes().values().stream()
                 .filter(other -> other.cardinality() != null)
                 .filter(other -> referencingEntity(other).isPresent())
+                .filter(other -> referencingEntity(other).get() == entity)
                 .collect(Collectors.toSet());
         } else {
             return referenced.attributes().values().stream()

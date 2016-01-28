@@ -152,9 +152,12 @@ class EntityGenerator implements SourceGenerator {
             AttributeDescriptor attribute = entry.getValue();
             if (element.getKind() == ElementKind.METHOD) {
                 ExecutableElement methodElement = (ExecutableElement) element;
-                TypeMirror returnType = methodElement.getReturnType();
+                TypeMirror fieldType = methodElement.getReturnType();
+                if (attribute.isOptional()) {
+                    fieldType = tryFirstTypeArgument(fieldType);
+                }
                 FieldSpec field = FieldSpec
-                    .builder(TypeName.get(returnType), attribute.fieldName(), Modifier.PRIVATE)
+                    .builder(TypeName.get(fieldType), attribute.fieldName(), Modifier.PRIVATE)
                     .build();
                 typeBuilder.addField(field);
             }
@@ -215,9 +218,14 @@ class EntityGenerator implements SourceGenerator {
             boolean isTransient = attribute.isTransient();
 
             TypeMirror typeMirror = attribute.typeMirror();
-            TypeName unboxedTypeName = attribute.isIterable() ?
-                getParameterizedCollectionName(typeMirror) :
-                nameResolver.tryGeneratedTypeName(typeMirror);
+            TypeName unboxedTypeName;
+            if (attribute.isIterable()) {
+                unboxedTypeName = getParameterizedCollectionName(typeMirror);
+            } else if (attribute.isOptional()) {
+                unboxedTypeName = TypeName.get(tryFirstTypeArgument(attribute.typeMirror()));
+            } else {
+                unboxedTypeName = nameResolver.tryGeneratedTypeName(typeMirror);
+            }
 
             String attributeName = attribute.fieldName();
             String getterName = entry.getValue().getterName();
@@ -225,7 +233,8 @@ class EntityGenerator implements SourceGenerator {
             // getter
             MethodSpec.Builder getter = MethodSpec.methodBuilder(getterName)
                     .addModifiers(Modifier.PUBLIC)
-                    .returns(unboxedTypeName);
+                    .returns(attribute.isOptional() ?
+                        TypeName.get(attribute.typeMirror()) : unboxedTypeName);
             if (Mirrors.overridesMethod(types, typeElement, getterName)) {
                 getter.addAnnotation(Override.class);
             }
@@ -234,6 +243,9 @@ class EntityGenerator implements SourceGenerator {
             }
             if (isTransient) {
                 getter.addStatement("return this.$L", attributeName);
+            } else if (attribute.isOptional()) {
+                getter.addStatement("return $T.ofNullable($L.get($L))",
+                    Optional.class, PROXY_NAME, fieldName);
             } else {
                 getter.addStatement("return $L.get($L)", PROXY_NAME, fieldName);
             }
@@ -396,7 +408,6 @@ class EntityGenerator implements SourceGenerator {
         for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
             entity.attributes().entrySet()) {
 
-            //Element element = entry.getKey();
             AttributeDescriptor attribute = entry.getValue();
             if (attribute.isTransient()) {
                 continue;
@@ -404,8 +415,11 @@ class EntityGenerator implements SourceGenerator {
             TypeMirror typeMirror = attribute.typeMirror();
             TypeName attributeTypeName;
             if (attribute.isIterable()) {
-                typeMirror = getCollectionElementType(attribute.typeMirror());
+                typeMirror = tryFirstTypeArgument(attribute.typeMirror());
                 attributeTypeName = getParameterizedCollectionName(attribute.typeMirror());
+            } else if (attribute.isOptional()) {
+                typeMirror = tryFirstTypeArgument(attribute.typeMirror());
+                attributeTypeName = TypeName.get(typeMirror);
             } else {
                 attributeTypeName = nameResolver.generatedTypeNameOf(typeMirror).orElse(null);
             }
@@ -429,7 +443,7 @@ class EntityGenerator implements SourceGenerator {
             CodeBlock.Builder builder = CodeBlock.builder();
 
             if (attribute.isIterable()) {
-                typeMirror = getCollectionElementType(typeMirror);
+                typeMirror = tryFirstTypeArgument(typeMirror);
                 TypeName name = nameResolver.tryGeneratedTypeName(typeMirror);
                 TypeElement collectionElement =
                     (TypeElement) types.asElement(attribute.typeMirror());
@@ -467,6 +481,7 @@ class EntityGenerator implements SourceGenerator {
             String attributeName = attribute.fieldName();
             ParameterizedTypeName getterType =
                 parameterizedTypeName(Getter.class, typeName, attributeTypeName);
+
             TypeSpec.Builder getterBuilder = TypeSpec.anonymousClassBuilder("")
                     .addSuperinterface(getterType)
                     .addMethod(CodeGeneration.overridePublicMethod("get")
@@ -580,7 +595,7 @@ class EntityGenerator implements SourceGenerator {
                 if (referencingEntity.isPresent()) {
                     EntityDescriptor referenced = referencingEntity.get();
                     Set<AttributeDescriptor> mappings =
-                        graph.mappedAttributes(attribute, referenced);
+                        graph.mappedAttributes(entity, attribute, referenced);
 
                     if (attribute.cardinality() == Cardinality.MANY_TO_MANY) {
                         String junctionType = null;
@@ -705,14 +720,14 @@ class EntityGenerator implements SourceGenerator {
     }
 
     private ParameterizedTypeName getParameterizedCollectionName(TypeMirror typeMirror) {
-        TypeMirror genericType = getCollectionElementType(typeMirror);
+        TypeMirror genericType = tryFirstTypeArgument(typeMirror);
         TypeName elementName = nameResolver.tryGeneratedTypeName(genericType);
         TypeElement collectionElement = (TypeElement) types.asElement(typeMirror);
         ClassName collectionName = ClassName.get(collectionElement);
         return ParameterizedTypeName.get(collectionName, elementName);
     }
 
-    private static TypeMirror getCollectionElementType(TypeMirror typeMirror) {
+    private static TypeMirror tryFirstTypeArgument(TypeMirror typeMirror) {
         List<TypeMirror> args = Mirrors.listGenericTypeArguments(typeMirror);
         return args.isEmpty() ? typeMirror : args.get(0);
     }

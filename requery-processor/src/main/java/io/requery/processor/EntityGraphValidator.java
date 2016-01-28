@@ -68,17 +68,17 @@ class EntityGraphValidator {
                 if (referencingEntity.isPresent()) {
                     EntityDescriptor referenced = referencingEntity.get();
                     Set<AttributeDescriptor> mappings =
-                        graph.mappedAttributes(attribute, referenced);
+                        graph.mappedAttributes(entity, attribute, referenced);
 
                     if (mappings.size() == 1) {
-                        attributeValidator.note("mapping: " + attribute + " -> " +
-                                referenced.typeName());
                         // validate the relation ship
                         AttributeDescriptor mapped = mappings.iterator().next();
                         validateRelationship(attributeValidator, attribute, mapped);
 
+                        attributeValidator.note("mapping: " + attribute + " -> " + mapped);
+
                     } else if (mappings.size() > 1) {
-                        attributeValidator.warning("multiple mappings found for: " +
+                        attributeValidator.warning(mappings.size() + " mappings found for: " +
                             attribute + " -> " + referenced.typeName());
                     }
                 } else {

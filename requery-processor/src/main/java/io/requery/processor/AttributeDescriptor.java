@@ -72,6 +72,8 @@ interface AttributeDescriptor {
 
     boolean isIterable();
 
+    boolean isOptional();
+
     Class<? extends AttributeBuilder> builderClass();
 
     Integer columnLength();

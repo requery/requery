@@ -98,6 +98,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private boolean isReadOnly;
     private boolean isTransient;
     private boolean isIterable;
+    private boolean isOptional;
     private boolean isMap;
     private boolean isIndexed;
     private Class<? extends AttributeBuilder> builderClass;
@@ -160,6 +161,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             if (element != null) {
                 isIterable = Mirrors.isInstance(types, element, Iterable.class);
                 isMap = Mirrors.isInstance(types, element, Map.class);
+                isOptional = Mirrors.isInstance(types, element, Optional.class);
             }
         }
         if (isIterable) {
@@ -232,7 +234,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             }
             isLazy = true;
         }
-        if (annotationOf(Nullable.class).isPresent() ||
+        if (annotationOf(Nullable.class).isPresent() || isOptional ||
             Mirrors.findAnnotationMirror(element(), "javax.annotation.Nullable").isPresent()) {
             isNullable = true;
         } else {
@@ -659,8 +661,14 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         return isMap;
     }
 
+    @Override
     public boolean isIterable() {
         return isIterable;
+    }
+
+    @Override
+    public boolean isOptional() {
+        return isOptional;
     }
 
     @Override
