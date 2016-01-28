@@ -82,8 +82,7 @@ abstract class AbstractPerson {
 Java 8 streams:
 
 ```java
-List<Person> query = data
-    .select(Person.class)
+data.select(Person.class)
     .orderBy(Person.AGE.desc())
     .get()
     .stream().forEach(System.out::println);
@@ -113,7 +112,7 @@ Optional Read/write separation. If you prefer separating read from writes mark t
 @ReadOnly and use update statements to modify data instead.
 
 ```java
-data.update(Person.class)
+int rows = data.update(Person.class)
     .set(Person.ABOUT, "nothing")
     .set(Person.AGE, 50)
     .where(Person.AGE.equal(100)).get();
