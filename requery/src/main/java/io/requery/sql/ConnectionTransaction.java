@@ -27,7 +27,6 @@ import io.requery.util.Objects;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -39,8 +38,7 @@ import java.util.Set;
 class ConnectionTransaction implements EntityProxyTransaction, ConnectionProvider {
 
     private final ConnectionProvider connectionProvider;
-    private final EntityCache cache;
-    private final Set<EntityProxy<?>> entities;
+    private final TransactionEntitiesSet entities;
     private final Set<EntityProxy<?>> entitiesReadOnly;
     private final TransactionListener transactionListener;
     private final boolean supportsTransaction;
@@ -56,9 +54,8 @@ class ConnectionTransaction implements EntityProxyTransaction, ConnectionProvide
                           boolean supportsTransaction) {
         this.transactionListener = Objects.requireNotNull(transactionListener);
         this.connectionProvider = Objects.requireNotNull(connectionProvider);
-        this.cache = Objects.requireNotNull(cache);
         this.supportsTransaction = supportsTransaction;
-        this.entities = new LinkedHashSet<>();
+        this.entities = new TransactionEntitiesSet(cache);
         this.entitiesReadOnly = Collections.unmodifiableSet(entities);
         this.previousIsolationLevel = -1;
     }
@@ -170,14 +167,7 @@ class ConnectionTransaction implements EntityProxyTransaction, ConnectionProvide
             if (supportsTransaction) {
                 connection.rollback();
                 rolledBack = true;
-                // detach objects in this transaction
-                for (EntityProxy<?> proxy : entities) {
-                    proxy.unlink();
-                    Object key = proxy.key();
-                    if (key != null) {
-                        cache.invalidate(proxy.type().classType(), key);
-                    }
-                }
+                entities.clearAndInvalidate();
             }
             transactionListener.afterRollback(entitiesReadOnly);
             entities.clear();

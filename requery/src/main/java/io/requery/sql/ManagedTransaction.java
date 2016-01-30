@@ -38,15 +38,13 @@ import javax.transaction.UserTransaction;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, Synchronization {
 
-    private final EntityCache cache;
     private final ConnectionProvider connectionProvider;
     private final TransactionListener transactionListener;
-    private final Set<EntityProxy<?>> entities;
+    private final TransactionEntitiesSet entities;
     private final Set<EntityProxy<?>> entitiesReadOnly;
     private Connection connection;
     private Connection uncloseableConnection;
@@ -62,9 +60,8 @@ class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, 
                        EntityCache cache) {
         this.transactionListener = Objects.requireNotNull(transactionListener);
         this.connectionProvider = Objects.requireNotNull(connectionProvider);
-        this.entities = new LinkedHashSet<>();
+        this.entities = new TransactionEntitiesSet(cache);
         this.entitiesReadOnly = Collections.unmodifiableSet(entities);
-        this.cache = Objects.requireNotNull(cache);
     }
 
     private TransactionSynchronizationRegistry getSynchronizationRegistry() {
@@ -185,14 +182,7 @@ class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, 
                 }
             } finally {
                 rolledBack = true;
-                for (EntityProxy<?> proxy : entities) {
-                    proxy.unlink();
-                    Object key = proxy.key();
-                    if (key != null) {
-                        cache.invalidate(proxy.type().classType(), key);
-                    }
-                }
-                entities.clear();
+                entities.clearAndInvalidate();
             }
         }
     }
