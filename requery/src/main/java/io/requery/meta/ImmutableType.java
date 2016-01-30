@@ -22,7 +22,7 @@ import java.util.Collections;
 
 final class ImmutableType<T> extends BaseType<T> {
 
-    public ImmutableType(TypeBuilder<T> builder) {
+    ImmutableType(TypeBuilder<T> builder) {
         this.type = builder.classType();
         this.baseType = builder.baseType();
         this.name = builder.name();

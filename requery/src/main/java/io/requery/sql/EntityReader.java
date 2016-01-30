@@ -133,7 +133,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         return refresh(entity, proxy, refreshAttributes);
     }
 
-    public E refreshAll(E entity, EntityProxy<E> proxy) {
+    E refreshAll(E entity, EntityProxy<E> proxy) {
         return refresh(entity, proxy, type.attributes());
     }
 
@@ -305,7 +305,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     }
 
     @SafeVarargs
-    public final void batchRefresh(Iterable<E> entities, Attribute<E, ?>... attributes) {
+    final void batchRefresh(Iterable<E> entities, Attribute<E, ?>... attributes) {
         Set<? extends Expression<?>> expressions;
         if (attributes == null || attributes.length == 0) {
             expressions = defaultSelection;

@@ -185,7 +185,7 @@ class EntityWriter<E extends S, S> {
         }
     }
 
-    public void batchInsert(Iterable<E> entities) {
+    void batchInsert(Iterable<E> entities) {
         // true if using JDBC batching
         final boolean batchInStatement = canBatchInStatement();
         final int batchSize = context.batchUpdateSize();
@@ -602,7 +602,7 @@ class EntityWriter<E extends S, S> {
         }
     }
 
-    public void batchDelete(Iterable<E> entities) {
+    void batchDelete(Iterable<E> entities) {
 
         final int batchSize = context.batchUpdateSize();
         final Iterator<E> iterator = entities.iterator();

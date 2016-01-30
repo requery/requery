@@ -37,7 +37,7 @@ class TypeChangeListener implements Supplier<TransactionListener> {
     private final BehaviorSubject<Type<?>> commitSubject;
     private final BehaviorSubject<Type<?>> rollbackSubject;
 
-    public TypeChangeListener() {
+    TypeChangeListener() {
         commitSubject = BehaviorSubject.create();
         rollbackSubject = BehaviorSubject.create();
     }

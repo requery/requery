@@ -39,10 +39,10 @@ public class JoinElement<E> implements JoinAndOr<E>, QueryWrapper<E>, LogicalEle
     private final LogicalOperator operator;
     private final Condition<?> condition;
 
-    public JoinElement(QueryElement<E> query,
-                       Set<JoinElement<E>> elements,
-                       Condition<?> condition,
-                       LogicalOperator operator) {
+    JoinElement(QueryElement<E> query,
+                Set<JoinElement<E>> elements,
+                Condition<?> condition,
+                LogicalOperator operator) {
         this.query = query;
         this.elements = elements;
         this.operator = operator;

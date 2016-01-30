@@ -273,7 +273,7 @@ public abstract class FieldExpression<V> implements Aliasable<Expression<V>>,
         private final Operator operator;
         private final Object value;
 
-        public ExpressionCondition(Expression<X> attribute, Operator operator, Object value) {
+        ExpressionCondition(Expression<X> attribute, Operator operator, Object value) {
             this.attribute = attribute;
             this.operator = operator;
             this.value = value;

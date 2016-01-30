@@ -472,7 +472,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         }
     }
 
-    class DataContext implements EntityContext<T>, ConnectionProvider {
+    private class DataContext implements EntityContext<T>, ConnectionProvider {
 
         @Override
         public <E> EntityProxy<E> proxyOf(E entity, boolean forUpdate) {
