@@ -51,6 +51,8 @@ import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class JPAModelTest {
@@ -155,5 +157,16 @@ public class JPAModelTest {
         PersonEntity person = randomPerson();
         data.insert(person);
         assertEquals(2, result.toList().size());
+    }
+
+    @Test
+    public void testGroupWithOptionalDescription() {
+        GroupEntity group = new GroupEntity();
+        group.setName("group1");
+        assertNotNull(group.getDescription());
+        assertFalse(group.getDescription().isPresent());
+        group.setDescription("text");
+        data.insert(group);
+        assertEquals("text", group.getDescription().get());
     }
 }

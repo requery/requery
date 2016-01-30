@@ -30,6 +30,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 import java.io.Serializable;
+import java.util.Optional;
 
 @Entity
 @Table(name = "Groups")
@@ -41,7 +42,7 @@ public interface Group extends Serializable, Persistable {
 
     String getName();
 
-    String getDescription();
+    Optional<String> getDescription();
 
     GroupType getType();
 
