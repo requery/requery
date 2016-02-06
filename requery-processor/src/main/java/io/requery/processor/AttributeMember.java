@@ -61,6 +61,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
+import javax.persistence.ConstraintMode;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
@@ -294,6 +295,17 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             javax.persistence.ForeignKey joinForeignKey = joinColumn.foreignKey();
             if (joinForeignKey != null) {
                 this.isForeignKey = true;
+                ConstraintMode constraintMode = joinForeignKey.value();
+                switch (constraintMode) {
+                    default:
+                    case PROVIDER_DEFAULT:
+                    case CONSTRAINT:
+                        referentialAction = ReferentialAction.CASCADE;
+                        break;
+                    case NO_CONSTRAINT:
+                        referentialAction = ReferentialAction.NO_ACTION;
+                        break;
+                }
             }
             this.referencedColumn = joinColumn.referencedColumnName();
         }
@@ -355,6 +367,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             ReflectiveAssociation reflect = new ReflectiveAssociation(oneToMany.get());
             mappedBy = reflect.mappedBy();
             cascadeActions = reflect.cascade();
+            checkIterable(validator);
         }
         if (manyToOne.isPresent()) {
             cardinality = Cardinality.MANY_TO_ONE;
@@ -384,6 +397,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                 associativeDescriptor = new JoinTableAssociation(joinTable.get());
             }
             isReadOnly = true;
+            checkIterable(validator);
         }
         if (isForeignKey()) {
             if (referentialAction == ReferentialAction.SET_NULL && !isNullable()) {
@@ -399,6 +413,12 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             } else {
                 referencedType = typeMirror().toString();
             }
+        }
+    }
+
+    private void checkIterable(ElementValidator validator) {
+        if (!isIterable()) {
+            validator.error("Many relation must be stored in an iterable type");
         }
     }
 
