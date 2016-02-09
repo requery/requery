@@ -93,9 +93,9 @@ public class TimeConversionsTest {
     public void testInsertReadDateTime() {
         Event event = new Event();
         UUID id = UUID.randomUUID();
-        LocalDateTime localDateTimeNow = LocalDateTime.now();
-        OffsetDateTime offsetDateTimeNow = OffsetDateTime.now();
-        ZonedDateTime zonedDateTimeNow = ZonedDateTime.now();
+        LocalDateTime localDateTimeNow = LocalDateTime.now().withNano(0);
+        OffsetDateTime offsetDateTimeNow = OffsetDateTime.now().withNano(0);
+        ZonedDateTime zonedDateTimeNow = ZonedDateTime.now().withNano(0);
         event.setId(id);
         event.setLocalDateTime(localDateTimeNow);
         event.setOffsetDateTime(offsetDateTimeNow);
