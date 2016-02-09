@@ -1,10 +1,10 @@
 package io.requery.test;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import io.requery.sql.Platform;
 import io.requery.sql.platform.Derby;
 import io.requery.sql.platform.MySQL;
 import io.requery.sql.platform.Oracle;
-import io.requery.sql.Platform;
 import io.requery.sql.platform.PostgresSQL;
 import io.requery.sql.platform.SQLServer;
 import io.requery.sql.platform.SQLite;
@@ -16,6 +16,7 @@ import org.sqlite.SQLiteDataSource;
 
 import javax.sql.CommonDataSource;
 import javax.sql.DataSource;
+import java.io.File;
 import java.io.FileInputStream;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -121,11 +122,15 @@ public enum DatabaseType {
                     .asSubclass(CommonDataSource.class);
             }
             CommonDataSource dataSource = dataSourceClass.newInstance();
-            String file = platformClass.getSimpleName().toLowerCase();
+            String fileName = platformClass.getSimpleName().toLowerCase();
             Properties properties = new Properties();
-            properties.load(
-                    new FileInputStream(
-                            "src/test/resources/io/requery/test/" + file + ".properties"));
+            File file = new File(
+                "src/test/resources/io/requery/test/" + fileName + ".properties");
+            if (file.exists()) {
+                try (FileInputStream stream = new FileInputStream(file)) {
+                    properties.load(stream);
+                }
+            }
             String server = properties.getProperty("server");
             Integer port = Integer.parseInt(properties.getProperty("port"));
             String user = properties.getProperty("user");
