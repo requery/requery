@@ -88,6 +88,20 @@ data.select(Person.class)
     .stream().forEach(System.out::println);
 ```
 
+Java 8 optional and time support:
+
+```java
+public interface Person {
+
+    @Key @Generated
+    int getId();
+
+    String getName();
+    Optional<String> getEmail();
+    ZonedDateTime getBirthday();
+}
+```
+
 RxJava Observables:
 
 ```java
