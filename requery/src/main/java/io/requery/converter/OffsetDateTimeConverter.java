@@ -23,7 +23,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 /**
- * Converts from a {@link OffsetDateTime} to a {@link java.sql.Date} for Java 8.
+ * Converts from a {@link OffsetDateTime} to a {@link java.sql.Timestamp} for Java 8.
  */
 public class OffsetDateTimeConverter implements Converter<OffsetDateTime, java.sql.Timestamp> {
 
