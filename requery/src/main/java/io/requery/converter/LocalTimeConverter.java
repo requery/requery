@@ -25,7 +25,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 
 /**
- * Converts from a {@link LocalTime} to a {@link java.sql.Date} for Java 8.
+ * Converts from a {@link LocalTime} to a {@link java.sql.Time} for Java 8.
  */
 public class LocalTimeConverter implements Converter<LocalTime, java.sql.Time> {
 

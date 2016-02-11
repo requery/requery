@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
- * Converts from a {@link LocalDateTime} to a {@link java.sql.Date} for Java 8.
+ * Converts from a {@link LocalDateTime} to a {@link java.sql.Timestamp} for Java 8.
  */
 public class LocalDateTimeConverter implements Converter<LocalDateTime, java.sql.Timestamp> {
 

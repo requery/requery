@@ -24,7 +24,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 /**
- * Converts from a {@link LocalDateTime} to a {@link java.sql.Date} for Java 8.
+ * Converts from a {@link LocalDateTime} to a {@link java.sql.Timestamp} for Java 8.
  */
 public class ZonedDateTimeConverter implements Converter<ZonedDateTime, java.sql.Timestamp> {
 
