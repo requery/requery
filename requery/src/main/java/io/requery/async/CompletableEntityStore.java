@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
@@ -49,14 +50,18 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
 
     private final BlockingEntityStore<T> delegate;
     private final Executor executor;
+    private final boolean createdExecutor;
 
     public CompletableEntityStore(BlockingEntityStore<T> delegate) {
-        this(delegate, Executors.newSingleThreadExecutor());
+        this.delegate = Objects.requireNotNull(delegate);
+        this.executor = Executors.newSingleThreadExecutor();
+        createdExecutor = true;
     }
 
     public CompletableEntityStore(BlockingEntityStore<T> delegate, Executor executor) {
         this.delegate = Objects.requireNotNull(delegate);
         this.executor = Objects.requireNotNull(executor);
+        createdExecutor = false;
     }
 
     @Override
@@ -163,7 +168,14 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
 
     @Override
     public void close() {
-        delegate.close();
+        try {
+            if (createdExecutor) {
+                ExecutorService executorService = (ExecutorService) executor;
+                executorService.shutdown();
+            }
+        } finally {
+            delegate.close();
+        }
     }
 
     @Override
