@@ -17,7 +17,6 @@
 package io.requery.sql;
 
 import io.requery.BlockingEntityStore;
-import io.requery.DetachedException;
 import io.requery.EntityCache;
 import io.requery.PersistenceException;
 import io.requery.ReadOnlyException;
@@ -25,9 +24,8 @@ import io.requery.RollbackException;
 import io.requery.Transaction;
 import io.requery.TransactionException;
 import io.requery.TransactionIsolation;
-import io.requery.query.Tuple;
-import io.requery.cache.EmptyEntityCache;
 import io.requery.TransactionListener;
+import io.requery.cache.EmptyEntityCache;
 import io.requery.meta.Attribute;
 import io.requery.meta.EntityModel;
 import io.requery.meta.QueryAttribute;
@@ -39,6 +37,7 @@ import io.requery.query.Insertion;
 import io.requery.query.Result;
 import io.requery.query.Scalar;
 import io.requery.query.Selection;
+import io.requery.query.Tuple;
 import io.requery.query.Update;
 import io.requery.query.element.QueryElement;
 import io.requery.query.function.Count;
@@ -178,8 +177,8 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
     @Override
     public <E extends T> E insert(E entity) {
-        EntityProxy<E> proxy = context.proxyOf(entity, false);
         try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
+            EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
                 context.write(proxy.type().classType()).insert(entity, proxy);
                 transaction.commit();
@@ -195,7 +194,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
                 EntityWriter<E, T> writer;
                 E entity = iterator.next();
-                EntityProxy<E> proxy = context.proxyOf(entity, false);
+                EntityProxy<E> proxy = context.proxyOf(entity, true);
                 writer = context.write(proxy.type().classType());
                 writer.batchInsert(entities);
                 transaction.commit();
@@ -206,8 +205,8 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
     @Override
     public <E extends T> E update(E entity) {
-        EntityProxy<E> proxy = context.proxyOf(entity, true);
         try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
+            EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
                 context.write(proxy.type().classType()).update(entity, proxy);
                 transaction.commit();
@@ -483,9 +482,6 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             @SuppressWarnings("unchecked")
             Type<E> type = (Type<E>) entityModel.typeOf(entity.getClass());
             EntityProxy<E> proxy = type.proxyProvider().apply(entity);
-            if (forUpdate && !proxy.isLinked()) {
-                throw new DetachedException();
-            }
             if (forUpdate && type.isReadOnly()) {
                 throw new ReadOnlyException();
             }

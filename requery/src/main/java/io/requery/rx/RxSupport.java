@@ -17,13 +17,11 @@
 package io.requery.rx;
 
 import io.requery.BlockingEntityStore;
-import io.requery.TransactionListener;
 import io.requery.meta.Type;
 import io.requery.query.BaseResult;
 import io.requery.query.Result;
 import io.requery.query.Scalar;
 import io.requery.query.element.QueryElement;
-import io.requery.query.element.QueryWrapper;
 import io.requery.util.CloseableIterator;
 import io.requery.util.function.Supplier;
 import rx.Observable;
@@ -50,16 +48,14 @@ public final class RxSupport {
         return new SingleEntityStoreFromBlocking<>(store);
     }
 
-    public static Supplier<TransactionListener> transactionListener() {
-        return typeChanges;
-    }
-
     public static <T> Observable<Result<T>> toResultObservable(final Result<T> result) {
-        if (!(result instanceof  QueryWrapper)) {
+        if (!(result instanceof ObservableResult)) {
             throw new UnsupportedOperationException();
         }
-        QueryWrapper wrapper = (QueryWrapper) result;
-        final QueryElement element = wrapper.unwrapQuery();
+        ObservableResult observableResult = (ObservableResult) result;
+        final QueryElement element = observableResult.unwrapQuery();
+        // ensure the transaction listener is added in the target data store
+        observableResult.addTransactionListener(typeChanges);
         return typeChanges.commitSubject().filter(new Func1<Type<?>, Boolean>() {
             @Override
             public Boolean call(Type<?> type) {

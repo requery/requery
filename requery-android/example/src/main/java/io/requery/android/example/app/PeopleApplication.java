@@ -24,7 +24,6 @@ import io.requery.android.sqlite.DatabaseSource;
 import io.requery.rx.RxSupport;
 import io.requery.rx.SingleEntityStore;
 import io.requery.sql.Configuration;
-import io.requery.sql.ConfigurationBuilder;
 import io.requery.sql.EntityDataStore;
 
 public class PeopleApplication extends Application {
@@ -46,13 +45,7 @@ public class PeopleApplication extends Application {
     SingleEntityStore<Persistable> getData() {
         if (dataStore == null) {
             // override onUpgrade to handle migrating to a new version
-            DatabaseSource source = new DatabaseSource(this, Models.DEFAULT, 1) {
-                @Override
-                protected void onConfigure(ConfigurationBuilder builder) {
-                    super.onConfigure(builder);
-                    builder.addTransactionListenerFactory(RxSupport.transactionListener());
-                }
-            };
+            DatabaseSource source = new DatabaseSource(this, Models.DEFAULT, 1);
             Configuration configuration = source.getConfiguration();
             dataStore = RxSupport.toReactiveStore(
                 new EntityDataStore<Persistable>(configuration));

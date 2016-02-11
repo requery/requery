@@ -17,12 +17,14 @@
 package io.requery.sql;
 
 import io.requery.PersistenceException;
+import io.requery.TransactionListener;
 import io.requery.query.BaseResult;
 import io.requery.query.Expression;
 import io.requery.query.element.QueryElement;
-import io.requery.query.element.QueryWrapper;
+import io.requery.rx.ObservableResult;
 import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
+import io.requery.util.function.Supplier;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,7 +38,7 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-class SelectResult<E> extends BaseResult<E> implements CloseableIterable<E>, QueryWrapper {
+class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, CloseableIterable<E> {
 
     private final QueryElement<?> query;
     private final RuntimeConfiguration configuration;
@@ -140,6 +142,13 @@ class SelectResult<E> extends BaseResult<E> implements CloseableIterable<E>, Que
                 } catch (SQLException ignored) {
                 }
             }
+        }
+    }
+
+    @Override
+    public void addTransactionListener(Supplier<TransactionListener> transactionListener) {
+        if (transactionListener != null) {
+            configuration.transactionListenerFactories().add(transactionListener);
         }
     }
 

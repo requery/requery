@@ -70,7 +70,6 @@ public class RxTest extends RandomData {
         CacheManager cacheManager = provider.getCacheManager();
         Configuration configuration = new ConfigurationBuilder(dataSource, model)
             .useDefaultLogging()
-            .addTransactionListenerFactory(RxSupport.transactionListener())
             .setWriteExecutor(Executors.newSingleThreadExecutor())
             .setEntityCache(new EntityCacheBuilder(model)
                 .useReferenceCache(true)
@@ -189,7 +188,7 @@ public class RxTest extends RandomData {
         });
         data.insert(randomPerson()).toBlocking().value();
         data.insert(randomPerson()).toBlocking().value();
-        assertEquals(2L, latch.getCount());
+        assertEquals(0L, latch.getCount());
     }
 
     @Test
