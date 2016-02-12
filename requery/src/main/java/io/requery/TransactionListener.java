@@ -20,17 +20,50 @@ import io.requery.proxy.EntityProxy;
 
 import java.util.Set;
 
+/**
+ * Provides an interface for listening to {@link Transaction} actions.
+ */
 public interface TransactionListener {
 
+    /**
+     * Invoked before the transaction is begun.
+     *
+     * @param isolation {@link TransactionIsolation} level of the transaction.
+     */
     void beforeBegin(TransactionIsolation isolation);
 
+    /**
+     * Invoked after the transaction is begun.
+     *
+     * @param isolation {@link TransactionIsolation} level of the transaction.
+     */
     void afterBegin(TransactionIsolation isolation);
 
+    /**
+     * Invoked before the transaction is committed.
+     *
+     * @param entities collection of entities involved in the transaction
+     */
     void beforeCommit(Set<EntityProxy<?>> entities);
 
+    /**
+     * Invoked after the transaction is committed successfully.
+     *
+     * @param entities collection of entities involved in the transaction
+     */
     void afterCommit(Set<EntityProxy<?>> entities);
 
+    /**
+     * Invoked before the transaction is rolled back.
+     *
+     * @param entities collection of entities involved in the transaction
+     */
     void beforeRollback(Set<EntityProxy<?>> entities);
 
+    /**
+     * Invoked after the transaction is rolled back successfully.
+     *
+     * @param entities collection of entities involved in the transaction
+     */
     void afterRollback(Set<EntityProxy<?>> entities);
 }
