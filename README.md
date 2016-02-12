@@ -1,7 +1,6 @@
-requery
-=======
+![requery](http://requery.github.io/logo.png)
 
-A micro ORM for Java/Android.
+A light but powerful ORM for Java/Android.
 
 Defining entities:
 
@@ -44,7 +43,6 @@ public interface Person {
     Date getBirthday();
     @OneToMany
     Result<Phone> getPhoneNumbers();
-
 }
 ```
 
@@ -79,7 +77,7 @@ abstract class AbstractPerson {
 }
 ```
 
-Java 8 streams:
+Java 8 [streams](https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html):
 
 ```java
 data.select(Person.class)
@@ -102,7 +100,7 @@ public interface Person {
 }
 ```
 
-RxJava Observables:
+[RxJava](https://github.com/ReactiveX/RxJava) [Observables](http://reactivex.io/documentation/observable.html):
 
 ```java
 Observable<Person> query = data
@@ -112,7 +110,7 @@ Observable<Person> query = data
     .toObservable();
 ```
 
-RxJava observe query on table changes:
+[RxJava](https://github.com/ReactiveX/RxJava) observe query on table changes:
 
 ```java
 Observable<Person> query = data
@@ -192,8 +190,9 @@ JPA annotations       |  Y       |  Y       |  N       |  N        | N
 2) Not annotation based
 3) Builder only
 
-See requery-android/example for an example Android project using databinding and interface based
-entities
+See [requery-android/example](https://github.com/requery/requery/tree/master/requery-android/example)
+for an example Android project using databinding and interface based entities. For more information
+see the [wiki](https://github.com/requery/requery/wiki/Android) page.
 
 Code generation
 ---------------
@@ -266,6 +265,8 @@ dependencies {
 ```
 
 Feedback and suggestions are welcome.
+
+For more information see the [wiki](https://github.com/requery/requery/wiki) page.
 
 License
 -------
