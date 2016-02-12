@@ -1,0 +1,100 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.5.0'
+        classpath "com.android.databinding:dataBinder:1.0-rc4"
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local' }
+    }
+}
+
+idea {
+    project {
+        jdkName = '1.8'
+    }
+}
+
+version = '1.0-SNAPSHOT'
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+configure([project(':requery'), project(':requery-processor')]) {
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+
+    javadoc.options.links("http://docs.oracle.com/javase/8/docs/api/");
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+                groupId 'io.requery'
+                artifactId project.name
+                version rootProject.version
+
+                artifact sourcesJar
+                artifact javadocJar
+            }
+        }
+
+        repositories {
+            maven {
+                credentials {
+                    username = properties.getProperty('bintray.user')
+                    password = properties.getProperty('bintray.apikey')
+                }
+                url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
+            }
+        }
+    }
+}
+
+configure([project(':requery'), project(':requery-processor'), project(':requery-android')]) {
+    apply plugin: 'com.jfrog.bintray'
+
+    bintray {
+        user = properties.getProperty('bintray.user')
+        key = properties.getProperty('bintray.apikey')
+        publications = ['maven']
+        pkg {
+            repo = 'requery'
+            name = 'requery'
+            userOrg = 'requery'
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/requery/requery.git'
+            version {
+                name = rootProject.version
+                desc = 'requery ORM'
+                released  = new Date()
+            }
+        }
+    }
+}
+
+
+
+

@@ -1,0 +1,9 @@
+/build
+/test-libs
+/src/generated
+/src/test/resources
+/dbtest
+/hsqltest.log
+/hsqltest.script
+/hsqltest.properties
+/derby.log

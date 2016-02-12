@@ -1,0 +1,22 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="io.requery.android.example.app">
+
+    <application
+            android:allowBackup="true"
+            android:name="io.requery.android.example.app.PeopleApplication"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme">
+        <activity
+                android:name="io.requery.android.example.app.PeopleActivity"
+                android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity
+                android:name="io.requery.android.example.app.PersonEditActivity"
+                android:label="@string/app_name">
+        </activity>
+    </application>
+</manifest>

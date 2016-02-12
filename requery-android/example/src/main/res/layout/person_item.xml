@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable name="person" type="io.requery.android.example.app.model.Person"/>
+    </data>
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="10dp">
+        <ImageView android:id="@+id/picture"
+                   android:layout_centerVertical="true"
+                   android:layout_width="72dp"
+                   android:layout_height="72dp"/>
+
+        <TextView android:id="@+id/name"
+                  android:layout_toRightOf="@+id/picture"
+                  android:layout_centerVertical="true"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:text="@{person.name}"
+                  android:textSize="20sp"
+                  android:layout_marginLeft="10dp"/>
+    </RelativeLayout>
+</layout>
