@@ -118,7 +118,7 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable, ToObserv
     /**
      * Converts this result into a list.
      *
-     * @return a new list with the contents of the result.
+     * @return a new unmodifiable list with the contents of the result.
      */
     List<E> toList();
 

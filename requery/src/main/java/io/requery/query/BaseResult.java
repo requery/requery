@@ -26,6 +26,7 @@ import io.requery.util.function.Consumer;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,7 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
     public List<E> toList() {
         List<E> list = maxSize == null ? new ArrayList<E>() : new ArrayList<E>(maxSize);
         collect(list);
-        return list;
+        return Collections.unmodifiableList(list);
     }
 
     @Override
