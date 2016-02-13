@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -399,14 +400,13 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         } else {
             int count = type.keyAttributes().size();
             if (count > 1) {
-                Object[] keys = new Object[count];
-                int index = 0;
-                for (Attribute attribute : type.keyAttributes()) {
+                LinkedHashMap<Attribute<E, ?>, Object> keys = new LinkedHashMap<>(count);
+                for (Attribute<E, ?> attribute : type.keyAttributes()) {
                     String name = attribute.name();
                     Object value = mapping.read(attribute, results, results.findColumn(name));
-                    keys[index++] = value;
+                    keys.put(attribute, value);
                 }
-                key = new CompositeKey(keys);
+                key = new CompositeKey<>(keys);
             }
         }
         return key;

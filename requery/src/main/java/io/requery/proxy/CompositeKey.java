@@ -16,34 +16,81 @@
 
 package io.requery.proxy;
 
+import io.requery.meta.Attribute;
+import io.requery.query.Expression;
+import io.requery.query.Tuple;
+import io.requery.util.Objects;
+
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents a composite key of multiple values.
  *
+ * @param <T> entity type
+ *
  * @author Nikhil Purushe
  */
-public class CompositeKey implements Serializable {
+public class CompositeKey<T> implements Serializable, Tuple {
 
-    private final Object[] values;
+    // attribute not used since this class is serializable, the key is the attribute name
+    private final Map<String, Object> map;
 
-    public CompositeKey(Object[] values) {
-        this.values = values;
+    /**
+     * Creates a new composite key instance.
+     *
+     * @param values a map of key {@link Attribute} to their corresponding values.
+     */
+    public CompositeKey(Map<? extends Attribute<T, ?>, ?> values) {
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        this.map = new LinkedHashMap<>();
+        for (Map.Entry<? extends Attribute<T, ?>, ?> entry : values.entrySet()) {
+            map.put(entry.getKey().name(), entry.getValue());
+        }
+    }
+
+    @Override
+    public <V> V get(Expression<V> key) {
+        if (key instanceof Attribute) {
+            return key.classType().cast(map.get(key.name()));
+        }
+        return null;
+    }
+
+    @Override
+    public <V> V get(String key) {
+        @SuppressWarnings("unchecked")
+        V value = (V) map.get(key);
+        return value;
+    }
+
+    @Override
+    public <V> V get(int index) {
+        @SuppressWarnings("unchecked")
+        V value = (V) map.values().toArray()[index];
+        return value;
+    }
+
+    @Override
+    public int count() {
+        return map.size();
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof CompositeKey) {
             CompositeKey other = (CompositeKey) obj;
-            return Arrays.equals(values, other.values);
+            return Objects.equals(map, other.map);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(values);
+        return Objects.hash(map);
     }
 
     @Override
@@ -51,12 +98,14 @@ public class CompositeKey implements Serializable {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         int index = 0;
-        for (Object o : values) {
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
             if (index > 0) {
                 sb.append(", ");
             }
             index++;
-            sb.append(o.toString());
+            sb.append(entry.getKey());
+            sb.append(" = ");
+            sb.append(entry.getValue());
         }
         sb.append("]");
         return sb.toString();

@@ -19,6 +19,8 @@ package io.requery.test;
 import io.requery.Persistable;
 import io.requery.PersistenceException;
 import io.requery.Transaction;
+import io.requery.meta.Attribute;
+import io.requery.proxy.CompositeKey;
 import io.requery.proxy.EntityProxy;
 import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
@@ -33,6 +35,7 @@ import io.requery.sql.EntityDataStore;
 import io.requery.test.model.Address;
 import io.requery.test.model.Group;
 import io.requery.test.model.GroupType;
+import io.requery.test.model.Group_Person;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
 import io.requery.util.function.Consumer;
@@ -50,6 +53,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -225,6 +229,27 @@ public abstract class FunctionalTest extends RandomData {
         assertTrue(person.getId() > 0);
         Person other = data.findByKey(Person.class, person.getId());
         assertSame(person, other);
+    }
+
+    @Test
+    public void testFindByCompositeKey() {
+        Group group = new Group();
+        group.setName("group");
+        group.setType(GroupType.PRIVATE);
+
+        Person person = randomPerson();
+        person.getGroups().add(group);
+        data.insert(person);
+        assertTrue(person.getId() > 0);
+
+        // create the composite key
+        Map<Attribute<Group_Person, Integer>, Integer> map = new LinkedHashMap<>();
+        map.put(Group_Person.GROUPS_ID, group.getId());
+        map.put(Group_Person.PERSON_ID, person.getId());
+
+        CompositeKey<Group_Person> compositeKey = new CompositeKey<>(map);
+        Group_Person joined = data.findByKey(Group_Person.class, compositeKey);
+        assertNotNull(joined);
     }
 
     @Test

@@ -25,13 +25,15 @@ import io.requery.util.function.Supplier;
 class TransactionScope implements AutoCloseable {
 
     private final Transaction transaction;
-    private boolean enteredTransaction;
+    private final boolean enteredTransaction;
 
     TransactionScope(Supplier<? extends Transaction> transactionSupplier) {
         this.transaction = transactionSupplier.get();
         if (!transaction.active()) {
             transaction.begin();
             enteredTransaction = true;
+        } else {
+            enteredTransaction = false;
         }
     }
 

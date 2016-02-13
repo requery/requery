@@ -141,14 +141,13 @@ public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateList
             if (keyAttribute != null) {
                 key = get(keyAttribute); // typical case one key attribute
             } else if (keyCount > 1) {
-                Object[] keys = new Object[type.keyAttributes().size()];
-                int index = 0;
-                for (Property property : this) {
+                LinkedHashMap<Attribute<E, ?>, Object> keys = new LinkedHashMap<>(keyCount);
+                for (Property<E, ?> property : this) {
                     if (property.attribute().isKey()) {
-                        keys[index++] = property.get();
+                        keys.put(property.attribute(), property.get());
                     }
                 }
-                key = new CompositeKey(keys);
+                key = new CompositeKey<>(keys);
             }
         }
         return key;

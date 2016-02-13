@@ -30,6 +30,7 @@ import io.requery.meta.Attribute;
 import io.requery.meta.EntityModel;
 import io.requery.meta.QueryAttribute;
 import io.requery.meta.Type;
+import io.requery.proxy.CompositeKey;
 import io.requery.proxy.EntityProxy;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
@@ -53,7 +54,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -297,14 +297,15 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             QueryAttribute<E, Object> attribute = Attributes.query(keys.iterator().next());
             selection.where(attribute.equal(key));
         } else {
-            Map map = (Map) key;
-            for (Attribute<E, ?> attribute : keys) {
-                QueryAttribute<E, Object> keyAttribute = Attributes.query(attribute);
-                if (!map.containsKey(keyAttribute.name())) {
-                    throw new MissingKeyException();
+            if (key instanceof CompositeKey) {
+                CompositeKey compositeKey = (CompositeKey) key;
+                for (Attribute<E, ?> attribute : keys) {
+                    QueryAttribute<E, Object> keyAttribute = Attributes.query(attribute);
+                    Object value = compositeKey.get(keyAttribute);
+                    selection.where(keyAttribute.equal(value));
                 }
-                Object value = map.get(keyAttribute.name());
-                selection.where(keyAttribute.equal(value));
+            } else {
+                throw new IllegalArgumentException("CompositeKey required");
             }
         }
         return selection.get().first();
