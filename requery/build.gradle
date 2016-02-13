@@ -11,7 +11,7 @@ configurations {
 dependencies {
     provided 'javax.transaction:javax.transaction-api:1.2'
     provided 'javax.cache:cache-api:1.0.0'
-    provided 'io.reactivex:rxjava:1.1.0'
+    provided 'io.reactivex:rxjava:1.1.1'
 }
 
 sourceSets {
