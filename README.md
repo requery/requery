@@ -1,6 +1,6 @@
 ![requery](http://requery.github.io/logo.png)
 
-A light but powerful ORM for Java/Android.
+A light but powerful ORM and SQL query generator for Java/Android with RxJava and Java 8 support.
 
 Defining entities:
 
@@ -39,10 +39,11 @@ public interface Person {
     int getId();
 
     String getName();
-    String getEmail();
-    Date getBirthday();
+
     @OneToMany
-    Result<Phone> getPhoneNumbers();
+    Set<Phone> getPhoneNumbers();
+
+    String getEmail();
 }
 ```
 
@@ -58,7 +59,7 @@ List<Person> query = data
 ```
 
 Relationships: rather than collections such as sets, and lists which have to be materialized with
-all the results, you can alternatively use query results directly: (sets and lists are supported to)
+all the results, you can use query results directly in side an entity: (sets and lists are supported to)
 
 ```java
 @Entity
@@ -103,7 +104,7 @@ public interface Person {
 [RxJava](https://github.com/ReactiveX/RxJava) [Observables](http://reactivex.io/documentation/observable.html):
 
 ```java
-Observable<Person> query = data
+Observable<Person> observable = data
     .select(Person.class)
     .orderBy(Person.AGE.desc())
     .get()
@@ -113,7 +114,7 @@ Observable<Person> query = data
 [RxJava](https://github.com/ReactiveX/RxJava) observe query on table changes:
 
 ```java
-Observable<Person> query = data
+Observable<Person> observable = data
     .select(Person.class)
     .orderBy(Person.AGE.desc())
     .get()
@@ -145,7 +146,7 @@ Features
 - Caching
 - Lifecycle callbacks
 - Custom type converters
-- JPA annotations support (requery is not a JPA provider)
+- JPA annotations (however requery is not a JPA provider)
 
 Reflection free
 ---------------
@@ -216,35 +217,8 @@ Tested on some of the most popular databases:
 JPA Annotations
 ---------------
 
-Only a subset of the JPA annotations are supported. These annotations are supported:
-
-- Basic
-- Cacheable
-- Column
-- Entity
-- Enumerated
-- GeneratedValue
-- Id
-- JoinColumn
-- JoinTable
-- ManyToMany
-- ManyToOne
-- OneToMany
-- OneToOne
-- PostLoad
-- PostPersist
-- PostRemove
-- PostUpdate
-- PrePersist
-- PreRemove
-- PreUpdate
-- Table
-- Transient
-- Version
-
-There is no support for embedded types or mapped superclasses. Unique/index constraints must
-be placed on the field/method level. Advanced JPA features are not yet supported such as
-mapping via @JoinTable to secondary tables to define relationships (outside of ManyToMany).
+A subset of the JPA annotations that map onto the requery annotations are supported.
+See [here](https://github.com/requery/requery/wiki/JPA-Annotations) for more information.
 
 Using it
 --------
