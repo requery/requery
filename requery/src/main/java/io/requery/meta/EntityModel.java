@@ -16,7 +16,7 @@
 
 package io.requery.meta;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * The top level meta information for a collection of entity classes in a persistence model.
@@ -42,5 +42,5 @@ public interface EntityModel {
     /**
      * @return Read only collection of all {@link Type} elements in this model.
      */
-    Collection<Type<?>> allTypes();
+    Set<Type<?>> allTypes();
 }

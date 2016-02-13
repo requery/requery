@@ -19,8 +19,8 @@ package io.requery.meta;
 import io.requery.util.ClassMap;
 import io.requery.util.Objects;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -55,8 +55,8 @@ final class ImmutableEntityModel implements EntityModel {
     }
 
     @Override
-    public Collection<Type<?>> allTypes() {
-        return map.values();
+    public Set<Type<?>> allTypes() {
+        return new LinkedHashSet<>(map.values());
     }
 
     @Override
