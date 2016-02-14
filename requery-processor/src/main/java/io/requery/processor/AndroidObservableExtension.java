@@ -23,6 +23,7 @@ import com.squareup.javapoet.TypeSpec;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -61,6 +62,11 @@ class AndroidObservableExtension implements TypeGenerationExtension, PropertyGen
             Mirrors.isInstance(processingEnvironment.getTypeUtils(), element, name));
     }
 
+    private boolean isBindable(AttributeDescriptor descriptor) {
+        Element element = descriptor.element();
+        return Mirrors.findAnnotationMirror(element, BINDING_PACKAGE + ".Bindable").isPresent();
+    }
+
     @Override
     public void generate(EntityDescriptor entity, TypeSpec.Builder builder) {
         if (isObservable() && entity.element().getKind().isInterface()) {
@@ -70,14 +76,14 @@ class AndroidObservableExtension implements TypeGenerationExtension, PropertyGen
 
     @Override
     public void addToGetter(AttributeDescriptor member, MethodSpec.Builder builder) {
-        if (observable) {
+        if (observable && isBindable(member)) {
             builder.addAnnotation(ClassName.get(BINDING_PACKAGE, "Bindable"));
         }
     }
 
     @Override
     public void addToSetter(AttributeDescriptor member, MethodSpec.Builder builder) {
-        if (!observable) {
+        if (!observable || !isBindable(member)) {
             return;
         }
         Elements elements = processingEnvironment.getElementUtils();
