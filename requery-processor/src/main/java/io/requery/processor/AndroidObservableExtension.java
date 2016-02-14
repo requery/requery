@@ -30,7 +30,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * Handler for Android's BaseObservable objects. If the target entity object extends BaseObservable
+ * Handler for Android's Observable objects. If the target entity object extends Observable
  * then the getter methods will be annotated with @Bindable and the setter methods will invoke
  * BaseObservable's notifyPropertyChanged method.
  *
