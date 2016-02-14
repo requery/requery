@@ -43,7 +43,7 @@ class AndroidParcelableExtension implements TypeGenerationExtension {
 
     private final Types types;
 
-    public AndroidParcelableExtension(Types types) {
+    AndroidParcelableExtension(Types types) {
         this.types = types;
     }
 
