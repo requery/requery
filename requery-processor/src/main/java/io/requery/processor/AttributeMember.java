@@ -554,15 +554,17 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         if (element().getKind() == ElementKind.METHOD) {
             ExecutableElement executableElement = (ExecutableElement) element();
             AccessorNamePrefix prefix = AccessorNamePrefix.fromElement(executableElement);
+            String name = elementName;
             switch (prefix) {
                 case GET:
-                    return Names.lowerCaseFirst(elementName.replaceFirst("get", ""));
+                    name = elementName.replaceFirst("get", "");
+                    break;
                 case IS:
-                    return Names.lowerCaseFirst(elementName.replaceFirst("is", ""));
-                case NONE:
-                default:
-                    return Names.lowerCaseFirst(elementName);
+                    name = elementName.replaceFirst("is", "");
+                    break;
             }
+            return Names.isAllUpper(name) ? name :
+                   Names.lowerCaseFirst(name);
         }
         return elementName;
     }
