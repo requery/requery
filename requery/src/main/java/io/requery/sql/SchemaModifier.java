@@ -193,23 +193,57 @@ public class SchemaModifier {
         }
     }
 
+    /**
+     * Alters the attribute's table and add's the column representing the given {@link Attribute}.
+     *
+     * @param attribute being added
+     * @param <T>       parent type of the attribute
+     */
     public <T> void addColumn(Attribute<T, ?> attribute) {
         Type<T> type = attribute.declaringType();
         QueryBuilder qb = createQueryBuilder();
         qb.keyword(ALTER, TABLE)
-        .tableName(type.name())
-        .keyword(ADD, COLUMN);
-        createColumn(qb, attribute);
-        executeSql(qb);
+            .tableName(type.name());
+        if (attribute.isForeignKey()) {
+            if (platform.supportsAddingConstraint()) {
+                // create the column first then the constraint
+                qb.keyword(ADD, COLUMN);
+                createColumn(qb, attribute);
+                executeSql(qb);
+                qb = createQueryBuilder();
+                qb.keyword(ALTER, TABLE)
+                    .tableName(type.name()).keyword(ADD);
+                createForeignKeyColumn(qb, attribute, true);
+            } else {
+                // just for SQLite for now adding the column and key is done in 1 statement
+                qb = createQueryBuilder();
+                qb.keyword(ALTER, TABLE)
+                    .tableName(type.name()).keyword(ADD);
+                createForeignKeyColumn(qb, attribute, false);
+            }
+        } else {
+            qb.keyword(ADD, COLUMN);
+            createColumn(qb, attribute);
+            executeSql(qb);
+        }
     }
 
+    /**
+     * Alters the attribute's table and removes the column representing the given {@link Attribute}.
+     *
+     * @param attribute being added
+     * @param <T>       parent type of the attribute
+     */
     public <T> void dropColumn(Attribute<T, ?> attribute) {
         Type<T> type = attribute.declaringType();
+        if (attribute.isForeignKey()) {
+            // TODO MySQL need to drop FK constraint first
+        }
         QueryBuilder qb = createQueryBuilder();
         qb.keyword(ALTER, TABLE)
-        .tableName(type.name())
-        .keyword(DROP, COLUMN)
-        .attribute(attribute);
+            .tableName(type.name())
+            .keyword(DROP, COLUMN)
+            .attribute(attribute);
         executeSql(qb);
     }
 
@@ -232,13 +266,13 @@ public class SchemaModifier {
         ArrayList<Type<?>> sorted = new ArrayList<>();
         while (!queue.isEmpty()) {
             Type<?> type = queue.poll();
-            Set<Class<?>> referencedClass = referencedTypesOf(type);
-            Set<Type<?>> referencing = new LinkedHashSet<>();
-            for (Class<?> cls : referencedClass) {
-                for (Type<?> t : model.allTypes()) {
-                    if (cls.isAssignableFrom(t.classType())) {
-                        referencing.add(t);
-                    }
+            Set<Type<?>> referencing = referencedTypesOf(type);
+
+            for (Type<?> referenced : referencing) {
+                Set<Type<?>> backReferences = referencedTypesOf(referenced);
+                if (backReferences.contains(type)) {
+                    throw new CircularReferenceException("circular reference detected between "
+                        + type.name() + " and " + referenced.name());
                 }
             }
             if (referencing.isEmpty() || sorted.containsAll(referencing)) {
@@ -251,15 +285,19 @@ public class SchemaModifier {
         return sorted;
     }
 
-    private Set<Class<?>> referencedTypesOf(Type<?> type) {
-        Set<Class<?>> referencedTypes = new LinkedHashSet<>();
+    private Set<Type<?>> referencedTypesOf(Type<?> type) {
+        Set<Type<?>> referencedTypes = new LinkedHashSet<>();
         for (Attribute<?, ?> attribute : type.attributes()) {
             if (attribute.isForeignKey()) {
                 Class<?> referenced = attribute.referencedClass() == null ?
                         attribute.classType() :
                         attribute.referencedClass();
                 if (referenced != null) {
-                    referencedTypes.add(referenced);
+                    for (Type<?> t : model.allTypes()) {
+                        if (referenced.isAssignableFrom(t.classType())) {
+                            referencedTypes.add(t);
+                        }
+                    }
                 }
             }
         }
@@ -310,58 +348,7 @@ public class SchemaModifier {
                 if (index > 0) {
                     qb.comma();
                 }
-                Type<?> referenced = model.typeOf(attribute.referencedClass() != null ?
-                        attribute.referencedClass() : attribute.classType());
-
-                if (!platform.supportsInlineForeignKeyReference()) {
-                    qb.keyword(FOREIGN, KEY)
-                            .openParenthesis()
-                            .attribute(attribute)
-                            .closeParenthesis()
-                            .space();
-                } else {
-                    qb.attribute(attribute);
-                    FieldType fieldType = BasicTypes.INTEGER;
-                    qb.value(fieldType.identifier());
-                }
-                qb.keyword(REFERENCES);
-                qb.tableName(referenced.name());
-                if (attribute.referencedAttribute() != null) {
-                    Attribute a = (Attribute) attribute.referencedAttribute().get();
-                    qb.openParenthesis()
-                        .attribute(a)
-                        .closeParenthesis()
-                        .space();
-                } else {
-                    Attribute a = referenced.keyAttributes().iterator().next();
-                    qb.openParenthesis()
-                       .attribute(a)
-                       .closeParenthesis();
-                }
-                if (!attribute.isNullable()) {
-                    qb.keyword(NOT, NULL);
-                }
-                if (attribute.referentialAction() != null) {
-                    ReferentialAction action = attribute.referentialAction();
-                    qb.keyword(ON, DELETE);
-                    switch (action) {
-                        case CASCADE:
-                            qb.keyword(CASCADE);
-                            break;
-                        case NO_ACTION:
-                            qb.keyword(NO, ACTION);
-                            break;
-                        case RESTRICT:
-                            qb.keyword(RESTRICT);
-                            break;
-                        case SET_DEFAULT:
-                            qb.keyword(SET, DEFAULT);
-                            break;
-                        case SET_NULL:
-                            qb.keyword(SET, NULL);
-                            break;
-                    }
-                }
+                createForeignKeyColumn(qb, attribute, true);
                 index++;
             }
         }
@@ -383,6 +370,63 @@ public class SchemaModifier {
         }
         qb.closeParenthesis();
         return qb.toString();
+    }
+
+    private void createForeignKeyColumn(QueryBuilder qb, Attribute<?,?> attribute,
+                                        boolean forCreateStatement) {
+
+        Type<?> referenced = model.typeOf(attribute.referencedClass() != null ?
+            attribute.referencedClass() : attribute.classType());
+
+        if (!platform.supportsInlineForeignKeyReference() && forCreateStatement) {
+            qb.keyword(FOREIGN, KEY)
+                .openParenthesis()
+                .attribute(attribute)
+                .closeParenthesis()
+                .space();
+        } else {
+            qb.attribute(attribute);
+            FieldType fieldType = BasicTypes.INTEGER;
+            qb.value(fieldType.identifier());
+        }
+        qb.keyword(REFERENCES);
+        qb.tableName(referenced.name());
+        if (attribute.referencedAttribute() != null) {
+            Attribute a = attribute.referencedAttribute().get();
+            qb.openParenthesis()
+                .attribute(a)
+                .closeParenthesis()
+                .space();
+        } else {
+            Attribute a = referenced.keyAttributes().iterator().next();
+            qb.openParenthesis()
+                .attribute(a)
+                .closeParenthesis();
+        }
+        if (!attribute.isNullable()) {
+            qb.keyword(NOT, NULL);
+        }
+        if (attribute.referentialAction() != null) {
+            ReferentialAction action = attribute.referentialAction();
+            qb.keyword(ON, DELETE);
+            switch (action) {
+                case CASCADE:
+                    qb.keyword(CASCADE);
+                    break;
+                case NO_ACTION:
+                    qb.keyword(NO, ACTION);
+                    break;
+                case RESTRICT:
+                    qb.keyword(RESTRICT);
+                    break;
+                case SET_DEFAULT:
+                    qb.keyword(SET, DEFAULT);
+                    break;
+                case SET_NULL:
+                    qb.keyword(SET, NULL);
+                    break;
+            }
+        }
     }
 
     private void createColumn(QueryBuilder qb, Attribute<?,?> attribute) {

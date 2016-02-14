@@ -37,6 +37,13 @@ public interface Platform {
     boolean supportsInlineForeignKeyReference();
 
     /**
+     * @return true if the database supports adding a constraint (e.g. foreign key) after the
+     * column is created (or if it requires it). In most DDL statements the column is created first
+     * and then the constraint is added.
+     */
+    boolean supportsAddingConstraint();
+
+    /**
      * @return true if the database supports the 'if exists' syntax in the create table/index,
      * drop DDL statements.
      */

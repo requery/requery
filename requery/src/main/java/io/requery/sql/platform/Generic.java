@@ -51,6 +51,11 @@ public class Generic implements Platform {
     }
 
     @Override
+    public boolean supportsAddingConstraint() {
+        return true;
+    }
+
+    @Override
     public boolean supportsIfExists() {
         return true;
     }

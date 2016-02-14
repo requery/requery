@@ -18,6 +18,7 @@ package io.requery.android.sqlite;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
@@ -27,24 +28,39 @@ import android.text.TextUtils;
 import io.requery.android.LoggingListener;
 import io.requery.android.ParcelConverter;
 import io.requery.android.UriConverter;
+import io.requery.meta.Attribute;
 import io.requery.meta.EntityModel;
+import io.requery.meta.Type;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
 import io.requery.sql.ConnectionProvider;
 import io.requery.sql.GenericMapping;
 import io.requery.sql.Mapping;
-import io.requery.sql.TableCreationMode;
-import io.requery.sql.SchemaModifier;
 import io.requery.sql.Platform;
+import io.requery.sql.SchemaModifier;
+import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.SQLite;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Wrapper for working with Android SQLite databases. This provides a {@link Connection} wrapping
  * the standard java SQLite API turning it into standard JDBC APIs.
+ *
+ * <p> This class extends the standard {@link SQLiteOpenHelper} and is used to create the database.
+ * {@link #onCreate(SQLiteDatabase)} will create the database tables & columns automatically.
+ *
+ * <p> {@link #onUpgrade(SQLiteDatabase, int, int)} will create any missing tables/columns, however
+ * it will not remove any tables/columns more complex upgrades should be handled by overriding
+ * {@link #onUpgrade(SQLiteDatabase, int, int)} and implementing a script to handle the migration.
  *
  * @author Nikhil Purushe
  */
@@ -179,6 +195,47 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         this.db = db;
+        SchemaModifier schema = new SchemaModifier(getConfiguration());
+        schema.createTables(TableCreationMode.CREATE_NOT_EXISTS);
+        // check for missing columns
+        List<Attribute> missingAttributes = new ArrayList<>();
+        for (Type<?> type : model.allTypes()) {
+            String tableName = type.name();
+            Cursor cursor = db.rawQuery("PRAGMA table_info(" + tableName + ")", null);
+            Map<String, Attribute> map = new LinkedHashMap<>();
+            for (Attribute attribute : type.attributes()) {
+                if (attribute.isAssociation() && !attribute.isForeignKey()) {
+                    continue;
+                }
+                map.put(attribute.name(), attribute);
+            }
+            if (cursor.getCount() > 0) {
+                int nameIndex = cursor.getColumnIndex("name");
+                while (cursor.moveToNext()) {
+                    String name = cursor.getString(nameIndex);
+                    map.remove(name);
+                }
+            }
+            cursor.close();
+            // whats left in the map are are the missing columns for this type
+            missingAttributes.addAll(map.values());
+        }
+        // foreign keys are created last
+        Collections.sort(missingAttributes, new Comparator<Attribute>() {
+            @Override
+            public int compare(Attribute lhs, Attribute rhs) {
+                if (lhs.isForeignKey() && rhs.isForeignKey()) {
+                    return 0;
+                }
+                if (lhs.isForeignKey()) {
+                    return 1;
+                }
+                return -1;
+            }
+        });
+        for (Attribute<?, ?> attribute : missingAttributes) {
+            schema.addColumn(attribute);
+        }
     }
 
     @Override

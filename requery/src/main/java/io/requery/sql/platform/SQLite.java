@@ -40,6 +40,11 @@ public class SQLite extends Generic {
     }
 
     @Override
+    public boolean supportsAddingConstraint() {
+        return false;
+    }
+
+    @Override
     public GeneratedColumnDefinition generatedColumnDefinition() {
         return autoIncrementColumn;
     }

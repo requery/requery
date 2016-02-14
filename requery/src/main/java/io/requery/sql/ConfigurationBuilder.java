@@ -135,7 +135,9 @@ public class ConfigurationBuilder {
         return this;
     }
 
-    public ConfigurationBuilder addTransactionListenerFactory(Supplier<TransactionListener> supplier) {
+    public ConfigurationBuilder addTransactionListenerFactory(
+        Supplier<TransactionListener> supplier) {
+
         this.transactionListenerFactory.add(Objects.requireNotNull(supplier));
         return this;
     }

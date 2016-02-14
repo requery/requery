@@ -54,6 +54,11 @@ public class PlatformDelegate implements Platform {
     }
 
     @Override
+    public boolean supportsAddingConstraint() {
+        return platform.supportsAddingConstraint();
+    }
+
+    @Override
     public boolean supportsGeneratedKeysInBatchUpdate() {
         return platform.supportsGeneratedKeysInBatchUpdate();
     }
