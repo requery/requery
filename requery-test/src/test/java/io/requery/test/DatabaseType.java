@@ -23,7 +23,17 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * Enumeration of the database types being tested.
+ * Enumeration of the database types being tested. Each database type is configured through a
+ * properties file located in resources/io.requery.test. Example for oracle, the file must be called
+ * oracle.properties and contain:
+ *
+ * <pre>
+ * server=someserver.local
+ * port=1521
+ * database=ORCL
+ * user=sa
+ * password=secret
+ * </pre>
  *
  * @author Nikhil Purushe
  */

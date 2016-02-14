@@ -11,8 +11,8 @@ configurations {
 dependencies {
     compile project(':requery')
     provided project(':requery-processor')
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'io.reactivex:rxjava:1.1.0'
+    compile fileTree(include: ['*.jar'], dir: 'libs') // for Oracle/SQL server JDBC drivers
+    compile 'io.reactivex:rxjava:1.1.1'
     compile 'org.eclipse.persistence:javax.persistence:2.1.1'
     testCompile fileTree(include: ['*.jar'], dir: 'test-libs')
     testCompile 'org.openjdk.jmh:jmh-core:1.11.2'
