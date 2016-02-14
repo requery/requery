@@ -23,6 +23,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Wraps an element that contains annotations that are to be processed by the annotation processor.
+ *
+ * @param <E> the type of the element being processed
+ *
+ * @author Nikhil Purushe
+ */
 interface ProcessableElement<E extends Element> {
 
     E element();
