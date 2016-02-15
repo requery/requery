@@ -16,6 +16,7 @@
 
 package io.requery.processor;
 
+import io.requery.ForeignKey;
 import io.requery.meta.Cardinality;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -95,6 +96,19 @@ class EntityGraphValidator {
                     if (!referencedElement.isPresent()) {
                         attributeValidator.warning("Couldn't find referenced element " +
                                 attribute.referencedColumn() + " for " + attribute);
+                    } else {
+                        // check all the foreign keys and see if they reference this entity
+                        referenced.get().attributes().values().stream()
+                            .filter(AttributeDescriptor::isForeignKey)
+                            .map(graph::referencingEntity)
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .filter(entity::equals)
+                            .findAny()
+                            .ifPresent(other -> attributeValidator.error(
+                                "Circular Foreign Key reference found between " +
+                                    entity.typeName() +  " and " + other.typeName(),
+                                ForeignKey.class));
                     }
                 } else {
                     attributeValidator.error("Couldn't find referenced attribute " +
