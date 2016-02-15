@@ -198,8 +198,8 @@ see the [wiki](https://github.com/requery/requery/wiki/Android) page.
 Code generation
 ---------------
 
-Generated entities from Abstract or Interface classes. Use JPA annotations or requery annotations.
-Requery will generate getter/setters, equals() and hashcode().
+Generate entities from Abstract or Interface classes. Use JPA annotations or requery annotations.
+requery will generate getter/setters, equals() and hashcode() when needed.
 
 Supported Databases
 -------------------
