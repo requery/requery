@@ -30,9 +30,9 @@ package io.requery;
  * be registered via mapping or in the entity class like so:
  *
  * <pre><code>
- *     {@literal @}Entity
+ *    {@literal @}Entity
  *     public class AbstractUser {
- *         {@literal @}Convert(URIConverter.class)
+ *        {@literal @}Convert(URIConverter.class)
  *         URI homepage
  *     }
  * }

@@ -29,9 +29,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * per object, if multiple keys are defined they define the composite key for the table.
  * Example:
  * <pre><code>
- *     {@literal @}Entity
+ *    {@literal @}Entity
  *     public class AbstractPerson {
- *         {@literal @}Key int id; // primary key
+ *        {@literal @}Key int id; // primary key
  *         ...
  *     }
  * </code></pre>

@@ -28,10 +28,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * have a void return type and no parameters.
  *
  * <pre><code>
- *     {@literal @}Entity
+ *    {@literal @}Entity
  *     public class AbstractPhone {
  *         ...
- *         {@literal @}PostInsert
+ *        {@literal @}PostInsert
  *         public void onPostInsert() {
  *            // do something post insert
  *         }
