@@ -17,10 +17,8 @@
 package io.requery.converter;
 
 import io.requery.Converter;
-import io.requery.PersistenceException;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * Converter for a {@link URI}
@@ -49,13 +47,6 @@ public class URIConverter implements Converter<URI, String> {
 
     @Override
     public URI convertToMapped(Class<? extends URI> type, String value) {
-        if (value == null) {
-            return null;
-        }
-        try {
-            return new URI(value);
-        } catch (URISyntaxException e) {
-            throw new PersistenceException(e);
-        }
+        return value == null ? null : URI.create(value);
     }
 }
