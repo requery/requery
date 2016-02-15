@@ -147,13 +147,18 @@ class QueryGenerator<E> {
         appendTables(FROM);
     }
 
+    private void checkEmptyValues(Map<Expression<?>, Object> values) {
+        if (values == null || values.isEmpty()) {
+            throw new IllegalStateException(
+                "Cannot generate insert/update statement with an empty set of values");
+        }
+    }
+
     private void appendInsert() {
+        Map<Expression<?>, Object> updates = query.updateValues();
+        checkEmptyValues(updates);
         qb.keyword(INSERT);
         appendTables(INTO);
-        Map<Expression<?>, Object> updates = query.updateValues();
-        if (updates == null || updates.isEmpty()) {
-            throw new IllegalStateException();
-        }
         qb.openParenthesis()
         .commaSeparated(updates.entrySet(),
             new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
@@ -189,13 +194,11 @@ class QueryGenerator<E> {
     }
 
     private void appendUpdate() {
+        Map<Expression<?>, Object> updates = query.updateValues();
+        checkEmptyValues(updates);
         qb.keyword(UPDATE);
         appendTables(null);
         qb.keyword(SET);
-        Map<Expression<?>, Object> updates = query.updateValues();
-        if (updates == null || updates.isEmpty()) {
-            throw new IllegalStateException();
-        }
         int index = 0;
         for (Map.Entry<Expression<?>, Object> entry : updates.entrySet()) {
             if (index > 0) {
@@ -488,7 +491,7 @@ class QueryGenerator<E> {
             }
             appendCondition(condition.condition());
             qb.keyword(THEN);
-            // TODO just some databses need the value inline in a case statement
+            // TODO just some databases need the value inline in a case statement
             if (condition.thenValue() instanceof CharSequence ||
                 condition.thenValue() instanceof Number) {
                 appendConditionValue(function, condition.thenValue(), false);
