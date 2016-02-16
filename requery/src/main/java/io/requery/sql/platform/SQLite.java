@@ -17,9 +17,17 @@
 package io.requery.sql.platform;
 
 import io.requery.sql.AutoIncrementColumnDefinition;
+import io.requery.sql.BasicTypes;
+import io.requery.sql.DelegateType;
 import io.requery.sql.GeneratedColumnDefinition;
-import io.requery.sql.LimitOffsetDefinition;
+import io.requery.sql.Keyword;
 import io.requery.sql.LimitDefinition;
+import io.requery.sql.LimitOffsetDefinition;
+import io.requery.sql.Mapping;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  * SQLite. (3.6 and later)
@@ -28,6 +36,25 @@ public class SQLite extends Generic {
 
     private final AutoIncrementColumnDefinition autoIncrementColumn;
     private final LimitDefinition limitDefinition;
+
+    // in SQLite BIGINT can be treated as just an integer, this handles the case when an long is
+    // used as generated key
+    private static class LongType extends DelegateType<Long> {
+
+        public LongType() {
+            super(Long.class, Types.INTEGER);
+        }
+
+        @Override
+        public Long fromResult(ResultSet results, int column) throws SQLException {
+            return results.getLong(column);
+        }
+
+        @Override
+        public Keyword identifier() {
+            return Keyword.INTEGER;
+        }
+    }
 
     public SQLite() {
         autoIncrementColumn = new AutoIncrementColumnDefinition("autoincrement");
@@ -52,5 +79,11 @@ public class SQLite extends Generic {
     @Override
     public LimitDefinition limitDefinition() {
         return limitDefinition;
+    }
+
+    @Override
+    public void addMappings(Mapping mapping) {
+        super.addMappings(mapping);
+        mapping.replaceType(BasicTypes.BIGINT, new LongType());
     }
 }

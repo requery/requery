@@ -23,15 +23,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class BigIntType extends DelegateType<Integer> {
+public class BigIntType extends DelegateType<Long> {
 
     public BigIntType() {
-        super(Integer.class, Types.BIGINT);
+        super(Long.class, Types.BIGINT);
     }
 
     @Override
-    public Integer fromResult(ResultSet results, int column) throws SQLException {
-        return results.getInt(column);
+    public Long fromResult(ResultSet results, int column) throws SQLException {
+        return results.getLong(column);
     }
 
     @Override

@@ -70,8 +70,8 @@ public class GenericMapping implements Mapping {
         types.put(Short.class, BasicTypes.SMALLINT);
         types.put(byte.class, BasicTypes.TINYINT);
         types.put(Byte.class, BasicTypes.TINYINT);
-        types.put(long.class, BasicTypes.INTEGER);
-        types.put(Long.class, BasicTypes.INTEGER);
+        types.put(long.class, BasicTypes.BIGINT);
+        types.put(Long.class, BasicTypes.BIGINT);
         types.put(float.class, BasicTypes.FLOAT);
         types.put(Float.class, BasicTypes.FLOAT);
         types.put(double.class, BasicTypes.REAL);

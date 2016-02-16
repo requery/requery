@@ -25,13 +25,13 @@ import io.requery.sql.type.DateType;
 import io.requery.sql.type.DecimalType;
 import io.requery.sql.type.FloatType;
 import io.requery.sql.type.IntegerType;
+import io.requery.sql.type.JavaDateType;
 import io.requery.sql.type.NVarCharType;
 import io.requery.sql.type.RealType;
 import io.requery.sql.type.SmallIntType;
 import io.requery.sql.type.TimeStampType;
 import io.requery.sql.type.TimeType;
 import io.requery.sql.type.TinyIntType;
-import io.requery.sql.type.JavaDateType;
 import io.requery.sql.type.VarBinaryType;
 import io.requery.sql.type.VarCharType;
 
