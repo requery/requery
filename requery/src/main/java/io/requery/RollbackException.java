@@ -16,6 +16,9 @@
 
 package io.requery;
 
+/**
+ * Exception thrown after indicating a transaction was rolled back.
+ */
 public class RollbackException extends TransactionException {
 
     public RollbackException(Throwable throwable) {
