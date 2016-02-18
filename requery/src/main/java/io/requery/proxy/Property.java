@@ -114,7 +114,7 @@ public class Property<E, V> implements Supplier<V> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(get());
+        return Objects.hash(attribute, get());
     }
 
     @Override
