@@ -38,6 +38,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
+import javax.persistence.Cacheable;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
@@ -112,7 +113,15 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             validator.error("Entity annotation cannot be applied to final class");
         }
         if (element().getKind() == ElementKind.ENUM) {
-            validator.error("Entity annotation cannot be applied to enum");
+            validator.error("Entity annotation cannot be applied to an enum class");
+        }
+        if (attributes.values().isEmpty()) {
+            validator.error("Entity contains no attributes");
+        }
+        if (!isReadOnly() && attributes.values().size() == 1 &&
+            attributes.values().iterator().next().isGenerated()) {
+            validator.warning(
+                "Entity contains only a single generated attribute may fail to persist");
         }
         validations.add(validator);
         return validations;
@@ -278,8 +287,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     @Override
     public boolean isCacheable() {
         return annotationOf(Entity.class).map(Entity::cacheable)
-            .orElse( annotationOf(javax.persistence.Cacheable.class)
-                    .map(javax.persistence.Cacheable::value)
+            .orElse( annotationOf(Cacheable.class)
+                    .map(Cacheable::value)
                     .orElse(true));
     }
 
