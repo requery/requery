@@ -58,8 +58,9 @@ List<Person> query = data
     .get().list();
 ```
 
-Relationships: rather than collections such as sets, and lists which have to be materialized with
-all the results, you can use query results directly in side an entity: (sets and lists are supported to)
+Relationships: Instead of collections such as sets and lists which have to be materialized with
+all the results, use query results directly in an entity from which you can create a Stream,
+RxJava Observable or plain iterator. (sets and lists are supported to)
 
 ```java
 @Entity
@@ -146,6 +147,7 @@ Features
 - Caching
 - Lifecycle callbacks
 - Custom type converters
+- Compile time entity validation
 - JPA annotations (however requery is not a JPA provider)
 
 Reflection free
@@ -183,13 +185,13 @@ Relational mapping    |  Y       |  Y(1)    |  N       |  Y(1)     | Y(1)
 Inverse relationships |  Y       |  N       |  N       |  N        | N
 Compile time          |  Y       |  N       |  Y       |  Y        | Y(2)
 JDBC Support          |  Y       |  Y       |  N       |  N        | N
-query language        |  Y       |  N       |  Y(3)    |  Y(3)     | Y(3)
+Query language        |  Y       |  N       |  Y(3)    |  Y(3)     | Y(3)
 Table Generation      |  Y       |  Y       |  Y       |  Y        | Y
 JPA annotations       |  Y       |  Y       |  N       |  N        | N
 
 1) Excludes Many-to-Many
 2) Not annotation based
-3) Builder only
+3) Builder only not DSL
 
 See [requery-android/example](https://github.com/requery/requery/tree/master/requery-android/example)
 for an example Android project using databinding and interface based entities. For more information
