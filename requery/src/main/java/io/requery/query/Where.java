@@ -19,5 +19,5 @@ package io.requery.query;
 public interface Where<E> extends SetGroupByOrderByLimit<E>, Return<E> {
 
     Exists<SetGroupByOrderByLimit<E>> where();
-    <V> WhereAndOr<E> where(Condition<V> condition);
+    <V> WhereAndOr<E> where(Condition<V, ?> condition);
 }

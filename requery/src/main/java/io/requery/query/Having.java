@@ -17,5 +17,5 @@
 package io.requery.query;
 
 public interface Having<E> {
-    <V> HavingAndOr<E> having(Condition<V> field);
+    <V> HavingAndOr<E> having(Condition<V, ?> field);
 }

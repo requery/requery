@@ -51,10 +51,10 @@ public class JoinOnElement<E> implements JoinOn<E> {
     }
 
     @Override
-    public <V> JoinAndOr<E> on(Condition<V> condition) {
-        JoinElement<E> w = new JoinElement<>(query, conditions, condition, null);
-        conditions.add(w);
-        return w;
+    public <V> JoinAndOr<E> on(Condition<V, ?> condition) {
+        JoinElement<E> element = new JoinElement<>(query, conditions, condition, null);
+        conditions.add(element);
+        return element;
     }
 
     @Override

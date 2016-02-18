@@ -355,24 +355,24 @@ public class QueryElement<E> implements Selectable<E>,
     }
 
     @Override
-    public <V> WhereAndOr<E> where(Condition<V> condition) {
+    public <V> WhereAndOr<E> where(Condition<V, ?> condition) {
         if (where == null) {
             where = new LinkedHashSet<>();
         }
         LogicalOperator operator = where.size() > 0 ? LogicalOperator.AND : null;
-        WhereElement<E> w = new WhereElement<>(this, where, condition, operator);
-        where.add(w);
-        return w;
+        WhereElement<E> element = new WhereElement<>(this, where, condition, operator);
+        where.add(element);
+        return element;
     }
 
     @Override
-    public <V> HavingAndOr<E> having(Condition<V> condition) {
+    public <V> HavingAndOr<E> having(Condition<V, ?> condition) {
         if (having == null) {
             having = new LinkedHashSet<>();
         }
-        HavingElement<E> w = new HavingElement<>(this, having, condition, null);
-        having.add(w);
-        return w;
+        HavingElement<E> element = new HavingElement<>(this, having, condition, null);
+        having.add(element);
+        return element;
     }
 
     @Override

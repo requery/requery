@@ -16,61 +16,38 @@
 
 package io.requery.query.element;
 
-import io.requery.query.Exists;
 import io.requery.query.Condition;
+import io.requery.query.Exists;
 import io.requery.query.Expression;
-import io.requery.query.Return;
-import io.requery.query.SetGroupByOrderByLimit;
-import io.requery.query.SetHavingOrderByLimit;
 import io.requery.query.JoinAndOr;
 import io.requery.query.JoinOn;
 import io.requery.query.Limit;
 import io.requery.query.Offset;
+import io.requery.query.Return;
 import io.requery.query.Selectable;
+import io.requery.query.SetGroupByOrderByLimit;
+import io.requery.query.SetHavingOrderByLimit;
 import io.requery.query.WhereAndOr;
-import io.requery.util.Objects;
 
 import java.util.Set;
 
-public class JoinElement<E> implements JoinAndOr<E>, QueryWrapper<E>, LogicalElement {
+public class JoinElement<E> extends BaseLogicalElement<JoinElement<E>, JoinAndOr<E>>
+    implements JoinAndOr<E>, QueryWrapper<E>, LogicalElement {
 
     private final QueryElement<E> query;
-    private final Set<JoinElement<E>> elements;
-    private final LogicalOperator operator;
-    private final Condition<?> condition;
 
     JoinElement(QueryElement<E> query,
                 Set<JoinElement<E>> elements,
-                Condition<?> condition,
+                Condition<?,?> condition,
                 LogicalOperator operator) {
+        super(elements, condition, operator);
         this.query = query;
-        this.elements = elements;
-        this.operator = operator;
-        this.condition = condition;
     }
 
     @Override
-    public Condition<?> condition() {
-        return condition;
-    }
-
-    @Override
-    public LogicalOperator operator() {
-        return operator;
-    }
-
-    @Override
-    public <V> JoinAndOr<E> and(Condition<V> condition) {
-        JoinElement<E> w = new JoinElement<>(query, elements, condition, LogicalOperator.AND);
-        elements.add(w);
-        return w;
-    }
-
-    @Override
-    public <V> JoinAndOr<E> or(Condition<V> condition) {
-        JoinElement<E> w = new JoinElement<>(query, elements, condition, LogicalOperator.OR);
-        elements.add(w);
-        return w;
+    JoinElement<E> newElement(Set<JoinElement<E>> elements, Condition<?,?> condition,
+                              LogicalOperator operator) {
+        return new JoinElement<>(query, elements, condition, operator);
     }
 
     @Override
@@ -119,7 +96,7 @@ public class JoinElement<E> implements JoinAndOr<E>, QueryWrapper<E>, LogicalEle
     }
 
     @Override
-    public <V> WhereAndOr<E> where(Condition<V> condition) {
+    public <V> WhereAndOr<E> where(Condition<V, ?> condition) {
         return query.where(condition);
     }
 
@@ -151,21 +128,6 @@ public class JoinElement<E> implements JoinAndOr<E>, QueryWrapper<E>, LogicalEle
     @Override
     public Selectable<E> except() {
         return query.except();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof JoinElement) {
-            JoinElement other = (JoinElement) obj;
-            return Objects.equals(operator, other.operator) &&
-                   Objects.equals(condition, other.condition);
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(operator, condition);
     }
 
     @Override

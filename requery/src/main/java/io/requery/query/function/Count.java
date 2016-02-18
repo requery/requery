@@ -17,6 +17,7 @@
 package io.requery.query.function;
 
 import io.requery.meta.Attribute;
+import io.requery.meta.QueryAttribute;
 
 public class Count extends Function<Integer> {
 
@@ -31,6 +32,10 @@ public class Count extends Function<Integer> {
     private Count(Class<?> entityClass) {
         super("count", Integer.class);
         this.entityClass = entityClass;
+    }
+
+    public static Count count(QueryAttribute<?,?>... attributes) {
+        return new Count(attributes);
     }
 
     public static Count count(Attribute<?,?>... attributes) {

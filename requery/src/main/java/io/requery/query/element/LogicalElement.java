@@ -20,7 +20,7 @@ import io.requery.query.Condition;
 
 public interface LogicalElement {
 
-    Condition<?> condition();
+    Condition<?, ?> condition();
 
     LogicalOperator operator();
 }

@@ -36,8 +36,11 @@ import java.util.Collection;
  *
  * @param <V> field type
  */
-public abstract class FieldExpression<V> implements Aliasable<Expression<V>>,
-        Functional<V>, Conditional<Condition<V>, V>, Expression<V> {
+public abstract class FieldExpression<V> implements
+    Expression<V>,
+    Functional<V>,
+    Aliasable<Expression<V>>,
+    Conditional<LogicalCondition<? extends Expression<V>, ?>, V> {
 
     protected FieldExpression() {
     }
@@ -127,7 +130,7 @@ public abstract class FieldExpression<V> implements Aliasable<Expression<V>>,
     }
 
     @Override
-    public Condition<V> equal(V value) {
+    public LogicalCondition<? extends Expression<V>, V> equal(V value) {
         if (value == null) { // allowing null value
             return isNull();
         }
@@ -135,113 +138,113 @@ public abstract class FieldExpression<V> implements Aliasable<Expression<V>>,
     }
 
     @Override
-    public Condition<V> notEqual(V value) {
+    public LogicalCondition<? extends Expression<V>, V> notEqual(V value) {
         Objects.requireNotNull(value);
         return new ExpressionCondition<>(this, Operator.NOT_EQUAL, value);
     }
 
     @Override
-    public Condition<V> lessThan(V value) {
+    public LogicalCondition<? extends Expression<V>, V> lessThan(V value) {
         Objects.requireNotNull(value);
         return new ExpressionCondition<>(this, Operator.LESS_THAN, value);
     }
 
     @Override
-    public Condition<V> greaterThan(V value) {
+    public LogicalCondition<? extends Expression<V>, V> greaterThan(V value) {
         Objects.requireNotNull(value);
         return new ExpressionCondition<>(this, Operator.GREATER_THAN, value);
     }
 
     @Override
-    public Condition<V> lessThanOrEqual(V value) {
+    public LogicalCondition<? extends Expression<V>, V> lessThanOrEqual(V value) {
         Objects.requireNotNull(value);
         return new ExpressionCondition<>(this, Operator.LESS_THAN_OR_EQUAL, value);
     }
 
     @Override
-    public Condition<V> greaterThanOrEqual(V value) {
+    public LogicalCondition<? extends Expression<V>, V> greaterThanOrEqual(V value) {
         Objects.requireNotNull(value);
         return new ExpressionCondition<>(this, Operator.GREATER_THAN_OR_EQUAL, value);
     }
 
     @Override
-    public Condition<V> eq(V value) {
+    public LogicalCondition<? extends Expression<V>, V> eq(V value) {
         return equal(value);
     }
 
     @Override
-    public Condition<V> ne(V value) {
+    public LogicalCondition<? extends Expression<V>, V> ne(V value) {
         return notEqual(value);
     }
 
     @Override
-    public Condition<V> lt(V value) {
+    public LogicalCondition<? extends Expression<V>, V> lt(V value) {
         return lessThan(value);
     }
 
     @Override
-    public Condition<V> gt(V value) {
+    public LogicalCondition<? extends Expression<V>, V> gt(V value) {
         return greaterThan(value);
     }
 
     @Override
-    public Condition<V> lte(V value) {
+    public LogicalCondition<? extends Expression<V>, V> lte(V value) {
         return lessThanOrEqual(value);
     }
 
     @Override
-    public Condition<V> gte(V value) {
+    public LogicalCondition<? extends Expression<V>, V> gte(V value) {
         return greaterThanOrEqual(value);
     }
 
     @Override
-    public Condition<V> in(Collection<V> values) {
+    public LogicalCondition<? extends Expression<V>, Collection<V>> in(Collection<V> values) {
         Objects.requireNotNull(values);
         return new ExpressionCondition<>(this, Operator.IN, values);
     }
 
     @Override
-    public Condition<V> notIn(Collection<V> values) {
+    public LogicalCondition<? extends Expression<V>, Collection<V>> notIn(Collection<V> values) {
         Objects.requireNotNull(values);
         return new ExpressionCondition<>(this, Operator.NOT_IN, values);
     }
 
     @Override
-    public Condition<V> in(Return<?> query) {
+    public LogicalCondition<? extends Expression<V>, ? extends Return<?>> in(Return<?> query) {
         Objects.requireNotNull(query);
         return new ExpressionCondition<>(this, Operator.IN, query);
     }
 
     @Override
-    public Condition<V> notIn(Return<?> query) {
+    public LogicalCondition<? extends Expression<V>, ? extends Return<?>> notIn(Return<?> query) {
         Objects.requireNotNull(query);
         return new ExpressionCondition<>(this, Operator.NOT_IN, query);
     }
 
     @Override
-    public Condition<V> isNull() {
+    public LogicalCondition<? extends Expression<V>, V> isNull() {
         return new ExpressionCondition<>(this, Operator.NULL, null);
     }
 
     @Override
-    public Condition<V> notNull() {
+    public LogicalCondition<? extends Expression<V>, V> notNull() {
         return new ExpressionCondition<>(this, Operator.NOT_NULL, null);
     }
 
     @Override
-    public Condition<V> like(String expression) {
+    public LogicalCondition<? extends Expression<V>, String> like(String expression) {
         Objects.requireNotNull(expression);
         return new ExpressionCondition<>(this, Operator.LIKE, expression);
     }
 
     @Override
-    public Condition<V> notLike(String expression) {
+    public LogicalCondition<? extends Expression<V>, String> notLike(String expression) {
         Objects.requireNotNull(expression);
         return new ExpressionCondition<>(this, Operator.NOT_LIKE, expression);
     }
 
     @Override
-    public Condition<V> between(V start, V end) {
+    public LogicalCondition<? extends Expression<V>, Object> between(V start, V end) {
         Objects.requireNotNull(start);
         Objects.requireNotNull(end);
         Object value = new Object[]{start, end};
@@ -267,16 +270,26 @@ public abstract class FieldExpression<V> implements Aliasable<Expression<V>>,
         return Objects.hash(name(), classType(), aliasName());
     }
 
-    private static class ExpressionCondition<X> implements Condition<X> {
+    private static class ExpressionCondition<L, R> implements LogicalCondition<L, R> {
 
-        private final Expression<X> attribute;
         private final Operator operator;
-        private final Object value;
+        private final L leftOperand;
+        private final R rightOperand;
 
-        ExpressionCondition(Expression<X> attribute, Operator operator, Object value) {
-            this.attribute = attribute;
+        ExpressionCondition(L leftOperand, Operator operator, R rightOperand) {
+            this.leftOperand = leftOperand;
             this.operator = operator;
-            this.value = value;
+            this.rightOperand = rightOperand;
+        }
+
+        @Override
+        public <V> LogicalCondition<?, ?> and(Condition<V, ?> condition) {
+            return new ExpressionCondition<>(this, Operator.AND, condition);
+        }
+
+        @Override
+        public <V> LogicalCondition<?, ?> or(Condition<V, ?> condition) {
+            return new ExpressionCondition<>(this, Operator.OR, condition);
         }
 
         @Override
@@ -285,13 +298,29 @@ public abstract class FieldExpression<V> implements Aliasable<Expression<V>>,
         }
 
         @Override
-        public Object value() {
-            return value;
+        public R rightOperand() {
+            return rightOperand;
         }
 
         @Override
-        public Expression<X> expression() {
-            return attribute;
+        public L leftOperand() {
+            return leftOperand;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof ExpressionCondition) {
+                ExpressionCondition other = (ExpressionCondition) obj;
+                return Objects.equals(leftOperand, other.leftOperand) &&
+                    Objects.equals(operator, other.operator) &&
+                    Objects.equals(rightOperand, other.rightOperand);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(leftOperand, rightOperand, operator);
         }
     }
 

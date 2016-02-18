@@ -18,5 +18,5 @@ package io.requery.query;
 
 public interface JoinOn<E> {
 
-    <V> JoinAndOr<E> on(Condition<V> field);
+    <V> JoinAndOr<E> on(Condition<V, ?> field);
 }

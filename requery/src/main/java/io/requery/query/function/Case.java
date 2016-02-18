@@ -16,8 +16,8 @@
 
 package io.requery.query.function;
 
-import io.requery.query.Expression;
 import io.requery.query.Condition;
+import io.requery.query.Expression;
 
 import java.util.ArrayList;
 
@@ -39,7 +39,7 @@ public class Case<E> extends Function<E> {
         return new Case<>(null, type);
     }
 
-    public <U, V> Case<E> when(Condition<U> condition, V then) {
+    public <U, V> Case<E> when(Condition<U, ?> condition, V then) {
         conditions.add(new CaseCondition<>(condition, then));
         return this;
     }
@@ -63,15 +63,15 @@ public class Case<E> extends Function<E> {
     }
 
     public static class CaseCondition<V, W> {
-        private final Condition<V> condition;
+        private final Condition<V, ?> condition;
         private final W then;
 
-        CaseCondition(Condition<V> condition, W then) {
+        CaseCondition(Condition<V, ?> condition, W then) {
             this.condition = condition;
             this.then = then;
         }
 
-        public Condition<V> condition() {
+        public Condition<V, ?> condition() {
             return condition;
         }
 

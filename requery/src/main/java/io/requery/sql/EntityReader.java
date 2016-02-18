@@ -339,7 +339,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             }
             @SuppressWarnings("unchecked")
             Set<QueryAttribute<E, ?>> selection = (Set<QueryAttribute<E, ?>>) expressions;
-            Condition<Object> condition = Attributes.query(keyAttribute).in(map.keySet());
+            Condition<?, ?> condition = Attributes.query(keyAttribute).in(map.keySet());
             if (type.isCacheable()) {
                 final Consumer<E> empty = new Consumer<E>() {
                     @Override

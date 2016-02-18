@@ -16,10 +16,11 @@
 
 package io.requery.query;
 
-public interface Update<E> extends Join<E>, Where<E>,
-    GroupBy<SetHavingOrderByLimit<E>>,
-    OrderBy<Limit<E>>,
-    Return<E> {
-
-    <V> Update<E> set(Expression<V> expression, V value);
+/**
+ * Condition which can be further chained with an and/or with another operation.
+ *
+ * @param <L> left operand type
+ * @param <R> right operand type
+ */
+public interface LogicalCondition<L, R> extends Condition<L, R>, AndOr<LogicalCondition<?, ?>> {
 }

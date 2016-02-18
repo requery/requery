@@ -916,8 +916,26 @@ public abstract class FunctionalTest extends RandomData {
         Person person = randomPerson();
         person.setAge(75);
         data.insert(person);
-        Person p = data.select(Person.class).where(Person.AGE.gte(75)).get().first();
+        Person person2 = randomPerson();
+        person2.setAge(10);
+        person2.setName("Carol");
+        data.insert(person2);
+        Person person3 = randomPerson();
+        person3.setAge(0);
+        person3.setName("Bob");
+        data.insert(person3);
+        List<Person> result = data.select(Person.class)
+            .where( Person.AGE.gt(5).and(Person.AGE.lt(75)).and(Person.NAME.ne("Bob")) )
+            .or(Person.NAME.eq("Bob"))
+            .get().toList();
+        assertTrue(result.contains(person2));
+        assertTrue(result.contains(person3));
 
+        result = data.select(Person.class)
+            .where( Person.AGE.gt(10).or(Person.AGE.eq(75)) )
+            .and(Person.NAME.eq("Bob"))
+            .get().toList();
+        assertTrue(result.isEmpty());
     }
 
     @Test

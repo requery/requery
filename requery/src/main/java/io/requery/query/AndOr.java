@@ -18,7 +18,7 @@ package io.requery.query;
 
 public interface AndOr<Q> {
 
-    <V> Q and(Condition<V> condition);
+    <V> Q and(Condition<V, ?> condition);
 
-    <V> Q or(Condition<V> condition);
+    <V> Q or(Condition<V, ?> condition);
 }

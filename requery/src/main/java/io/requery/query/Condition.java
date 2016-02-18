@@ -16,11 +16,18 @@
 
 package io.requery.query;
 
-public interface Condition<V> {
+/**
+ * Represents a Unary or Binary operation/condition. If a unary operation the right operand is
+ * undefined. Separation between unary/binary may be made more explicit in the future.
+ *
+ * @param <L> left operand type
+ * @param <R> right operand type
+ */
+public interface Condition<L, R> {
+
+    L leftOperand();
 
     Operator operator();
 
-    Object value();
-
-    Expression<V> expression();
+    R rightOperand();
 }

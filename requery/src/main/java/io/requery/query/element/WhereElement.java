@@ -16,14 +16,13 @@
 
 package io.requery.query.element;
 
-import io.requery.query.Expression;
-import io.requery.query.Return;
-import io.requery.query.SetHavingOrderByLimit;
-import io.requery.query.Offset;
-import io.requery.query.Selectable;
-import io.requery.util.Objects;
 import io.requery.query.Condition;
+import io.requery.query.Expression;
 import io.requery.query.Limit;
+import io.requery.query.Offset;
+import io.requery.query.Return;
+import io.requery.query.Selectable;
+import io.requery.query.SetHavingOrderByLimit;
 import io.requery.query.WhereAndOr;
 
 import java.util.Set;
@@ -34,45 +33,23 @@ import java.util.Set;
  * @param <E> result type
  * @author Nikhil Purushe
  */
-public class WhereElement<E> implements WhereAndOr<E>, QueryWrapper<E>, LogicalElement {
+public class WhereElement<E> extends BaseLogicalElement<WhereElement<E>, WhereAndOr<E>>
+    implements WhereAndOr<E>, QueryWrapper<E>, LogicalElement {
 
-    private final Set<WhereElement<E>> elements;
     private final QueryElement<E> query;
-    private final LogicalOperator operator;
-    private final Condition<?> condition;
 
     WhereElement(QueryElement<E> query,
                  Set<WhereElement<E>> where,
-                 Condition<?> condition,
+                 Condition<?,?> condition,
                  LogicalOperator operator) {
-        this.elements = where;
-        this.condition = condition;
+        super(where, condition, operator);
         this.query = query;
-        this.operator = operator;
     }
 
     @Override
-    public Condition<?> condition() {
-        return condition;
-    }
-
-    @Override
-    public LogicalOperator operator() {
-        return operator;
-    }
-
-    @Override
-    public <V> WhereAndOr<E> and(Condition<V> condition) {
-        WhereElement<E> w = new WhereElement<>(query, elements, condition, LogicalOperator.AND);
-        elements.add(w);
-        return w;
-    }
-
-    @Override
-    public <V> WhereAndOr<E> or(Condition<V> condition) {
-        WhereElement<E> w = new WhereElement<>(query, elements, condition, LogicalOperator.OR);
-        elements.add(w);
-        return w;
+    WhereElement<E> newElement(Set<WhereElement<E>> elements, Condition<?,?> condition,
+                               LogicalOperator operator) {
+        return new WhereElement<>(query, elements, condition, operator);
     }
 
     @Override
@@ -128,21 +105,6 @@ public class WhereElement<E> implements WhereAndOr<E>, QueryWrapper<E>, LogicalE
     @Override
     public Selectable<E> except() {
         return query.except();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof WhereElement) {
-            WhereElement other = (WhereElement) obj;
-            return Objects.equals(operator, other.operator) &&
-                Objects.equals(condition, other.condition);
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(operator, condition);
     }
 
     @Override

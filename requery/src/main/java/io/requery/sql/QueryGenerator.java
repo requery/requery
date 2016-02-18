@@ -47,9 +47,13 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.requery.sql.Keyword.*;
+import static io.requery.sql.Keyword.AND;
+import static io.requery.sql.Keyword.OR;
 
 /**
  * Generates a parameterizable SQL statement from a given query.
+ *
+ * @param <E> result type
  *
  * @author Nikhil Purushe
  */
@@ -480,16 +484,7 @@ class QueryGenerator<E> {
         qb.keyword(CASE);
         for (Case.CaseCondition<?,?> condition : function.conditions()) {
             qb.keyword(WHEN);
-            Expression expression = condition.condition().expression();
-            switch (expression.type()) {
-                case ATTRIBUTE:
-                    appendColumn(expression);
-                    break;
-                default:
-                    qb.append(expression.name()).space();
-                    break;
-            }
-            appendCondition(condition.condition());
+            appendOperation(condition.condition());
             qb.keyword(THEN);
             // TODO just some databases need the value inline in a case statement
             if (condition.thenValue() instanceof CharSequence ||
@@ -529,40 +524,58 @@ class QueryGenerator<E> {
         }
     }
 
-    private void appendCondition(Condition<?> condition) {
-        appendOperator(condition.operator());
-        Object value = condition.value();
-        final Expression<?> expression = condition.expression();
-        if (value instanceof Collection) {
-            Collection collection = (Collection) value;
-            qb.openParenthesis();
-            qb.commaSeparated(collection, new QueryBuilder.Appender() {
-                @Override
-                public void append(QueryBuilder qb, Object value) {
-                    appendConditionValue(expression, value);
+    private void appendOperation(Condition condition) {
+        Object leftOperand = condition.leftOperand();
+        if (leftOperand instanceof Expression) {
+            final Expression<?> expression = (Expression<?>) condition.leftOperand();
+            appendColumn(expression);
+            Object value = condition.rightOperand();
+            appendOperator(condition.operator());
+
+            if (value instanceof Collection) {
+                Collection collection = (Collection) value;
+                qb.openParenthesis();
+                qb.commaSeparated(collection, new QueryBuilder.Appender() {
+                    @Override
+                    public void append(QueryBuilder qb, Object value) {
+                        appendConditionValue(expression, value);
+                    }
+                });
+                qb.closeParenthesis();
+            } else if (value instanceof Object[]) {
+                Object[] values = (Object[]) value;
+                if (condition.operator() == Operator.BETWEEN) {
+                    Object begin = values[0];
+                    Object end = values[1];
+                    appendConditionValue(expression, begin);
+                    qb.keyword(AND);
+                    appendConditionValue(expression, end);
+                } else {
+                    for (Object o : values) {
+                        appendConditionValue(expression, o);
+                    }
                 }
-            });
-            qb.closeParenthesis();
-        } else if (value instanceof Object[]) {
-            Object[] values = (Object[]) value;
-            if (condition.operator() == Operator.BETWEEN) {
-                Object begin = values[0];
-                Object end = values[1];
-                appendConditionValue(expression, begin);
-                qb.keyword(AND);
-                appendConditionValue(expression, end);
-            } else {
-                for (Object o : values) {
-                    appendConditionValue(expression, o);
-                }
+            } else if (value instanceof QueryWrapper) {
+                QueryWrapper wrapper = (QueryWrapper) value;
+                qb.openParenthesis();
+                mergeQuery(wrapper);
+                qb.closeParenthesis().space();
+            } else if (value instanceof Condition) {
+                appendOperation((Condition) value);
+            } else if (value != null) {
+                appendConditionValue(expression, value);
             }
-        } else if (value instanceof QueryWrapper) {
-            QueryWrapper wrapper = (QueryWrapper) value;
-            qb.openParenthesis();
-            mergeQuery(wrapper);
-            qb.closeParenthesis().space();
-        } else if (value != null) {
-            appendConditionValue(expression, value);
+        } else if(leftOperand instanceof Condition) {
+            appendOperation((Condition) leftOperand);
+            appendOperator(condition.operator());
+            Object value = condition.rightOperand();
+            if (value instanceof Condition) {
+                appendOperation((Condition) value);
+            } else {
+                throw new IllegalStateException();
+            }
+        } else {
+            throw new IllegalStateException("unknown start expression type " + leftOperand);
         }
     }
 
@@ -588,15 +601,29 @@ class QueryGenerator<E> {
         }
     }
 
-    private void appendConditional(LogicalElement where) {
-        LogicalOperator op = where.operator();
+    private void appendConditional(LogicalElement element) {
+        LogicalOperator op = element.operator();
         if (op != null) {
-            qb.append(op.toString()).space();
+            switch (op) {
+                case AND:
+                    qb.keyword(AND);
+                    break;
+                case OR:
+                    qb.keyword(OR);
+                    break;
+            }
         }
-        appendColumn(where.condition().expression());
-        Condition<?> condition = where.condition();
-        if (condition != null) {
-            appendCondition(condition);
+        Condition condition = element.condition();
+        boolean nested = false;
+        if (condition.rightOperand() instanceof Condition) {
+            nested = true;
+        }
+        if (nested) {
+            qb.openParenthesis();
+        }
+        appendOperation(condition);
+        if (nested) {
+            qb.closeParenthesis().space();
         }
     }
 
@@ -652,6 +679,12 @@ class QueryGenerator<E> {
             case NOT_NULL:
                 qb.keyword(IS, NOT, NULL);
                 break;
+            case AND:
+                qb.keyword(AND);
+                break;
+            case OR:
+                qb.keyword(OR);
+                break;
         }
     }
 
@@ -705,5 +738,4 @@ class QueryGenerator<E> {
             qb.append(alias + "." + expression.name()).space();
         }
     }
-
 }
