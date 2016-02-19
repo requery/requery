@@ -215,6 +215,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             if (expression instanceof Attribute) {
                 @SuppressWarnings("unchecked")
                 Attribute<E, ?> attribute = (Attribute) expression;
+                // if it's a foreign key its resolved as part of the basic properties
                 if (attribute.isAssociation()) {
                     refreshAssociation(proxy, attribute);
                 }
@@ -227,6 +228,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         Supplier<Result<S>> query = associativeQuery(proxy, attribute);
         switch (attribute.cardinality()) {
             case ONE_TO_ONE:
+            case MANY_TO_ONE:
                 S value = query == null ? null : query.get().firstOrNull();
                 proxy.set(attribute, attribute.classType().cast(value), PropertyState.LOADED);
                 break;
@@ -248,7 +250,8 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                                                                Attribute<E, ?> attribute) {
         switch (attribute.cardinality()) {
             case ONE_TO_ONE:
-            case ONE_TO_MANY: {
+            case ONE_TO_MANY:
+            case MANY_TO_ONE: {
                 Object key;
                 QueryAttribute<Q, Object> keyAttribute;
                 Class<Q> uType;
@@ -299,7 +302,6 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     .join(type.classType()).on(tKey.equal(tId))
                     .where(tId.equal(id));
             }
-            case MANY_TO_ONE:
             default:
                 throw new IllegalStateException();
         }

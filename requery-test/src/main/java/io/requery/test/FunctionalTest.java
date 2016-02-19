@@ -565,6 +565,20 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testManyToOneRefresh() {
+        Person person = randomPerson();
+        Phone phone1 = randomPhone();
+        Phone phone2 = randomPhone();
+        person.getPhoneNumbers().add(phone1);
+        person.getPhoneNumbers().add(phone2);
+        data.insert(person);
+        assertSame(person, phone1.getOwner());
+        assertSame(person, phone2.getOwner());
+        data.refresh(phone1, Phone.OWNER);
+        data.refresh(phone2, Phone.OWNER);
+    }
+
+    @Test
     public void testInsertManyToMany() {
         Person person = randomPerson();
         data.insert(person);
