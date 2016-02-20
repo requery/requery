@@ -17,13 +17,13 @@
 package io.requery.sql.type;
 
 import io.requery.sql.Keyword;
-import io.requery.sql.DelegateType;
+import io.requery.sql.BasicType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class VarBinaryType extends DelegateType<byte[]> {
+public class VarBinaryType extends BasicType<byte[]> {
 
     public VarBinaryType() {
         super(byte[].class, Types.VARBINARY);

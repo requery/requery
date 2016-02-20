@@ -18,7 +18,7 @@ package io.requery.sql.platform;
 
 import io.requery.sql.AutoIncrementColumnDefinition;
 import io.requery.sql.BasicTypes;
-import io.requery.sql.DelegateType;
+import io.requery.sql.BasicType;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.Keyword;
 import io.requery.sql.LimitDefinition;
@@ -39,7 +39,7 @@ public class SQLite extends Generic {
 
     // in SQLite BIGINT can be treated as just an integer, this handles the case when an long is
     // used as generated key
-    private static class LongType extends DelegateType<Long> {
+    private static class LongType extends BasicType<Long> {
 
         public LongType() {
             super(Long.class, Types.INTEGER);

@@ -17,14 +17,14 @@
 package io.requery.sql.type;
 
 import io.requery.sql.Keyword;
-import io.requery.sql.DelegateType;
+import io.requery.sql.BasicType;
 
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class BlobType extends DelegateType<Blob> {
+public class BlobType extends BasicType<Blob> {
 
     public BlobType() {
         super(Blob.class, Types.BLOB);

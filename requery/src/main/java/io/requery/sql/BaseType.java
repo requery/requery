@@ -35,6 +35,12 @@ public abstract class BaseType<T> implements FieldType<T> {
     private final Class<T> type;
     private final int sqlType;
 
+    /**
+     * Instantiates a new type instance.
+     *
+     * @param type    java class type being mapped
+     * @param sqlType the {@link java.sql.Types} being mapped
+     */
     protected BaseType(Class<T> type, int sqlType) {
         this.type = type;
         this.sqlType = sqlType;
@@ -52,9 +58,9 @@ public abstract class BaseType<T> implements FieldType<T> {
     @Override
     public void write(PreparedStatement statement, int index, T value) throws SQLException {
         if (value == null) {
-            statement.setNull(index, sqlType());
+            statement.setNull(index, sqlType);
         } else {
-            statement.setObject(index, value, sqlType());
+            statement.setObject(index, value, sqlType);
         }
     }
 

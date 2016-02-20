@@ -19,12 +19,33 @@ package io.requery.sql;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public abstract class DelegateType<T> extends BaseType<T> {
+/**
+ * Reads a result using a specific {@link ResultSet} get method rather than
+ * {@link ResultSet#getObject(int)}.
+ *
+ * @param <T> java type
+ */
+public abstract class BasicType<T> extends BaseType<T> {
 
-    protected DelegateType(Class<T> type, int sqlType) {
+    /**
+     * Instantiates a new type instance.
+     *
+     * @param type    java class type being mapped
+     * @param sqlType the {@link java.sql.Types} being mapped
+     */
+    protected BasicType(Class<T> type, int sqlType) {
         super(type, sqlType);
     }
 
+    /**
+     * Reads a result using a specific {@link ResultSet} get method rather than
+     * {@link ResultSet#getObject(int)}.
+     *
+     * @param results {@link ResultSet} set to the index of the result to be read
+     * @param column  column index to read
+     * @return the type from the {@link ResultSet}
+     * @throws SQLException
+     */
     public abstract T fromResult(ResultSet results, int column) throws SQLException;
 
     @Override

@@ -17,7 +17,7 @@
 package io.requery.sql.type;
 
 import io.requery.sql.Keyword;
-import io.requery.sql.DelegateType;
+import io.requery.sql.BasicType;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -25,7 +25,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class DateType extends DelegateType<Date> {
+public class DateType extends BasicType<Date> {
 
     public DateType() {
         super(Date.class, Types.DATE);

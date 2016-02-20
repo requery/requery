@@ -17,14 +17,14 @@
 package io.requery.sql.type;
 
 import io.requery.sql.Keyword;
-import io.requery.sql.DelegateType;
+import io.requery.sql.BasicType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Types;
 
-public class TimeType extends DelegateType<Time> {
+public class TimeType extends BasicType<Time> {
 
     public TimeType() {
         super(Time.class, Types.TIME);
