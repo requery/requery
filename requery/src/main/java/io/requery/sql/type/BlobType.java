@@ -27,7 +27,7 @@ import java.sql.Types;
 public class BlobType extends DelegateType<Blob> {
 
     public BlobType() {
-        super(Blob.class, Types.BINARY);
+        super(Blob.class, Types.BLOB);
     }
 
     @Override

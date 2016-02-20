@@ -27,7 +27,7 @@ import java.sql.Types;
 public class ClobType extends DelegateType<Clob> {
 
     public ClobType() {
-        super(Clob.class, Types.BINARY);
+        super(Clob.class, Types.CLOB);
     }
 
     @Override

@@ -27,7 +27,7 @@ import java.sql.Types;
 public class TimeStampType extends DelegateType<Timestamp> {
 
     public TimeStampType() {
-        super(Timestamp.class, Types.DATE);
+        super(Timestamp.class, Types.TIMESTAMP);
     }
 
     @Override
@@ -37,6 +37,6 @@ public class TimeStampType extends DelegateType<Timestamp> {
 
     @Override
     public Keyword identifier() {
-        return Keyword.TIME;
+        return Keyword.TIMESTAMP;
     }
 }

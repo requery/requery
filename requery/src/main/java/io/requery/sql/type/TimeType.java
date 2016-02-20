@@ -27,7 +27,7 @@ import java.sql.Types;
 public class TimeType extends DelegateType<Time> {
 
     public TimeType() {
-        super(Time.class, Types.DATE);
+        super(Time.class, Types.TIME);
     }
 
     @Override
