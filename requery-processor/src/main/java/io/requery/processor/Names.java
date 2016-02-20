@@ -69,7 +69,12 @@ final class Names {
 
     public static String removeMemberPrefixes(CharSequence name) {
         String string = name.toString();
-        if (string.startsWith("m") || string.startsWith("_")) {
+        if (string.startsWith("_")) {
+            return string.substring(1);
+        }
+        // detect mSomething names, which are common in Android apps
+        if (string.length() > 1 &&
+            string.startsWith("m") && Character.isUpperCase(string.charAt(1))) {
             return string.substring(1);
         }
         return string;
