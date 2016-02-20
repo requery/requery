@@ -58,7 +58,7 @@ public class AbstractPerson implements Serializable {
     @OneToMany
     protected List<Phone> phoneNumbersList;
 
-    @ManyToMany(mappedBy = "persons")
+    @ManyToMany(mappedBy = "members")
     protected MutableResult<Group> groups;
 
     @Lazy

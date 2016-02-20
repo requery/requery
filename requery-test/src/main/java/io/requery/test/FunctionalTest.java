@@ -599,6 +599,9 @@ public abstract class FunctionalTest extends RandomData {
         }
         data.refresh(person, Person.GROUPS);
         assertTrue(added.containsAll(person.getGroups().toList()));
+        for (Group group : added) {
+            assertTrue(group.getMembers().toList().contains(person));
+        }
     }
 
     @Test

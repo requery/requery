@@ -30,22 +30,11 @@ public class AbstractGroup {
     @Version
     protected int version;
 
-    /*
-    @JunctionTable(columns = {
-            @Column(name = "personId", foreignKey =
-                @ForeignKey(references = AbstractPerson.class, referencedColumn = "id")),
-            @Column(name = "groupId", foreignKey =
-                @ForeignKey(references = AbstractGroup.class, referencedColumn = "id")) } )
-    */
     @JunctionTable
     @ManyToMany
-    protected MutableResult<Person> persons;
+    protected MutableResult<Person> members;
 
-    //@Column("CURRENT_DATE")
     protected java.sql.Date createdDate;
-
-    //@Column("CURRENT_TIMESTAMP")
-    //protected java.sql.Timestamp createdTimestamp;
 
     @Transient
     protected String temporaryName;
