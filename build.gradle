@@ -30,7 +30,10 @@ idea {
 version = '1.0-SNAPSHOT'
 
 Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
+File localProperties = project.rootProject.file('local.properties')
+if (localProperties.exists()) {
+    properties.load(localProperties.newDataInputStream())
+}
 
 configure([project(':requery'), project(':requery-processor')]) {
     apply plugin: 'java'

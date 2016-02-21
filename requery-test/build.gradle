@@ -15,8 +15,8 @@ dependencies {
     compile 'io.reactivex:rxjava:1.1.1'
     compile 'org.eclipse.persistence:javax.persistence:2.1.1'
     testCompile fileTree(include: ['*.jar'], dir: 'test-libs')
-    testCompile 'org.openjdk.jmh:jmh-core:1.11.2'
-    testCompile 'org.openjdk.jmh:jmh-generator-annprocess:1.11.2'
+    testCompile 'org.openjdk.jmh:jmh-core:1.11.3'
+    testCompile 'org.openjdk.jmh:jmh-generator-annprocess:1.11.3'
     testCompile 'mysql:mysql-connector-java:5.1.38'
     testCompile 'org.postgresql:postgresql:9.4.1207.jre7'
     testCompile 'org.xerial:sqlite-jdbc:3.8.11.1'

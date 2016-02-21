@@ -37,17 +37,26 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class ParameterizedFunctionalTest extends FunctionalTest {
 
+    private static Collection<Platform> EMBEDDED = Arrays.<Platform>asList(
+        new H2(),
+        new HSQL(),
+        new Derby(),
+        new SQLite());
+
+    private static Collection<Platform> ALL = Arrays.<Platform>asList(
+        new Oracle(),
+        new SQLServer(),
+        new MySQL(),
+        new PostgresSQL(),
+        new Derby(),
+        new SQLite(),
+        new H2(),
+        new HSQL());
+
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Platform> data() {
-        return Arrays.<Platform>asList(
-            new Oracle(),
-            new SQLServer(),
-            new MySQL(),
-            new PostgresSQL(),
-            new Derby(),
-            new SQLite(),
-            new H2(),
-            new HSQL());
+        // TODO configure from gradle
+        return EMBEDDED; // ALL;
     }
 
     private Platform platform;

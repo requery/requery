@@ -3,10 +3,10 @@ package io.requery.test;
 import io.requery.meta.EntityModel;
 import io.requery.query.Result;
 import io.requery.sql.EntityDataStore;
+import io.requery.sql.Platform;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.H2;
-import io.requery.sql.Platform;
 import io.requery.test.model.Models;
 import io.requery.test.model.Person;
 import org.junit.Test;
@@ -16,6 +16,7 @@ import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.runner.NoBenchmarksException;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -56,13 +57,17 @@ public class BenchmarkTest {
             .mode(Mode.SingleShotTime)
             .timeUnit(TimeUnit.MILLISECONDS)
             .warmupTime(TimeValue.seconds(5))
-            .warmupIterations(0)
+            .warmupIterations(2)
             .measurementTime(TimeValue.seconds(10))
             .measurementIterations(5)
             .threads(1)
             .forks(2)
             .build();
-        new Runner(options).run();
+        try {
+            new Runner(options).run();
+        } catch (NoBenchmarksException ignored) {
+            // expected? only happens from gradle
+        }
     }
 
     @Setup
