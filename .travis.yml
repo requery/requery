@@ -1,4 +1,5 @@
 language: android
+sudo: required
 jdk:
     - oraclejdk8
 android:
@@ -7,3 +8,7 @@ android:
     - build-tools-23.0.2
     - android-23
     - extra
+# https://github.com/travis-ci/travis-ci/issues/3259
+script:
+  - sudo apt-get update && sudo apt-get install oracle-java8-installer
+  - java -version
