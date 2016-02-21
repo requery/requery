@@ -134,13 +134,20 @@ public enum DatabaseType {
             CommonDataSource dataSource = dataSourceClass.newInstance();
             String fileName = platformClass.getSimpleName().toLowerCase();
             Properties properties = new Properties();
-            File file = new File(
-                "src/test/resources/io/requery/test/" + fileName + ".properties");
-            if (file.exists()) {
-                try (FileInputStream stream = new FileInputStream(file)) {
-                    properties.load(stream);
+            String localPath = "src/test/resources/io/requery/test/local/";
+            String ciPath = "src/test/resources/io/requery/test/ci/";
+            File[] files = new File[] {
+                new File(localPath + fileName + ".properties"),
+                new File(ciPath + fileName + ".properties")};
+            for (File file : files) {
+                if (file.exists()) {
+                    try (FileInputStream stream = new FileInputStream(file)) {
+                        properties.load(stream);
+                    }
+                    break;
                 }
             }
+
             String server = properties.getProperty("server");
             Integer port = Integer.parseInt(properties.getProperty("port"));
             String user = properties.getProperty("user");

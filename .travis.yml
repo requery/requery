@@ -1,14 +1,23 @@
 language: android
 sudo: required
-dist: trusty # https://github.com/travis-ci/travis-ci/issues/3259
+dist: trusty
 jdk:
-    - oraclejdk8
+  - oraclejdk8
+
 android:
   components:
     - tools
     - build-tools-23.0.2
     - android-23
     - extra
+
+services:
+  - postgresql
+  - mysql
+
+before_install:
+  - mysql -e "create database IF NOT EXISTS testdb;" -uroot
+  - psql -c 'create database testdb;' -U postgres
 
 before_script:
   - echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a
