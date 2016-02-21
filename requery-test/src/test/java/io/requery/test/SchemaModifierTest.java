@@ -25,7 +25,6 @@ import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.Derby;
 import io.requery.sql.platform.H2;
 import io.requery.sql.platform.HSQL;
-import io.requery.sql.platform.PostgresSQL;
 import io.requery.test.model.Person;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +42,7 @@ public class SchemaModifierTest extends RandomData {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Platform> data() {
-        return Arrays.<Platform>asList(new PostgresSQL(), new H2(), new HSQL(), new Derby());
+        return Arrays.<Platform>asList(new H2(), new HSQL(), new Derby());
     }
 
     private Platform platform;

@@ -18,18 +18,18 @@ package io.requery.test;
 
 import io.requery.Persistable;
 import io.requery.TransactionIsolation;
+import io.requery.TransactionListener;
 import io.requery.async.CompletableEntityStore;
 import io.requery.async.CompletionStageEntityStore;
-import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
 import io.requery.proxy.EntityProxy;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
 import io.requery.sql.EntityDataStore;
+import io.requery.sql.Platform;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
-import io.requery.sql.Platform;
-import io.requery.sql.platform.PostgresSQL;
+import io.requery.sql.platform.HSQL;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
 import io.requery.util.function.Supplier;
@@ -66,7 +66,7 @@ public class CompletableEntityStoreTest extends RandomData {
 
     @Before
     public void setup() throws SQLException {
-        Platform platform = new PostgresSQL();
+        Platform platform = new HSQL();
         CommonDataSource dataSource = DatabaseType.getDataSource(platform);
         EntityModel model = io.requery.test.model.Models.DEFAULT;
 
