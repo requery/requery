@@ -2,7 +2,8 @@
 
 A light but powerful ORM and SQL query generator for Java/Android with RxJava and Java 8 support.
 
-#### Quick overview
+Examples
+--------
 
 **Entities:**
 
