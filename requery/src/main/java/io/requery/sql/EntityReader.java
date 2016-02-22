@@ -35,6 +35,8 @@ import io.requery.query.Condition;
 import io.requery.query.Expression;
 import io.requery.query.Result;
 import io.requery.query.Tuple;
+import io.requery.query.element.QueryElement;
+import io.requery.query.element.QueryType;
 import io.requery.util.Objects;
 import io.requery.util.function.Consumer;
 import io.requery.util.function.Predicate;
@@ -46,7 +48,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -74,7 +75,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     private final EntityContext<S> context;
     private final Queryable<S> queryable;
     private final Set<Expression<?>> defaultSelection;
-    private final Attribute<E, ?> keyAttribute;
+    private final QueryAttribute<E, ?> keyAttribute;
 
     EntityReader(Type<E> type, EntityContext<S> context, Queryable<S> queryable) {
         this.type = Objects.requireNotNull(type);
@@ -90,7 +91,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     Expression<?> expression = aliasVersion(attribute);
                     selectAttributes.add(expression);
                 } else {
-                    selectAttributes.add(attribute);
+                    selectAttributes.add((Expression)attribute);
                 }
             }
         }
@@ -98,7 +99,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         // optimization for single key attribute
         int count = type.keyAttributes().size();
         if (count == 1) {
-            keyAttribute = type.keyAttributes().iterator().next();
+            keyAttribute = Attributes.query(type.keyAttributes().iterator().next());
         } else {
             keyAttribute = null;
         }
@@ -115,7 +116,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             Expression<?> expression = (Expression<?>) attribute;
             return new AliasedExpression<>(expression, columnName, expression.name());
         }
-        return attribute;
+        return (Expression) attribute;
     }
 
     @Override
@@ -125,16 +126,16 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
 
     public E refresh(E entity, EntityProxy<E> proxy) {
         // refresh only the attributes that were loaded...
-        final Set<Attribute<E, ?>> refreshAttributes = new HashSet<>();
+        final Set<Attribute<E, ?>> refreshAttributes = new LinkedHashSet<>();
         for (Property<E, ?> property : proxy) {
-            if(property.state() == PropertyState.LOADED) {
+            if (property.state() == PropertyState.LOADED) {
                 refreshAttributes.add(property.attribute());
             }
         }
         return refresh(entity, proxy, refreshAttributes);
     }
 
-    E refreshAll(E entity, EntityProxy<E> proxy) {
+    public E refreshAll(E entity, EntityProxy<E> proxy) {
         return refresh(entity, proxy, type.attributes());
     }
 
@@ -154,7 +155,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     }
 
     private E refresh(E entity, EntityProxy<E> proxy,
-                      final Set<? extends Expression<?>> attributes) {
+                      final Set<Attribute<E, ?>> attributes) {
 
         Predicate<Property<E, ?>> basicFilter = new Predicate<Property<E, ?>>() {
             @Override
@@ -211,14 +212,10 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             }
         }
         // refresh associations
-        for (Expression expression : attributes) {
-            if (expression instanceof Attribute) {
-                @SuppressWarnings("unchecked")
-                Attribute<E, ?> attribute = (Attribute) expression;
-                // if it's a foreign key its resolved as part of the basic properties
-                if (attribute.isAssociation()) {
-                    refreshAssociation(proxy, attribute);
-                }
+        for (Attribute<E, ?> attribute : attributes) {
+            // if it's a foreign key its resolved as part of the basic properties
+            if (attribute.isAssociation()) {
+                refreshAssociation(proxy, attribute);
             }
         }
         return entity;
@@ -309,27 +306,27 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
 
     @SafeVarargs
     final void batchRefresh(Iterable<E> entities, Attribute<E, ?>... attributes) {
-        Set<? extends Expression<?>> expressions;
-        if (attributes == null || attributes.length == 0) {
-            expressions = defaultSelection;
-        } else {
-            Set<Attribute<E, ?>> set = new LinkedHashSet<>(attributes.length);
-            if (keyAttribute != null) {
-                set.add(keyAttribute);
-            }
-            for (Attribute<E, ?> attribute : attributes) {
-                if (!attribute.isAssociation()) {
-                    set.add(attribute);
-                }
-            }
-            expressions = set;
-        }
         if (keyAttribute == null) {
             // non optimal case objects with multiple keys or no keys
             for (E entity : entities) {
-                refresh(entity, type.proxyProvider().apply(entity), expressions);
+                refresh(entity, type.proxyProvider().apply(entity), attributes);
             }
         } else {
+            Set<Expression<?>> selection = new LinkedHashSet<>();
+            if (attributes == null || attributes.length == 0) {
+                selection.addAll(defaultSelection);
+            } else {
+                selection.add(keyAttribute);
+                for (Attribute<E, ?> attribute : attributes) {
+                    if (attribute.isVersion()) {
+                        selection.add(aliasVersion(attribute));
+                    } else if (!attribute.isAssociation()) {
+                        QueryAttribute<E, ?> queryAttribute = Attributes.query(attribute);
+                        selection.add(queryAttribute);
+                    }
+                }
+            }
+
             Map<Object, EntityProxy<E>> map = new HashMap<>();
             for (E entity : entities) {
                 EntityProxy<E> proxy = type.proxyProvider().apply(entity);
@@ -339,8 +336,6 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 }
                 map.put(key, proxy);
             }
-            @SuppressWarnings("unchecked")
-            Set<QueryAttribute<E, ?>> selection = (Set<QueryAttribute<E, ?>>) expressions;
             Condition<?, ?> condition = Attributes.query(keyAttribute).in(map.keySet());
             if (type.isCacheable()) {
                 final Consumer<E> empty = new Consumer<E>() {
@@ -349,24 +344,30 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     }
                 };
                 // readResult will merge the results into the target object in cache mode
-                try (Result<E> result =
-                         queryable.select(type.classType(), selection).where(condition).get()) {
+                EntityReader<E, S> reader = context.read(type.classType());
+                EntityResultReader<E, S> resultReader = new EntityResultReader<>(reader);
+                SelectOperation<E> select = new SelectOperation<>(context, resultReader);
+                QueryElement<Result<E>> query =
+                    new QueryElement<>(QueryType.SELECT, context.model(), select);
 
+                try (Result<E> result = query.select(selection).where(condition).get()) {
                     result.each(empty);
                 }
             } else {
                 try (Result<Tuple> result = queryable.select(selection).where(condition).get()) {
                     for (Tuple tuple : result) {
-                        Object key = tuple.get(keyAttribute);
+                        Object key = tuple.get((Expression) keyAttribute);
                         EntityProxy<E> proxy = map.get(key);
                         synchronized (proxy.syncObject()) {
-                            for (Expression expression : expressions) {
-                                if (expression instanceof Attribute) {
-                                    Attribute<E, Object> attribute =
-                                        Attributes.query((Attribute) expression);
-                                    Object value = tuple.get(expression);
-                                    proxy.set(attribute, value, PropertyState.LOADED);
+                            for (Expression expression: selection) {
+                                Object value = tuple.get(expression);
+                                if (expression instanceof AliasedExpression) {
+                                    AliasedExpression aliased = (AliasedExpression) expression;
+                                    expression = aliased.innerExpression();
                                 }
+                                @SuppressWarnings("unchecked")
+                                Attribute<E, ?> attribute = (Attribute<E, ?>)expression;
+                                proxy.propertyOf(attribute).setObject(value, PropertyState.LOADED);
                             }
                         }
                     }
@@ -405,7 +406,8 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 LinkedHashMap<Attribute<E, ?>, Object> keys = new LinkedHashMap<>(count);
                 for (Attribute<E, ?> attribute : type.keyAttributes()) {
                     String name = attribute.name();
-                    Object value = mapping.read(attribute, results, results.findColumn(name));
+                    int column = results.findColumn(name);
+                    Object value = mapping.read((Expression) attribute, results, column);
                     keys.put(attribute, value);
                 }
                 key = new CompositeKey<>(keys);
@@ -459,7 +461,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
 
                     Attribute referenced = Attributes.get(attribute.referencedAttribute());
 
-                    Object key = mapping.read(referenced, results, index);
+                    Object key = mapping.read((Expression) referenced, results, index);
                     if (key != null) {
                         Object value = property.get();
                         if (value == null) {
@@ -479,7 +481,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
 
                 } else if (overwrite || property.state() != PropertyState.MODIFIED) {
 
-                    Object value = mapping.read(property.attribute(), results, index);
+                    Object value = mapping.read((Expression)property.attribute(), results, index);
                     property.setObject(value, PropertyState.LOADED);
                 }
                 index++;

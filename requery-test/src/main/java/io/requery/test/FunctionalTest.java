@@ -428,12 +428,17 @@ public abstract class FunctionalTest extends RandomData {
         group.setName("group");
         group.setType(GroupType.PRIVATE);
         data.insert(group);
-        //Assert.assertTrue(group.version() == 1);
         group.setType(GroupType.PUBLIC);
         data.update(group);
         data.refresh(group, Group.VERSION);
         //System.out.println("group.version + " + group.version());
         assertTrue(group.getVersion() > 0);
+
+        Group group2 = new Group();
+        group2.setName("group2");
+        group2.setType(GroupType.PRIVATE);
+        data.insert(group2);
+        data.refresh(Arrays.asList(group, group2), Group.VERSION);
     }
 
     @Test

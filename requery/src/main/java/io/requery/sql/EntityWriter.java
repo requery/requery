@@ -275,7 +275,7 @@ class EntityWriter<E extends S, S> {
                 resultIndex = results.findColumn(column);
             } catch (SQLException ignored) {
             }
-            generatedKey = context.mapping().read(key, results, resultIndex);
+            generatedKey = context.mapping().read((Expression)key, results, resultIndex);
             if (generatedKey == null) {
                 throw new MissingKeyException(proxy);
             }

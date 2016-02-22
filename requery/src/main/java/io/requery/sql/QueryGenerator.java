@@ -115,15 +115,15 @@ class QueryGenerator<E> {
     }
 
     private void forceOrderBy(LimitDefinition limitSupport) {
-        if(limitSupport.requireOrderBy() && query.getLimit() != null &&
-                (query.orderByExpressions() == null || query.orderByExpressions().isEmpty())) {
+        if (limitSupport.requireOrderBy() && query.getLimit() != null &&
+            (query.orderByExpressions() == null || query.orderByExpressions().isEmpty())) {
 
             Set<Type<?>> types = query.entityTypes();
-            if(types != null && !types.isEmpty()) {
+            if (types != null && !types.isEmpty()) {
                 Type<?> type = types.iterator().next();
-                for(Attribute attribute : type.attributes()) {
-                    if(attribute.isKey()) {
-                        query.orderBy(attribute);
+                for (Attribute attribute : type.attributes()) {
+                    if (attribute.isKey()) {
+                        query.orderBy((Expression) attribute);
                         break;
                     }
                 }

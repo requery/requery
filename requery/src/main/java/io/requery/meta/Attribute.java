@@ -20,7 +20,6 @@ import io.requery.CascadeAction;
 import io.requery.Converter;
 import io.requery.ReferentialAction;
 import io.requery.proxy.Field;
-import io.requery.query.Expression;
 import io.requery.util.function.Supplier;
 
 import java.util.Set;
@@ -33,18 +32,16 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-public interface Attribute<T, V> extends Expression<V> {
+public interface Attribute<T, V> {
 
     /**
      * @return the type name, not this can be different from the member/field name.
      */
-    @Override
     String name();
 
     /**
      * @return the type of {@link Class} this attribute holds.
      */
-    @Override
     Class<V> classType();
 
     /**
