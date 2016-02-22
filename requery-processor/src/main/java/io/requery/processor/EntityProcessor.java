@@ -101,7 +101,7 @@ public final class EntityProcessor extends AbstractProcessor {
         }
         if (ElementValidator.hasErrors(validators)) {
             hasErrors = true;
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING,
                 "model has errors code generation may fail");
         }
 

@@ -72,11 +72,9 @@ class EntityGraphValidator {
                         graph.mappedAttributes(entity, attribute, referenced);
 
                     if (mappings.size() == 1) {
-                        // validate the relation ship
+                        // validate the relationship
                         AttributeDescriptor mapped = mappings.iterator().next();
                         validateRelationship(attributeValidator, attribute, mapped);
-
-                        attributeValidator.note("mapping: " + attribute + " -> " + mapped);
 
                     } else if (mappings.size() > 1) {
                         attributeValidator.warning(mappings.size() + " mappings found for: " +

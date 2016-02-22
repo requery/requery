@@ -78,14 +78,10 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                     element.getModifiers().contains(Modifier.FINAL)) {
                     continue;
                 }
-                if (element.getModifiers().contains(Modifier.PRIVATE)) {
-                    processingEnvironment.getMessager().printMessage(Diagnostic.Kind.NOTE,
-                        "Field " + element.getSimpleName() + " of " +
-                            typeElement.getQualifiedName() +
-                            " is private and will not be persistable");
-                } else {
+
+                if (!element.getModifiers().contains(Modifier.PRIVATE)) {
                     computeAttribute(element);
-                }
+                } // private fields are skipped
             }
         }
     }
@@ -171,10 +167,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                     if (isMethodProcessable(element)) {
                         Optional<AttributeMember> attribute = computeAttribute(element);
                         attribute.ifPresent(a -> a.annotations().put(type, annotation));
-                    } else {
-                        processingEnvironment.getMessager().printMessage(Diagnostic.Kind.NOTE,
-                            annotationElement.getSimpleName() + " not applicable to element ",
-                            annotatedElement);
                     }
                 }
                 break;

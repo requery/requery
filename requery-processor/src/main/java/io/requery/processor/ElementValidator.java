@@ -42,10 +42,6 @@ class ElementValidator {
         this.messager = processingEnvironment.getMessager();
     }
 
-    public void note(String message) {
-        messager.printMessage(Diagnostic.Kind.NOTE, message, element);
-    }
-
     public void error(String message) {
         hasErrors = true;
         messager.printMessage(Diagnostic.Kind.ERROR, message, element);
