@@ -2,7 +2,9 @@
 
 A light but powerful ORM and SQL query generator for Java/Android with RxJava and Java 8 support.
 
-Defining entities:
+#### Quick overview
+
+**Entities:**
 
 ```java
 @Entity
@@ -29,7 +31,7 @@ abstract class AbstractPerson {
 }
 
 ```
-or from an interface:
+or from an **interface:**
 
 ```java
 @Entity
@@ -47,20 +49,19 @@ public interface Person {
 }
 ```
 
-Queries:
+**Queries:**
 
 ```java
-List<Person> query = data
+Result<Person> query = data
     .select(Person.class)
-    .where(Person.NAME.lower().like("b%"))
+    .where(Person.NAME.lower().like("b%")).and(Person.AGE.gt(20))
     .orderBy(Person.AGE.desc())
     .limit(5)
-    .get().list();
+    .get();
 ```
 
-Relationships: Instead of collections such as sets and lists which have to be materialized with
-all the results, use query results directly in an entity from which you can create a Stream,
-RxJava Observable or plain iterator. (sets and lists are supported to)
+**Relationships:** represent relations more efficiently with Java 8 Streams, RxJava Observables or
+plain iterables. (sets and lists are supported to)
 
 ```java
 @Entity
@@ -79,7 +80,7 @@ abstract class AbstractPerson {
 }
 ```
 
-Java 8 [streams](https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html):
+**Java 8 [streams](https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html):**
 
 ```java
 data.select(Person.class)
@@ -88,7 +89,7 @@ data.select(Person.class)
     .stream().forEach(System.out::println);
 ```
 
-Java 8 optional and time support:
+**Java 8 optional and time support:**
 
 ```java
 public interface Person {
@@ -102,7 +103,7 @@ public interface Person {
 }
 ```
 
-[RxJava](https://github.com/ReactiveX/RxJava) [Observables](http://reactivex.io/documentation/observable.html):
+**[RxJava](https://github.com/ReactiveX/RxJava) [Observables](http://reactivex.io/documentation/observable.html):**
 
 ```java
 Observable<Person> observable = data
@@ -112,7 +113,7 @@ Observable<Person> observable = data
     .toObservable();
 ```
 
-[RxJava](https://github.com/ReactiveX/RxJava) observe query on table changes:
+**[RxJava](https://github.com/ReactiveX/RxJava) observe query on table changes:**
 
 ```java
 Observable<Person> observable = data
@@ -122,7 +123,7 @@ Observable<Person> observable = data
     .toSelfObservable().subscribe(::updateFromResult);
 ```
 
-Optional Read/write separation. If you prefer separating read from writes mark the entity as
+**Read/write separation** If you prefer separating read from writes mark the entity as
 @ReadOnly and use update statements to modify data instead.
 
 ```java
@@ -168,9 +169,13 @@ Relationships
 
 You can define One-to-One, One-to-Many, Many-to-One, and Many-to-Many relations in your models using
 annotations. Relationships can be navigated in both directions. Of many type relations can be loaded
-into standard java collection objects or into a more efficient iterable only object. Many-to-Many
-junction tables can be generated automatically. Additionally the relation model is validated at
-compile time eliminating runtime errors.
+into standard java collection objects or into a more efficient
+[Result](http://requery.github.io/javadoc/io/requery/query/Result.html) type.
+From a [Result](http://requery.github.io/javadoc/io/requery/query/Result.html)
+easily create a Stream, RxJava Observable, Iterator, List or Map.
+
+Many-to-Many junction tables can be generated automatically. Additionally the relation model is
+validated at compile time eliminating runtime errors.
 
 Android
 -------
