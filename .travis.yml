@@ -15,8 +15,15 @@ services:
   - postgresql
   - mysql
 
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
 before_install:
-  - mysql -e "create database IF NOT EXISTS testdb;" -uroot
+  - mysql -e "create database if not exists testdb;" -uroot
   - psql -c 'create database testdb;' -U postgres
 
 before_script:
