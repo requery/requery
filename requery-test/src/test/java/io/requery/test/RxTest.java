@@ -165,8 +165,6 @@ public class RxTest extends RandomData {
         final List<Person> people = new ArrayList<>();
         data.select(Person.class).limit(50).get()
             .toObservable()
-            .observeOn(Schedulers.newThread())
-            .subscribeOn(Schedulers.immediate())
             .subscribe(new Action1<Person>() {
             @Override
             public void call(Person person) {
