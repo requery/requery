@@ -61,6 +61,7 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     protected Class<?> referencedClass;
     protected Supplier<Attribute> mappedAttribute;
     protected Supplier<Attribute> referencedAttribute;
+    protected int hashCode;
 
     @Override
     public Getter<T, V> getter() {
@@ -225,7 +226,10 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, classType, declaringType);
+        if (hashCode == 0) {
+            hashCode = Objects.hash(name, classType, declaringType);
+        }
+        return hashCode;
     }
 
     @Override
