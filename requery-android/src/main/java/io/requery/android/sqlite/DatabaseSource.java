@@ -72,6 +72,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
     private SQLiteDatabase db;
     private Configuration configuration;
     private boolean configured;
+    private boolean loggingEnabled;
 
     /**
      * Creates a new {@link DatabaseSource} instance.
@@ -111,15 +112,21 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
                           SQLiteDatabase.CursorFactory factory,
                           int version) {
         super(context, name, factory, version);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            setWriteAheadLoggingEnabled(true);
-        }
         if (model == null) {
             throw new IllegalArgumentException("null model");
         }
         this.platform = new SQLite();
         this.mapping = onCreateMapping();
         this.model = model;
+    }
+
+    /**
+     * Enables statement logging. Not use for debugging only as it impacts performance.
+     *
+     * @param enable true to enable, false otherwise default is false.
+     */
+    public void setLoggingEnabled(boolean enable) {
+        this.loggingEnabled = enable;
     }
 
     private static String getDefaultDatabaseName(Context context, EntityModel model) {
@@ -146,8 +153,10 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
      * @param builder {@link ConfigurationBuilder instance} to configure.
      */
     protected void onConfigure(ConfigurationBuilder builder) {
-        LoggingListener loggingListener = new LoggingListener();
-        builder.addStatementListener(loggingListener);
+        if (loggingEnabled) {
+            LoggingListener loggingListener = new LoggingListener();
+            builder.addStatementListener(loggingListener);
+        }
     }
 
     private Connection getConnection(SQLiteDatabase db) throws SQLException {
