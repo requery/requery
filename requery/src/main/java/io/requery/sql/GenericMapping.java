@@ -28,6 +28,7 @@ import io.requery.converter.UUIDConverter;
 import io.requery.converter.ZonedDateTimeConverter;
 import io.requery.meta.Attribute;
 import io.requery.query.Expression;
+import io.requery.query.ExpressionType;
 import io.requery.util.ClassMap;
 import io.requery.util.LanguageVersion;
 import io.requery.util.Objects;
@@ -41,6 +42,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -57,8 +59,8 @@ public class GenericMapping implements Mapping {
 
     private final ClassMap<FieldType> types;
     private final ClassMap<FieldType> fixedTypes;
-    private final ClassMap<FieldType> substitutedTypes;
     private final ClassMap<Converter<?, ?>> converters;
+    private final Map<Attribute, FieldType> resolvedTypes;
 
     public GenericMapping(Platform platform) {
         types = new ClassMap<>();
@@ -87,10 +89,10 @@ public class GenericMapping implements Mapping {
         types.put(Blob.class, BasicTypes.BLOB);
         types.put(Clob.class, BasicTypes.CLOB);
 
-        substitutedTypes = new ClassMap<>();
         fixedTypes = new ClassMap<>();
         fixedTypes.put(byte[].class, BasicTypes.BINARY);
         converters = new ClassMap<>();
+        resolvedTypes = new HashMap<>();
         Set<Converter> converters = new HashSet<>();
         converters.add(new EnumStringConverter<>(Enum.class));
         converters.add(new UUIDConverter());
@@ -155,6 +157,10 @@ public class GenericMapping implements Mapping {
 
     @Override
     public FieldType mapAttribute(Attribute<?, ?> attribute) {
+        FieldType fieldType = resolvedTypes.get(attribute);
+        if (fieldType != null) {
+            return fieldType;
+        }
         Class<?> type = attribute.classType();
         if (attribute.isForeignKey()) {
             type = attribute.isAssociation() ?
@@ -165,7 +171,9 @@ public class GenericMapping implements Mapping {
             Converter<?, ?> converter = attribute.converter();
             type = converter.persistedType();
         }
-        return getSubstitutedType(type);
+        fieldType = getSubstitutedType(type);
+        resolvedTypes.put(attribute, fieldType);
+        return fieldType;
     }
 
     @Override
@@ -183,17 +191,14 @@ public class GenericMapping implements Mapping {
     }
 
     private FieldType getSubstitutedType(Class<?> type) {
-        // prefer platform substituted type
-        FieldType fieldType = substitutedTypes.get(type);
+        FieldType fieldType = null;
         // check conversion
-        if (fieldType == null) {
-            Converter<?,?> converter = converterForType(type);
-            if (converter != null) {
-                if(converter.persistedSize() != null) {
-                    fieldType = fixedTypes.get(converter.persistedType());
-                }
-                type = converter.persistedType();
+        Converter<?,?> converter = converterForType(type);
+        if (converter != null) {
+            if(converter.persistedSize() != null) {
+                fieldType = fixedTypes.get(converter.persistedType());
             }
+            type = converter.persistedType();
         }
         if (fieldType == null) {
             fieldType = types.get(type);
@@ -206,7 +211,7 @@ public class GenericMapping implements Mapping {
         Class<A> type;
         Converter<?, ?> converter = null;
         FieldType fieldType;
-        if (expression instanceof Attribute) {
+        if (expression.type() == ExpressionType.ATTRIBUTE) {
             Attribute<?, A> attribute = Attributes.query((Attribute) expression);
             converter = attribute.converter();
             type = attribute.classType();
@@ -215,7 +220,7 @@ public class GenericMapping implements Mapping {
             type = expression.classType();
             fieldType = getSubstitutedType(type);
         }
-        if (converter == null) {
+        if (converter == null && !type.isPrimitive()) {
             converter = converterForType(type);
         }
         Object value = fieldType.read(results, column);
@@ -232,7 +237,7 @@ public class GenericMapping implements Mapping {
         Class<?> type;
         Converter converter = null;
         FieldType fieldType;
-        if (expression instanceof Attribute) {
+        if (expression.type() == ExpressionType.ATTRIBUTE) {
             Attribute<?, A> attribute = Attributes.query((Attribute) expression);
             converter = attribute.converter();
             fieldType = mapAttribute(attribute);
@@ -243,7 +248,7 @@ public class GenericMapping implements Mapping {
             type = expression.classType();
             fieldType = getSubstitutedType(type);
         }
-        if (converter == null) {
+        if (converter == null && !type.isPrimitive()) {
             converter = converterForType(type);
         }
         Object converted;
