@@ -61,6 +61,11 @@ public interface Type<T> extends Expression<T> {
     boolean isReadOnly();
 
     /**
+     * @return true if the type has all state tracking disabled, false otherwise.
+     */
+    boolean isStateless();
+
+    /**
      * @return A readonly collection of {@link Attribute}s that this type represents. (includes
      * all attributes)
      */
@@ -70,6 +75,11 @@ public interface Type<T> extends Expression<T> {
      * @return A readonly collection of {@link Attribute}s that are the key for this type.
      */
     Set<Attribute<T, ?>> keyAttributes();
+
+    /**
+     * @return If there is only a single key that key's attribute, otherwise null.
+     */
+    Attribute<T, ?> singleKeyAttribute();
 
     /**
      * @return {@link Supplier} instance used to provide new instances of {@link #classType()}.

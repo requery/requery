@@ -171,7 +171,11 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             stateListeners.addPreInsertListener(logListener);
             stateListeners.addPreDeleteListener(logListener);
             stateListeners.addPreUpdateListener(logListener);
+            stateListeners.enableStateListeners(true);
             statementListeners.add(logListener);
+        } else {
+            // disable the listener since it's used only for logging right now
+            stateListeners.enableStateListeners(false);
         }
     }
 

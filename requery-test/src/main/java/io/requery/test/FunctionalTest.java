@@ -22,7 +22,6 @@ import io.requery.Transaction;
 import io.requery.meta.Attribute;
 import io.requery.proxy.CompositeKey;
 import io.requery.proxy.EntityProxy;
-import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
 import io.requery.query.NamedExpression;
 import io.requery.query.Result;
@@ -39,7 +38,6 @@ import io.requery.test.model.Group_Person;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
 import io.requery.util.function.Consumer;
-import io.requery.util.function.Predicate;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -287,23 +285,17 @@ public abstract class FunctionalTest extends RandomData {
         person.setBirthday(calendar.getTime());
         EntityProxy<Person> proxy = Person.$TYPE.proxyProvider().apply(person);
         int count = 0;
-        for (Property ignored : proxy.filterProperties(new Predicate<Property<Person, ?>>() {
-            @Override
-            public boolean test(Property value) {
-                return value.state() == PropertyState.MODIFIED;
+        for (Attribute<Person, ?>  ignored : Person.$TYPE.attributes()) {
+            if (proxy.getState(ignored) == PropertyState.MODIFIED) {
+                count++;
             }
-        })) {
-            count++;
         }
         assertEquals(2, count);
         data.update(person);
-        for (Property ignored : proxy.filterProperties(new Predicate<Property<Person, ?>>() {
-            @Override
-            public boolean test(Property value) {
-                return value.state() == PropertyState.MODIFIED;
+        for (Attribute<Person, ?> ignored : Person.$TYPE.attributes()) {
+            if (proxy.getState(ignored) == PropertyState.MODIFIED) {
+                fail();
             }
-        })) {
-            fail();
         }
     }
 

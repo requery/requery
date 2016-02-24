@@ -18,7 +18,6 @@ package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
 import io.requery.sql.BaseType;
-import io.requery.sql.BasicTypes;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.Keyword;
 import io.requery.sql.LimitDefinition;
@@ -117,6 +116,6 @@ public class SQLServer extends Generic {
     @Override
     public void addMappings(Mapping mapping) {
         super.addMappings(mapping);
-        mapping.replaceType(BasicTypes.BOOLEAN, new BitBooleanType());
+        mapping.replaceType(Types.BOOLEAN, new BitBooleanType());
     }
 }

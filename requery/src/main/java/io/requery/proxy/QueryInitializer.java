@@ -16,10 +16,11 @@
 
 package io.requery.proxy;
 
+import io.requery.meta.Attribute;
 import io.requery.query.Result;
 import io.requery.util.function.Supplier;
 
-public interface QueryInitializer<V> {
+public interface QueryInitializer<E, V> {
 
-    <U> V initialize(Property<?, V> property, Supplier<Result<U>> query);
+    <U> V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute, Supplier<Result<U>> query);
 }

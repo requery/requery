@@ -36,8 +36,12 @@ public class BoundParameters {
         values = new ArrayList<>();
     }
 
+    BoundParameters(int size) {
+        expressions = new ArrayList<>(size);
+        values = new ArrayList<>(size);
+    }
+
     public <V> void add(Expression<V> expression, V value) {
-        Objects.requireNotNull(expression);
         expressions.add(expression);
         values.add(value);
     }
@@ -61,6 +65,11 @@ public class BoundParameters {
     public void addAll(BoundParameters parameters) {
         expressions.addAll(parameters.expressions);
         values.addAll(parameters.values);
+    }
+
+    public void clear() {
+        expressions.clear();
+        values.clear();
     }
 
     @Override

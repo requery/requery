@@ -19,25 +19,28 @@ package io.requery.meta;
 import io.requery.CascadeAction;
 import io.requery.Converter;
 import io.requery.ReferentialAction;
-import io.requery.proxy.Getter;
 import io.requery.proxy.Field;
+import io.requery.proxy.Getter;
 import io.requery.proxy.Initializer;
+import io.requery.proxy.PropertyState;
 import io.requery.proxy.Setter;
-import io.requery.query.FieldExpression;
 import io.requery.query.ExpressionType;
+import io.requery.query.FieldExpression;
 import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
 
 import java.util.Collections;
 import java.util.Set;
 
-abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
+public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
         QueryAttribute<T, V>, Field<T, V> {
 
     protected String name;
     protected Getter<T, V> getter;
     protected Setter<T, V> setter;
-    protected Initializer<V> initializer;
+    protected Getter<T, PropertyState> stateGetter;
+    protected Setter<T, PropertyState> stateSetter;
+    protected Initializer<T, V> initializer;
     protected Class<V> classType;
     protected boolean isLazy;
     protected boolean isKey;
@@ -74,7 +77,17 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     }
 
     @Override
-    public Initializer<V> initializer() {
+    public Getter<T, PropertyState> stateGetter() {
+        return stateGetter;
+    }
+
+    @Override
+    public Setter<T, PropertyState> stateSetter() {
+        return stateSetter;
+    }
+
+    @Override
+    public Initializer<T, V> initializer() {
         return initializer;
     }
 

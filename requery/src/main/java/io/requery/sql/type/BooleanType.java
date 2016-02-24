@@ -25,8 +25,8 @@ import java.sql.Types;
 
 public class BooleanType extends BasicType<Boolean> {
 
-    public BooleanType() {
-        super(Boolean.class, Types.BOOLEAN);
+    public BooleanType(Class<Boolean> type) {
+        super(type, Types.BOOLEAN);
     }
 
     @Override

@@ -25,8 +25,8 @@ import java.sql.Types;
 
 public class FloatType extends BasicType<Float> {
 
-    public FloatType() {
-        super(Float.class, Types.FLOAT);
+    public FloatType(Class<Float> type) {
+        super(type, Types.FLOAT);
     }
 
     @Override

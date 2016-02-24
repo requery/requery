@@ -25,8 +25,8 @@ import java.sql.Types;
 
 public class IntegerType extends BasicType<Integer> {
 
-    public IntegerType() {
-        super(Integer.class, Types.INTEGER);
+    public IntegerType(Class<Integer> type) {
+        super(type, Types.INTEGER);
     }
 
     @Override

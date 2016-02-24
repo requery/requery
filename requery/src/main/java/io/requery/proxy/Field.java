@@ -22,5 +22,9 @@ public interface Field<E, V> {
 
     Setter<E, V> setter();
 
-    Initializer<V> initializer();
+    Getter<E, PropertyState> stateGetter();
+
+    Setter<E, PropertyState> stateSetter();
+
+    Initializer<E, V> initializer();
 }

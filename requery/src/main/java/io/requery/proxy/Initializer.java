@@ -16,7 +16,9 @@
 
 package io.requery.proxy;
 
-public interface Initializer<V> {
+import io.requery.meta.Attribute;
 
-    V initialize(Property<?, V> property);
+public interface Initializer<E, V> {
+
+    V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute);
 }

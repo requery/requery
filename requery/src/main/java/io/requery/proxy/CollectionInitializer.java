@@ -28,19 +28,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class CollectionInitializer<V> implements Initializer<V>,
-    QueryInitializer<V> {
+public class CollectionInitializer<E, V> implements Initializer<E, V>,
+    QueryInitializer<E, V> {
 
     @Override
-    public V initialize(Property<?, V> property) {
-        return initialize(property, null);
+    public V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute) {
+        return initialize(proxy, attribute, null);
     }
 
     @Override
-    public <U> V initialize(Property<?, V> property, Supplier<Result<U>> query) {
-        Attribute attribute = property.attribute();
+    public <U> V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute,
+                            Supplier<Result<U>> query) {
+
         Class<?> type = attribute.classType();
-        CollectionChanges<U> changes = new CollectionChanges<>(property);
+        CollectionChanges<E, U> changes = new CollectionChanges<>(proxy, attribute);
         Result<U> result = query == null ? null : query.get();
         Collection<U> collection;
         if (type == Set.class) {
@@ -58,8 +59,8 @@ public class CollectionInitializer<V> implements Initializer<V>,
         } else {
             throw new IllegalStateException("Unsupported collection type " + type);
         }
-        V value = property.attribute().classType().cast(collection);
-        property.set(value, PropertyState.LOADED);
+        V value = attribute.classType().cast(collection);
+        proxy.set(attribute, value, PropertyState.LOADED);
         return value;
     }
 }

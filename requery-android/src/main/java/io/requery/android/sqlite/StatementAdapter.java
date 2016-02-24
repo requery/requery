@@ -107,8 +107,7 @@ class StatementAdapter implements Statement {
                 if (rowId == -1) {
                     throw new SQLException("executeInsert failed");
                 }
-                Cursor cursor = new SingleResultCursor(null, rowId);
-                insertResult = new CursorResultSet(this, cursor, true);
+                insertResult = new SingleResultSet(this, rowId);
                 return true;
             } else {
                 statement.execute();
@@ -167,8 +166,7 @@ class StatementAdapter implements Statement {
                 if (rowId == -1) {
                     throw new SQLException("executeInsert failed");
                 }
-                Cursor cursor = new SingleResultCursor(null, rowId);
-                insertResult = new CursorResultSet(this, cursor, true);
+                insertResult = new SingleResultSet(this, rowId);
                 return 1;
             } else {
                 return updateCount = statement.executeUpdateDelete();

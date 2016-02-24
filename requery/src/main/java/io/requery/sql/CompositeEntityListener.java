@@ -28,9 +28,17 @@ import io.requery.proxy.EntityProxy;
 
 class CompositeEntityListener<T> extends EntityStateEventListeners<T> {
 
+    private boolean enableStateListeners;
+
+    public void enableStateListeners(boolean enabled) {
+        this.enableStateListeners = enabled;
+    }
+
     void preUpdate(T entity, EntityProxy<? extends T> proxy) {
-        for (PreUpdateListener<T> listener : preUpdateListeners) {
-            listener.preUpdate(entity);
+        if (enableStateListeners) {
+            for (PreUpdateListener<T> listener : preUpdateListeners) {
+                listener.preUpdate(entity);
+            }
         }
         if (proxy != null) {
             proxy.preUpdate();
@@ -38,8 +46,10 @@ class CompositeEntityListener<T> extends EntityStateEventListeners<T> {
     }
 
     void postUpdate(T entity, EntityProxy<? extends T> proxy) {
-        for (PostUpdateListener<T> listener : postUpdateListeners) {
-            listener.postUpdate(entity);
+        if (enableStateListeners) {
+            for (PostUpdateListener<T> listener : postUpdateListeners) {
+                listener.postUpdate(entity);
+            }
         }
         if (proxy != null) {
             proxy.postUpdate();
@@ -47,8 +57,10 @@ class CompositeEntityListener<T> extends EntityStateEventListeners<T> {
     }
 
     void preInsert(T entity, EntityProxy<? extends T> proxy) {
-        for (PreInsertListener<T> listener : preInsertListeners) {
-            listener.preInsert(entity);
+        if (enableStateListeners) {
+            for (PreInsertListener<T> listener : preInsertListeners) {
+                listener.preInsert(entity);
+            }
         }
         if (proxy != null) {
             proxy.preInsert();
@@ -56,8 +68,10 @@ class CompositeEntityListener<T> extends EntityStateEventListeners<T> {
     }
 
     void postInsert(T entity, EntityProxy<? extends T> proxy) {
-        for (PostInsertListener<T> listener : postInsertListeners) {
-            listener.postInsert(entity);
+        if (enableStateListeners) {
+            for (PostInsertListener<T> listener : postInsertListeners) {
+                listener.postInsert(entity);
+            }
         }
         if (proxy != null) {
             proxy.postInsert();
@@ -65,8 +79,10 @@ class CompositeEntityListener<T> extends EntityStateEventListeners<T> {
     }
 
     void preDelete(T entity, EntityProxy<? extends T> proxy) {
-        for (PreDeleteListener<T> listener : preDeleteListeners) {
-            listener.preDelete(entity);
+        if (enableStateListeners) {
+            for (PreDeleteListener<T> listener : preDeleteListeners) {
+                listener.preDelete(entity);
+            }
         }
         if (proxy != null) {
             proxy.preDelete();
@@ -74,8 +90,10 @@ class CompositeEntityListener<T> extends EntityStateEventListeners<T> {
     }
 
     void postDelete(T entity, EntityProxy<? extends T> proxy) {
-        for (PostDeleteListener<T> listener : postDeleteListeners) {
-            listener.postDelete(entity);
+        if (enableStateListeners) {
+            for (PostDeleteListener<T> listener : postDeleteListeners) {
+                listener.postDelete(entity);
+            }
         }
         if (proxy != null) {
             proxy.postDelete();
@@ -83,8 +101,10 @@ class CompositeEntityListener<T> extends EntityStateEventListeners<T> {
     }
 
     void postLoad(T entity, EntityProxy<? extends T> proxy) {
-        for (PostLoadListener<T> listener : postLoadListeners) {
-            listener.postLoad(entity);
+        if (enableStateListeners) {
+            for (PostLoadListener<T> listener : postLoadListeners) {
+                listener.postLoad(entity);
+            }
         }
         if (proxy != null) {
             proxy.postLoad();

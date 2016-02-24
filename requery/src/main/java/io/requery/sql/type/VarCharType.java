@@ -35,6 +35,11 @@ public class VarCharType extends BasicType<String> {
     }
 
     @Override
+    public String read(ResultSet results, int column) throws SQLException {
+        return results.getString(column);
+    }
+
+    @Override
     public Keyword identifier() {
         return Keyword.VARCHAR;
     }

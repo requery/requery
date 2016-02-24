@@ -18,7 +18,6 @@ package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
 import io.requery.sql.BaseType;
-import io.requery.sql.BasicTypes;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.IdentityColumnDefinition;
 import io.requery.sql.Mapping;
@@ -127,9 +126,9 @@ public class Oracle extends Generic {
     @Override
     public void addMappings(Mapping mapping) {
         super.addMappings(mapping);
-        mapping.replaceType(BasicTypes.BINARY, new RawType(Types.BINARY));
-        mapping.replaceType(BasicTypes.VARBINARY, new RawType(Types.VARBINARY));
-        mapping.replaceType(BasicTypes.BOOLEAN, new NumericBooleanType());
+        mapping.replaceType(Types.BINARY, new RawType(Types.BINARY));
+        mapping.replaceType(Types.VARBINARY, new RawType(Types.VARBINARY));
+        mapping.replaceType(Types.BOOLEAN, new NumericBooleanType());
     }
 
     @Override

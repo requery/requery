@@ -17,9 +17,9 @@
 package io.requery.sql.platform;
 
 import io.requery.sql.BaseType;
-import io.requery.sql.BasicTypes;
 import io.requery.sql.Keyword;
 import io.requery.sql.Mapping;
+import io.requery.sql.type.VarCharType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -74,9 +74,9 @@ public class Derby extends Generic {
     @Override
     public void addMappings(Mapping mapping) {
         super.addMappings(mapping);
-        mapping.replaceType(BasicTypes.VARBINARY, new CharBitData(Types.VARBINARY));
-        mapping.replaceType(BasicTypes.BINARY, new CharBitData(Types.BINARY));
-        mapping.replaceType(BasicTypes.NVARCHAR, BasicTypes.VARCHAR);
+        mapping.replaceType(Types.VARBINARY, new CharBitData(Types.VARBINARY));
+        mapping.replaceType(Types.BINARY, new CharBitData(Types.BINARY));
+        mapping.replaceType(Types.NVARCHAR, new VarCharType());
     }
 
     @Override

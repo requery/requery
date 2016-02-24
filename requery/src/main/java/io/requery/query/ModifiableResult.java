@@ -18,6 +18,7 @@ package io.requery.query;
 
 import io.requery.proxy.CollectionChanges;
 import io.requery.util.CloseableIterator;
+import io.requery.util.CollectionObserver;
 import io.requery.util.CompositeIterator;
 import io.requery.util.function.Consumer;
 import io.requery.util.FilteringIterator;
@@ -38,15 +39,15 @@ import java.util.stream.StreamSupport;
 public class ModifiableResult<E> implements MutableResult<E>, ObservableCollection<E> {
 
     private final Result<E> result;
-    private final CollectionChanges<E> changes;
+    private final CollectionChanges<?, E> changes;
 
-    public ModifiableResult(Result<E> result, CollectionChanges<E> changes) {
+    public ModifiableResult(Result<E> result, CollectionChanges<?, E> changes) {
         this.result = result;
         this.changes = changes;
     }
 
     @Override
-    public CollectionChanges<E> observer() {
+    public CollectionObserver<E> observer() {
         return changes;
     }
 

@@ -18,13 +18,13 @@ package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
 import io.requery.sql.BaseType;
-import io.requery.sql.BasicTypes;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.LimitDefinition;
 import io.requery.sql.LimitOffsetDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.QueryBuilder;
 import io.requery.sql.VersionColumnDefinition;
+import io.requery.sql.type.VarCharType;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -132,9 +132,9 @@ public class PostgresSQL extends Generic {
     @Override
     public void addMappings(Mapping mapping) {
         super.addMappings(mapping);
-        mapping.replaceType(BasicTypes.BINARY, new ByteArrayType(Types.BINARY));
-        mapping.replaceType(BasicTypes.VARBINARY, new ByteArrayType(Types.VARBINARY));
-        mapping.replaceType(BasicTypes.NVARCHAR, BasicTypes.VARCHAR);
+        mapping.replaceType(Types.BINARY, new ByteArrayType(Types.BINARY));
+        mapping.replaceType(Types.VARBINARY, new ByteArrayType(Types.VARBINARY));
+        mapping.replaceType(Types.NVARCHAR, new VarCharType());
         mapping.putType(UUID.class, new UUIDType());
     }
 

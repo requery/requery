@@ -21,6 +21,7 @@ import io.requery.Converter;
 import io.requery.ReferentialAction;
 import io.requery.proxy.Getter;
 import io.requery.proxy.Initializer;
+import io.requery.proxy.PropertyState;
 import io.requery.proxy.Setter;
 import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
@@ -45,7 +46,17 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
         return this;
     }
 
-    public AttributeBuilder<T, V> setInitializer(Initializer<V> initializer) {
+    public AttributeBuilder<T, V> setStateGetter(Getter<T, PropertyState> getter) {
+        this.stateGetter = getter;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setStateSetter(Setter<T, PropertyState> setter) {
+        this.stateSetter = setter;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setInitializer(Initializer<T, V> initializer) {
         this.initializer = initializer;
         return this;
     }
@@ -149,5 +160,4 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
     public QueryAttribute<T, V> build() {
         return new ImmutableAttribute<>(this);
     }
-
 }

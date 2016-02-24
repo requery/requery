@@ -32,12 +32,14 @@ abstract class BaseType<T> implements Type<T> {
     protected Class<? super T> baseType;
     protected String name;
     protected boolean cacheable;
+    protected boolean stateless;
     protected boolean readOnly;
     protected Set<Attribute<T, ?>> attributes;
     protected Supplier<T> factory;
     protected Function<T, EntityProxy<T>> proxyProvider;
     protected Set<Class<?>> referencedTypes;
     protected Set<Attribute<T, ?>> keyAttributes;
+    protected Attribute<T, ?> keyAttribute;
     protected String[] tableCreateAttributes;
 
     public BaseType() {
@@ -66,6 +68,11 @@ abstract class BaseType<T> implements Type<T> {
     }
 
     @Override
+    public boolean isStateless() {
+        return stateless;
+    }
+
+    @Override
     public Class<T> classType() {
         return type;
     }
@@ -90,8 +97,16 @@ abstract class BaseType<T> implements Type<T> {
                 }
             }
             keyAttributes = Collections.unmodifiableSet(keyAttributes);
+            if (keyAttributes.size() == 1) {
+                keyAttribute = keyAttributes.iterator().next();
+            }
         }
         return keyAttributes;
+    }
+
+    @Override
+    public Attribute<T, ?> singleKeyAttribute() {
+        return keyAttribute;
     }
 
     @Override

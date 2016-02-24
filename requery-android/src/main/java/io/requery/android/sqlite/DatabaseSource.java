@@ -174,6 +174,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
                 .setMapping(mapping)
                 .setPlatform(platform)
                 .setStatementCacheSize(0)
+                .setBatchUpdateSize(1000)
                 .setQuoteColumnNames(false)
                 .setQuoteTableNames(false);
             onConfigure(builder);

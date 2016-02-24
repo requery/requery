@@ -20,9 +20,7 @@ import android.os.Parcel;
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
-import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
-import io.requery.util.function.Predicate;
 
 /**
  * Handler for Android's Parcelable objects. Serializes field types that are handled by
@@ -34,56 +32,56 @@ import io.requery.util.function.Predicate;
 public class EntityParceler<T> {
 
     private final Type<T> type;
-    private final Predicate<Property<T,?>> filter;
 
     public EntityParceler(Type<T> type) {
         this.type = type;
-        this.filter = new Predicate<Property<T, ?>>() {
-            @Override
-            public boolean test(Property<T, ?> value) {
-                Attribute attribute = value.attribute();
-                return !attribute.isAssociation();
-            }
-        };
     }
 
     public T readFromParcel(Parcel in) {
         T entity = type.factory().get();
         EntityProxy<T> proxy = type.proxyProvider().apply(entity);
-        for (Property<T, ?> property : proxy.filterProperties(filter)) {
-            Class<?> type = property.attribute().classType();
+        for (Attribute<T, ?> attribute : type.attributes()) {
+            if (attribute.isAssociation()) {
+                continue;
+            }
+            Class<?> typeClass = attribute.classType();
             Object value;
-            if (type.isEnum()) {
+            if (typeClass.isEnum()) {
                 String name = (String) in.readValue(null);
                 if (name == null) {
                     value = null;
                 } else {
                     @SuppressWarnings("unchecked")
-                    Class<? extends Enum> enumClass = (Class<? extends Enum>) type;
+                    Class<? extends Enum> enumClass = (Class<? extends Enum>) typeClass;
                     value = Enum.valueOf(enumClass, name);
                 }
             } else {
                 value = in.readValue(null);
             }
-            PropertyState state = PropertyState.valueOf(in.readValue(null).toString());
-            property.setObject(value, state);
+            PropertyState state = PropertyState.LOADED;
+            if (!type.isStateless()) {
+                state = PropertyState.valueOf(in.readValue(null).toString());
+            }
+            proxy.setObject(attribute, value, state);
         }
         return entity;
     }
 
     public void writeToParcel(T entity, Parcel out) {
         EntityProxy<T> proxy = type.proxyProvider().apply(entity);
-        for (Property<T, ?> property : proxy.filterProperties(filter)) {
-            Object value = property.get();
-            Class<?> type = property.attribute().classType();
-            if (type.isEnum()) {
+        for (Attribute<T, ?> attribute : type.attributes()) {
+            Object value = proxy.get(attribute, false);
+            Class<?> typeClass = attribute.classType();
+            if (typeClass.isEnum()) {
                 if (value != null) {
                     value = value.toString();
                 }
             }
             out.writeValue(value);
-            PropertyState state = property.state();
-            out.writeString(state.toString());
+            if (!type.isStateless()) {
+                PropertyState state = proxy.getState(attribute);
+                out.writeString(state.toString());
+            }
         }
     }
 }

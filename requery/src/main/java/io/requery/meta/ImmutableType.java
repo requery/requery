@@ -29,6 +29,7 @@ final class ImmutableType<T> extends BaseType<T> {
         this.attributes = Collections.unmodifiableSet(builder.attributes());
         this.cacheable = builder.isCacheable();
         this.readOnly = builder.isReadOnly();
+        this.stateless = builder.isStateless();
         this.factory = builder.factory();
         this.proxyProvider = builder.proxyProvider();
         this.tableCreateAttributes = builder.tableCreateAttributes();

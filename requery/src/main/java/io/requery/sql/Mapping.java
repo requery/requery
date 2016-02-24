@@ -46,12 +46,12 @@ public interface Mapping {
      * Replace the default mapping from a {@link FieldType} to a another {@link FieldType}. If the
      * basic type is not mapped then a mapping will be added.
      *
-     * @param basicType       non null type to replace
+     * @param sqlType         {@link java.sql.Types} to replace
      * @param replacementType non null replacement type
      * @param <T>             the mapped type
      * @return mapping instance
      */
-    <T> Mapping replaceType(FieldType<T> basicType, FieldType<T> replacementType);
+    <T> Mapping replaceType(int sqlType, FieldType<T> replacementType);
 
     /**
      * Get the mapped storage type mapping for a given type {@link Attribute}.

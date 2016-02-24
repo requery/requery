@@ -17,7 +17,6 @@
 package io.requery.sql.platform;
 
 import io.requery.sql.AutoIncrementColumnDefinition;
-import io.requery.sql.BasicTypes;
 import io.requery.sql.BasicType;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.Keyword;
@@ -41,8 +40,8 @@ public class SQLite extends Generic {
     // used as generated key
     private static class LongType extends BasicType<Long> {
 
-        public LongType() {
-            super(Long.class, Types.INTEGER);
+        public LongType(Class<Long> type) {
+            super(type, Types.INTEGER);
         }
 
         @Override
@@ -84,6 +83,7 @@ public class SQLite extends Generic {
     @Override
     public void addMappings(Mapping mapping) {
         super.addMappings(mapping);
-        mapping.replaceType(BasicTypes.BIGINT, new LongType());
+        mapping.putType(long.class, new LongType(long.class));
+        mapping.putType(Long.class, new LongType(Long.class));
     }
 }

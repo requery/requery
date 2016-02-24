@@ -27,6 +27,8 @@ import java.sql.SQLException;
  */
 public abstract class BasicType<T> extends BaseType<T> {
 
+    private final boolean checkNull;
+
     /**
      * Instantiates a new type instance.
      *
@@ -35,6 +37,7 @@ public abstract class BasicType<T> extends BaseType<T> {
      */
     protected BasicType(Class<T> type, int sqlType) {
         super(type, sqlType);
+        checkNull = !type.isPrimitive();
     }
 
     /**
@@ -51,7 +54,7 @@ public abstract class BasicType<T> extends BaseType<T> {
     @Override
     public T read(ResultSet results, int column) throws SQLException {
         T result = fromResult(results, column);
-        if (results.wasNull()) {
+        if (checkNull && results.wasNull()) {
             return null;
         }
         return result;

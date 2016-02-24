@@ -21,18 +21,18 @@ import io.requery.query.ModifiableResult;
 import io.requery.query.Result;
 import io.requery.util.function.Supplier;
 
-public class ResultInitializer<V> implements Initializer<V>, QueryInitializer<V> {
+public class ResultInitializer<E, V> implements Initializer<E, V>, QueryInitializer<E, V> {
 
     @Override
-    public V initialize(Property<?, V> property) {
-        return initialize(property, null);
+    public V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute) {
+        return initialize(proxy, attribute, null);
     }
 
     @Override
-    public <U> V initialize(Property<?, V> property, Supplier<Result<U>> query) {
-        Attribute attribute = property.attribute();
+    public <U> V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute,
+                            Supplier<Result<U>> query) {
         Class<?> type = attribute.classType();
-        CollectionChanges<U> changes = new CollectionChanges<>(property);
+        CollectionChanges<E, U> changes = new CollectionChanges<>(proxy, attribute);
         Result<U> result = query == null ? null : query.get();
         Object collection;
         if (Iterable.class.isAssignableFrom(type)) {
@@ -40,8 +40,8 @@ public class ResultInitializer<V> implements Initializer<V>, QueryInitializer<V>
         } else {
             throw new IllegalStateException("Unsupported result type " + type);
         }
-        V value = property.attribute().classType().cast(collection);
-        property.set(value, PropertyState.LOADED);
+        V value = attribute.classType().cast(collection);
+        proxy.set(attribute, value, PropertyState.LOADED);
         return value;
     }
 }

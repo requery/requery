@@ -62,6 +62,11 @@ public class TypeBuilder<T> extends BaseType<T> {
         return this;
     }
 
+    public TypeBuilder<T> setStateless(boolean stateless) {
+        this.stateless = stateless;
+        return this;
+    }
+
     public TypeBuilder<T> setFactory(Supplier<T> factory) {
         this.factory = factory;
         return this;

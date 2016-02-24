@@ -18,13 +18,9 @@ package io.requery.proxy;
 
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
-import io.requery.util.FilteringIterator;
 import io.requery.util.Objects;
-import io.requery.util.function.Predicate;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Proxy object for a data entity containing various properties that can be read or written and the
@@ -33,13 +29,11 @@ import java.util.Map;
  * @param <E> entity type
  * @author Nikhil Purushe
  */
-public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateListener {
+public class EntityProxy<E> implements EntityStateListener {
 
     private final Type<E> type;
     private final E entity;
-    private final Map<Attribute<E, ?>, Property<E, ?>> properties;
-    private final int keyCount;
-    private Attribute<E, ?> keyAttribute;
+    private final boolean stateless;
     private PropertyLoader<E> loader;
     private CompositeEntityStateListener<E> listeners;
     private Object key;
@@ -53,19 +47,9 @@ public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateList
      * @param type   the entity meta type instance
      */
     public EntityProxy(E entity, Type<E> type) {
-        this.entity = Objects.requireNotNull(entity);
-        this.type = Objects.requireNotNull(type);
-        this.properties = new LinkedHashMap<>();
-        this.keyCount = type.keyAttributes().size();
-
-        for (Attribute<E, ?> attribute : type.attributes()) {
-            Property<E, ?> property = new Property<>(entity, attribute);
-            properties.put(attribute, property);
-            // if there is only 1 key then keyAttribute will be used for the optimal case
-            if (attribute.isKey() && keyCount == 1) {
-                keyAttribute = attribute;
-            }
-        }
+        this.entity = entity;
+        this.type = type;
+        this.stateless = type.isStateless();
     }
 
     /**
@@ -90,16 +74,16 @@ public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateList
      * retrieve it if fetch = true.
      */
     public <V> V get(Attribute<E, V> attribute, boolean fetch) {
-        Property<E, V> property = propertyOf(attribute);
-        if (fetch && property.state() == PropertyState.FETCH && isLinked()) {
+        PropertyState state = getState(attribute);
+        if (fetch && state == PropertyState.FETCH && loader != null) {
             // lazy loaded, get from store then set the value
-            loader.load(entity, this, property);
+            loader.load(entity, this, attribute);
         }
-        V value = attribute.classType().cast(property.get());
-        if (value == null && property.state() == PropertyState.FETCH &&
+        V value = attribute.fieldAccess().getter().get(entity);
+        if (value == null && state == PropertyState.FETCH &&
             attribute.fieldAccess().initializer() != null) {
 
-            value = attribute.fieldAccess().initializer().initialize(property);
+            value = attribute.fieldAccess().initializer().initialize(this, attribute);
             set(attribute, value, PropertyState.FETCH);
         }
         return value;
@@ -126,11 +110,59 @@ public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateList
      * @param <V>       type of the value
      */
     public <V> void set(Attribute<E, V> attribute, V value, PropertyState state) {
-        Property<E, V> property = propertyOf(attribute);
-        property.set(value, state);
-        if (attribute == keyAttribute) {
+        Field<E, V> field = attribute.fieldAccess();
+        field.setter().set(entity, value);
+        field.stateSetter().set(entity, state);
+        checkRegenerateKey(attribute);
+    }
+
+    /**
+     * Unchecked version of set, use only when the the attribute type is not known.
+     *
+     * @param attribute attribute to change
+     * @param value     new property value
+     * @param state     new property state
+     */
+    @SuppressWarnings("unchecked")
+    public void setObject(Attribute<E, ?> attribute, Object value, PropertyState state) {
+        Field<E, Object> field = (Field<E, Object>) attribute.fieldAccess();
+        field.setter().set(entity, value);
+        if (!stateless) {
+            field.stateSetter().set(entity, state);
+        }
+        checkRegenerateKey(attribute);
+    }
+
+    private void checkRegenerateKey(Attribute<E, ?> attribute) {
+        if (attribute.isKey()) {
             regenerateKey = true;
         }
+    }
+
+    /**
+     * Sets the current {@link PropertyState} of a given {@link Attribute}.
+     *
+     * @param attribute to set
+     * @param state     state to set
+     */
+    public void setState(Attribute<E, ?> attribute, PropertyState state) {
+        if (!stateless) {
+            attribute.fieldAccess().stateSetter().set(entity, state);
+        }
+    }
+
+    /**
+     * Gets the current {@link PropertyState} of a given {@link Attribute}.
+     *
+     * @param attribute to get
+     * @return the state of the attribute
+     */
+    public PropertyState getState(Attribute<E, ?> attribute) {
+        if (stateless) {
+            return null;
+        }
+        PropertyState state = attribute.fieldAccess().stateGetter().get(entity);
+        return state == null ? PropertyState.FETCH : state;
     }
 
     /**
@@ -138,14 +170,13 @@ public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateList
      */
     public Object key() {
         if (regenerateKey || key == null) {
-            if (keyAttribute != null) {
-                key = get(keyAttribute); // typical case one key attribute
-            } else if (keyCount > 1) {
-                LinkedHashMap<Attribute<E, ?>, Object> keys = new LinkedHashMap<>(keyCount);
-                for (Property<E, ?> property : this) {
-                    if (property.attribute().isKey()) {
-                        keys.put(property.attribute(), property.get());
-                    }
+            if (type.singleKeyAttribute() != null) {
+                key = get(type.singleKeyAttribute()); // typical case one key attribute
+            } else if (type.keyAttributes().size() > 1) {
+                LinkedHashMap<Attribute<E, ?>, Object> keys =
+                    new LinkedHashMap<>(type.keyAttributes().size());
+                for (Attribute<E, ?> attribute : type.keyAttributes()) {
+                    keys.put(attribute, get(attribute));
                 }
                 key = new CompositeKey<>(keys);
             }
@@ -204,27 +235,6 @@ public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateList
     }
 
     @Override
-    public Iterator<Property<E, ?>> iterator() {
-        return properties.values().iterator();
-    }
-
-    public Iterable<Property<E, ?>> filterProperties(final Predicate<Property<E, ?>> filter) {
-        return new Iterable<Property<E, ?>>() {
-            @Override
-            public Iterator<Property<E, ?>> iterator() {
-                Iterator<Property<E, ?>> iterator = properties.values().iterator();
-                return new FilteringIterator<>(iterator, filter);
-            }
-        };
-    }
-
-    public <V> Property<E, V> propertyOf(Attribute<E, V> attribute) {
-        @SuppressWarnings("unchecked")
-        Property<E, V> property = (Property<E, V>) properties.get(attribute);
-        return Objects.requireNotNull(property);
-    }
-
-    @Override
     public void preUpdate() {
         stateListener().preUpdate();
     }
@@ -264,19 +274,13 @@ public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateList
         if (obj instanceof EntityProxy) {
             EntityProxy other = (EntityProxy) obj;
             if (other.entity.getClass().equals(entity.getClass())) {
-                for (Map.Entry<Attribute<E, ?>, Property<E, ?>> entry : properties.entrySet()) {
-                    Attribute<E, ?> attribute = entry.getKey();
+                for (Attribute<E, ?> attribute : type.attributes()) {
                     // comparing only the non-associative properties for now
                     if (!attribute.isAssociation()) {
-                        Property p = entry.getValue();
-                        if (!p.equals(other.properties.get(attribute))) {
-                            return false;
-                        }
-                    }
-                    // compare foreign key
-                    if (attribute.isForeignKey()) {
-                        Property p = entry.getValue();
-                        if (!p.equals(other.properties.get(attribute))) {
+                        Object value = get(attribute, false);
+                        @SuppressWarnings("unchecked")
+                        Object otherValue = other.get(attribute, false);
+                        if (!Objects.equals(value, otherValue)) {
                             return false;
                         }
                     }
@@ -290,10 +294,9 @@ public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateList
     @Override
     public int hashCode() {
         int hash = 31;
-        for (Property<E, ?> property : this) {
-            Attribute<?, ?> attribute = property.attribute();
+        for (Attribute<E, ?> attribute : type.attributes()) {
             if (!attribute.isAssociation()) {
-                hash = 31 * hash + property.hashCode();
+                hash = 31 * hash + Objects.hashCode(get(attribute, false));
             }
         }
         return hash;
@@ -305,11 +308,12 @@ public class EntityProxy<E> implements Iterable<Property<E, ?>>, EntityStateList
         sb.append(type.name());
         sb.append(" [");
         int index = 0;
-        for (Map.Entry<Attribute<E, ?>, Property<E, ?>> entry : properties.entrySet()) {
+        for (Attribute<E, ?> attribute : type.attributes()) {
             if (index > 0) {
                 sb.append(", ");
             }
-            sb.append(entry.getValue().toString());
+            Object value = get(attribute, false);
+            sb.append(value == null ? "null" : value.toString());
             index++;
         }
         sb.append("]");

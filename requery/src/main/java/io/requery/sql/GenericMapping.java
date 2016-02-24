@@ -29,6 +29,23 @@ import io.requery.converter.ZonedDateTimeConverter;
 import io.requery.meta.Attribute;
 import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
+import io.requery.sql.type.BigIntType;
+import io.requery.sql.type.BinaryType;
+import io.requery.sql.type.BlobType;
+import io.requery.sql.type.BooleanType;
+import io.requery.sql.type.ClobType;
+import io.requery.sql.type.DateType;
+import io.requery.sql.type.DecimalType;
+import io.requery.sql.type.FloatType;
+import io.requery.sql.type.IntegerType;
+import io.requery.sql.type.JavaDateType;
+import io.requery.sql.type.RealType;
+import io.requery.sql.type.SmallIntType;
+import io.requery.sql.type.TimeStampType;
+import io.requery.sql.type.TimeType;
+import io.requery.sql.type.TinyIntType;
+import io.requery.sql.type.VarBinaryType;
+import io.requery.sql.type.VarCharType;
 import io.requery.util.ClassMap;
 import io.requery.util.LanguageVersion;
 import io.requery.util.Objects;
@@ -42,8 +59,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,35 +81,35 @@ public class GenericMapping implements Mapping {
 
     public GenericMapping(Platform platform) {
         types = new ClassMap<>();
-        types.put(boolean.class, BasicTypes.BOOLEAN);
-        types.put(Boolean.class, BasicTypes.BOOLEAN);
-        types.put(int.class, BasicTypes.INTEGER);
-        types.put(Integer.class, BasicTypes.INTEGER);
-        types.put(short.class, BasicTypes.SMALLINT);
-        types.put(Short.class, BasicTypes.SMALLINT);
-        types.put(byte.class, BasicTypes.TINYINT);
-        types.put(Byte.class, BasicTypes.TINYINT);
-        types.put(long.class, BasicTypes.BIGINT);
-        types.put(Long.class, BasicTypes.BIGINT);
-        types.put(float.class, BasicTypes.FLOAT);
-        types.put(Float.class, BasicTypes.FLOAT);
-        types.put(double.class, BasicTypes.REAL);
-        types.put(Double.class, BasicTypes.REAL);
-        types.put(BigInteger.class, BasicTypes.BIGINT);
-        types.put(BigDecimal.class, BasicTypes.DECIMAL);
-        types.put(byte[].class, BasicTypes.VARBINARY);
-        types.put(java.util.Date.class, BasicTypes.JAVA_DATE);
-        types.put(java.sql.Date.class, BasicTypes.DATE);
-        types.put(Time.class, BasicTypes.TIME);
-        types.put(Timestamp.class, BasicTypes.TIMESTAMP);
-        types.put(String.class, BasicTypes.VARCHAR);
-        types.put(Blob.class, BasicTypes.BLOB);
-        types.put(Clob.class, BasicTypes.CLOB);
+        types.put(boolean.class, new BooleanType(boolean.class));
+        types.put(Boolean.class, new BooleanType(Boolean.class));
+        types.put(int.class, new IntegerType(int.class));
+        types.put(Integer.class, new IntegerType(Integer.class));
+        types.put(short.class, new SmallIntType(short.class));
+        types.put(Short.class, new SmallIntType(Short.class));
+        types.put(byte.class, new TinyIntType(byte.class));
+        types.put(Byte.class, new TinyIntType(Byte.class));
+        types.put(long.class, new BigIntType(long.class));
+        types.put(Long.class, new BigIntType(Long.class));
+        types.put(float.class, new FloatType(float.class));
+        types.put(Float.class, new FloatType(Float.class));
+        types.put(double.class, new RealType(double.class));
+        types.put(Double.class, new RealType(Double.class));
+        types.put(BigInteger.class, new BigIntType(long.class));
+        types.put(BigDecimal.class, new DecimalType());
+        types.put(byte[].class, new VarBinaryType());
+        types.put(java.util.Date.class, new JavaDateType());
+        types.put(java.sql.Date.class, new DateType());
+        types.put(Time.class, new TimeType());
+        types.put(Timestamp.class, new TimeStampType());
+        types.put(String.class, new VarCharType());
+        types.put(Blob.class, new BlobType());
+        types.put(Clob.class, new ClobType());
 
         fixedTypes = new ClassMap<>();
-        fixedTypes.put(byte[].class, BasicTypes.BINARY);
+        fixedTypes.put(byte[].class, new BinaryType());
         converters = new ClassMap<>();
-        resolvedTypes = new HashMap<>();
+        resolvedTypes = new IdentityHashMap<>();
         Set<Converter> converters = new HashSet<>();
         converters.add(new EnumStringConverter<>(Enum.class));
         converters.add(new UUIDConverter());
@@ -115,18 +132,17 @@ public class GenericMapping implements Mapping {
     }
 
     @Override
-    public <T> Mapping replaceType(FieldType<T> basicType, FieldType<T> replacementType) {
-        Objects.requireNotNull(basicType);
+    public <T> Mapping replaceType(int sqlType, FieldType<T> replacementType) {
         Objects.requireNotNull(replacementType);
-        replace(types, basicType, replacementType);
-        replace(fixedTypes, basicType, replacementType);
+        replace(types, sqlType, replacementType);
+        replace(fixedTypes, sqlType, replacementType);
         return this;
     }
 
-    private static void replace(ClassMap<FieldType> map, FieldType current, FieldType replace) {
+    private static void replace(ClassMap<FieldType> map, int sqlType, FieldType replace) {
         Set<Class<?>> keys = new LinkedHashSet<>();
         for (Map.Entry<Class<?>, FieldType> entry : map.entrySet()) {
-            if (entry.getValue().equals(current)) {
+            if (entry.getValue().sqlType() == sqlType) {
                 keys.add(entry.getKey());
             }
         }
@@ -157,6 +173,7 @@ public class GenericMapping implements Mapping {
 
     @Override
     public FieldType mapAttribute(Attribute<?, ?> attribute) {
+
         FieldType fieldType = resolvedTypes.get(attribute);
         if (fieldType != null) {
             return fieldType;
@@ -193,9 +210,9 @@ public class GenericMapping implements Mapping {
     private FieldType getSubstitutedType(Class<?> type) {
         FieldType fieldType = null;
         // check conversion
-        Converter<?,?> converter = converterForType(type);
+        Converter<?, ?> converter = converterForType(type);
         if (converter != null) {
-            if(converter.persistedSize() != null) {
+            if (converter.persistedSize() != null) {
                 fieldType = fixedTypes.get(converter.persistedType());
             }
             type = converter.persistedType();
@@ -203,7 +220,7 @@ public class GenericMapping implements Mapping {
         if (fieldType == null) {
             fieldType = types.get(type);
         }
-        return fieldType == null ? BasicTypes.VARCHAR : fieldType;
+        return fieldType == null ? new VarCharType(): fieldType;
     }
 
     @Override
@@ -226,6 +243,12 @@ public class GenericMapping implements Mapping {
         Object value = fieldType.read(results, column);
         if (converter != null) {
             value = toMapped((Converter) converter, type, value);
+        }
+        if (type.isPrimitive()) {
+            // cast primitive types only into their boxed type
+            @SuppressWarnings("unchecked")
+            A boxed = (A) value;
+            return boxed;
         }
         return type.cast(value);
     }

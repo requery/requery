@@ -25,8 +25,8 @@ import java.sql.Types;
 
 public class BigIntType extends BasicType<Long> {
 
-    public BigIntType() {
-        super(Long.class, Types.BIGINT);
+    public BigIntType(Class<Long> type) {
+        super(type, Types.BIGINT);
     }
 
     @Override

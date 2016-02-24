@@ -16,14 +16,10 @@
 
 package io.requery.android.sqlite;
 
-import android.database.Cursor;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.StringReader;
 import java.math.BigDecimal;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
@@ -34,7 +30,6 @@ import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
-import java.sql.SQLDataException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
@@ -45,47 +40,34 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-/**
- * {@link ResultSet} implementation using Android's {@link Cursor} interface.
- *
- * @author Nikhil Purushe
- */
-class CursorResultSet extends NonUpdateableResultSet {
+public class SingleResultSet extends NonUpdateableResultSet {
 
     private final Statement statement;
-    private final Cursor cursor;
-    private final boolean closeCursor;
-    private int lastColumnIndex;
+    private final long value;
 
-    CursorResultSet(Statement statement, Cursor cursor, boolean closeCursor) {
-        if(cursor == null) {
-            throw new IllegalArgumentException("null cursor");
-        }
+    SingleResultSet(Statement statement, long value) {
         this.statement = statement;
-        this.cursor = cursor;
-        this.closeCursor = closeCursor;
-        cursor.moveToPosition(-1);
+        this.value = value;
     }
 
     @Override
     public boolean absolute(int row) throws SQLException {
-        return cursor.moveToPosition(row - 1);
+        return row == 1;
     }
 
     @Override
     public void afterLast() throws SQLException {
-        cursor.moveToLast();
-        cursor.moveToNext();
+
     }
 
     @Override
     public void beforeFirst() throws SQLException {
-        cursor.moveToPosition(-1);
+
     }
 
     @Override
     public void cancelRowUpdates() throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+
     }
 
     @Override
@@ -95,150 +77,137 @@ class CursorResultSet extends NonUpdateableResultSet {
 
     @Override
     public void close() throws SQLException {
-        if (closeCursor) {
-            cursor.close();
-        }
+
     }
 
     @Override
     public void deleteRow() throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+
     }
 
     @Override
     public int findColumn(String columnName) throws SQLException {
-        int index = cursor.getColumnIndex(columnName);
-        if (index == -1) {
-            throw new SQLDataException("no column " + columnName);
-        }
-        return index + 1;
+        return 1;
     }
 
     @Override
     public boolean first() throws SQLException {
-        return cursor.moveToFirst();
+        return true;
     }
 
     @Override
     public Array getArray(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public Array getArray(String colName) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public InputStream getAsciiStream(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public InputStream getAsciiStream(String columnName) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
-        String value = getString(columnIndex);
-        return value == null ? null : new BigDecimal(value);
+        return null;
     }
 
     @Override
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
-        String value = getString(columnIndex);
-        BigDecimal result = value == null ? null : new BigDecimal(value);
-        if(result != null) {
-            result = result.setScale(scale, BigDecimal.ROUND_DOWN);
-        }
-        return result;
+        return null;
     }
 
     @Override
     public BigDecimal getBigDecimal(String columnName) throws SQLException {
-        return getBigDecimal(findColumn(columnName));
+        return null;
     }
 
     @Override
     public BigDecimal getBigDecimal(String columnName, int scale) throws SQLException {
-        return getBigDecimal(findColumn(columnName));
+        return null;
     }
 
     @Override
     public InputStream getBinaryStream(int columnIndex) throws SQLException {
-        return new ByteArrayInputStream(getBytes(columnIndex));
+        return null;
     }
 
     @Override
     public InputStream getBinaryStream(String columnName) throws SQLException {
-        return getBinaryStream(findColumn(columnName));
+        return null;
     }
 
     @Override
     public Blob getBlob(int columnIndex) throws SQLException {
-        return new ByteArrayBlob(getBytes(columnIndex));
+        return null;
     }
 
     @Override
     public Blob getBlob(String columnName) throws SQLException {
-        return getBlob(findColumn(columnName));
+        return null;
     }
 
     @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
-        return getInt(columnIndex) > 0;
+        return false;
     }
 
     @Override
     public boolean getBoolean(String columnName) throws SQLException {
-        return getBoolean(findColumn(columnName));
+        return false;
     }
 
     @Override
     public byte getByte(int columnIndex) throws SQLException {
-        return (byte) getShort(columnIndex);
+        return 0;
     }
 
     @Override
     public byte getByte(String columnName) throws SQLException {
-        return getByte(findColumn(columnName));
+        return 0;
     }
 
     @Override
     public byte[] getBytes(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        return cursor.getBlob(columnIndex - 1);
+        return null;
     }
 
     @Override
     public byte[] getBytes(String columnName) throws SQLException {
-        return getBytes(findColumn(columnName));
+        return null;
     }
 
     @Override
     public Reader getCharacterStream(int columnIndex) throws SQLException {
-        return new StringReader(getString(columnIndex));
+        return null;
     }
 
     @Override
     public Reader getCharacterStream(String columnName) throws SQLException {
-        return new StringReader(getString(columnName));
+        return null;
     }
 
     @Override
     public Clob getClob(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public Clob getClob(String colName) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public int getConcurrency() throws SQLException {
-        return CONCUR_READ_ONLY;
+        return ResultSet.CONCUR_READ_ONLY;
     }
 
     @Override
@@ -248,42 +217,37 @@ class CursorResultSet extends NonUpdateableResultSet {
 
     @Override
     public Date getDate(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        if(cursor.isNull(columnIndex - 1)) {
-            return null;
-        }
-        return new Date(cursor.getLong(columnIndex - 1));
+        return null;
     }
 
     @Override
     public Date getDate(int columnIndex, Calendar cal) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public Date getDate(String columnName) throws SQLException {
-        return getDate(findColumn(columnName));
+        return null;
     }
 
     @Override
     public Date getDate(String columnName, Calendar cal) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public double getDouble(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        return cursor.getDouble(columnIndex - 1);
+        return 0;
     }
 
     @Override
     public double getDouble(String columnName) throws SQLException {
-        return getDouble(findColumn(columnName));
+        return 0;
     }
 
     @Override
     public int getFetchDirection() throws SQLException {
-        return FETCH_FORWARD;
+        return ResultSet.FETCH_FORWARD;
     }
 
     @Override
@@ -293,35 +257,32 @@ class CursorResultSet extends NonUpdateableResultSet {
 
     @Override
     public float getFloat(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        return cursor.getFloat(columnIndex - 1);
+        return 0;
     }
 
     @Override
     public float getFloat(String columnName) throws SQLException {
-        return getFloat(findColumn(columnName));
+        return 0;
     }
 
     @Override
     public int getInt(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        return cursor.getInt(columnIndex - 1);
+        return (int) value;
     }
 
     @Override
     public int getInt(String columnName) throws SQLException {
-        return getInt(findColumn(columnName));
+        return (int) value;
     }
 
     @Override
     public long getLong(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        return cursor.getLong(columnIndex - 1);
+        return value;
     }
 
     @Override
     public long getLong(String columnName) throws SQLException {
-        return getLong(findColumn(columnName));
+        return value;
     }
 
     @Override
@@ -331,65 +292,47 @@ class CursorResultSet extends NonUpdateableResultSet {
 
     @Override
     public Object getObject(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        columnIndex = columnIndex - 1;
-        int type = cursor.getType(columnIndex);
-        if(!cursor.isNull(columnIndex)) {
-            switch (type) {
-                case Cursor.FIELD_TYPE_BLOB:
-                    return cursor.getBlob(columnIndex);
-                case Cursor.FIELD_TYPE_FLOAT:
-                    return cursor.getFloat(columnIndex);
-                case Cursor.FIELD_TYPE_INTEGER:
-                    return cursor.getInt(columnIndex);
-                case Cursor.FIELD_TYPE_NULL:
-                    return null;
-                case Cursor.FIELD_TYPE_STRING:
-                    return cursor.getString(columnIndex);
-            }
-        }
-        return null;
+        return value;
     }
 
     @Override
     public Object getObject(int columnIndex, Map<String, Class<?>> map) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return value;
     }
 
     @Override
     public Object getObject(String columnName) throws SQLException {
-        return getObject(findColumn(columnName));
+        return value;
     }
 
     @Override
     public Object getObject(String columnName, Map<String, Class<?>> map) throws SQLException {
-        return getObject(findColumn(columnName), map);
+        return value;
     }
 
     @Override
     public Ref getRef(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public Ref getRef(String colName) throws SQLException {
-        return getRef(findColumn(colName));
+        return null;
     }
 
     @Override
     public int getRow() throws SQLException {
-        return cursor.getPosition() + 1;
+        return 0;
     }
 
     @Override
     public short getShort(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        return cursor.getShort(columnIndex - 1);
+        return (short) value;
     }
 
     @Override
     public short getShort(String columnName) throws SQLException {
-        return getShort(findColumn(columnName));
+        return (short) value;
     }
 
     @Override
@@ -399,101 +342,77 @@ class CursorResultSet extends NonUpdateableResultSet {
 
     @Override
     public String getString(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        if(cursor.isNull(columnIndex - 1)) {
-            return null;
-        }
-        return cursor.getString(columnIndex - 1);
+        return String.valueOf(value);
     }
 
     @Override
     public String getString(String columnName) throws SQLException {
-        return getString(findColumn(columnName));
+        return String.valueOf(value);
     }
 
     @Override
     public Time getTime(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        if(cursor.isNull(columnIndex - 1)) {
-            return null;
-        }
-        return new Time(getLong(columnIndex - 1));
+        return null;
     }
 
     @Override
     public Time getTime(int columnIndex, Calendar cal) throws SQLException {
-        lastColumnIndex = columnIndex;
-        if(cursor.isNull(columnIndex - 1)) {
-            return null;
-        }
-        return new Time(getLong(columnIndex - 1));
+        return null;
     }
 
     @Override
     public Time getTime(String columnName) throws SQLException {
-        return getTime(findColumn(columnName));
+        return null;
     }
 
     @Override
     public Time getTime(String columnName, Calendar cal) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
-        lastColumnIndex = columnIndex;
-        if(cursor.isNull(columnIndex - 1)) {
-            return null;
-        }
-        return new Timestamp(getLong(columnIndex - 1));
+        return null;
     }
 
     @Override
     public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public Timestamp getTimestamp(String columnName) throws SQLException {
-        return getTimestamp(findColumn(columnName));
+        return null;
     }
 
     @Override
     public Timestamp getTimestamp(String columnName, Calendar cal) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public int getType() throws SQLException {
-        return TYPE_SCROLL_SENSITIVE; // allows random access from ResultSetIterator
+        return ResultSet.TYPE_FORWARD_ONLY;
     }
 
     @Override
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public InputStream getUnicodeStream(String columnName) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public URL getURL(int columnIndex) throws SQLException {
-        String value = getString(columnIndex);
-        if(value == null) {
-            return null;
-        }
-        try {
-            return new URL(value);
-        } catch (MalformedURLException e) {
-            throw new SQLException(e);
-        }
+        return null;
     }
 
     @Override
     public URL getURL(String columnName) throws SQLException {
-        return getURL(findColumn(columnName));
+        return null;
     }
 
     @Override
@@ -503,52 +422,52 @@ class CursorResultSet extends NonUpdateableResultSet {
 
     @Override
     public void insertRow() throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+
     }
 
     @Override
     public boolean isAfterLast() throws SQLException {
-        return cursor.isAfterLast();
+        return false;
     }
 
     @Override
     public boolean isBeforeFirst() throws SQLException {
-        return cursor.getCount() != 0 && cursor.isBeforeFirst();
+        return false;
     }
 
     @Override
     public boolean isFirst() throws SQLException {
-        return cursor.isFirst();
+        return false;
     }
 
     @Override
     public boolean isLast() throws SQLException {
-        return cursor.isLast() || cursor.getCount() == 0;
+        return true;
     }
 
     @Override
     public boolean last() throws SQLException {
-        return cursor.moveToLast();
+        return false;
     }
 
     @Override
     public void moveToCurrentRow() throws SQLException {
-
+        throw new SQLFeatureNotSupportedException();
     }
 
     @Override
     public void moveToInsertRow() throws SQLException {
-
+        throw new SQLFeatureNotSupportedException();
     }
 
     @Override
     public boolean next() throws SQLException {
-        return cursor.moveToNext();
+        return true;
     }
 
     @Override
     public boolean previous() throws SQLException {
-        return cursor.moveToPrevious();
+        return false;
     }
 
     @Override
@@ -558,7 +477,7 @@ class CursorResultSet extends NonUpdateableResultSet {
 
     @Override
     public boolean relative(int rows) throws SQLException {
-        return cursor.move(rows);
+        return false;
     }
 
     @Override
@@ -578,9 +497,7 @@ class CursorResultSet extends NonUpdateableResultSet {
 
     @Override
     public void setFetchDirection(int direction) throws SQLException {
-        if(direction != ResultSet.FETCH_FORWARD) {
-            throw new SQLException("Only FETCH_FORWARD is supported");
-        }
+
     }
 
     @Override
@@ -590,80 +507,76 @@ class CursorResultSet extends NonUpdateableResultSet {
 
     @Override
     public boolean wasNull() throws SQLException {
-        return cursor.isNull(lastColumnIndex - 1);
+        return false;
     }
 
     @Override
     public RowId getRowId(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public RowId getRowId(String columnLabel) throws SQLException {
-        return getRowId(findColumn(columnLabel));
+        return null;
     }
 
     @Override
     public int getHoldability() throws SQLException {
-        return HOLD_CURSORS_OVER_COMMIT;
+        return ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
     @Override
     public boolean isClosed() throws SQLException {
-        return cursor.isClosed();
+        return false;
     }
 
     @Override
     public NClob getNClob(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public NClob getNClob(String columnLabel) throws SQLException {
-        return getNClob(findColumn(columnLabel));
+        return null;
     }
 
     @Override
     public SQLXML getSQLXML(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public SQLXML getSQLXML(String columnLabel) throws SQLException {
-        return getSQLXML(findColumn(columnLabel));
+        return null;
     }
 
     @Override
     public String getNString(int columnIndex) throws SQLException {
-        return getString(columnIndex);
+        return null;
     }
 
     @Override
     public String getNString(String columnLabel) throws SQLException {
-        return getNString(findColumn(columnLabel));
+        return null;
     }
 
     @Override
     public Reader getNCharacterStream(int columnIndex) throws SQLException {
-        return getCharacterStream(columnIndex);
+        return null;
     }
 
     @Override
     public Reader getNCharacterStream(String columnLabel) throws SQLException {
-        return getNCharacterStream(findColumn(columnLabel));
+        return null;
     }
-
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        if(iface == Cursor.class) {
-            return iface.cast(cursor);
-        }
-        throw new SQLFeatureNotSupportedException();
+        return null;
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface == Cursor.class;
+        return false;
     }
 }

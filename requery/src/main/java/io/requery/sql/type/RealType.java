@@ -25,8 +25,8 @@ import java.sql.Types;
 
 public class RealType extends BasicType<Double> {
 
-    public RealType() {
-        super(Double.class, Types.REAL);
+    public RealType(Class<Double> type) {
+        super(type, Types.REAL);
     }
 
     @Override

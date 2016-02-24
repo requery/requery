@@ -28,6 +28,6 @@ public class CollectionAttributeBuilder<T, C extends Collection, E> extends Attr
                                       Class<E> elementClass) {
         super(name, (Class<C>) type);
         this.elementClass = Objects.requireNotNull(elementClass);
-        setInitializer(new CollectionInitializer<C>());
+        setInitializer(new CollectionInitializer<T, C>());
     }
 }

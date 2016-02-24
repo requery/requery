@@ -58,6 +58,12 @@ public @interface Entity {
     boolean cacheable() default true;
 
     /**
+     * @return true if the entity object should have state tracking disabled, which allows partial
+     * updates of changed values only defaults to false.
+     */
+    boolean stateless() default false;
+
+    /**
      * Defines the name style of properties in the target entity e.g. for a property 'name' and
      * style set to {@link PropertyNameStyle#BEAN} would map to:
      * <pre><code>

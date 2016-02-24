@@ -23,6 +23,7 @@ import io.requery.meta.Attribute;
 import io.requery.meta.EntityModel;
 import io.requery.meta.Type;
 import io.requery.sql.platform.PlatformDelegate;
+import io.requery.sql.type.IntegerType;
 import io.requery.util.Objects;
 import io.requery.util.function.Predicate;
 
@@ -386,7 +387,7 @@ public class SchemaModifier {
                 .space();
         } else {
             qb.attribute(attribute);
-            FieldType fieldType = BasicTypes.INTEGER;
+            FieldType fieldType = new IntegerType(int.class);
             qb.value(fieldType.identifier());
         }
         qb.keyword(REFERENCES);

@@ -16,19 +16,18 @@
 
 package io.requery.sql;
 
-import io.requery.proxy.Property;
+import io.requery.meta.Attribute;
 import io.requery.query.Expression;
 import io.requery.util.function.Predicate;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.Set;
 
-class EntityResultReader<E extends S, S> implements ResultReader<E>, Predicate<Property<E, ?>> {
+class EntityResultReader<E extends S, S> implements ResultReader<E>, Predicate<Attribute<E, ?>> {
 
     private final EntityReader<E, S> reader;
-    private Collection selection;
+    private Expression[] selection;
 
     public EntityResultReader(EntityReader<E, S> reader) {
         this.reader = reader;
@@ -37,13 +36,19 @@ class EntityResultReader<E extends S, S> implements ResultReader<E>, Predicate<P
     @Override
     public E read(ResultSet results, Set<? extends Expression<?>> selection) throws SQLException {
         if (this.selection == null) {
-            this.selection = selection;
+            this.selection = selection.toArray(new Expression[selection.size()]);
         }
         return reader.fromResult(null, results, this);
     }
 
     @Override
-    public boolean test(Property<E, ?> value) {
-        return selection.contains(value.attribute());
+    public boolean test(Attribute<E, ?> value) {
+        // slightly faster than contains()
+        for (Expression expression : selection) {
+            if (expression == value) {
+                return true;
+            }
+        }
+        return false;
     }
 }

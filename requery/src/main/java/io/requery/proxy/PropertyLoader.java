@@ -16,7 +16,9 @@
 
 package io.requery.proxy;
 
+import io.requery.meta.Attribute;
+
 public interface PropertyLoader<E> {
 
-    <V> void load(E entity, EntityProxy<E> proxy, Property<E, V> property);
+    <V> void load(E entity, EntityProxy<E> proxy, Attribute<E, V> attribute);
 }

@@ -25,8 +25,8 @@ import java.sql.Types;
 
 public class SmallIntType extends BasicType<Short> {
 
-    public SmallIntType() {
-        super(Short.class, Types.SMALLINT);
+    public SmallIntType(Class<Short> type) {
+        super(type, Types.SMALLINT);
     }
 
     @Override

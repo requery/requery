@@ -41,6 +41,7 @@ import io.requery.meta.TypeBuilder;
 import io.requery.proxy.EntityProxy;
 import io.requery.proxy.Getter;
 import io.requery.proxy.PreInsertListener;
+import io.requery.proxy.PropertyState;
 import io.requery.proxy.Setter;
 import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
@@ -143,6 +144,20 @@ class EntityGenerator implements SourceGenerator {
     }
 
     private void generateMembers(TypeSpec.Builder typeBuilder) {
+
+        // generate property states
+        if (!entity.isStateless()) {
+            for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
+                entity.attributes().entrySet()) {
+
+                AttributeDescriptor attribute = entry.getValue();
+                TypeName stateType = ClassName.get(PropertyState.class);
+                FieldSpec field = FieldSpec
+                    .builder(stateType, propertyStateFieldName(attribute), Modifier.PRIVATE)
+                    .build();
+                typeBuilder.addField(field);
+            }
+        }
         if (!typeElement.getKind().isInterface()) {
             return; //only used when generating from a interface
         }
@@ -361,9 +376,10 @@ class EntityGenerator implements SourceGenerator {
                 .add("new $T<$T>($T.class, $S)\n",
                     schemaName, typeName, typeName, entity.tableName());
 
-        typeBuilder.add(".setBaseType($T.class)\n", ClassName.get(typeElement));
-        typeBuilder.add(".setReadOnly($L)\n", entity.isReadOnly());
-        typeBuilder.add(".setCacheable($L)\n", entity.isCacheable());
+        typeBuilder.add(".setBaseType($T.class)\n", ClassName.get(typeElement))
+            .add(".setReadOnly($L)\n", entity.isReadOnly())
+            .add(".setCacheable($L)\n", entity.isCacheable())
+            .add(".setStateless($L)\n", entity.isStateless());
         String factoryName = entity.classFactoryName();
         if (factoryName != null) {
             typeBuilder.add(".setFactory(new $L())\n", ClassName.bestGuess(factoryName));
@@ -473,8 +489,12 @@ class EntityGenerator implements SourceGenerator {
             } else {
                 ParameterizedTypeName builderName = parameterizedTypeName(
                         attribute.builderClass(), typeName, attributeTypeName);
+                TypeName classType = attributeTypeName;
+                if (typeMirror.getKind().isPrimitive()) {
+                    classType = TypeName.get(typeMirror);
+                }
                 builder.add("\nnew $T($S, $T.class)\n",
-                        builderName, attribute.name(), attributeTypeName);
+                        builderName, attribute.name(), classType);
             }
 
             // getter proxy
@@ -492,6 +512,19 @@ class EntityGenerator implements SourceGenerator {
 
             builder.add(".setGetter($L)\n", getterBuilder.build());
 
+            // state getter proxy
+            ClassName stateClass = ClassName.get(PropertyState.class);
+            if (!entity.isStateless()) {
+                TypeSpec.Builder stateGetterBuilder = TypeSpec.anonymousClassBuilder("")
+                    .addSuperinterface(parameterizedTypeName(Getter.class, typeName, stateClass))
+                    .addMethod(CodeGeneration.overridePublicMethod("get")
+                        .addParameter(typeName, "entity")
+                        .addStatement("return entity.$L", propertyStateFieldName(attribute))
+                        .returns(stateClass)
+                        .build());
+
+                builder.add(".setStateGetter($L)\n", stateGetterBuilder.build());
+            }
             // setter proxy
             ParameterizedTypeName setterType =
                 parameterizedTypeName(Setter.class, typeName, attributeTypeName);
@@ -510,9 +543,21 @@ class EntityGenerator implements SourceGenerator {
                 setterMethod.addStatement("entity.$L = value", attributeName);
             }
             setterBuilder.addMethod(setterMethod.build());
-
             builder.add(".setSetter($L)\n", setterBuilder.build());
 
+            // state setter proxy
+            if (!entity.isStateless()) {
+                TypeSpec.Builder stateSetterBuilder = TypeSpec.anonymousClassBuilder("")
+                    .addSuperinterface(parameterizedTypeName(Setter.class, typeName, stateClass));
+                stateSetterBuilder.addMethod(CodeGeneration.overridePublicMethod("set")
+                    .addParameter(typeName, "entity")
+                    .addParameter(stateClass, "value")
+                    .addStatement("entity.$L = value", propertyStateFieldName(attribute)).build());
+
+                builder.add(".setStateSetter($L)\n", stateSetterBuilder.build());
+            }
+
+            // attribute properties
             if (attribute.isKey()) {
                 builder.add(".setKey(true)\n");
             }
@@ -631,6 +676,10 @@ class EntityGenerator implements SourceGenerator {
             typeBuilder.addField(fieldBuilder.build());
         }
         generateType(typeBuilder);
+    }
+
+    private String propertyStateFieldName(AttributeDescriptor attribute) {
+        return "$" + attribute.fieldName() + "_state";
     }
 
     private static String getJunctionTypeName(boolean isAbstract,

@@ -16,20 +16,23 @@
 
 package io.requery.proxy;
 
+import io.requery.meta.Attribute;
 import io.requery.util.Objects;
 import io.requery.util.CollectionObserver;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class CollectionChanges<E> implements CollectionObserver<E> {
+public class CollectionChanges<T, E> implements CollectionObserver<E> {
 
-    private final Property property;
+    private final EntityProxy<T> proxy;
+    private final Attribute<T, ?> attribute;
     private final Collection<E> added;
     private final Collection<E> removed;
 
-    public CollectionChanges(Property property) {
-        this.property = property;
+    public CollectionChanges(EntityProxy<T> proxy, Attribute<T, ?> attribute) {
+        this.proxy = proxy;
+        this.attribute = attribute;
         added = new ArrayList<>();
         removed = new ArrayList<>();
     }
@@ -46,7 +49,7 @@ public class CollectionChanges<E> implements CollectionObserver<E> {
     public void elementAdded(E element) {
         Objects.requireNotNull(element);
         if (added.add(element)) {
-            property.setState(PropertyState.MODIFIED);
+            proxy.setState(attribute, PropertyState.MODIFIED);
         }
         removed.remove(element);
     }
@@ -56,7 +59,7 @@ public class CollectionChanges<E> implements CollectionObserver<E> {
         Objects.requireNotNull(element);
         added.remove(element);
         if (removed.add(element)) {
-            property.setState(PropertyState.MODIFIED);
+            proxy.setState(attribute, PropertyState.MODIFIED);
         }
     }
 

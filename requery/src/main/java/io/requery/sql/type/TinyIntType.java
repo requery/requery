@@ -25,8 +25,8 @@ import java.sql.Types;
 
 public class TinyIntType extends BasicType<Byte> {
 
-    public TinyIntType() {
-        super(Byte.class, Types.TINYINT);
+    public TinyIntType(Class<Byte> type) {
+        super(type, Types.TINYINT);
     }
 
     @Override

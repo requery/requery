@@ -197,11 +197,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
-    public boolean isReadOnly() {
-        return annotationOf(ReadOnly.class).isPresent();
-    }
-
-    @Override
     public String modelName() {
         // it's important that the AnnotationMirror is used here since the model name needs to be
         // known before process() is called
@@ -282,6 +277,16 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             .orElse( annotationOf(Cacheable.class)
                     .map(Cacheable::value)
                     .orElse(true));
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return annotationOf(ReadOnly.class).isPresent();
+    }
+
+    @Override
+    public boolean isStateless() {
+        return annotationOf(Entity.class).map(Entity::stateless).orElse(false);
     }
 
     @Override

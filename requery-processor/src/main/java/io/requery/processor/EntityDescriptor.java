@@ -45,9 +45,11 @@ interface EntityDescriptor {
 
     PropertyNameStyle propertyNameStyle();
 
+    boolean isCacheable();
+
     boolean isReadOnly();
 
-    boolean isCacheable();
+    boolean isStateless();
 
     Map<Element, ? extends AttributeDescriptor> attributes();
 

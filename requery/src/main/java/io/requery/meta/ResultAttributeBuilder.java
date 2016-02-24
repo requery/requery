@@ -26,6 +26,6 @@ public class ResultAttributeBuilder<T, V extends Iterable<E>, E> extends Attribu
                                   Class<E> elementType) {
         super(name, (Class<V>) type);
         this.elementClass = Objects.requireNotNull(elementType);
-        setInitializer(new ResultInitializer<V>());
+        setInitializer(new ResultInitializer<T, V>());
     }
 }
