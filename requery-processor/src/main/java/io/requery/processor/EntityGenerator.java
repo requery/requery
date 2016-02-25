@@ -94,9 +94,9 @@ class EntityGenerator implements SourceGenerator {
     private final Set<TypeGenerationExtension> typeExtensions;
     private final Set<PropertyGenerationExtension> memberExtensions;
 
-    public EntityGenerator(ProcessingEnvironment processingEnvironment,
-                           EntityGraph graph,
-                           EntityDescriptor entity) {
+    EntityGenerator(ProcessingEnvironment processingEnvironment,
+                    EntityGraph graph,
+                    EntityDescriptor entity) {
         this.entity = entity;
         this.processingEnvironment = processingEnvironment;
         this.elements = processingEnvironment.getElementUtils();
@@ -171,8 +171,9 @@ class EntityGenerator implements SourceGenerator {
                 if (attribute.isOptional()) {
                     fieldType = tryFirstTypeArgument(fieldType);
                 }
+                TypeName fieldTypeName = nameResolver.tryGeneratedTypeName(fieldType);
                 FieldSpec field = FieldSpec
-                    .builder(TypeName.get(fieldType), attribute.fieldName(), Modifier.PRIVATE)
+                    .builder(fieldTypeName, attribute.fieldName(), Modifier.PRIVATE)
                     .build();
                 typeBuilder.addField(field);
             }
@@ -690,16 +691,16 @@ class EntityGenerator implements SourceGenerator {
 
     private void generateJunctionType(AttributeDescriptor attribute) throws IOException {
 
-        Optional<EntityDescriptor> otherEntity = graph.referencingEntity(attribute);
-        if (!otherEntity.isPresent()) {
+        EntityDescriptor otherEntity = graph.referencingEntity(attribute).orElse(null);
+        if (otherEntity == null) {
             return;
         }
         String name = attribute.associativeEntity().name();
         if (Names.isEmpty(name)) {
             // create junction table name with TableA_TableB
-            name = entity.tableName() + "_" + otherEntity.get().tableName();
+            name = entity.tableName() + "_" + otherEntity.tableName();
         }
-        String className = getJunctionTypeName(true, entity, otherEntity.get());
+        String className = getJunctionTypeName(true, entity, otherEntity);
 
         TypeSpec.Builder junctionType = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
@@ -711,7 +712,7 @@ class EntityGenerator implements SourceGenerator {
         CodeGeneration.addGeneratedAnnotation(processingEnvironment, junctionType);
 
         Set<AssociativeReference> references = attribute.associativeEntity().columns();
-        EntityDescriptor[] types = new EntityDescriptor[] { entity, otherEntity.get() };
+        EntityDescriptor[] types = new EntityDescriptor[] { entity, otherEntity };
         if (references.isEmpty()) {
             // generate with defaults
             for (EntityDescriptor type : types) {
