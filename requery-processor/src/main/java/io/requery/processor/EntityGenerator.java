@@ -167,11 +167,16 @@ class EntityGenerator implements SourceGenerator {
             AttributeDescriptor attribute = entry.getValue();
             if (element.getKind() == ElementKind.METHOD) {
                 ExecutableElement methodElement = (ExecutableElement) element;
-                TypeMirror fieldType = methodElement.getReturnType();
-                if (attribute.isOptional()) {
-                    fieldType = tryFirstTypeArgument(fieldType);
+                TypeMirror typeMirror = methodElement.getReturnType();
+                TypeName fieldTypeName;
+                if (attribute.isIterable()) {
+                    fieldTypeName = getParameterizedCollectionName(typeMirror);
+                } else if (attribute.isOptional()) {
+                    typeMirror = tryFirstTypeArgument(attribute.typeMirror());
+                    fieldTypeName = TypeName.get(typeMirror);
+                } else {
+                    fieldTypeName = nameResolver.tryGeneratedTypeName(typeMirror);
                 }
-                TypeName fieldTypeName = nameResolver.tryGeneratedTypeName(fieldType);
                 FieldSpec field = FieldSpec
                     .builder(fieldTypeName, attribute.fieldName(), Modifier.PRIVATE)
                     .build();
