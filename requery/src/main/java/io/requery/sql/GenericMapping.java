@@ -51,7 +51,6 @@ import io.requery.util.LanguageVersion;
 import io.requery.util.Objects;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
@@ -95,7 +94,6 @@ public class GenericMapping implements Mapping {
         types.put(Float.class, new FloatType(Float.class));
         types.put(double.class, new RealType(double.class));
         types.put(Double.class, new RealType(Double.class));
-        types.put(BigInteger.class, new BigIntType(long.class));
         types.put(BigDecimal.class, new DecimalType());
         types.put(byte[].class, new VarBinaryType());
         types.put(java.util.Date.class, new JavaDateType());
