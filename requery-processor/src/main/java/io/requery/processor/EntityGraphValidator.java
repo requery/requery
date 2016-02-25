@@ -44,7 +44,7 @@ class EntityGraphValidator {
         this.graph = graph;
     }
 
-    public Set<ElementValidator> validate() {
+    Set<ElementValidator> validate() {
         Set<ElementValidator> results = new LinkedHashSet<>();
         for (EntityDescriptor entity : graph.entities()) {
             results.addAll( validateEntity(entity) );
@@ -145,6 +145,17 @@ class EntityGraphValidator {
         if (mappedCardinality != expectedCardinality) {
             String message = mappingErrorMessage(source, mapped, expectedCardinality);
             validator.error(message);
+        } else if (sourceCardinality == Cardinality.MANY_TO_MANY) {
+            AssociativeEntityDescriptor sourceAssociation = source.associativeEntity();
+            AssociativeEntityDescriptor mappedAssociation = mapped.associativeEntity();
+            if (sourceAssociation == null && mappedAssociation == null) {
+                validator.error("One side of the ManyToMany relationship must specify the " +
+                    "@JunctionTable annotation");
+            }
+            if (sourceAssociation != null && mappedAssociation != null) {
+                validator.warning("@JunctionTable should be specified on only one side of a " +
+                    "ManyToMany relationship");
+            }
         }
     }
 
