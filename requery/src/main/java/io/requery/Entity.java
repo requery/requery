@@ -59,7 +59,8 @@ public @interface Entity {
 
     /**
      * @return true if the entity object should have state tracking disabled, which allows partial
-     * updates of changed values only defaults to false.
+     * updates of changed values only and automatic retrieval of not loaded properties. Defaults to
+     * false.
      */
     boolean stateless() default false;
 
