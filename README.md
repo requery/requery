@@ -248,7 +248,7 @@ dependencies {
 
 For Android, in order to process the `apt` dependency, also include the android-apt plugin:
 
-```
+```gradle
 buildscript {
     dependencies {
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
