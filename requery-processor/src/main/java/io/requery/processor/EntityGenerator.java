@@ -699,7 +699,7 @@ class EntityGenerator implements SourceGenerator {
         if (Names.isEmpty(descriptor.name())) {
             return prefix + a.typeName().className() + "_" + b.typeName().className();
         } else {
-            return prefix + descriptor.name();
+            return prefix + Names.upperCaseFirst(descriptor.name());
         }
     }
 
