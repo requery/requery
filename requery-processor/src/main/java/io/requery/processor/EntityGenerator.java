@@ -652,10 +652,13 @@ class EntityGenerator implements SourceGenerator {
                         String junctionType = null;
                         if (attribute.associativeEntity() != null) {
                             // generate a special type for the junction table (with attributes)
+                            junctionType = getJunctionTypeName(
+                                false, attribute.associativeEntity(), entity, referenced);
                             generateJunctionType(attribute);
-                            junctionType = getJunctionTypeName(false, entity, referenced);
                         } else if ( mappings.size() == 1) {
-                            junctionType = getJunctionTypeName(false, referenced, entity);
+                            AttributeDescriptor mapped = mappings.iterator().next();
+                            junctionType = getJunctionTypeName(
+                                false, mapped.associativeEntity(), referenced, entity);
                         }
                         if (junctionType != null) {
                             builder.add(".setReferencedClass($T.class)\n",
@@ -689,9 +692,15 @@ class EntityGenerator implements SourceGenerator {
     }
 
     private static String getJunctionTypeName(boolean isAbstract,
-                                              EntityDescriptor a, EntityDescriptor b) {
+                                              AssociativeEntityDescriptor descriptor,
+                                              EntityDescriptor a,
+                                              EntityDescriptor b) {
         String prefix = isAbstract? "Abstract" : "";
-        return prefix + a.typeName().className() + "_" + b.typeName().className();
+        if (Names.isEmpty(descriptor.name())) {
+            return prefix + a.typeName().className() + "_" + b.typeName().className();
+        } else {
+            return prefix + descriptor.name();
+        }
     }
 
     private void generateJunctionType(AttributeDescriptor attribute) throws IOException {
@@ -700,12 +709,13 @@ class EntityGenerator implements SourceGenerator {
         if (otherEntity == null) {
             return;
         }
-        String name = attribute.associativeEntity().name();
+        AssociativeEntityDescriptor associativeDescriptor = attribute.associativeEntity();
+        String name = associativeDescriptor.name();
         if (Names.isEmpty(name)) {
             // create junction table name with TableA_TableB
             name = entity.tableName() + "_" + otherEntity.tableName();
         }
-        String className = getJunctionTypeName(true, entity, otherEntity);
+        String className = getJunctionTypeName(true, associativeDescriptor, entity, otherEntity);
 
         TypeSpec.Builder junctionType = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
@@ -716,7 +726,7 @@ class EntityGenerator implements SourceGenerator {
                         .addMember("name", "$S", name).build());
         CodeGeneration.addGeneratedAnnotation(processingEnvironment, junctionType);
 
-        Set<AssociativeReference> references = attribute.associativeEntity().columns();
+        Set<AssociativeReference> references = associativeDescriptor.columns();
         EntityDescriptor[] types = new EntityDescriptor[] { entity, otherEntity };
         if (references.isEmpty()) {
             // generate with defaults

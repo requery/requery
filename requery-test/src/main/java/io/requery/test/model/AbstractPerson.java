@@ -61,6 +61,9 @@ public class AbstractPerson implements Serializable {
     @ManyToMany(mappedBy = "members")
     protected MutableResult<Group> groups;
 
+    @ManyToMany(mappedBy = "owners")
+    protected MutableResult<Group> ownedGroups;
+
     @Lazy
     protected String about;
 

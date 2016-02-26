@@ -34,6 +34,10 @@ public class AbstractGroup {
     @ManyToMany
     protected MutableResult<Person> members;
 
+    @JunctionTable(name = "Group_Owners")
+    @ManyToMany
+    protected MutableResult<Person> owners;
+
     protected java.sql.Date createdDate;
 
     @Transient
