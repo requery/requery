@@ -246,6 +246,18 @@ dependencies {
 }
 ```
 
+For Android, in order to process the `apt` dependency, also include the android-apt plugin:
+
+```
+buildscript {
+    dependencies {
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+    }
+}
+
+apply plugin: 'com.neenbedankt.android-apt'
+```
+
 Feedback and suggestions are welcome.
 
 For more information see the [wiki](https://github.com/requery/requery/wiki) page.
