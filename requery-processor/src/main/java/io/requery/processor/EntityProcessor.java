@@ -120,29 +120,26 @@ public final class EntityProcessor extends AbstractProcessor {
         }
 
         if (getBooleanOption(GENERATE_MODEL, true)) {
-            boolean canGenerateModel = true;
             Map<String, Collection<EntityDescriptor>> packagesMap = new LinkedHashMap<>();
-            for (Map.Entry<String, EntityGraph> entry : graphs.entrySet()) {
-                EntityGraph graph = entry.getValue();
-                for (EntityType entity : entities.values()) {
-                    if (graph.entities().contains(entity) &&
-                        entity.generatesAdditionalTypes()) {
-
-                        canGenerateModel = false;
-                    }
+            Map<String, Boolean> canGenerate = new HashMap<>();
+            for (EntityType entity : entities.values()) {
+                EntityGraph graph = graphs.get(entity.modelName());
+                String packageName = findModelPackageName(graph);
+                canGenerate.computeIfAbsent(packageName, key -> true);
+                if (entity.generatesAdditionalTypes()) {
+                    canGenerate.put(packageName, false);
                 }
-                if (!entities.isEmpty() && canGenerateModel) {
-                    String packageName = findModelPackageName(graph);
-                    if (packagesMap.containsKey(packageName)) {
-                        packagesMap.get(packageName).addAll(graph.entities());
-                    } else {
-                        packagesMap.put(packageName, new LinkedHashSet<>(graph.entities()));
-                    }
+                if (packagesMap.containsKey(packageName)) {
+                    packagesMap.get(packageName).addAll(graph.entities());
+                } else {
+                    packagesMap.put(packageName, new LinkedHashSet<>(graph.entities()));
                 }
             }
+
             generators.addAll(
                 packagesMap.entrySet().stream()
                     .filter(entry -> !entry.getValue().isEmpty())
+                    .filter(entry -> canGenerate.get(entry.getKey()))
                     .map(entry ->
                         new ModelGenerator(processingEnv, entry.getKey(), entry.getValue()))
                     .collect(Collectors.toList()));

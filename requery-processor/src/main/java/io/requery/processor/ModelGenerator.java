@@ -46,11 +46,11 @@ class ModelGenerator implements SourceGenerator {
 
     private final String packageName;
     private final ProcessingEnvironment processingEnvironment;
-    private final Collection<EntityDescriptor> entities;
+    private final Collection<? extends EntityDescriptor> entities;
 
     public ModelGenerator(ProcessingEnvironment processingEnvironment,
                           String packageName,
-                          Collection<EntityDescriptor> entities) {
+                          Collection<? extends EntityDescriptor> entities) {
         this.processingEnvironment = processingEnvironment;
         this.packageName = packageName;
         this.entities = entities;
