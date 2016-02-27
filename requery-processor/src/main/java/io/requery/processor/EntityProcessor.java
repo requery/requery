@@ -29,12 +29,14 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.requery.processor.EntityProcessor.GENERATE_ALWAYS;
 import static io.requery.processor.EntityProcessor.GENERATE_JPA;
@@ -76,7 +78,8 @@ public final class EntityProcessor extends AbstractProcessor {
             for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
                 Optional<TypeElement> typeElement = typeElementOf(element);
 
-                if (typeElement.map(this::isTypeProcessable).orElse(false)) {
+                if (typeElement.isPresent() &&
+                    typeElement.map(this::isTypeProcessable).orElse(false)) {
                     // create or get the entity for the annotation
                     EntityType entity = entities.computeIfAbsent(typeElement.get(),
                         key -> new EntityType(processingEnv, key));
@@ -118,6 +121,7 @@ public final class EntityProcessor extends AbstractProcessor {
 
         if (getBooleanOption(GENERATE_MODEL, true)) {
             boolean canGenerateModel = true;
+            Map<String, Collection<EntityDescriptor>> packagesMap = new LinkedHashMap<>();
             for (Map.Entry<String, EntityGraph> entry : graphs.entrySet()) {
                 EntityGraph graph = entry.getValue();
                 for (EntityType entity : entities.values()) {
@@ -128,9 +132,20 @@ public final class EntityProcessor extends AbstractProcessor {
                     }
                 }
                 if (!entities.isEmpty() && canGenerateModel) {
-                    generators.add(new ModelGenerator(processingEnv, graph.entities()));
+                    String packageName = findModelPackageName(graph);
+                    if (packagesMap.containsKey(packageName)) {
+                        packagesMap.get(packageName).addAll(graph.entities());
+                    } else {
+                        packagesMap.put(packageName, new LinkedHashSet<>(graph.entities()));
+                    }
                 }
             }
+            generators.addAll(
+                packagesMap.entrySet().stream()
+                    .filter(entry -> !entry.getValue().isEmpty())
+                    .map(entry ->
+                        new ModelGenerator(processingEnv, entry.getKey(), entry.getValue()))
+                    .collect(Collectors.toList()));
         }
         for (SourceGenerator generator : generators) {
             try {
@@ -169,5 +184,37 @@ public final class EntityProcessor extends AbstractProcessor {
     private boolean getBooleanOption(String key, boolean defaultValue) {
         String value = processingEnv.getOptions().get(key);
         return value == null ? defaultValue : Boolean.valueOf(value);
+    }
+
+    private String findModelPackageName(EntityGraph graph) {
+        String packageName = "";
+        Set<String> packageNames = graph.entities().stream().map(
+            entity -> entity.typeName().packageName()).collect(Collectors.toSet());
+
+        if (packageNames.size() == 1) {
+            // all the types are in the same package...
+            packageName = packageNames.iterator().next();
+        } else {
+            String target = packageNames.iterator().next();
+
+            while (target.indexOf(".") != target.lastIndexOf(".")) {
+                target = target.substring(0, target.lastIndexOf("."));
+                boolean allTypesInPackage = true;
+                for (EntityDescriptor entity : graph.entities()) {
+                    if (!entity.typeName().packageName().startsWith(target)) {
+                        allTypesInPackage = false;
+                    }
+                }
+                if (allTypesInPackage) {
+                    packageName = target;
+                    break;
+                }
+            }
+            // no common package...
+            if ("".equals(packageName)) {
+                packageName = "io.requery.generated";
+            }
+        }
+        return packageName;
     }
 }

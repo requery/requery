@@ -33,58 +33,31 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
- * Generates a java class file containing all the {@link EntityModel} information for classes that
- * were processed by the annotation processor. The models can be used to group together persistable
- * classes that may belong to different databases through the {@link Entity#model()} field.
+ * Generates a java class file containing one or more {@link EntityModel} information for classes
+ * that were processed by the annotation processor. The models can be used to group together
+ * persistable classes that may belong to different databases through the {@link Entity#model()}
+ * field.
  *
  * @author Nikhil Purushe
  */
 class ModelGenerator implements SourceGenerator {
 
+    private final String packageName;
     private final ProcessingEnvironment processingEnvironment;
     private final Collection<EntityDescriptor> entities;
 
     public ModelGenerator(ProcessingEnvironment processingEnvironment,
+                          String packageName,
                           Collection<EntityDescriptor> entities) {
         this.processingEnvironment = processingEnvironment;
+        this.packageName = packageName;
         this.entities = entities;
     }
 
     @Override
     public void generate() throws IOException {
-        // find a package to place the class
-        String packageName = "";
-        Set<String> packageNames = entities.stream().map(
-                entity -> entity.typeName().packageName()).collect(Collectors.toSet());
-
-        if (packageNames.size() == 1) {
-            // all the types are in the same package...
-            packageName = packageNames.iterator().next();
-        } else {
-            String target = packageNames.iterator().next();
-
-            while (target.indexOf(".") != target.lastIndexOf(".")) {
-                target = target.substring(0, target.lastIndexOf("."));
-                boolean allTypesInPackage = true;
-                for (EntityDescriptor entity : entities) {
-                    if (!entity.typeName().packageName().startsWith(target)) {
-                        allTypesInPackage = false;
-                    }
-                }
-                if (allTypesInPackage) {
-                    packageName = target;
-                    break;
-                }
-            }
-            // no common package...
-            if ("".equals(packageName)) {
-                packageName = "io.requery.generated";
-            }
-        }
-
         ClassName typeName = ClassName.get(packageName, "Models");
         TypeSpec.Builder type = TypeSpec.classBuilder(typeName.simpleName())
                 .addModifiers(Modifier.PUBLIC)
