@@ -261,6 +261,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         if (column != null) {
             name = "".equals(column.name()) ? null : column.name();
             isUnique = column.unique();
+            isNullable = column.nullable();
             defaultValue = column.value();
             collate = column.collate();
             if (column.length() > 0) {

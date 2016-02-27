@@ -40,6 +40,11 @@ public @interface Column {
     String name() default "";
 
     /**
+     * @return true if this column is nullable or false otherwise. Defaults to true (no constraint).
+     */
+    boolean nullable() default true;
+
+    /**
      * @return true if this column is uniquely constrained false otherwise.
      */
     boolean unique() default false;

@@ -33,9 +33,9 @@ public class AbstractAddress {
     @Convert(AddressTypeConverter.class)
     protected AddressType type;
 
-    @Column("0.0")
+    @Column(value = "0.0", nullable = false)
     protected float latitude;
-    @Column("0.0")
+    @Column(value = "0.0", nullable = false)
     protected float longitude;
 
     @Override
