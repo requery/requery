@@ -87,26 +87,15 @@ class PreparedStatementAdapter extends StatementAdapter implements PreparedState
         }
     }
 
-    private void bindLong(int index, Long value) {
-        if (value == null) {
-            statement.bindNull(index);
-            if (bindings != null) {
-                bindings.add(null);
-            }
-        } else {
-            statement.bindLong(index, value);
-            if (bindings != null) {
-                bindings.add(value);
-            }
+    private void bindLong(int index, long value) {
+        statement.bindLong(index, value);
+        if (bindings != null) {
+            bindings.add(value);
         }
     }
 
-    private void bindDouble(int index, Double value) {
-        if (value == null) {
-            statement.bindNull(index);
-        } else {
-            statement.bindDouble(index, value);
-        }
+    private void bindDouble(int index, double value) {
+        statement.bindDouble(index, value);
         if (bindings != null) {
             bindings.add(value);
         }
@@ -245,7 +234,6 @@ class PreparedStatementAdapter extends StatementAdapter implements PreparedState
 
     @Override
     public void setBigDecimal(int parameterIndex, BigDecimal theBigDecimal) throws SQLException {
-        throwIfClosed();
         bindNullOrString(parameterIndex, theBigDecimal);
     }
 
@@ -257,26 +245,22 @@ class PreparedStatementAdapter extends StatementAdapter implements PreparedState
 
     @Override
     public void setBlob(int parameterIndex, Blob theBlob) throws SQLException {
-        throwIfClosed();
         setBytes(parameterIndex, theBlob.getBytes(0, (int) theBlob.length()));
     }
 
     @Override
     public void setBoolean(int parameterIndex, boolean theBoolean) throws SQLException {
-        throwIfClosed();
         long value = theBoolean ? 1 : 0;
         bindLong(parameterIndex, value);
     }
 
     @Override
     public void setByte(int parameterIndex, byte theByte) throws SQLException {
-        throwIfClosed();
         bindLong(parameterIndex, (long) theByte);
     }
 
     @Override
     public void setBytes(int parameterIndex, byte[] theBytes) throws SQLException {
-        throwIfClosed();
         bindBlob(parameterIndex, theBytes);
     }
 
@@ -292,55 +276,50 @@ class PreparedStatementAdapter extends StatementAdapter implements PreparedState
 
     @Override
     public void setDate(int parameterIndex, Date theDate) throws SQLException {
-        throwIfClosed();
         setDate(parameterIndex, theDate, null);
     }
 
     @Override
     public void setDate(int parameterIndex, Date theDate, Calendar cal) throws SQLException {
-        throwIfClosed();
-        bindLong(parameterIndex, theDate == null ? null : theDate.getTime());
+        if (theDate == null) {
+            bindNullOrString(parameterIndex, null);
+        } else {
+            bindLong(parameterIndex, theDate.getTime());
+        }
     }
 
     @Override
     public void setDouble(int parameterIndex, double theDouble) throws SQLException {
-        throwIfClosed();
         bindDouble(parameterIndex, theDouble);
     }
 
     @Override
     public void setFloat(int parameterIndex, float theFloat) throws SQLException {
-        throwIfClosed();
         bindDouble(parameterIndex, (double) theFloat);
     }
 
     @Override
     public void setInt(int parameterIndex, int theInt) throws SQLException {
-        throwIfClosed();
         bindLong(parameterIndex, (long) theInt);
     }
 
     @Override
     public void setLong(int parameterIndex, long theLong) throws SQLException {
-        throwIfClosed();
         bindLong(parameterIndex, theLong);
     }
 
     @Override
     public void setNull(int parameterIndex, int sqlType) throws SQLException {
-        throwIfClosed();
         bindNullOrString(parameterIndex, null);
     }
 
     @Override
     public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException {
-        throwIfClosed();
         bindNullOrString(paramIndex, null);
     }
 
     @Override
     public void setObject(int parameterIndex, Object theObject) throws SQLException {
-        throwIfClosed();
         if (theObject == null) {
             setNull(parameterIndex, Types.NULL);
         } else {
@@ -450,38 +429,49 @@ class PreparedStatementAdapter extends StatementAdapter implements PreparedState
 
     @Override
     public void setShort(int parameterIndex, short theShort) throws SQLException {
-        throwIfClosed();
         bindLong(parameterIndex, (long) theShort);
     }
 
     @Override
     public void setString(int parameterIndex, String theString) throws SQLException {
-        throwIfClosed();
         bindNullOrString(parameterIndex, theString);
     }
 
     @Override
     public void setTime(int parameterIndex, Time theTime) throws SQLException {
-        throwIfClosed();
-        bindLong(parameterIndex, theTime == null ? null : theTime.getTime());
+        if (theTime == null) {
+            bindNullOrString(parameterIndex, null);
+        } else {
+            bindLong(parameterIndex, theTime.getTime());
+        }
     }
 
     @Override
     public void setTime(int parameterIndex, Time theTime, Calendar cal) throws SQLException {
-        throwIfClosed();
-        bindLong(parameterIndex, theTime == null ? null : theTime.getTime());
+        if (theTime == null) {
+            bindNullOrString(parameterIndex, null);
+        } else {
+            bindLong(parameterIndex, theTime.getTime());
+        }
     }
 
     @Override
     public void setTimestamp(int parameterIndex, Timestamp theTimestamp) throws SQLException {
-        throwIfClosed();
-        bindLong(parameterIndex, theTimestamp == null ? null : theTimestamp.getTime());
+        if (theTimestamp == null) {
+            bindNullOrString(parameterIndex, null);
+        } else {
+            bindLong(parameterIndex, theTimestamp.getTime());
+        }
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp theTimestamp, Calendar cal) throws SQLException {
-        throwIfClosed();
-        bindLong(parameterIndex, theTimestamp == null ? null : theTimestamp.getTime());
+    public void setTimestamp(int parameterIndex, Timestamp theTimestamp, Calendar cal)
+        throws SQLException {
+        if (theTimestamp == null) {
+            bindNullOrString(parameterIndex, null);
+        } else {
+            bindLong(parameterIndex, theTimestamp.getTime());
+        }
     }
 
     @Override
@@ -492,7 +482,6 @@ class PreparedStatementAdapter extends StatementAdapter implements PreparedState
 
     @Override
     public void setURL(int parameterIndex, URL theURL) throws SQLException {
-        throwIfClosed();
         bindNullOrString(parameterIndex, theURL);
     }
 
@@ -503,7 +492,6 @@ class PreparedStatementAdapter extends StatementAdapter implements PreparedState
 
     @Override
     public void setNString(int parameterIndex, String theString) throws SQLException {
-        throwIfClosed();
         bindNullOrString(parameterIndex, theString);
     }
 
