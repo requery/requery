@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
-package io.requery.proxy;
+package io.requery.sql.type;
 
-@FunctionalInterface
-public interface Getter<E, V> {
-    V get(E entity);
+import io.requery.sql.FieldType;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public interface PrimitiveBooleanType extends FieldType<Boolean> {
+
+    boolean readBoolean(ResultSet results, int column) throws SQLException;
+    void writeBoolean(PreparedStatement statement, int index, boolean value) throws SQLException;
 }

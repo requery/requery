@@ -24,7 +24,6 @@ import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.List;
 
 /**
  * Executes a batched update or insert operation using JDBC batching if enabled otherwise reuses
@@ -32,23 +31,28 @@ import java.util.List;
  *
  * @author Nikhil Purushe
  */
-class BatchUpdateOperation extends AbstractUpdate implements QueryOperation<int[]> {
+class BatchUpdateOperation<E> extends AbstractUpdate implements QueryOperation<int[]> {
 
-    private final List<BoundParameters> values;
+    private final E[] elements;
+    private final int length;
+    private final ParameterBinder<E> parameterBinder;
     private final boolean batchInStatement;
 
     BatchUpdateOperation(RuntimeConfiguration configuration,
-                         List<BoundParameters> values,
+                         E[] elements, int length,
+                         ParameterBinder<E> parameterBinder,
                          GeneratedResultReader generatedResultReader,
                          boolean batchInStatement) {
         super(configuration, generatedResultReader);
-        this.values = values;
+        this.elements = elements;
+        this.length = length;
+        this.parameterBinder = parameterBinder;
         this.batchInStatement = batchInStatement;
     }
 
     @Override
     public int[] execute(QueryElement<int[]> query) {
-        int[] result = batchInStatement ? null : new int[values.size()];
+        int[] result = batchInStatement ? null : new int[length];
         int count = 0;
 
         try (Connection connection = configuration.connectionProvider().getConnection()) {
@@ -59,12 +63,13 @@ class BatchUpdateOperation extends AbstractUpdate implements QueryOperation<int[
 
             try (PreparedStatement statement = prepare(sql, connection)) {
 
-                for (BoundParameters parameters : values) {
-                    mapParameters(statement, parameters);
+                for (int i = 0; i < length; i++) {
+                    E element = elements[i];
+                    parameterBinder.bindParameters(element, statement);
                     if (batchInStatement) {
                         statement.addBatch();
                     } else {
-                        listener.beforeExecuteUpdate(statement, sql, parameters);
+                        listener.beforeExecuteUpdate(statement, sql, null);
                         result[count] = statement.executeUpdate();
                         listener.afterExecuteUpdate(statement);
                         readGeneratedKeys(count, statement);

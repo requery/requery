@@ -39,7 +39,8 @@ class UpdateOperation extends AbstractUpdate implements QueryOperation<Scalar<In
         super(configuration, null);
     }
 
-    UpdateOperation(RuntimeConfiguration configuration, GeneratedResultReader resultReader) {
+    UpdateOperation(RuntimeConfiguration configuration,
+                    GeneratedResultReader resultReader) {
         super(configuration, resultReader);
     }
 

@@ -14,27 +14,16 @@
  * limitations under the License.
  */
 
-package io.requery.sql;
+package io.requery.sql.type;
 
-import io.requery.meta.Attribute;
-import io.requery.query.Expression;
+import io.requery.sql.FieldType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Set;
 
-class EntityResultReader<E extends S, S> implements ResultReader<E> {
+public interface PrimitiveIntType extends FieldType<Integer> {
 
-    private final EntityReader<E, S> reader;
-    private Attribute<?, ?>[] attributes;
-
-    public EntityResultReader(EntityReader<E, S> reader, Attribute<?, ?>[] attributes) {
-        this.reader = reader;
-        this.attributes = attributes;
-    }
-
-    @Override
-    public E read(ResultSet results, Set<? extends Expression<?>> selection) throws SQLException {
-        return reader.fromResult(null, results, attributes);
-    }
+    int readInt(ResultSet results, int column) throws SQLException;
+    void writeInt(PreparedStatement statement, int index, int value) throws SQLException;
 }

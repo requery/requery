@@ -19,7 +19,9 @@ package io.requery.meta;
 import io.requery.CascadeAction;
 import io.requery.Converter;
 import io.requery.ReferentialAction;
-import io.requery.proxy.Field;
+import io.requery.proxy.Initializer;
+import io.requery.proxy.Property;
+import io.requery.proxy.PropertyState;
 import io.requery.util.function.Supplier;
 
 import java.util.Set;
@@ -50,9 +52,27 @@ public interface Attribute<T, V> {
     Type<T> declaringType();
 
     /**
-     * @return the {@link Field} representing access to this attribute.
+     * @return {@link PrimitiveKind} of this attribute if this attribute is representing a
+     * primitive field, returns null otherwise if the field is not primitive (including boxed
+     * versions of types)
      */
-    Field<T, V> fieldAccess();
+    PrimitiveKind primitiveKind();
+
+    /**
+     * @return {@link Property} representing access to the field of the entity.
+     */
+    Property<T, V> property();
+
+    /**
+     * @return {@link Property} representing access to the state of the held property.
+     */
+    Property<T, PropertyState> propertyState();
+
+    /**
+     * @return {@link Initializer} for defining the default value for the property representing the
+     * attribute.
+     */
+    Initializer<T, V> initializer();
 
     /**
      * @return true if this attribute is lazily loaded, false otherwise.

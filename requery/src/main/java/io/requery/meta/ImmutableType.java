@@ -19,6 +19,7 @@ package io.requery.meta;
 import io.requery.util.function.Supplier;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 
 final class ImmutableType<T> extends BaseType<T> {
 
@@ -26,7 +27,6 @@ final class ImmutableType<T> extends BaseType<T> {
         this.type = builder.classType();
         this.baseType = builder.baseType();
         this.name = builder.name();
-        this.attributes = Collections.unmodifiableSet(builder.attributes());
         this.cacheable = builder.isCacheable();
         this.readOnly = builder.isReadOnly();
         this.stateless = builder.isStateless();
@@ -34,12 +34,15 @@ final class ImmutableType<T> extends BaseType<T> {
         this.proxyProvider = builder.proxyProvider();
         this.tableCreateAttributes = builder.tableCreateAttributes();
 
-        for (Attribute<T, ?> attribute : attributes) {
+        LinkedHashSet<Attribute<T, ?>> attributes = new LinkedHashSet<>();
+        for (Attribute<T, ?> attribute : builder.attributes()) {
             if (attribute instanceof BaseAttribute) {
                 BaseAttribute baseAttribute = (BaseAttribute) attribute;
                 baseAttribute.declaringType = this;
             }
+            attributes.add(attribute);
         }
+        this.attributes = Collections.unmodifiableSet(attributes);
         if (factory == null) {
             // factory will be set by the processor this is a fallback
             factory = new Supplier<T>() {

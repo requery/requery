@@ -36,11 +36,6 @@ public class BoundParameters {
         values = new ArrayList<>();
     }
 
-    BoundParameters(int size) {
-        expressions = new ArrayList<>(size);
-        values = new ArrayList<>(size);
-    }
-
     public <V> void add(Expression<V> expression, V value) {
         expressions.add(expression);
         values.add(value);

@@ -23,7 +23,9 @@ import io.requery.sql.Keyword;
 import io.requery.sql.LimitDefinition;
 import io.requery.sql.LimitOffsetDefinition;
 import io.requery.sql.Mapping;
+import io.requery.sql.type.PrimitiveLongType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -38,7 +40,7 @@ public class SQLite extends Generic {
 
     // in SQLite BIGINT can be treated as just an integer, this handles the case when an long is
     // used as generated key
-    private static class LongType extends BasicType<Long> {
+    private static class LongType extends BasicType<Long> implements PrimitiveLongType {
 
         public LongType(Class<Long> type) {
             super(type, Types.INTEGER);
@@ -52,6 +54,17 @@ public class SQLite extends Generic {
         @Override
         public Keyword identifier() {
             return Keyword.INTEGER;
+        }
+
+        @Override
+        public long readLong(ResultSet results, int column) throws SQLException {
+            return results.getLong(column);
+        }
+
+        @Override
+        public void writeLong(PreparedStatement statement, int index, long value)
+            throws SQLException {
+            statement.setLong(index, value);
         }
     }
 

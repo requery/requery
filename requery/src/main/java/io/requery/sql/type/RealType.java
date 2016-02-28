@@ -19,11 +19,12 @@ package io.requery.sql.type;
 import io.requery.sql.Keyword;
 import io.requery.sql.BasicType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class RealType extends BasicType<Double> {
+public class RealType extends BasicType<Double> implements PrimitiveDoubleType {
 
     public RealType(Class<Double> type) {
         super(type, Types.REAL);
@@ -37,5 +38,16 @@ public class RealType extends BasicType<Double> {
     @Override
     public Keyword identifier() {
         return Keyword.REAL;
+    }
+
+    @Override
+    public double readDouble(ResultSet results, int column) throws SQLException {
+        return results.getDouble(column);
+    }
+
+    @Override
+    public void writeDouble(PreparedStatement statement, int index, double value)
+        throws SQLException {
+        statement.setDouble(index, value);
     }
 }

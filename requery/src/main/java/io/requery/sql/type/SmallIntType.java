@@ -19,11 +19,12 @@ package io.requery.sql.type;
 import io.requery.sql.Keyword;
 import io.requery.sql.BasicType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class SmallIntType extends BasicType<Short> {
+public class SmallIntType extends BasicType<Short> implements PrimitiveShortType {
 
     public SmallIntType(Class<Short> type) {
         super(type, Types.SMALLINT);
@@ -37,5 +38,16 @@ public class SmallIntType extends BasicType<Short> {
     @Override
     public Keyword identifier() {
         return Keyword.SMALLINT;
+    }
+
+    @Override
+    public short readShort(ResultSet results, int column) throws SQLException {
+        return results.getShort(column);
+    }
+
+    @Override
+    public void writeShort(PreparedStatement statement, int index, short value)
+        throws SQLException {
+        statement.setShort(index, value);
     }
 }

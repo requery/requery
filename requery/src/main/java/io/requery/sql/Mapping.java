@@ -22,7 +22,6 @@ import io.requery.query.Expression;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 /**
  * Defines the mapping between java class types and {@link FieldType} instances which determines
@@ -62,14 +61,6 @@ public interface Mapping {
     FieldType mapAttribute(Attribute<?, ?> attribute);
 
     /**
-     * Get the mapped storage type mapping for a given {@link Attribute} that is a collection type.
-     *
-     * @param attribute attribute
-     * @return the mapped {@link FieldType}s for a collection
-     */
-    List<FieldType> mapCollectionAttribute(Attribute<?, ?> attribute);
-
-    /**
      * Given the expression read it from {@link ResultSet} instance.
      *
      * @param expression expression to read
@@ -80,6 +71,66 @@ public interface Mapping {
      * @throws SQLException on a failure to read from the {@link ResultSet}
      */
     <A> A read(Expression<A> expression, ResultSet results, int column) throws SQLException;
+
+    /**
+     * Reads a boolean value.
+     *
+     * @param results {@link ResultSet} instance
+     * @param column  column index
+     * @return read value
+     * @throws SQLException on a failure to read from the {@link ResultSet}
+     */
+    boolean readBoolean(ResultSet results, int column) throws SQLException;
+
+    /**
+     * Reads a boolean value.
+     *
+     * @param results {@link ResultSet} instance
+     * @param column  column index
+     * @return read value
+     * @throws SQLException on a failure to read from the {@link ResultSet}
+     */
+    short readShort(ResultSet results, int column) throws SQLException;
+
+    /**
+     * Reads a integer value.
+     *
+     * @param results {@link ResultSet} instance
+     * @param column  column index
+     * @return read value
+     * @throws SQLException on a failure to read from the {@link ResultSet}
+     */
+    int readInt(ResultSet results, int column) throws SQLException;
+
+    /**
+     * Reads a long value.
+     *
+     * @param results {@link ResultSet} instance
+     * @param column  column index
+     * @return read value
+     * @throws SQLException on a failure to read from the {@link ResultSet}
+     */
+    long readLong(ResultSet results, int column) throws SQLException;
+
+    /**
+     * Reads a float value.
+     *
+     * @param results {@link ResultSet} instance
+     * @param column  column index
+     * @return read value
+     * @throws SQLException on a failure to read from the {@link ResultSet}
+     */
+    float readFloat(ResultSet results, int column) throws SQLException;
+
+    /**
+     * Reads a double value.
+     *
+     * @param results {@link ResultSet} instance
+     * @param column  column index
+     * @return read value
+     * @throws SQLException on a failure to read from the {@link ResultSet}
+     */
+    double readDouble(ResultSet results, int column) throws SQLException;
 
     /**
      * Given the expression bind it into a JDBC {@link PreparedStatement}.
@@ -93,4 +144,65 @@ public interface Mapping {
      */
     <A> void write(Expression<A> expression, PreparedStatement statement, int index, A value)
         throws SQLException;
+
+    /**
+     * Sets a boolean value
+     *
+     * @param statement prepared statement
+     * @param index     statement index
+     * @param value     type to be bound
+     * @throws SQLException on a failure to set the expression on the {@link PreparedStatement}
+     */
+    void writeBoolean(PreparedStatement statement, int index, boolean value) throws SQLException;
+
+    /**
+     * Sets a short value
+     *
+     * @param statement prepared statement
+     * @param index     statement index
+     * @param value     type to be bound
+     * @throws SQLException on a failure to set the expression on the {@link PreparedStatement}
+     */
+    void writeShort(PreparedStatement statement, int index, short value) throws SQLException;
+
+    /**
+     * Sets a int value
+     *
+     * @param statement prepared statement
+     * @param index     statement index
+     * @param value     type to be bound
+     * @throws SQLException on a failure to set the expression on the {@link PreparedStatement}
+     */
+    void writeInt(PreparedStatement statement, int index, int value) throws SQLException;
+
+    /**
+     * Sets a long value
+     *
+     * @param statement prepared statement
+     * @param index     statement index
+     * @param value     type to be bound
+     * @throws SQLException on a failure to set the expression on the {@link PreparedStatement}
+     */
+    void writeLong(PreparedStatement statement, int index, long value) throws SQLException;
+
+    /**
+     * Sets a float value
+     *
+     * @param statement prepared statement
+     * @param index     statement index
+     * @param value     type to be bound
+     * @throws SQLException on a failure to set the expression on the {@link PreparedStatement}
+     */
+    void writeFloat(PreparedStatement statement, int index, float value) throws SQLException;
+
+    /**
+     * Sets a double value
+     *
+     * @param statement prepared statement
+     * @param index     statement index
+     * @param value     type to be bound
+     * @throws SQLException on a failure to set the expression on the {@link PreparedStatement}
+     */
+    void writeDouble(PreparedStatement statement, int index, double value) throws SQLException;
+
 }

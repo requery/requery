@@ -19,40 +19,38 @@ package io.requery.meta;
 import io.requery.CascadeAction;
 import io.requery.Converter;
 import io.requery.ReferentialAction;
-import io.requery.proxy.Getter;
 import io.requery.proxy.Initializer;
+import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
-import io.requery.proxy.Setter;
 import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
 
 import java.util.Arrays;
 import java.util.EnumSet;
 
+/**
+ * Builds information about an attribute on a specific {@link Type}.
+ *
+ * @param <T> entity type
+ * @param <V> value type
+ *
+ * @author Nikhil Purushe
+ */
 public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
 
     public AttributeBuilder(String name, Class<V> type) {
         this.name = Objects.requireNotNull(name);
         this.classType = Objects.requireNotNull(type);
+        this.primitiveKind = PrimitiveKind.fromClass(classType);
     }
 
-    public AttributeBuilder<T, V> setGetter(Getter<T, V> getter) {
-        this.getter = getter;
+    public AttributeBuilder<T, V> setProperty(Property<T, V> property) {
+        this.property = property;
         return this;
     }
 
-    public AttributeBuilder<T, V> setSetter(Setter<T, V> setter) {
-        this.setter = setter;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setStateGetter(Getter<T, PropertyState> getter) {
-        this.stateGetter = getter;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setStateSetter(Setter<T, PropertyState> setter) {
-        this.stateSetter = setter;
+    public AttributeBuilder<T, V> setPropertyState(Property<T, PropertyState> property) {
+        this.propertyState = property;
         return this;
     }
 

@@ -16,15 +16,9 @@
 
 package io.requery.proxy;
 
-public interface Field<E, V> {
+public interface Property<E, V> {
 
-    Getter<E, V> getter();
+    V get(E entity);
 
-    Setter<E, V> setter();
-
-    Getter<E, PropertyState> stateGetter();
-
-    Setter<E, PropertyState> stateSetter();
-
-    Initializer<E, V> initializer();
+    void set(E entity, V value);
 }

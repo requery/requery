@@ -38,11 +38,16 @@ import io.requery.meta.Cardinality;
 import io.requery.meta.QueryAttribute;
 import io.requery.meta.Type;
 import io.requery.meta.TypeBuilder;
+import io.requery.proxy.BooleanProperty;
+import io.requery.proxy.DoubleProperty;
 import io.requery.proxy.EntityProxy;
-import io.requery.proxy.Getter;
+import io.requery.proxy.FloatProperty;
+import io.requery.proxy.IntProperty;
+import io.requery.proxy.LongProperty;
 import io.requery.proxy.PreInsertListener;
+import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
-import io.requery.proxy.Setter;
+import io.requery.proxy.ShortProperty;
 import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
 
@@ -503,39 +508,44 @@ class EntityGenerator implements SourceGenerator {
                         builderName, attribute.name(), classType);
             }
 
-            // getter proxy
+            // getter/setter proxy
             String attributeName = attribute.fieldName();
-            ParameterizedTypeName getterType =
-                parameterizedTypeName(Getter.class, typeName, attributeTypeName);
-
-            TypeSpec.Builder getterBuilder = TypeSpec.anonymousClassBuilder("")
-                    .addSuperinterface(getterType)
-                    .addMethod(CodeGeneration.overridePublicMethod("get")
-                        .addParameter(typeName, "entity")
-                        .addStatement("return entity.$L", attributeName)
-                        .returns(attributeTypeName)
-                        .build());
-
-            builder.add(".setGetter($L)\n", getterBuilder.build());
-
-            // state getter proxy
-            ClassName stateClass = ClassName.get(PropertyState.class);
-            if (!entity.isStateless()) {
-                TypeSpec.Builder stateGetterBuilder = TypeSpec.anonymousClassBuilder("")
-                    .addSuperinterface(parameterizedTypeName(Getter.class, typeName, stateClass))
-                    .addMethod(CodeGeneration.overridePublicMethod("get")
-                        .addParameter(typeName, "entity")
-                        .addStatement("return entity.$L", propertyStateFieldName(attribute))
-                        .returns(stateClass)
-                        .build());
-
-                builder.add(".setStateGetter($L)\n", stateGetterBuilder.build());
+            Class propertyClass = Property.class;
+            if (typeMirror.getKind().isPrimitive()) {
+                switch (typeMirror.getKind()) {
+                    case BOOLEAN:
+                        propertyClass = BooleanProperty.class;
+                        break;
+                    case SHORT:
+                        propertyClass = ShortProperty.class;
+                        break;
+                    case INT:
+                        propertyClass = IntProperty.class;
+                        break;
+                    case LONG:
+                        propertyClass = LongProperty.class;
+                        break;
+                    case FLOAT:
+                        propertyClass = FloatProperty.class;
+                        break;
+                    case DOUBLE:
+                        propertyClass = DoubleProperty.class;
+                        break;
+                }
             }
-            // setter proxy
-            ParameterizedTypeName setterType =
-                parameterizedTypeName(Setter.class, typeName, attributeTypeName);
-            TypeSpec.Builder setterBuilder = TypeSpec.anonymousClassBuilder("")
-                    .addSuperinterface(setterType);
+            ParameterizedTypeName propertyType;
+            if (propertyClass == Property.class) {
+                propertyType = parameterizedTypeName(propertyClass, typeName, attributeTypeName);
+            } else {
+                propertyType = parameterizedTypeName(propertyClass, typeName);
+            }
+            TypeSpec.Builder propertyBuilder = TypeSpec.anonymousClassBuilder("")
+                    .addSuperinterface(propertyType)
+                .addMethod(CodeGeneration.overridePublicMethod("get")
+                    .addParameter(typeName, "entity")
+                    .addStatement("return entity.$L", attributeName)
+                    .returns(attributeTypeName)
+                    .build());
             MethodSpec.Builder setterMethod = CodeGeneration.overridePublicMethod("set")
                     .addParameter(typeName, "entity")
                     .addParameter(attributeTypeName, "value");
@@ -548,19 +558,42 @@ class EntityGenerator implements SourceGenerator {
             } else {
                 setterMethod.addStatement("entity.$L = value", attributeName);
             }
-            setterBuilder.addMethod(setterMethod.build());
-            builder.add(".setSetter($L)\n", setterBuilder.build());
+            propertyBuilder.addMethod(setterMethod.build());
 
-            // state setter proxy
+            // generate primitive get/set
+            if (propertyClass != Property.class) {
+                TypeName primitiveType = TypeName.get(attribute.typeMirror());
+                String name = Names.upperCaseFirst(attribute.typeMirror().toString());
+                propertyBuilder
+                    .addMethod(CodeGeneration.overridePublicMethod("get" + name)
+                        .addParameter(typeName, "entity")
+                        .addStatement("return entity.$L", attributeName)
+                        .returns(primitiveType)
+                        .build())
+                    .addMethod(CodeGeneration.overridePublicMethod("set" + name)
+                        .addParameter(typeName, "entity")
+                        .addParameter(primitiveType, "value")
+                        .addStatement("entity.$L = value", attributeName)
+                        .build());
+            }
+
+            builder.add(".setProperty($L)\n", propertyBuilder.build());
+
+            // property state proxy
             if (!entity.isStateless()) {
-                TypeSpec.Builder stateSetterBuilder = TypeSpec.anonymousClassBuilder("")
-                    .addSuperinterface(parameterizedTypeName(Setter.class, typeName, stateClass));
-                stateSetterBuilder.addMethod(CodeGeneration.overridePublicMethod("set")
+                ClassName stateClass = ClassName.get(PropertyState.class);
+                TypeSpec.Builder propertyStateType = TypeSpec.anonymousClassBuilder("")
+                    .addSuperinterface(parameterizedTypeName(Property.class, typeName, stateClass));
+                propertyStateType.addMethod(CodeGeneration.overridePublicMethod("set")
                     .addParameter(typeName, "entity")
                     .addParameter(stateClass, "value")
                     .addStatement("entity.$L = value", propertyStateFieldName(attribute)).build());
-
-                builder.add(".setStateSetter($L)\n", stateSetterBuilder.build());
+                propertyStateType.addMethod(CodeGeneration.overridePublicMethod("get")
+                    .addParameter(typeName, "entity")
+                    .addStatement("return entity.$L", propertyStateFieldName(attribute))
+                    .returns(stateClass)
+                    .build());
+                builder.add(".setPropertyState($L)\n", propertyStateType.build());
             }
 
             // attribute properties

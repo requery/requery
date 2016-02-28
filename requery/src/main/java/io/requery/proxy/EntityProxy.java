@@ -79,14 +79,44 @@ public class EntityProxy<E> implements EntityStateListener {
             // lazy loaded, get from store then set the value
             loader.load(entity, this, attribute);
         }
-        V value = attribute.fieldAccess().getter().get(entity);
+        V value = attribute.property().get(entity);
         if (value == null && state == PropertyState.FETCH &&
-            attribute.fieldAccess().initializer() != null) {
+            attribute.initializer() != null) {
 
-            value = attribute.fieldAccess().initializer().initialize(this, attribute);
+            value = attribute.initializer().initialize(this, attribute);
             set(attribute, value, PropertyState.FETCH);
         }
         return value;
+    }
+
+    public int getInt(Attribute<E, Integer> attribute) {
+        IntProperty<E> property = (IntProperty<E>) attribute.property();
+        return property.getInt(entity);
+    }
+
+    public long getLong(Attribute<E, Long> attribute) {
+        LongProperty<E> property = (LongProperty<E>) attribute.property();
+        return property.getLong(entity);
+    }
+
+    public short getShort(Attribute<E, Short> attribute) {
+        ShortProperty<E> property = (ShortProperty<E>) attribute.property();
+        return property.getShort(entity);
+    }
+
+    public float getFloat(Attribute<E, Float> attribute) {
+        FloatProperty<E> property = (FloatProperty<E>) attribute.property();
+        return property.getFloat(entity);
+    }
+
+    public double getDouble(Attribute<E, Double> attribute) {
+        DoubleProperty<E> property = (DoubleProperty<E>) attribute.property();
+        return property.getDouble(entity);
+    }
+
+    public boolean getBoolean(Attribute<E, Boolean> attribute) {
+        BooleanProperty<E> property = (BooleanProperty<E>) attribute.property();
+        return property.getBoolean(entity);
     }
 
     /**
@@ -110,9 +140,8 @@ public class EntityProxy<E> implements EntityStateListener {
      * @param <V>       type of the value
      */
     public <V> void set(Attribute<E, V> attribute, V value, PropertyState state) {
-        Field<E, V> field = attribute.fieldAccess();
-        field.setter().set(entity, value);
-        field.stateSetter().set(entity, state);
+        attribute.property().set(entity, value);
+        setState(attribute, state);
         checkRegenerateKey(attribute);
     }
 
@@ -123,14 +152,50 @@ public class EntityProxy<E> implements EntityStateListener {
      * @param value     new property value
      * @param state     new property state
      */
-    @SuppressWarnings("unchecked")
     public void setObject(Attribute<E, ?> attribute, Object value, PropertyState state) {
-        Field<E, Object> field = (Field<E, Object>) attribute.fieldAccess();
-        field.setter().set(entity, value);
-        if (!stateless) {
-            field.stateSetter().set(entity, state);
-        }
+        @SuppressWarnings("unchecked")
+        Property<E, Object> property = (Property<E, Object>) attribute.property();
+        property.set(entity, value);
+        setState(attribute, state);
         checkRegenerateKey(attribute);
+    }
+
+    public void setInt(Attribute<E, Integer> attribute, int value, PropertyState state) {
+        IntProperty<E> property = (IntProperty<E>) attribute.property();
+        property.setInt(entity, value);
+        setState(attribute, state);
+        checkRegenerateKey(attribute);
+    }
+
+    public void setLong(Attribute<E, Long> attribute, long value, PropertyState state) {
+        LongProperty<E> property = (LongProperty<E>) attribute.property();
+        property.setLong(entity, value);
+        setState(attribute, state);
+        checkRegenerateKey(attribute);
+    }
+
+    public void setShort(Attribute<E, Short> attribute, short value, PropertyState state) {
+        ShortProperty<E> property = (ShortProperty<E>) attribute.property();
+        property.setShort(entity, value);
+        setState(attribute, state);
+    }
+
+    public void setFloat(Attribute<E, Float> attribute, float value, PropertyState state) {
+        FloatProperty<E> property = (FloatProperty<E>) attribute.property();
+        property.setFloat(entity, value);
+        setState(attribute, state);
+    }
+
+    public void setDouble(Attribute<E, Double> attribute, double value, PropertyState state) {
+        DoubleProperty<E> property = (DoubleProperty<E>) attribute.property();
+        property.setDouble(entity, value);
+        setState(attribute, state);
+    }
+
+    public void setBoolean(Attribute<E, Boolean> attribute, boolean value, PropertyState state) {
+        BooleanProperty<E> property = (BooleanProperty<E>) attribute.property();
+        property.setBoolean(entity, value);
+        setState(attribute, state);
     }
 
     private void checkRegenerateKey(Attribute<E, ?> attribute) {
@@ -147,7 +212,7 @@ public class EntityProxy<E> implements EntityStateListener {
      */
     public void setState(Attribute<E, ?> attribute, PropertyState state) {
         if (!stateless) {
-            attribute.fieldAccess().stateSetter().set(entity, state);
+            attribute.propertyState().set(entity, state);
         }
     }
 
@@ -161,7 +226,7 @@ public class EntityProxy<E> implements EntityStateListener {
         if (stateless) {
             return null;
         }
-        PropertyState state = attribute.fieldAccess().stateGetter().get(entity);
+        PropertyState state = attribute.propertyState().get(entity);
         return state == null ? PropertyState.FETCH : state;
     }
 

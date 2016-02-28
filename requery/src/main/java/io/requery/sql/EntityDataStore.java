@@ -361,33 +361,26 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     public <E extends T> Selection<Result<E>> select(Class<E> type,
                                                      QueryAttribute<?, ?>... attributes) {
         checkClosed();
-        EntityResultReader<E, T> reader = new EntityResultReader<>(context.read(type));
-        SelectOperation<E> select = new SelectOperation<>(context, reader);
-        QueryElement<Result<E>> query = new QueryElement<>(SELECT, entityModel, select);
+        EntityReader<E, T> reader = context.read(type);
         Set<Expression<?>> selection;
+        EntityResultReader<E, T> resultReader;
         if (attributes == null || attributes.length == 0) {
-            selection = context.read(type).defaultSelection();
+            selection = reader.defaultSelection();
+            resultReader = new EntityResultReader<>(reader, reader.defaultSelectionAttributes());
         } else {
             selection = new LinkedHashSet<>(Arrays.<Expression<?>>asList(attributes));
+            resultReader = new EntityResultReader<>(reader, attributes);
         }
+        SelectOperation<E> select = new SelectOperation<>(context, resultReader);
+        QueryElement<Result<E>> query = new QueryElement<>(SELECT, entityModel, select);
         return query.select(selection).from(type);
     }
 
     @Override
     public <E extends T> Selection<Result<E>> select(
                         Class<E> type, Set<? extends QueryAttribute<E, ?>> attributes) {
-        checkClosed();
-        EntityResultReader<E, T> reader = new EntityResultReader<>(context.read(type));
-        SelectOperation<E> select = new SelectOperation<>(context, reader);
-        QueryElement<Result<E>> query = new QueryElement<>(SELECT, entityModel, select);
-        Set<Expression<?>> selection;
-        if (attributes == null || attributes.isEmpty()) {
-            selection = context.read(type).defaultSelection();
-        } else {
-            selection = new LinkedHashSet<>();
-            selection.addAll(attributes);
-        }
-        return query.select(selection).from(type);
+        QueryAttribute<?, ?>[] array = attributes.toArray(new QueryAttribute[attributes.size()]);
+        return select(type, array);
     }
 
     @Override

@@ -19,11 +19,9 @@ package io.requery.meta;
 import io.requery.CascadeAction;
 import io.requery.Converter;
 import io.requery.ReferentialAction;
-import io.requery.proxy.Field;
-import io.requery.proxy.Getter;
 import io.requery.proxy.Initializer;
+import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
-import io.requery.proxy.Setter;
 import io.requery.query.ExpressionType;
 import io.requery.query.FieldExpression;
 import io.requery.util.Objects;
@@ -33,15 +31,14 @@ import java.util.Collections;
 import java.util.Set;
 
 public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
-        QueryAttribute<T, V>, Field<T, V> {
+        QueryAttribute<T, V> {
 
     protected String name;
-    protected Getter<T, V> getter;
-    protected Setter<T, V> setter;
-    protected Getter<T, PropertyState> stateGetter;
-    protected Setter<T, PropertyState> stateSetter;
     protected Initializer<T, V> initializer;
     protected Class<V> classType;
+    protected PrimitiveKind primitiveKind;
+    protected Property<T, V> property;
+    protected Property<T, PropertyState> propertyState;
     protected boolean isLazy;
     protected boolean isKey;
     protected boolean isUnique;
@@ -64,31 +61,20 @@ public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     protected Class<?> referencedClass;
     protected Supplier<Attribute> mappedAttribute;
     protected Supplier<Attribute> referencedAttribute;
-    protected int hashCode;
-
-    @Override
-    public Getter<T, V> getter() {
-        return getter;
-    }
-
-    @Override
-    public Setter<T, V> setter() {
-        return setter;
-    }
-
-    @Override
-    public Getter<T, PropertyState> stateGetter() {
-        return stateGetter;
-    }
-
-    @Override
-    public Setter<T, PropertyState> stateSetter() {
-        return stateSetter;
-    }
 
     @Override
     public Initializer<T, V> initializer() {
         return initializer;
+    }
+
+    @Override
+    public Property<T, V> property() {
+        return property;
+    }
+
+    @Override
+    public Property<T, PropertyState> propertyState() {
+        return propertyState;
     }
 
     @Override
@@ -102,6 +88,11 @@ public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     }
 
     @Override
+    public PrimitiveKind primitiveKind() {
+        return primitiveKind;
+    }
+
+    @Override
     public ExpressionType type() {
         return ExpressionType.ATTRIBUTE;
     }
@@ -109,11 +100,6 @@ public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     @Override
     public Type<T> declaringType() {
         return declaringType;
-    }
-
-    @Override
-    public Field<T, V> fieldAccess() {
-        return this;
     }
 
     @Override
@@ -239,10 +225,7 @@ public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
 
     @Override
     public int hashCode() {
-        if (hashCode == 0) {
-            hashCode = Objects.hash(name, classType, declaringType);
-        }
-        return hashCode;
+        return Objects.hash(name, classType, declaringType);
     }
 
     @Override

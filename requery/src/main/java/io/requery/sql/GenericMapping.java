@@ -39,6 +39,12 @@ import io.requery.sql.type.DecimalType;
 import io.requery.sql.type.FloatType;
 import io.requery.sql.type.IntegerType;
 import io.requery.sql.type.JavaDateType;
+import io.requery.sql.type.PrimitiveBooleanType;
+import io.requery.sql.type.PrimitiveDoubleType;
+import io.requery.sql.type.PrimitiveFloatType;
+import io.requery.sql.type.PrimitiveIntType;
+import io.requery.sql.type.PrimitiveLongType;
+import io.requery.sql.type.PrimitiveShortType;
 import io.requery.sql.type.RealType;
 import io.requery.sql.type.SmallIntType;
 import io.requery.sql.type.TimeStampType;
@@ -61,8 +67,6 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -77,9 +81,21 @@ public class GenericMapping implements Mapping {
     private final ClassMap<FieldType> fixedTypes;
     private final ClassMap<Converter<?, ?>> converters;
     private final Map<Attribute, FieldType> resolvedTypes;
+    private PrimitiveIntType primitiveIntType;
+    private PrimitiveLongType primitiveLongType;
+    private PrimitiveShortType primitiveShortType;
+    private PrimitiveBooleanType primitiveBooleanType;
+    private PrimitiveFloatType primitiveFloatType;
+    private PrimitiveDoubleType primitiveDoubleType;
 
     public GenericMapping(Platform platform) {
         types = new ClassMap<>();
+        primitiveIntType = new IntegerType(int.class);
+        primitiveLongType = new BigIntType(long.class);
+        primitiveShortType = new SmallIntType(short.class);
+        primitiveBooleanType = new BooleanType(boolean.class);
+        primitiveFloatType = new FloatType(float.class);
+        primitiveDoubleType = new RealType(double.class);
         types.put(boolean.class, new BooleanType(boolean.class));
         types.put(Boolean.class, new BooleanType(Boolean.class));
         types.put(int.class, new IntegerType(int.class));
@@ -137,7 +153,7 @@ public class GenericMapping implements Mapping {
         return this;
     }
 
-    private static void replace(ClassMap<FieldType> map, int sqlType, FieldType replace) {
+    private void replace(ClassMap<FieldType> map, int sqlType, FieldType replace) {
         Set<Class<?>> keys = new LinkedHashSet<>();
         for (Map.Entry<Class<?>, FieldType> entry : map.entrySet()) {
             if (entry.getValue().sqlType() == sqlType) {
@@ -146,6 +162,25 @@ public class GenericMapping implements Mapping {
         }
         for (Class<?> type : keys) {
             map.put(type, replace);
+        }
+        // check if the replacement type replaces any of the primitive types
+        if (sqlType == primitiveIntType.sqlType() && replace instanceof PrimitiveIntType) {
+            primitiveIntType = (PrimitiveIntType) replace;
+        } else if (
+            sqlType == primitiveLongType.sqlType() && replace instanceof PrimitiveLongType) {
+            primitiveLongType = (PrimitiveLongType) replace;
+        } else if (
+            sqlType == primitiveShortType.sqlType() && replace instanceof PrimitiveShortType) {
+            primitiveShortType = (PrimitiveShortType) replace;
+        } else if (
+            sqlType == primitiveBooleanType.sqlType() && replace instanceof PrimitiveBooleanType) {
+            primitiveBooleanType = (PrimitiveBooleanType) replace;
+        } else if (
+            sqlType == primitiveFloatType.sqlType() && replace instanceof PrimitiveFloatType) {
+            primitiveFloatType = (PrimitiveFloatType) replace;
+        } else if (
+            sqlType == primitiveDoubleType.sqlType() && replace instanceof PrimitiveDoubleType) {
+            primitiveDoubleType = (PrimitiveDoubleType) replace;
         }
     }
 
@@ -171,7 +206,6 @@ public class GenericMapping implements Mapping {
 
     @Override
     public FieldType mapAttribute(Attribute<?, ?> attribute) {
-
         FieldType fieldType = resolvedTypes.get(attribute);
         if (fieldType != null) {
             return fieldType;
@@ -189,20 +223,6 @@ public class GenericMapping implements Mapping {
         fieldType = getSubstitutedType(type);
         resolvedTypes.put(attribute, fieldType);
         return fieldType;
-    }
-
-    @Override
-    public List<FieldType> mapCollectionAttribute(Attribute<?, ?> attribute) {
-        List<FieldType> fieldTypes = new LinkedList<>();
-        if (attribute.elementClass() != null) {
-            if (attribute.mapKeyClass() != null) {
-                FieldType keyType = types.get(attribute.mapKeyClass());
-                fieldTypes.add(Objects.requireNotNull(keyType));
-            }
-            FieldType valueType = types.get(attribute.elementClass());
-            fieldTypes.add(Objects.requireNotNull(valueType));
-        }
-        return fieldTypes;
     }
 
     private FieldType getSubstitutedType(Class<?> type) {
@@ -227,7 +247,8 @@ public class GenericMapping implements Mapping {
         Converter<?, ?> converter = null;
         FieldType fieldType;
         if (expression.type() == ExpressionType.ATTRIBUTE) {
-            Attribute<?, A> attribute = Attributes.query((Attribute) expression);
+            @SuppressWarnings("unchecked")
+            Attribute<?, A> attribute = (Attribute) expression;
             converter = attribute.converter();
             type = attribute.classType();
             fieldType = mapAttribute(attribute);
@@ -235,20 +256,52 @@ public class GenericMapping implements Mapping {
             type = expression.classType();
             fieldType = getSubstitutedType(type);
         }
-        if (converter == null && !type.isPrimitive()) {
+        boolean isPrimitive = type.isPrimitive();
+        if (converter == null && !isPrimitive) {
             converter = converterForType(type);
         }
         Object value = fieldType.read(results, column);
         if (converter != null) {
             value = toMapped((Converter) converter, type, value);
         }
-        if (type.isPrimitive()) {
+        if (isPrimitive) {
             // cast primitive types only into their boxed type
             @SuppressWarnings("unchecked")
             A boxed = (A) value;
             return boxed;
+        } else {
+            return type.cast(value);
         }
-        return type.cast(value);
+    }
+
+    @Override
+    public boolean readBoolean(ResultSet results, int column) throws SQLException {
+        return primitiveBooleanType.readBoolean(results, column);
+    }
+
+    @Override
+    public int readInt(ResultSet results, int column) throws SQLException {
+        return primitiveIntType.readInt(results, column);
+    }
+
+    @Override
+    public long readLong(ResultSet results, int column) throws SQLException {
+        return primitiveLongType.readLong(results, column);
+    }
+
+    @Override
+    public short readShort(ResultSet results, int column) throws SQLException {
+        return primitiveShortType.readShort(results, column);
+    }
+
+    @Override
+    public float readFloat(ResultSet results, int column) throws SQLException {
+        return primitiveFloatType.readFloat(results, column);
+    }
+
+    @Override
+    public double readDouble(ResultSet results, int column) throws SQLException {
+        return primitiveDoubleType.readDouble(results, column);
     }
 
     @SuppressWarnings("unchecked")
@@ -259,7 +312,7 @@ public class GenericMapping implements Mapping {
         Converter converter = null;
         FieldType fieldType;
         if (expression.type() == ExpressionType.ATTRIBUTE) {
-            Attribute<?, A> attribute = Attributes.query((Attribute) expression);
+            Attribute<?, A> attribute = (Attribute) expression;
             converter = attribute.converter();
             fieldType = mapAttribute(attribute);
             type = attribute.isAssociation() ?
@@ -272,13 +325,45 @@ public class GenericMapping implements Mapping {
         if (converter == null && !type.isPrimitive()) {
             converter = converterForType(type);
         }
-        Object converted;
-        if (converter == null) {
-            converted = value;
-        } else {
+        Object converted = value;
+        if (converter != null) {
             converted = converter.convertToPersisted(value);
         }
         fieldType.write(statement, index, converted);
+    }
+
+    @Override
+    public void writeBoolean(PreparedStatement statement, int index, boolean value)
+        throws SQLException {
+        primitiveBooleanType.writeBoolean(statement, index, value);
+    }
+
+    @Override
+    public void writeInt(PreparedStatement statement, int index, int value) throws SQLException {
+        primitiveIntType.writeInt(statement, index, value);
+    }
+
+    @Override
+    public void writeLong(PreparedStatement statement, int index, long value) throws SQLException {
+        primitiveLongType.writeLong(statement, index, value);
+    }
+
+    @Override
+    public void writeShort(PreparedStatement statement, int index, short value)
+        throws SQLException {
+        primitiveShortType.writeShort(statement, index, value);
+    }
+
+    @Override
+    public void writeFloat(PreparedStatement statement, int index, float value)
+        throws SQLException {
+        primitiveFloatType.writeFloat(statement, index, value);
+    }
+
+    @Override
+    public void writeDouble(PreparedStatement statement, int index, double value)
+        throws SQLException {
+        primitiveDoubleType.writeDouble(statement, index, value);
     }
 
     public void addConverter(Converter<?, ?> converter, Class<?>... classes) {

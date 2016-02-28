@@ -19,11 +19,12 @@ package io.requery.sql.type;
 import io.requery.sql.Keyword;
 import io.requery.sql.BasicType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class BigIntType extends BasicType<Long> {
+public class BigIntType extends BasicType<Long> implements PrimitiveLongType {
 
     public BigIntType(Class<Long> type) {
         super(type, Types.BIGINT);
@@ -37,5 +38,15 @@ public class BigIntType extends BasicType<Long> {
     @Override
     public Keyword identifier() {
         return Keyword.BIGINT;
+    }
+
+    @Override
+    public long readLong(ResultSet results, int column) throws SQLException {
+        return results.getLong(column);
+    }
+
+    @Override
+    public void writeLong(PreparedStatement statement, int index, long value) throws SQLException {
+        statement.setLong(index, value);
     }
 }

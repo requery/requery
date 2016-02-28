@@ -19,11 +19,12 @@ package io.requery.sql.type;
 import io.requery.sql.Keyword;
 import io.requery.sql.BasicType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class IntegerType extends BasicType<Integer> {
+public class IntegerType extends BasicType<Integer> implements PrimitiveIntType {
 
     public IntegerType(Class<Integer> type) {
         super(type, Types.INTEGER);
@@ -37,5 +38,15 @@ public class IntegerType extends BasicType<Integer> {
     @Override
     public Keyword identifier() {
         return Keyword.INTEGER;
+    }
+
+    @Override
+    public int readInt(ResultSet results, int column) throws SQLException {
+        return results.getInt(column);
+    }
+
+    @Override
+    public void writeInt(PreparedStatement statement, int index, int value) throws SQLException {
+        statement.setInt(index, value);
     }
 }

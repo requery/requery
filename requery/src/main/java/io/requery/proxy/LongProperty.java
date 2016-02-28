@@ -16,7 +16,9 @@
 
 package io.requery.proxy;
 
-@FunctionalInterface
-public interface Setter<E, V> {
-    void set(E entity, V value);
+public interface LongProperty<E> extends Property<E, Long> {
+
+    long getLong(E entity);
+
+    void setLong(E entity, long value);
 }

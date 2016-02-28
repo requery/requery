@@ -21,20 +21,38 @@ import io.requery.util.Objects;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Builds information about an entity model by defining the specific {@link Type}s that define it.
+ *
+ * @author Nikhil Purushe
+ */
 public class EntityModelBuilder {
 
     private final String name;
     private final Set<Type<?>> types = new HashSet<>();
 
+    /**
+     * Creates a new {@link EntityModel} instance.
+     *
+     * @param name of the model
+     */
     public EntityModelBuilder(String name) {
         this.name = name;
     }
 
+    /**
+     * Adds a {@link Type} instance to the model.
+     * @param type type to add
+     * @return the builder instance.
+     */
     public EntityModelBuilder addType(Type<?> type) {
         types.add(Objects.requireNotNull(type));
         return this;
     }
 
+    /**
+     * @return An immutable {@link EntityModel} instance with the defined types.
+     */
     public EntityModel build() {
         return new ImmutableEntityModel(name, types);
     }

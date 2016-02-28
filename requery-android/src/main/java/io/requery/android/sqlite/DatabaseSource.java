@@ -112,11 +112,11 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
                           SQLiteDatabase.CursorFactory factory,
                           int version) {
         super(context, name, factory, version);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            setWriteAheadLoggingEnabled(true);
-        }
         if (model == null) {
             throw new IllegalArgumentException("null model");
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            setWriteAheadLoggingEnabled(true);
         }
         this.platform = new SQLite();
         this.mapping = onCreateMapping();

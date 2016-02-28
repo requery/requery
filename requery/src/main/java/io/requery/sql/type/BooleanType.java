@@ -19,11 +19,12 @@ package io.requery.sql.type;
 import io.requery.sql.Keyword;
 import io.requery.sql.BasicType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class BooleanType extends BasicType<Boolean> {
+public class BooleanType extends BasicType<Boolean> implements PrimitiveBooleanType {
 
     public BooleanType(Class<Boolean> type) {
         super(type, Types.BOOLEAN);
@@ -37,5 +38,16 @@ public class BooleanType extends BasicType<Boolean> {
     @Override
     public Keyword identifier() {
         return Keyword.BOOLEAN;
+    }
+
+    @Override
+    public boolean readBoolean(ResultSet results, int column) throws SQLException {
+        return results.getBoolean(column);
+    }
+
+    @Override
+    public void writeBoolean(PreparedStatement statement, int index, boolean value)
+        throws SQLException {
+        statement.setBoolean(index, value);
     }
 }

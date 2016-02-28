@@ -73,9 +73,10 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     private final Mapping mapping;
     private final EntityContext<S> context;
     private final Queryable<S> queryable;
-    private final Set<Expression<?>> defaultSelection;
     private final QueryAttribute<E, ?> keyAttribute;
     private final boolean stateless;
+    private final Set<Expression<?>> defaultSelection;
+    private final Attribute<E, ?>[] defaultSelectionAttributes;
 
     EntityReader(Type<E> type, EntityContext<S> context, Queryable<S> queryable) {
         this.type = Objects.requireNotNull(type);
@@ -85,24 +86,34 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         this.mapping = this.context.mapping();
         this.stateless = type.isStateless();
         // compute default/minimum selections for the type
-        LinkedHashSet<Expression<?>> selectAttributes = new LinkedHashSet<>();
+        LinkedHashSet<Expression<?>> selection = new LinkedHashSet<>();
+        LinkedHashSet<Attribute<E, ?>> selectAttributes = new LinkedHashSet<>();
         for (Attribute<E, ?> attribute : type.attributes()) {
             if (!attribute.isLazy() && !attribute.isAssociation()) {
                 if (attribute.isVersion()) {
                     Expression<?> expression = aliasVersion(attribute);
-                    selectAttributes.add(expression);
+                    selection.add(expression);
                 } else {
-                    selectAttributes.add((Expression)attribute);
+                    selection.add((Expression)attribute);
                 }
+                selectAttributes.add(attribute);
             }
         }
-        defaultSelection = Collections.unmodifiableSet(selectAttributes);
+        defaultSelection = Collections.unmodifiableSet(selection);
         // optimization for single key attribute
         keyAttribute = Attributes.query(type.singleKeyAttribute());
+        // attributes converted to array for performance
+        @SuppressWarnings("unchecked")
+        Attribute<E, ?>[] array = new Attribute[selectAttributes.size()];
+        defaultSelectionAttributes = selectAttributes.toArray(array);
     }
 
     Set<Expression<?>> defaultSelection() {
         return defaultSelection;
+    }
+
+    Attribute<E, ?>[] defaultSelectionAttributes() {
+        return defaultSelectionAttributes;
     }
 
     private Expression aliasVersion(Attribute attribute) {
@@ -161,7 +172,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             }
         };
         FilteringIterator<Attribute<E, ?>> filterator =
-            new FilteringIterator<>(type.attributes().iterator(), basicFilter);
+            new FilteringIterator<>(attributes.iterator(), basicFilter);
         if (filterator.hasNext()) {
             QueryBuilder qb = new QueryBuilder(context.queryBuilderOptions())
                 .keyword(SELECT)
@@ -199,7 +210,9 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 ResultSet results = statement.executeQuery();
                 context.statementListener().afterExecuteQuery(statement);
                 if (results.next()) {
-                    fromResult(entity, results, basicFilter);
+                    Attribute[] selection = new Attribute[attributes.size()];
+                    attributes.toArray(selection);
+                    fromResult(entity, results, selection);
                 }
             } catch (SQLException e) {
                 throw new PersistenceException(e);
@@ -225,7 +238,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 break;
             case ONE_TO_MANY:
             case MANY_TO_MANY:
-                Initializer<E, V> initializer = attribute.fieldAccess().initializer();
+                Initializer<E, V> initializer = attribute.initializer();
                 if (initializer instanceof QueryInitializer) {
                     @SuppressWarnings("unchecked")
                     QueryInitializer<E, V> queryInitializer = (QueryInitializer<E, V>) initializer;
@@ -307,10 +320,14 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             }
         } else {
             Set<Expression<?>> selection = new LinkedHashSet<>();
+            Attribute[] selectAttributes;
             if (attributes == null || attributes.length == 0) {
-                selection.addAll(defaultSelection);
+                selection = defaultSelection;
+                selectAttributes = defaultSelectionAttributes;
             } else {
+                LinkedHashSet<Attribute> selectedAttributes = new LinkedHashSet<>();
                 selection.add(keyAttribute);
+                selectedAttributes.add(keyAttribute);
                 for (Attribute<E, ?> attribute : attributes) {
                     if (attribute.isVersion()) {
                         selection.add(aliasVersion(attribute));
@@ -318,9 +335,10 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                         QueryAttribute<E, ?> queryAttribute = Attributes.query(attribute);
                         selection.add(queryAttribute);
                     }
+                    selectedAttributes.add(attribute);
                 }
+                selectAttributes = selectedAttributes.toArray(new Attribute[selection.size()]);
             }
-
             Map<Object, EntityProxy<E>> map = new HashMap<>();
             for (E entity : entities) {
                 EntityProxy<E> proxy = type.proxyProvider().apply(entity);
@@ -338,8 +356,9 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     }
                 };
                 // readResult will merge the results into the target object in cache mode
-                EntityReader<E, S> reader = context.read(type.classType());
-                EntityResultReader<E, S> resultReader = new EntityResultReader<>(reader);
+                EntityResultReader<E, S> resultReader =
+                    new EntityResultReader<>(this, selectAttributes);
+
                 SelectOperation<E> select = new SelectOperation<>(context, resultReader);
                 QueryElement<Result<E>> query =
                     new QueryElement<>(QueryType.SELECT, context.model(), select);
@@ -410,8 +429,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         return key;
     }
 
-    E fromResult(E entity, ResultSet results, Predicate<Attribute<E, ?>> filter)
-            throws SQLException {
+    E fromResult(E entity, ResultSet results, Attribute[] selection) throws SQLException {
         // if refreshing (entity not null) overwrite the properties
         boolean overwrite = entity != null || stateless;
 
@@ -443,13 +461,12 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         synchronized (proxy.syncObject()) {
             proxy.link(this);
             int index = 1;
-            for (Attribute<E, ?> attribute : type.attributes()) {
-                if (!filter.test(attribute)) {
-                    continue;
-                }
-                // handle loading the foreign key into referenced object
-                if (attribute.isAssociation() && attribute.isForeignKey()) {
+            for (Attribute expression : selection) {
+                @SuppressWarnings("unchecked")
+                Attribute<E, ?> attribute = (Attribute<E, ?>) expression;
 
+                if (attribute.isForeignKey() && attribute.isAssociation()) {
+                    // handle loading the foreign key into referenced object
                     Attribute referenced = Attributes.get(attribute.referencedAttribute());
 
                     Object key = mapping.read((Expression) referenced, results, index);
@@ -473,19 +490,60 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                         }
                         proxy.setObject(attribute, value, state);
                     }
-
+                } else if (attribute.isAssociation()) {
+                    continue;
                 } else if (overwrite || proxy.getState(attribute) != PropertyState.MODIFIED) {
-
-                    Object value = mapping.read((Expression)attribute, results, index);
-                    proxy.setObject(attribute, value, PropertyState.LOADED);
+                    if (attribute.primitiveKind() != null) {
+                        readPrimitiveField(proxy, attribute, results, index);
+                    } else {
+                        Object value = mapping.read((Expression) attribute, results, index);
+                        proxy.setObject(attribute, value, PropertyState.LOADED);
+                    }
                 }
                 index++;
             }
         }
-
         if (!wasCached) {
             context.stateListener().postLoad(entity, proxy);
         }
         return entity;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void readPrimitiveField(EntityProxy<E> proxy,
+                                    Attribute<E, ?> attribute,
+                                    ResultSet results, int index) throws SQLException {
+        switch (attribute.primitiveKind()) {
+            case INT:
+                Attribute<E, Integer> intAttribute = (Attribute<E, Integer>) attribute;
+                int intValue = mapping.readInt(results, index);
+                proxy.setInt(intAttribute, intValue, PropertyState.LOADED);
+                break;
+            case LONG:
+                Attribute<E, Long> longAttribute = (Attribute<E, Long>) attribute;
+                long longValue = mapping.readLong(results, index);
+                proxy.setLong(longAttribute, longValue, PropertyState.LOADED);
+                break;
+            case SHORT:
+                Attribute<E, Short> shortAttribute = (Attribute<E, Short>) attribute;
+                short shortValue = mapping.readShort(results, index);
+                proxy.setShort(shortAttribute, shortValue, PropertyState.LOADED);
+                break;
+            case BOOLEAN:
+                Attribute<E, Boolean> booleanAttribute = (Attribute<E, Boolean>) attribute;
+                boolean booleanValue = mapping.readBoolean(results, index);
+                proxy.setBoolean(booleanAttribute, booleanValue, PropertyState.LOADED);
+                break;
+            case FLOAT:
+                Attribute<E, Float> floatAttribute = (Attribute<E, Float>) attribute;
+                float floatValue = mapping.readFloat(results, index);
+                proxy.setFloat(floatAttribute, floatValue, PropertyState.LOADED);
+                break;
+            case DOUBLE:
+                Attribute<E, Double> doubleAttribute = (Attribute<E, Double>) attribute;
+                double doubleValue = mapping.readDouble(results, index);
+                proxy.setDouble(doubleAttribute, doubleValue, PropertyState.LOADED);
+                break;
+        }
     }
 }

@@ -19,11 +19,12 @@ package io.requery.sql.type;
 import io.requery.sql.Keyword;
 import io.requery.sql.BasicType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class FloatType extends BasicType<Float> {
+public class FloatType extends BasicType<Float> implements PrimitiveFloatType {
 
     public FloatType(Class<Float> type) {
         super(type, Types.FLOAT);
@@ -37,5 +38,15 @@ public class FloatType extends BasicType<Float> {
     @Override
     public Keyword identifier() {
         return Keyword.FLOAT;
+    }
+
+    @Override
+    public float readFloat(ResultSet results, int column) throws SQLException {
+        return results.getFloat(column);
+    }
+
+    @Override
+    public void writeFloat(PreparedStatement statement, int index, float value) throws SQLException {
+        statement.setFloat(index, value);
     }
 }

@@ -22,7 +22,9 @@ import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.IdentityColumnDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.QueryBuilder;
+import io.requery.sql.type.PrimitiveBooleanType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -69,7 +71,8 @@ public class Oracle extends Generic {
     }
 
     // no boolean support
-    private static class NumericBooleanType extends BaseType<Boolean> {
+    private static class NumericBooleanType extends BaseType<Boolean>
+        implements PrimitiveBooleanType {
 
         NumericBooleanType() {
             super(Boolean.class, Types.NUMERIC);
@@ -97,6 +100,17 @@ public class Oracle extends Generic {
                 return null;
             }
             return value;
+        }
+
+        @Override
+        public boolean readBoolean(ResultSet results, int column) throws SQLException {
+            return results.getBoolean(column);
+        }
+
+        @Override
+        public void writeBoolean(PreparedStatement statement, int index, boolean value)
+            throws SQLException {
+            statement.setBoolean(index, value);
         }
     }
 

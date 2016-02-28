@@ -24,7 +24,9 @@ import io.requery.sql.LimitDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.OffsetFetchLimitDefinition;
 import io.requery.sql.QueryBuilder;
+import io.requery.sql.type.PrimitiveBooleanType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -72,7 +74,7 @@ public class SQLServer extends Generic {
     }
 
     // no boolean support
-    private static class BitBooleanType extends BaseType<Boolean> {
+    private static class BitBooleanType extends BaseType<Boolean> implements PrimitiveBooleanType {
 
         BitBooleanType() {
             super(Boolean.class, Types.BIT);
@@ -87,6 +89,17 @@ public class SQLServer extends Generic {
         public Boolean read(ResultSet results, int column) throws SQLException {
             Boolean value = results.getBoolean(column);
             return results.wasNull() ? null : value;
+        }
+
+        @Override
+        public boolean readBoolean(ResultSet results, int column) throws SQLException {
+            return results.getBoolean(column);
+        }
+
+        @Override
+        public void writeBoolean(PreparedStatement statement, int index, boolean value)
+            throws SQLException {
+            statement.setBoolean(index, value);
         }
     }
 
