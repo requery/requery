@@ -187,7 +187,7 @@ Comparison to similar Android libraries:
 
 Feature               |  requery |  ORMLite |  Squidb  |  DBFlow   | GreenDao
 ----------------------|----------|----------|----------|-----------|-----------
-Relational mapping    |  Y       |  Y(1)    |  N       |  Y(1)     | Y(1)
+Relational mapping    |  Y       |  Y(1)    |  N       |  Y        | Y(1)
 Inverse relationships |  Y       |  N       |  N       |  N        | N
 Compile time          |  Y       |  N       |  Y       |  Y        | Y(2)
 JDBC Support          |  Y       |  Y       |  N       |  N        | N
@@ -201,7 +201,7 @@ JPA annotations       |  Y       |  Y       |  N       |  N        | N
 
 See [requery-android/example](https://github.com/requery/requery/tree/master/requery-android/example)
 for an example Android project using databinding and interface based entities. For more information
-see the [wiki](https://github.com/requery/requery/wiki/Android) page.
+see the [Android](https://github.com/requery/requery/wiki/Android) page.
 
 Code generation
 ---------------
@@ -217,7 +217,7 @@ Tested on some of the most popular databases:
 - MySQL 5.x
 - Oracle 12c+
 - Microsoft SQL Server 2012 or later
-- SQLite (Android or with xerial JDBC driver)
+- SQLite (Android or with the [xerial](https://github.com/xerial/sqlite-jdbc) JDBC driver)
 - Apache Derby 10.11+
 - H2 1.4+
 - HSQLDB 2.3+
@@ -258,9 +258,8 @@ buildscript {
 apply plugin: 'com.neenbedankt.android-apt'
 ```
 
+For more information see the [wiki](https://github.com/requery/requery/wiki).
 Feedback and suggestions are welcome.
-
-For more information see the [wiki](https://github.com/requery/requery/wiki) page.
 
 License
 -------
