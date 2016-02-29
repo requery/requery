@@ -18,7 +18,11 @@ package io.requery.sql;
 
 import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
+import io.requery.util.function.Predicate;
 import io.requery.util.function.Supplier;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
 
 @SuppressWarnings("unchecked")
 final class Attributes {
@@ -27,7 +31,19 @@ final class Attributes {
         return (QueryAttribute<E, V>) attribute;
     }
 
-    static <E,V> QueryAttribute<E, V> get(Supplier provider) {
-        return (QueryAttribute<E, V>) provider.get();
+    static <E,V> QueryAttribute<E, V> get(Supplier supplier) {
+        return (QueryAttribute<E, V>) supplier.get();
+    }
+
+    static <E> Attribute<E, ?>[] attributesToArray(Collection<Attribute<E,?>> attributes,
+                                                   Predicate<Attribute<E, ?>> filter) {
+        LinkedHashSet<Attribute> filtered = new LinkedHashSet<>();
+        for (Attribute<E, ?> attribute : attributes) {
+            if (filter.test(attribute)) {
+                filtered.add(attribute);
+            }
+        }
+        Attribute<E, ?>[] array = new Attribute[filtered.size()];
+        return filtered.toArray(array);
     }
 }

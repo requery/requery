@@ -16,7 +16,6 @@
 
 package io.requery.sql;
 
-
 import io.requery.EntityCache;
 import io.requery.PersistenceException;
 import io.requery.Queryable;
@@ -103,9 +102,13 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         // optimization for single key attribute
         keyAttribute = Attributes.query(type.singleKeyAttribute());
         // attributes converted to array for performance
-        @SuppressWarnings("unchecked")
-        Attribute<E, ?>[] array = new Attribute[selectAttributes.size()];
-        defaultSelectionAttributes = selectAttributes.toArray(array);
+        defaultSelectionAttributes = Attributes.attributesToArray(selectAttributes,
+            new Predicate<Attribute<E, ?>>() {
+            @Override
+            public boolean test(Attribute<E, ?> value) {
+                return true;
+            }
+        });
     }
 
     Set<Expression<?>> defaultSelection() {

@@ -51,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +121,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         stateless = type.isStateless();
 
         // create bindable attributes as an array for performance
-        bindableAttributes = attributesToArray(new Predicate<Attribute<E, ?>>() {
+        bindableAttributes = Attributes.attributesToArray(type.attributes(),
+            new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
                 boolean isGeneratedKey = value.isGenerated() && value.isKey();
@@ -131,24 +131,13 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 return !(isGeneratedKey || isSystemVersion) && !isAssociation;
             }
         });
-        associativeAttributes = attributesToArray(new Predicate<Attribute<E, ?>>() {
+        associativeAttributes = Attributes.attributesToArray(type.attributes(),
+            new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
                 return value.isAssociation() && !value.isForeignKey();
             }
         });
-    }
-
-    private Attribute<E, ?>[] attributesToArray(Predicate<Attribute<E, ?>> predicate) {
-        LinkedHashSet<Attribute> attributes = new LinkedHashSet<>();
-        for (Attribute<E, ?> attribute : type.attributes()) {
-            if (predicate.test(attribute)) {
-                attributes.add(attribute);
-            }
-        }
-        @SuppressWarnings("unchecked")
-        Attribute<E, ?>[] array = new Attribute[attributes.size()];
-        return attributes.toArray(array);
     }
 
     private void checkRowsAffected(int count, E entity, EntityProxy<E> proxy) {
