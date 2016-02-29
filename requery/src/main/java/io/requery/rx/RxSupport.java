@@ -66,10 +66,10 @@ public final class RxSupport {
             public Result<T> call(Type<?> type) {
                 return result;
             }
-        });
+        }).startWith(result);
     }
 
-    public static <E> Observable<E> toObservable(final CloseableIterator<E> iterator) {
+    private static <E> Observable<E> toObservable(final CloseableIterator<E> iterator) {
         return Observable.from(new Iterable<E>() {
             // use single iterator
             @Override

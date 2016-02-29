@@ -66,9 +66,9 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable, ToObserv
     rx.Observable<E> toObservable();
 
     /**
-     * Creates an observable that emits this result whenever commits that may affect the query
-     * result are made from within the same {@link io.requery.EntityStore} from where this instance
-     * originated.
+     * Creates an observable that emits this result initially and then again whenever commits that
+     * may affect the query result are made from within the same {@link io.requery.EntityStore}
+     * from where this instance originated.
      *
      * @return observable instance of this result that is triggered whenever changes that may
      * affect the query are made.

@@ -50,6 +50,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -176,17 +177,17 @@ public class RxTest extends RandomData {
 
     @Test
     public void testQuerySelfObservable() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(2);
+        final AtomicInteger count = new AtomicInteger();
         data.select(Person.class).get().toSelfObservable().subscribe(
             new Action1<Result<Person>>() {
             @Override
             public void call(Result<Person> persons) {
-                latch.countDown();
+                count.incrementAndGet();
             }
         });
         data.insert(randomPerson()).toBlocking().value();
         data.insert(randomPerson()).toBlocking().value();
-        assertEquals(0L, latch.getCount());
+        assertEquals(3, count.get());
     }
 
     @Test
