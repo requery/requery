@@ -1,16 +1,24 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "net.ltgt.gradle:gradle-apt-plugin:0.5"
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: "net.ltgt.apt"
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
-configurations {
-    provided
-}
-
 dependencies {
     compile project(':requery')
-    provided project(':requery-processor')
+    apt project(':requery-processor')
     compile fileTree(include: ['*.jar'], dir: 'libs') // for Oracle/SQL server JDBC drivers
     compile 'io.reactivex:rxjava:1.1.1'
     compile 'org.eclipse.persistence:javax.persistence:2.1.1'
@@ -26,42 +34,4 @@ dependencies {
     testCompile 'org.ehcache:ehcache:3.0.0.m3'
     testCompile 'javax.cache:cache-api:1.0.0'
     compile 'junit:junit:4.12'
-}
-
-idea {
-    module {
-        scopes.PROVIDED.plus += [configurations.provided]
-    }
-}
-
-sourceSets {
-    main {
-        runtimeClasspath += configurations.provided
-    }
-    generated {
-        java {
-            srcDirs += "$projectDir/src/main/generated"
-        }
-    }
-}
-
-// custom task to run apt (if you use compile or provided dependency scope
-// gradle will compile and export all the processor dependencies which is wrong)
-// https://issues.gradle.org/browse/GRADLE-784
-task aptProcess(type: JavaCompile, group: 'build', description: 'apt') {
-    source = sourceSets.main.java
-    classpath = configurations.compile + configurations.provided
-    options.compilerArgs = [
-            "-processor", "io.requery.processor.EntityProcessor"
-    ]
-    destinationDir = sourceSets.generated.java.srcDirs.iterator().next()
-}
-
-compileJava {
-    dependsOn aptProcess
-    source aptProcess.destinationDir
-}
-
-clean {
-    delete sourceSets.generated.java.srcDirs
 }
