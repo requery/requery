@@ -108,7 +108,7 @@ class EntityGraphValidator {
                                     entity.typeName() +  " and " + other.typeName(),
                                 ForeignKey.class));
                     }
-                } else {
+                } else if(attribute.cardinality() != null) {
                     attributeValidator.error("Couldn't find referenced attribute " +
                             attribute.referencedColumn() + " for " + attribute);
                 }

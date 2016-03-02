@@ -621,12 +621,12 @@ class EntityGenerator implements SourceGenerator {
             }
             if (attribute.isForeignKey()) {
                 builder.add(".setForeignKey($L)\n", attribute.isForeignKey());
-                if (attribute.referencedType() != null) {
-                    ClassName referencedName = ClassName.bestGuess(attribute.referencedType());
-                    builder.add(".setReferencedClass($T.class)\n", referencedName);
-                }
                 Optional<EntityDescriptor> referenced = graph.referencingEntity(attribute);
                 if (referenced.isPresent()) {
+                    if (attribute.referencedType() != null) {
+                        ClassName referencedName = ClassName.bestGuess(attribute.referencedType());
+                        builder.add(".setReferencedClass($T.class)\n", referencedName);
+                    }
                     Optional<? extends AttributeDescriptor> referencedElement =
                         graph.referencingAttribute(attribute, referenced.get());
 

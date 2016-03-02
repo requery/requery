@@ -17,6 +17,7 @@
 package io.requery.processor;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.Collection;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Holds entity types and navigates relationships between entity objects that will be generated.
@@ -78,9 +80,18 @@ class EntityGraph {
      * @return Optional Entity type being referenced.
      */
     Optional<EntityDescriptor> referencingEntity(AttributeDescriptor attribute) {
-        if (attribute.referencedType() != null) {
-            QualifiedName referencedType = new QualifiedName(attribute.referencedType());
-            return entityByName(referencedType);
+        if (!Names.isEmpty(attribute.referencedType())) {
+            Optional<TypeKind> primitiveType = Stream.of(TypeKind.values())
+                .filter(TypeKind::isPrimitive)
+                .filter(kind -> kind.toString().toLowerCase().equals(attribute.referencedType()))
+                .findFirst();
+            if (primitiveType.isPresent()) {
+                // attribute is basic foreign key and not referring to an entity
+                return Optional.empty();
+            } else {
+                QualifiedName referencedType = new QualifiedName(attribute.referencedType());
+                return entityByName(referencedType);
+            }
         } else {
             TypeMirror referencedType = attribute.typeMirror();
             if (attribute.isIterable()) {
