@@ -17,14 +17,24 @@ import java.sql.SQLException;
 @RunWith(AndroidJUnit4.class)
 public class AndroidFunctionalTest extends FunctionalTest {
 
+    private DatabaseSource dataSource;
+
     @Override
     public void setup() throws SQLException {
         Context context = InstrumentationRegistry.getContext();
         final String dbName = "test.db";
         context.deleteDatabase(dbName);
         EntityModel model = Models.DEFAULT;
-        DatabaseSource dataSource = new DatabaseSource(context, model, dbName, 1);
+        dataSource = new DatabaseSource(context, model, dbName, 1);
         dataSource.setLoggingEnabled(true);
         data = new EntityDataStore<>(dataSource.getConfiguration());
+    }
+
+    @Override
+    public void teardown() {
+        super.teardown();
+        if (dataSource != null) {
+            dataSource.close();
+        }
     }
 }
