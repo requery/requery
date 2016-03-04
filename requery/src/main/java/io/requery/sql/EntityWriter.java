@@ -135,7 +135,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
-                return value.isAssociation() && !value.isForeignKey();
+                return value.isAssociation();
             }
         });
     }
@@ -177,7 +177,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
     private void findCascadePreInserts(EntityProxy<E> proxy,
                                        Map<Class<? extends S>, List<S>> elements) {
-        for (Attribute<E, ?> attribute : type.attributes()) {
+        for (Attribute<E, ?> attribute : associativeAttributes) {
             S referenced = foreignKeyReference(proxy, attribute);
             if (referenced != null) {
                 EntityProxy<S> otherProxy = context.proxyOf(referenced, false);
@@ -316,7 +316,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         } else {
             generatedKey = mapping.read((Expression) key, results, resultIndex);
             if (generatedKey == null) {
-                throw new MissingKeyException(proxy);
+                throw new MissingKeyException();
             }
             proxy.setObject(key, generatedKey, PropertyState.LOADED);
         }
@@ -403,7 +403,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         QueryElement<Scalar<Integer>> query = new QueryElement<>(QueryType.INSERT, model, insert);
         query.from(entityClass);
 
-        for (Attribute<E, ?> attribute : type.attributes()) {
+        for (Attribute<E, ?> attribute : associativeAttributes) {
             // persist the foreign key object if needed
             S referenced = foreignKeyReference(proxy, attribute);
             if (referenced != null) {
@@ -578,9 +578,6 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         if (count != 1) {
                             throw new RowCountException(1, count);
                         }
-                        //if (attribute.cascadeActions().contains(CascadeAction.DELETE)) {
-                            //cascadeDelete(removed);
-                        //}
                     }
                     changes.clear();
                     break;
@@ -768,24 +765,22 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     }
 
     private void removeEntity(EntityProxy<E> proxy, Object entity) {
-        for (Attribute<E, ?> attribute : type.attributes()) {
-            if (attribute.isAssociation()) {
-                Object value = proxy.get(attribute, false);
-                switch (attribute.cardinality()) {
-                    case ONE_TO_ONE:
-                    case MANY_TO_ONE:
-                        if (value == entity) {
-                            proxy.set(attribute, null, PropertyState.LOADED);
-                        }
-                        break;
-                    case ONE_TO_MANY:
-                    case MANY_TO_MANY:
-                        if (value instanceof Collection) {
-                            Collection collection = (Collection) value;
-                            collection.remove(entity);
-                        }
-                        break;
-                }
+        for (Attribute<E, ?> attribute : associativeAttributes) {
+            Object value = proxy.get(attribute, false);
+            switch (attribute.cardinality()) {
+                case ONE_TO_ONE:
+                case MANY_TO_ONE:
+                    if (value == entity) {
+                        proxy.set(attribute, null, PropertyState.LOADED);
+                    }
+                    break;
+                case ONE_TO_MANY:
+                case MANY_TO_MANY:
+                    if (value instanceof Collection) {
+                        Collection collection = (Collection) value;
+                        collection.remove(entity);
+                    }
+                    break;
             }
         }
     }

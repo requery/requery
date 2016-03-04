@@ -363,13 +363,13 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         checkClosed();
         EntityReader<E, T> reader = context.read(type);
         Set<Expression<?>> selection;
-        EntityResultReader<E, T> resultReader;
+        ResultReader<E> resultReader;
         if (attributes == null || attributes.length == 0) {
             selection = reader.defaultSelection();
-            resultReader = new EntityResultReader<>(reader, reader.defaultSelectionAttributes());
+            resultReader = reader.newResultReader(reader.defaultSelectionAttributes());
         } else {
             selection = new LinkedHashSet<>(Arrays.<Expression<?>>asList(attributes));
-            resultReader = new EntityResultReader<>(reader, attributes);
+            resultReader = reader.newResultReader(attributes);
         }
         SelectOperation<E> select = new SelectOperation<>(context, resultReader);
         QueryElement<Result<E>> query = new QueryElement<>(SELECT, entityModel, select);
@@ -384,9 +384,15 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
-    public <E extends T> Insertion<Scalar<Integer>> insert(Class<E> type) {
+    public <E extends T> Insertion<Result<Tuple>> insert(Class<E> type) {
         checkClosed();
-        return new QueryElement<>(INSERT, entityModel, updateExecutor).from(type);
+        Type<E> entityType = context.model().typeOf(type);
+        Set<Expression<?>> keySelection = new LinkedHashSet<>();
+        for (Attribute<E, ?> attribute : entityType.keyAttributes()) {
+            keySelection.add((Expression<?>) attribute);
+        }
+        InsertReturningOperation operation = new InsertReturningOperation(context, keySelection);
+        return new QueryElement<>(INSERT, entityModel, operation).from(type);
     }
 
     @Override

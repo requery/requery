@@ -211,7 +211,7 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     }
 
     @Override
-    public <E extends T> Insertion<Scalar<Integer>> insert(Class<E> type) {
+    public <E extends T> Insertion<Result<Tuple>> insert(Class<E> type) {
         return delegate.insert(type);
     }
 

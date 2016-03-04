@@ -28,17 +28,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * Base class for update operation executors.
+ * Base class for insert/update operations.
  *
  * @author Nikhil Purushe
  */
-abstract class AbstractUpdate {
+abstract class PreparedQueryOperation {
 
     protected final RuntimeConfiguration configuration;
     protected final GeneratedResultReader generatedResultReader;
 
-    protected AbstractUpdate(RuntimeConfiguration configuration,
-                             GeneratedResultReader generatedResultReader) {
+    protected PreparedQueryOperation(RuntimeConfiguration configuration,
+                                     GeneratedResultReader generatedResultReader) {
         this.configuration = configuration;
         this.generatedResultReader = generatedResultReader;
     }

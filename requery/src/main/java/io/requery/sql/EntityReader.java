@@ -74,6 +74,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     private final Queryable<S> queryable;
     private final QueryAttribute<E, ?> keyAttribute;
     private final boolean stateless;
+    private final boolean cacheable;
     private final Set<Expression<?>> defaultSelection;
     private final Attribute<E, ?>[] defaultSelectionAttributes;
 
@@ -84,6 +85,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         this.cache = this.context.cache();
         this.mapping = this.context.mapping();
         this.stateless = type.isStateless();
+        this.cacheable = type.isCacheable();
         // compute default/minimum selections for the type
         LinkedHashSet<Expression<?>> selection = new LinkedHashSet<>();
         LinkedHashSet<Attribute<E, ?>> selectAttributes = new LinkedHashSet<>();
@@ -117,6 +119,10 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
 
     Attribute<E, ?>[] defaultSelectionAttributes() {
         return defaultSelectionAttributes;
+    }
+
+    ResultReader<E> newResultReader(Attribute[] attributes) {
+        return new EntityResultReader<>(this, attributes);
     }
 
     private Expression aliasVersion(Attribute attribute) {
@@ -359,8 +365,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     }
                 };
                 // readResult will merge the results into the target object in cache mode
-                EntityResultReader<E, S> resultReader =
-                    new EntityResultReader<>(this, selectAttributes);
+                ResultReader<E> resultReader = newResultReader(selectAttributes);
 
                 SelectOperation<E> select = new SelectOperation<>(context, resultReader);
                 QueryElement<Result<E>> query =
@@ -435,27 +440,28 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     E fromResult(E entity, ResultSet results, Attribute[] selection) throws SQLException {
         // if refreshing (entity not null) overwrite the properties
         boolean overwrite = entity != null || stateless;
-
-        // get or create the entity object
         boolean wasCached = false;
+
         if (entity == null) {
-            Object key = null;
-            synchronized (type) {
-                // try lookup cached object
-                if (type.isCacheable()) {
-                    key = readCacheKey(results);
+            // get or create the entity object
+            if (cacheable) {
+                synchronized (type) {
+                    // try lookup cached object
+                    final Object key = readCacheKey(results);
                     if (key != null) {
                         entity = cache.get(type.classType(), key);
                         wasCached = entity != null;
                     }
-                }
-                // not cached create a new one
-                if (entity == null) {
-                    entity = createEntity();
-                    if (key != null) {
-                        cache.put(type.classType(), key, entity);
+                    // not cached create a new one
+                    if (entity == null) {
+                        entity = createEntity();
+                        if (key != null) {
+                            cache.put(type.classType(), key, entity);
+                        }
                     }
                 }
+            } else {
+                entity = createEntity();
             }
         }
 
@@ -512,7 +518,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         return entity;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // checked by primitiveKind
     private void readPrimitiveField(EntityProxy<E> proxy,
                                     Attribute<E, ?> attribute,
                                     ResultSet results, int index) throws SQLException {

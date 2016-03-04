@@ -26,9 +26,9 @@ import java.util.Set;
 class EntityResultReader<E extends S, S> implements ResultReader<E> {
 
     private final EntityReader<E, S> reader;
-    private Attribute<?, ?>[] attributes;
+    private final Attribute[] attributes;
 
-    public EntityResultReader(EntityReader<E, S> reader, Attribute<?, ?>[] attributes) {
+    public EntityResultReader(EntityReader<E, S> reader, Attribute[] attributes) {
         this.reader = reader;
         this.attributes = attributes;
     }

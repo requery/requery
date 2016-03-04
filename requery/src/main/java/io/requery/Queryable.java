@@ -39,7 +39,8 @@ import java.util.Set;
 public interface Queryable<T> {
 
     /**
-     * Initiates a query against a set of expression values return a specific entity type.
+     * Initiates a query against a set of expression values return a specific entity type in a
+     * {@link Result}.
      *
      * @param type       of entity
      * @param attributes to select (must of be of type E, not enforced due to erasure)
@@ -49,7 +50,8 @@ public interface Queryable<T> {
     <E extends T> Selection<Result<E>> select(Class<E> type, QueryAttribute<?, ?>... attributes);
 
     /**
-     * Initiates a query against a set of expression values return a specific entity type.
+     * Initiates a query against a set of expression values return a specific entity type in a
+     * {@link Result}.
      *
      * @param type       of entity
      * @param attributes to select (must of be of type E, not enforced due to erasure)
@@ -61,14 +63,15 @@ public interface Queryable<T> {
 
     /**
      * Initiates an insert operation for a type. After completing the expression call
-     * {@link Return#get()} to perform the operation. The result is the number of rows
-     * affected by the call.
+     * {@link Return#get()} to perform the operation. If the type has no generated key values the
+     * result is a tuple containing a single element with the number of rows affected by the
+     * operation. Otherwise if the type has generated keys those keys are returned as the result.
      *
      * @param type of entity
      * @param <E>  entity type
      * @return next query step
      */
-    <E extends T> Insertion<Scalar<Integer>> insert(Class<E> type);
+    <E extends T> Insertion<Result<Tuple>> insert(Class<E> type);
 
     /**
      * Initiates an update query for a type. After completing the expression call

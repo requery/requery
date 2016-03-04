@@ -29,11 +29,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * Executes a single update or insert operation.
+ * Executes a single update operation.
  *
  * @author Nikhil Purushe
  */
-class UpdateOperation extends AbstractUpdate implements QueryOperation<Scalar<Integer>> {
+class UpdateOperation extends PreparedQueryOperation implements QueryOperation<Scalar<Integer>> {
 
     UpdateOperation(RuntimeConfiguration configuration) {
         super(configuration, null);

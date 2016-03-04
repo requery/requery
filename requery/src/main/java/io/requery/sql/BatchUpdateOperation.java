@@ -31,7 +31,7 @@ import java.sql.SQLException;
  *
  * @author Nikhil Purushe
  */
-class BatchUpdateOperation<E> extends AbstractUpdate implements QueryOperation<int[]> {
+class BatchUpdateOperation<E> extends PreparedQueryOperation implements QueryOperation<int[]> {
 
     private final E[] elements;
     private final int length;
@@ -53,7 +53,6 @@ class BatchUpdateOperation<E> extends AbstractUpdate implements QueryOperation<i
     @Override
     public int[] execute(QueryElement<int[]> query) {
         int[] result = batchInStatement ? null : new int[length];
-        int count = 0;
 
         try (Connection connection = configuration.connectionProvider().getConnection()) {
             QueryGenerator generator = new QueryGenerator<>(query);
@@ -70,11 +69,10 @@ class BatchUpdateOperation<E> extends AbstractUpdate implements QueryOperation<i
                         statement.addBatch();
                     } else {
                         listener.beforeExecuteUpdate(statement, sql, null);
-                        result[count] = statement.executeUpdate();
+                        result[i] = statement.executeUpdate();
                         listener.afterExecuteUpdate(statement);
-                        readGeneratedKeys(count, statement);
+                        readGeneratedKeys(i, statement);
                     }
-                    count++;
                 }
                 if (batchInStatement) {
                     listener.beforeExecuteUpdate(statement, sql, null);
