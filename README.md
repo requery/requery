@@ -138,7 +138,8 @@ Features
 --------
 
 - No Reflection
-- Fast startup
+- Fast startup & performance
+- No dependencies (RxJava is optional)
 - Typed query language
 - Table generation
 - Supports JDBC and many popular databases
