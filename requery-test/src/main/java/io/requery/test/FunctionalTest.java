@@ -197,10 +197,16 @@ public abstract class FunctionalTest extends RandomData {
 
     @Test
     public void testInsertQuery() {
-        Integer id = data.insert(Person.class)
+        Integer id1 = data.insert(Person.class)
                 .value(Person.ABOUT, "nothing")
                 .value(Person.AGE, 50).get().first().get(0);
-        assertNotNull(id);
+        assertNotNull(id1);
+
+        Integer id2 = data.insert(Person.class)
+            .value(Person.NAME, "Bob")
+            .value(Person.AGE, 50).get().first().get(Person.ID);
+        assertNotNull(id2);
+        assertTrue(!id1.equals(id2));
     }
 
     @Test
