@@ -32,6 +32,18 @@ import java.util.NoSuchElementException;
  */
 class ResultTuple implements Tuple {
 
+    private static final Map<Class<?>, Class<?>> boxedTypes = new HashMap<>();
+    static {
+        boxedTypes.put(boolean.class, Boolean.class);
+        boxedTypes.put(int.class, Integer.class);
+        boxedTypes.put(long.class, Long.class);
+        boxedTypes.put(short.class, Short.class);
+        boxedTypes.put(float.class, Float.class);
+        boxedTypes.put(double.class, Double.class);
+        boxedTypes.put(char.class, Character.class);
+        boxedTypes.put(byte.class, Byte.class);
+    }
+
     private final Map<String, Object> keyMap;
     private final Object[] values;
 
@@ -62,7 +74,13 @@ class ResultTuple implements Tuple {
         if (value == null) {
             throw new NoSuchElementException();
         }
-        return key.classType().cast(value);
+        Class<V> type = key.classType();
+        if (type.isPrimitive()) {
+            @SuppressWarnings("unchecked")
+            V result = (V) boxedTypes.get(type).cast(value);
+            return result;
+        }
+        return type.cast(value);
     }
 
     @SuppressWarnings("unchecked")
