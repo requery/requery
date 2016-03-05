@@ -34,13 +34,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Table {
 
     /**
-     * DDL attributes e.g. TEMPORARY or VIRTUAL used in the DDL statements.
+     * Defines DDL attributes e.g. TEMPORARY or VIRTUAL used to create the table when using table
+     * generation.
      * @return attributes of the table, defaults to empty
      */
     String[] createAttributes() default {};
 
     /**
-     * @return name of the table, defaults to the entity class name.
+     * @return name of the table the object should be mapped to, defaults to the entity class name.
      */
     String name() default "";
 }

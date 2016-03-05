@@ -32,5 +32,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface ManyToOne {
 
+    /**
+     * @return the set of {@link CascadeAction} actions to take when the entity containing this
+     * reference is persisted/deleted. Defaults to {@link CascadeAction#SAVE}.
+     */
     CascadeAction[] cascade() default CascadeAction.SAVE;
 }

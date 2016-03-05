@@ -32,7 +32,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface OneToMany {
 
+    /**
+     * @return the property name in the type this relation is mapped to. Optional normally this can
+     * be discovered by the entity processor.
+     */
     String mappedBy() default "";
 
+    /**
+     * @return the set of {@link CascadeAction} actions to take when the entity containing this
+     * reference is persisted/deleted. Defaults to {@link CascadeAction#SAVE}.
+     */
     CascadeAction[] cascade() default CascadeAction.SAVE;
 }
