@@ -58,15 +58,6 @@ public class ClassMap<V> implements Map<Class<?>, V> {
                 return cls;
             }
         }
-        /*if (map.containsKey(key)) {
-            return key;
-        } else {
-            for (Class<?> type : keySet()) {
-                if (type.isAssignableFrom(key)) {
-                    return type;
-                }
-            }
-        }*/
         return null;
     }
 
