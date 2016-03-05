@@ -41,6 +41,8 @@ abstract class BaseType<T> implements Type<T> {
     protected Set<Attribute<T, ?>> keyAttributes;
     protected Attribute<T, ?> keyAttribute;
     protected String[] tableCreateAttributes;
+    protected Supplier<?> builderFactory;
+    protected Function<?, T> buildFunction;
 
     public BaseType() {
         cacheable = true;
@@ -50,6 +52,16 @@ abstract class BaseType<T> implements Type<T> {
     @Override
     public String name() {
         return name;
+    }
+
+    @Override
+    public Class<T> classType() {
+        return type;
+    }
+
+    @Override
+    public Class<? super T> baseType() {
+        return baseType;
     }
 
     @Override
@@ -73,13 +85,8 @@ abstract class BaseType<T> implements Type<T> {
     }
 
     @Override
-    public Class<T> classType() {
-        return type;
-    }
-
-    @Override
-    public Class<? super T> baseType() {
-        return baseType;
+    public boolean isBuildable() {
+        return builderFactory != null;
     }
 
     @Override
@@ -107,6 +114,20 @@ abstract class BaseType<T> implements Type<T> {
     @Override
     public Attribute<T, ?> singleKeyAttribute() {
         return keyAttribute;
+    }
+
+    @Override
+    public <B> Supplier<B> builderFactory() {
+        @SuppressWarnings("unchecked")
+        Supplier<B> supplier = (Supplier<B>) builderFactory;
+        return supplier;
+    }
+
+    @Override
+    public <B> Function<B, T> buildFunction() {
+        @SuppressWarnings("unchecked")
+        Function<B, T> function = (Function<B, T>) buildFunction;
+        return function;
     }
 
     @Override

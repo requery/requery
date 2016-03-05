@@ -102,7 +102,8 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     private DataContext context;
 
     /**
-     * Create new {@link EntityDataStore} with the given {@link DataSource} and {@link EntityModel}.
+     * Creates a new {@link EntityDataStore} with the given {@link DataSource} and
+     * {@link EntityModel}.
      *
      * @param dataSource to use
      * @param model to use
@@ -112,8 +113,8 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     /**
-     * Create new {@link EntityDataStore} with the given {@link DataSource},{@link EntityModel} and
-     * {@link Mapping}.
+     * Creates a new {@link EntityDataStore} with the given {@link DataSource},{@link EntityModel}
+     * and {@link Mapping}.
      *
      * @param dataSource to use
      * @param model to use
@@ -126,7 +127,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     /**
-     * Create new {@link EntityDataStore} with the given configuration.
+     * Creates a new {@link EntityDataStore} with the given configuration.
      *
      * @param configuration to use
      */

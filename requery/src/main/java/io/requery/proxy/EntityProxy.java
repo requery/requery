@@ -27,9 +27,10 @@ import java.util.LinkedHashMap;
  * {@link Attribute} meta data associated with them.
  *
  * @param <E> entity type
+ *
  * @author Nikhil Purushe
  */
-public class EntityProxy<E> implements EntityStateListener {
+public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateListener {
 
     private final Type<E> type;
     private final E entity;
@@ -52,27 +53,12 @@ public class EntityProxy<E> implements EntityStateListener {
         this.stateless = type.isStateless();
     }
 
-    /**
-     * get the current value for an attribute through this proxy.
-     *
-     * @param attribute to get
-     * @param <V>       type of the attribute
-     * @return the current value of that attribute using {@link PropertyLoader} instance to
-     * retrieve it if required.
-     */
+    @Override
     public <V> V get(Attribute<E, V> attribute) {
         return get(attribute, true);
     }
 
-    /**
-     * get the current value for an attribute through this proxy.
-     *
-     * @param attribute to get
-     * @param fetch     true to fetch the value through the {@link PropertyLoader} if set
-     * @param <V>       type fo the attribute
-     * @return the current value of that attribute using {@link PropertyLoader} instance to
-     * retrieve it if fetch = true.
-     */
+    @Override
     public <V> V get(Attribute<E, V> attribute, boolean fetch) {
         PropertyState state = getState(attribute);
         if (fetch && state == PropertyState.FETCH && loader != null) {
@@ -89,69 +75,55 @@ public class EntityProxy<E> implements EntityStateListener {
         return value;
     }
 
+    @Override
     public int getInt(Attribute<E, Integer> attribute) {
         IntProperty<E> property = (IntProperty<E>) attribute.property();
         return property.getInt(entity);
     }
 
+    @Override
     public long getLong(Attribute<E, Long> attribute) {
         LongProperty<E> property = (LongProperty<E>) attribute.property();
         return property.getLong(entity);
     }
 
+    @Override
     public short getShort(Attribute<E, Short> attribute) {
         ShortProperty<E> property = (ShortProperty<E>) attribute.property();
         return property.getShort(entity);
     }
 
+    @Override
     public float getFloat(Attribute<E, Float> attribute) {
         FloatProperty<E> property = (FloatProperty<E>) attribute.property();
         return property.getFloat(entity);
     }
 
+    @Override
     public double getDouble(Attribute<E, Double> attribute) {
         DoubleProperty<E> property = (DoubleProperty<E>) attribute.property();
         return property.getDouble(entity);
     }
 
+    @Override
     public boolean getBoolean(Attribute<E, Boolean> attribute) {
         BooleanProperty<E> property = (BooleanProperty<E>) attribute.property();
         return property.getBoolean(entity);
     }
 
-    /**
-     * Set a value through this proxy and change it's corresponding {@link PropertyState} to
-     * {@link PropertyState#MODIFIED}.
-     *
-     * @param attribute attribute to change
-     * @param value     new property value
-     * @param <V>       type of the value
-     */
+    @Override
     public <V> void set(Attribute<E, V> attribute, V value) {
         set(attribute, value, PropertyState.MODIFIED);
     }
 
-    /**
-     * Set a value through this proxy and change it's corresponding {@link PropertyState}.
-     *
-     * @param attribute attribute to change
-     * @param value     new property value
-     * @param state     new property state
-     * @param <V>       type of the value
-     */
+    @Override
     public <V> void set(Attribute<E, V> attribute, V value, PropertyState state) {
         attribute.property().set(entity, value);
         setState(attribute, state);
         checkRegenerateKey(attribute);
     }
 
-    /**
-     * Unchecked version of set, use only when the the attribute type is not known.
-     *
-     * @param attribute attribute to change
-     * @param value     new property value
-     * @param state     new property state
-     */
+    @Override
     public void setObject(Attribute<E, ?> attribute, Object value, PropertyState state) {
         @SuppressWarnings("unchecked")
         Property<E, Object> property = (Property<E, Object>) attribute.property();
@@ -160,6 +132,7 @@ public class EntityProxy<E> implements EntityStateListener {
         checkRegenerateKey(attribute);
     }
 
+    @Override
     public void setInt(Attribute<E, Integer> attribute, int value, PropertyState state) {
         IntProperty<E> property = (IntProperty<E>) attribute.property();
         property.setInt(entity, value);
@@ -167,6 +140,7 @@ public class EntityProxy<E> implements EntityStateListener {
         checkRegenerateKey(attribute);
     }
 
+    @Override
     public void setLong(Attribute<E, Long> attribute, long value, PropertyState state) {
         LongProperty<E> property = (LongProperty<E>) attribute.property();
         property.setLong(entity, value);
@@ -174,24 +148,28 @@ public class EntityProxy<E> implements EntityStateListener {
         checkRegenerateKey(attribute);
     }
 
+    @Override
     public void setShort(Attribute<E, Short> attribute, short value, PropertyState state) {
         ShortProperty<E> property = (ShortProperty<E>) attribute.property();
         property.setShort(entity, value);
         setState(attribute, state);
     }
 
+    @Override
     public void setFloat(Attribute<E, Float> attribute, float value, PropertyState state) {
         FloatProperty<E> property = (FloatProperty<E>) attribute.property();
         property.setFloat(entity, value);
         setState(attribute, state);
     }
 
+    @Override
     public void setDouble(Attribute<E, Double> attribute, double value, PropertyState state) {
         DoubleProperty<E> property = (DoubleProperty<E>) attribute.property();
         property.setDouble(entity, value);
         setState(attribute, state);
     }
 
+    @Override
     public void setBoolean(Attribute<E, Boolean> attribute, boolean value, PropertyState state) {
         BooleanProperty<E> property = (BooleanProperty<E>) attribute.property();
         property.setBoolean(entity, value);

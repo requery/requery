@@ -25,6 +25,7 @@ final class ImmutableAttribute<T, V> extends BaseAttribute<T, V> {
         property = builder.property();
         propertyState = builder.propertyState();
         initializer = builder.initializer();
+        builderProperty = builder.builderProperty();
         isLazy = builder.isLazy();
         length = builder.length();
         isKey = builder.isKey();

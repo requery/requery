@@ -21,6 +21,7 @@ import io.requery.PropertyNameStyle;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Definition of an entity to be processed.
@@ -29,29 +30,81 @@ import java.util.Map;
  */
 interface EntityDescriptor {
 
+    /**
+     * @return {@link TypeElement} element being represented
+     */
     TypeElement element();
 
+    /**
+     * @return {@link QualifiedName} qualified name of the class to be generated
+     */
     QualifiedName typeName();
 
+    /**
+     * @return Name for the Type member in the generated entity
+     */
     String staticTypeName();
 
+    /**
+     * @return Name of the model this entity belongs to
+     */
     String modelName();
 
+    /**
+     * @return Name of the table this entity is being mapped to
+     */
     String tableName();
 
+    /**
+     * @return Optional name of the class factory which will instantiates instances of the entity
+     * type.
+     */
     String classFactoryName();
 
+    /**
+     * @return table attributes used during table generataion
+     */
     String[] tableAttributes();
 
+    /**
+     * @return {@link PropertyNameStyle} style of the accessors in the entity
+     */
     PropertyNameStyle propertyNameStyle();
 
+    /**
+     * @return true if the entity is cacheable
+     */
     boolean isCacheable();
 
+    /**
+     * @return true if the entity is read only, differs from immutable in that the properties can
+     * still be set in the generated entity by the framework but no setters are generated
+     */
     boolean isReadOnly();
 
+    /**
+     * @return true if the entity has no modification state in the generated entity
+     */
     boolean isStateless();
 
+    /**
+     * @return true if the underlying type being represented is immutable, false otherwise
+     */
+    boolean isImmutable();
+
+    /**
+     * @return {@link TypeElement} of the builder class that can build instances of the entity if
+     * the type is {@link #isImmutable()}
+     */
+    Optional<TypeElement> builderType();
+
+    /**
+     * @return map of elements to attributes
+     */
     Map<Element, ? extends AttributeDescriptor> attributes();
 
+    /**
+     * @return map of elements to listener methods
+     */
     Map<Element, ? extends ListenerDescriptor> listeners();
 }

@@ -66,6 +66,24 @@ public interface Type<T> extends Expression<T> {
     boolean isStateless();
 
     /**
+     * @return true if a builder class is used to construct instances of the type when reading from
+     * a store or query. Generally used for immutable objects.
+     */
+    boolean isBuildable();
+
+    /**
+     * @return if {@link #isBuildable()} returns the factory that instantiates the builder instance,
+     * otherwise null.
+     */
+    <B> Supplier<B> builderFactory();
+
+    /**
+     * @return if {@link #isBuildable()} returns the function that builds the final type from
+     * a builder instance.
+     */
+    <B> Function<B, T> buildFunction();
+
+    /**
      * @return A readonly collection of {@link Attribute}s that this type represents. (includes
      * all attributes)
      */

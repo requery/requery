@@ -43,10 +43,10 @@ import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Processes class level annotations on an abstract entity type.
@@ -66,23 +66,17 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         listeners = new LinkedHashMap<>();
         // create attributes for fields that have no annotations
         Elements elements = processingEnvironment.getElementUtils();
-        if (element().getKind().isInterface()) {
+        if (element().getKind().isInterface() || isImmutable()) {
             ElementFilter.methodsIn(typeElement.getEnclosedElements()).stream()
                 .filter(this::isMethodProcessable)
                 .forEach(this::computeAttribute);
         } else {
-            List<? extends Element> members = elements.getAllMembers(typeElement);
-            for (VariableElement element : ElementFilter.fieldsIn(members)) {
-                // skip static/final members
-                if (element.getModifiers().contains(Modifier.STATIC) ||
-                    element.getModifiers().contains(Modifier.FINAL)) {
-                    continue;
-                }
-
-                if (!element.getModifiers().contains(Modifier.PRIVATE)) {
-                    computeAttribute(element);
-                } // private fields are skipped
-            }
+            // private/static/final members fields are skipped
+            ElementFilter.fieldsIn(elements.getAllMembers(typeElement)).stream()
+                .filter(element -> !element.getModifiers().contains(Modifier.PRIVATE) &&
+                    !element.getModifiers().contains(Modifier.STATIC) &&
+                    (!element.getModifiers().contains(Modifier.FINAL) || isImmutable()))
+                .forEach(this::computeAttribute);
         }
     }
 
@@ -126,7 +120,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     private boolean isMethodProcessable(ExecutableElement element) {
         // must be a getter style method with no args
         return element.getReturnType().getKind() != TypeKind.VOID &&
-               element.getParameters().isEmpty();
+               element.getParameters().isEmpty() &&
+               !element.getModifiers().contains(Modifier.STATIC);
     }
 
     void addAnnotationElement(TypeElement annotationElement, Element annotatedElement) {
@@ -228,12 +223,10 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         Elements elements = processingEnvironment.getElementUtils();
         PackageElement packageElement = elements.getPackageOf(element());
         String packageName = packageElement.getQualifiedName().toString();
-
         // if set in the annotation just use that
         if (!Names.isEmpty(entityName)) {
             return new QualifiedName(packageName, entityName);
         }
-
         String typeName = element().getSimpleName().toString();
         if (element().getKind().isInterface()) {
             // maybe I<Something> style
@@ -261,7 +254,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         return annotationOf(Table.class).map(Table::name).orElse(
                annotationOf(javax.persistence.Table.class)
                    .map(javax.persistence.Table::name).orElse(
-            element().getKind().isInterface() ?
+            element().getKind().isInterface() || isImmutable() ?
                 element().getSimpleName().toString() :
                 typeName().className()));
     }
@@ -274,9 +267,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     @Override
     public boolean isCacheable() {
         return annotationOf(Entity.class).map(Entity::cacheable)
-            .orElse( annotationOf(Cacheable.class)
-                    .map(Cacheable::value)
-                    .orElse(true));
+            .orElse( annotationOf(Cacheable.class).map(Cacheable::value).orElse(true));
     }
 
     @Override
@@ -286,7 +277,25 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public boolean isStateless() {
-        return annotationOf(Entity.class).map(Entity::stateless).orElse(false);
+        return isImmutable() || annotationOf(Entity.class).map(Entity::stateless).orElse(false);
+    }
+
+    @Override
+    public boolean isImmutable() {
+        // check known immutable type annotations then check the immutable value
+        return Stream.of("com.google.auto.value.AutoValue",
+                         "auto.parcel.AutoParcel",
+                         "org.immutables.value.Value.Immutable")
+            .filter(type -> Mirrors.findAnnotationMirror(element(), type).isPresent())
+            .findAny().isPresent() ||
+            annotationOf(Entity.class).map(Entity::immutable).orElse(false);
+    }
+
+    @Override
+    public Optional<TypeElement> builderType() {
+        return ElementFilter.typesIn(element().getEnclosedElements()).stream()
+            .filter(element -> element.getSimpleName().toString().equals("Builder"))
+            .findFirst();
     }
 
     @Override

@@ -111,6 +111,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private ReferentialAction referentialAction;
     private String referencedColumn;
     private String referencedType;
+    private String referencedTable;
     private String mappedBy;
     private String defaultValue;
     private String collate;
@@ -135,6 +136,9 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         processBasicColumnAnnotations(validator);
         processAssociativeAnnotations(processingEnvironment, validator);
         processConverterAnnotation(validator);
+        if (cardinality() != null && entity.isImmutable()) {
+            validator.error("Immutable value type cannot contain relational references");
+        }
         return validators;
     }
 
@@ -308,6 +312,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                         break;
                 }
             }
+            this.referencedTable = joinColumn.table();
             this.referencedColumn = joinColumn.referencedColumnName();
         }
 
@@ -411,7 +416,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                 referencedType = mirror.flatMap(m -> Mirrors.findAnnotationValue(m, "references"))
                         .map(value -> value.getValue().toString())
                         .orElse(null);
-            } else {
+            } else if (!typeMirror().getKind().isPrimitive()) {
                 referencedType = typeMirror().toString();
             }
         }
@@ -652,6 +657,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     @Override
     public String referencedType() {
         return referencedType;
+    }
+
+    @Override
+    public String referencedTable() {
+        return referencedTable;
     }
 
     @Override

@@ -80,7 +80,14 @@ class EntityGraph {
      * @return Optional Entity type being referenced.
      */
     Optional<EntityDescriptor> referencingEntity(AttributeDescriptor attribute) {
-        if (!Names.isEmpty(attribute.referencedType())) {
+        if (!Names.isEmpty(attribute.referencedTable())) {
+            // match by table name
+            return entities.values().stream()
+                .filter(entity -> entity.tableName().equalsIgnoreCase(attribute.referencedTable()))
+                .findFirst();
+
+        } else if (!Names.isEmpty(attribute.referencedType())) {
+            // match by type name
             Optional<TypeKind> primitiveType = Stream.of(TypeKind.values())
                 .filter(TypeKind::isPrimitive)
                 .filter(kind -> kind.toString().toLowerCase().equals(attribute.referencedType()))

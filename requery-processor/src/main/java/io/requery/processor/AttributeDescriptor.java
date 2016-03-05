@@ -88,6 +88,8 @@ interface AttributeDescriptor {
 
     String referencedType();
 
+    String referencedTable();
+
     String mappedBy();
 
     String converterName();

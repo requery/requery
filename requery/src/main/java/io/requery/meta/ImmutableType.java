@@ -33,11 +33,15 @@ final class ImmutableType<T> extends BaseType<T> {
         this.factory = builder.factory();
         this.proxyProvider = builder.proxyProvider();
         this.tableCreateAttributes = builder.tableCreateAttributes();
+        this.builderFactory = builder.builderFactory();
+        this.buildFunction = builder.buildFunction();
 
         LinkedHashSet<Attribute<T, ?>> attributes = new LinkedHashSet<>();
         for (Attribute<T, ?> attribute : builder.attributes()) {
             if (attribute instanceof BaseAttribute) {
                 BaseAttribute baseAttribute = (BaseAttribute) attribute;
+                // cheating here a bit but needed to avoid circular references, will be
+                // effectively immutable after the type is constructed
                 baseAttribute.declaringType = this;
             }
             attributes.add(attribute);

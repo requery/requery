@@ -38,6 +38,7 @@ public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     protected Class<V> classType;
     protected PrimitiveKind primitiveKind;
     protected Property<T, V> property;
+    protected Property<?, V> builderProperty;
     protected Property<T, PropertyState> propertyState;
     protected boolean isLazy;
     protected boolean isKey;
@@ -75,6 +76,13 @@ public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     @Override
     public Property<T, PropertyState> propertyState() {
         return propertyState;
+    }
+
+    @Override
+    public <B> Property<B, V> builderProperty() {
+        @SuppressWarnings("unchecked")
+        Property<B, V> property = (Property<B, V>) builderProperty;
+        return property;
     }
 
     @Override

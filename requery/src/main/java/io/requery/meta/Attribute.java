@@ -59,6 +59,12 @@ public interface Attribute<T, V> {
     PrimitiveKind primitiveKind();
 
     /**
+     * @return {@link Initializer} for defining the default value for the property representing the
+     * attribute.
+     */
+    Initializer<T, V> initializer();
+
+    /**
      * @return {@link Property} representing access to the field of the entity.
      */
     Property<T, V> property();
@@ -69,10 +75,10 @@ public interface Attribute<T, V> {
     Property<T, PropertyState> propertyState();
 
     /**
-     * @return {@link Initializer} for defining the default value for the property representing the
-     * attribute.
+     * @param <B> builder type
+     * @return {@link Property} used to apply the attribute a builder instance for the type.
      */
-    Initializer<T, V> initializer();
+    <B> Property<B, V> builderProperty();
 
     /**
      * @return true if this attribute is lazily loaded, false otherwise.

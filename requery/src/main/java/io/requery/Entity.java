@@ -60,9 +60,17 @@ public @interface Entity {
     /**
      * @return true if the entity object should have state tracking disabled, which allows partial
      * updates of changed values only and automatic retrieval of not loaded properties. Defaults to
-     * false.
+     * false, unless the entity is {@link #immutable()} in which case the value is true.
      */
     boolean stateless() default false;
+
+    /**
+     * @return true if the entity object is immutable. If true the entity can be constructed via
+     * queries only and cannot be modified/refreshed or contain changeable relations. Defaults to
+     * false however if this annotation is placed in conjunction with immutable type annotations
+     * e.g. @AutoValue from Google on an object then defaults to true.
+     */
+    boolean immutable() default false;
 
     /**
      * Defines the name style of properties in the target entity e.g. for a property 'name' and

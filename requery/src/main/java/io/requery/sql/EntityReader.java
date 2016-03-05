@@ -23,11 +23,13 @@ import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.meta.Type;
 import io.requery.proxy.CompositeKey;
+import io.requery.proxy.EntityBuilderProxy;
 import io.requery.proxy.EntityProxy;
 import io.requery.proxy.Initializer;
 import io.requery.proxy.PropertyLoader;
 import io.requery.proxy.PropertyState;
 import io.requery.proxy.QueryInitializer;
+import io.requery.proxy.Settable;
 import io.requery.query.AliasedExpression;
 import io.requery.query.Condition;
 import io.requery.query.Expression;
@@ -122,7 +124,11 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     }
 
     ResultReader<E> newResultReader(Attribute[] attributes) {
-        return new EntityResultReader<>(this, attributes);
+        if (type.isBuildable()) {
+            return new BuildableEntityResultReader<>(this, attributes);
+        } else {
+            return new EntityResultReader<>(this, attributes);
+        }
     }
 
     private Expression aliasVersion(Attribute attribute) {
@@ -518,8 +524,25 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         return entity;
     }
 
+    <B> E fromBuilder(ResultSet results, Attribute[] selection) throws SQLException {
+        EntityBuilderProxy<B, E> proxy = new EntityBuilderProxy<>(type);
+        int index = 1;
+        for (Attribute expression : selection) {
+            @SuppressWarnings("unchecked")
+            Attribute<E, ?> attribute = (Attribute<E, ?>) expression;
+            if (attribute.primitiveKind() != null) {
+                readPrimitiveField(proxy, attribute, results, index);
+            } else {
+                Object value = mapping.read((Expression) attribute, results, index);
+                proxy.setObject(attribute, value, PropertyState.LOADED);
+            }
+            index++;
+        }
+        return proxy.build();
+    }
+
     @SuppressWarnings("unchecked") // checked by primitiveKind
-    private void readPrimitiveField(EntityProxy<E> proxy,
+    private void readPrimitiveField(Settable<E> proxy,
                                     Attribute<E, ?> attribute,
                                     ResultSet results, int index) throws SQLException {
         switch (attribute.primitiveKind()) {

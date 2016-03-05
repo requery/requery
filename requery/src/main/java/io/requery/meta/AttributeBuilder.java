@@ -54,6 +54,11 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
         return this;
     }
 
+    public <B> AttributeBuilder<T, V> setBuilderProperty(Property<B, V> property) {
+        this.builderProperty = property;
+        return this;
+    }
+
     public AttributeBuilder<T, V> setInitializer(Initializer<T, V> initializer) {
         this.initializer = initializer;
         return this;

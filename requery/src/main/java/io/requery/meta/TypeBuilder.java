@@ -77,6 +77,16 @@ public class TypeBuilder<T> extends BaseType<T> {
         return this;
     }
 
+    public <B> TypeBuilder<T> setBuilderFactory(Supplier<B> factory) {
+        this.builderFactory = factory;
+        return this;
+    }
+
+    public <B> TypeBuilder<T> setBuilderFunction(Function<B, T> function) {
+        this.buildFunction = function;
+        return this;
+    }
+
     public TypeBuilder<T> setTableCreateAttributes(String[] attributes) {
         this.tableCreateAttributes = attributes;
         return this;

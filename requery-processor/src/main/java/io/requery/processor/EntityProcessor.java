@@ -209,7 +209,7 @@ public final class EntityProcessor extends AbstractProcessor {
             }
             // no common package...
             if ("".equals(packageName)) {
-                packageName = "io.requery.generated";
+                packageName = target;
             }
         }
         return packageName;
