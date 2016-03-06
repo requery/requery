@@ -75,10 +75,9 @@ public interface Attribute<T, V> {
     Property<T, PropertyState> propertyState();
 
     /**
-     * @param <B> builder type
      * @return {@link Property} used to apply the attribute a builder instance for the type.
      */
-    <B> Property<B, V> builderProperty();
+    Property<?, V> builderProperty();
 
     /**
      * @return true if this attribute is lazily loaded, false otherwise.

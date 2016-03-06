@@ -29,6 +29,7 @@ import io.requery.util.function.Supplier;
  *
  * @author Nikhil Purushe
  */
+@SuppressWarnings("unchecked") // builder class is purposefully not stored in Type
 public class EntityBuilderProxy<B, E> implements Settable<E> {
 
     private final Type<E> type;
@@ -47,12 +48,11 @@ public class EntityBuilderProxy<B, E> implements Settable<E> {
 
     @Override
     public <V> void set(Attribute<E, V> attribute, V value, PropertyState state) {
-        attribute.builderProperty().set(builder, value);
+        setObject(attribute, value, state);
     }
 
     @Override
     public void setObject(Attribute<E, ?> attribute, Object value, PropertyState state) {
-        @SuppressWarnings("unchecked")
         Property<B, Object> property = (Property<B, Object>) attribute.builderProperty();
         property.set(builder, value);
     }

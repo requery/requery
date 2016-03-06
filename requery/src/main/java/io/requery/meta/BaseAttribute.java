@@ -79,10 +79,8 @@ public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     }
 
     @Override
-    public <B> Property<B, V> builderProperty() {
-        @SuppressWarnings("unchecked")
-        Property<B, V> property = (Property<B, V>) builderProperty;
-        return property;
+    public Property<?, V> builderProperty() {
+        return builderProperty;
     }
 
     @Override
