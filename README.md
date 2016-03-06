@@ -124,8 +124,40 @@ Observable<Person> observable = data
     .toSelfObservable().subscribe(::updateFromResult);
 ```
 
-**Read/write separation** If you prefer separating read from writes mark the entity as
-@ReadOnly and use update statements to modify data instead.
+**Immutable types** You can combine requery/JPA attributes on [@AutoValue](https://github.com/google/auto/tree/master/value)
+and other generated immutable types and use requery object mapping in queries.
+
+```java
+@AutoValue
+@Entity
+public abstract class Person implements Serializable {
+
+    @AutoValue.Builder
+    public static abstract class Builder {
+        public abstract Builder setId(int id);
+        public abstract Builder setName(String name);
+        public abstract Builder setBirthday(Date date);
+        public abstract Builder setAge(int age);
+        public abstract Person build();
+    }
+
+    public static Builder builder() {
+        return new AutoValue_Person.Builder();
+    }
+
+    @Id @GeneratedValue
+    public abstract int getId();
+
+    public abstract String getName();
+    public abstract Date getBirthday();
+    public abstract int getAge();
+}
+```
+(Note some features will not be available when using immutable types, see the
+[wiki](https://github.com/requery/requery/wiki) for more info)
+
+**Read/write separation** Along with immutable types you can choose to separate querying (reading)
+and modifications (writing) entirely:
 
 ```java
 int rows = data.update(Person.class)
