@@ -72,12 +72,14 @@ public interface Type<T> extends Expression<T> {
     boolean isBuildable();
 
     /**
+     * @param <B> builder type
      * @return if {@link #isBuildable()} returns the factory that instantiates the builder instance,
      * otherwise null.
      */
     <B> Supplier<B> builderFactory();
 
     /**
+     * @param <B> builder type
      * @return if {@link #isBuildable()} returns the function that builds the final type from
      * a builder instance.
      */

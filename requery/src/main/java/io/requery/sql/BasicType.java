@@ -47,7 +47,7 @@ public abstract class BasicType<T> extends BaseType<T> {
      * @param results {@link ResultSet} set to the index of the result to be read
      * @param column  column index to read
      * @return the type from the {@link ResultSet}
-     * @throws SQLException
+     * @throws SQLException on a failure to read from the result set
      */
     public abstract T fromResult(ResultSet results, int column) throws SQLException;
 
