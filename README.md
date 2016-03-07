@@ -154,10 +154,10 @@ public abstract class Person implements Serializable {
 }
 ```
 (Note some features will not be available when using immutable types, see the
-[wiki](https://github.com/requery/requery/wiki) for more info)
+[wiki](https://github.com/requery/requery/wiki/Immutable-types) for more info)
 
 **Read/write separation** Along with immutable types you can choose to separate querying (reading)
-and modifications (writing) entirely:
+and modifications (writing):
 
 ```java
 int rows = data.update(Person.class)
@@ -223,14 +223,16 @@ Feature               |  requery |  ORMLite |  Squidb  |  DBFlow   | GreenDao
 Relational mapping    |  Y       |  Y(1)    |  N       |  Y        | Y(1)
 Inverse relationships |  Y       |  N       |  N       |  N        | N
 Compile time          |  Y       |  N       |  Y       |  Y        | Y(2)
+Query DSL             |  Y       |  N       |  N(3)    |  N(3)     | N(3)
 JDBC Support          |  Y       |  Y       |  N       |  N        | N
-Query language        |  Y       |  N       |  Y(3)    |  Y(3)     | Y(3)
 Table Generation      |  Y       |  Y       |  Y       |  Y        | Y
 JPA annotations       |  Y       |  Y       |  N       |  N        | N
+RxJava support        |  Y       |  N       |  Y(4)    |  N        | N
 
 1) Excludes Many-to-Many
 2) Not annotation based
 3) Builder only not DSL
+4) Table changes only
 
 See [requery-android/example](https://github.com/requery/requery/tree/master/requery-android/example)
 for an example Android project using databinding and interface based entities. For more information
@@ -279,20 +281,9 @@ dependencies {
 }
 ```
 
-For Android, in order to process the `apt` dependency, also include the android-apt plugin:
+For more information on gradle and annotation processing & gradle see the [wiki](https://github.com/requery/requery/wiki/Gradle-&-Annotation-processing#annotation-processing).
 
-```gradle
-buildscript {
-    dependencies {
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
-    }
-}
-
-apply plugin: 'com.neenbedankt.android-apt'
-```
-
-For more information see the [wiki](https://github.com/requery/requery/wiki).
-Feedback and suggestions are welcome.
+Beta release on bintray will arrive soon!
 
 License
 -------
