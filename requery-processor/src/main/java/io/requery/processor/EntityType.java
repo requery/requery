@@ -293,8 +293,22 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public Optional<TypeElement> builderType() {
+        Optional<Class<?>> fromAnnotation = annotationOf(Entity.class)
+            .map(Entity::builder)
+            .filter(type -> !type.equals(void.class));
+        if (fromAnnotation.isPresent()) {
+            Elements elements = processingEnvironment.getElementUtils();
+            return fromAnnotation.map(cls -> elements.getTypeElement(cls.getCanonicalName()));
+        }
         return ElementFilter.typesIn(element().getEnclosedElements()).stream()
             .filter(element -> element.getSimpleName().toString().equals("Builder"))
+            .findFirst();
+    }
+
+    @Override
+    public Optional<ExecutableElement> buildMethod() {
+        return ElementFilter.methodsIn(element().getEnclosedElements()).stream()
+            .filter(element -> element.getSimpleName().toString().equals("builder"))
             .findFirst();
     }
 

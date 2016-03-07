@@ -404,12 +404,21 @@ class EntityGenerator implements SourceGenerator {
         } else if (entity.isImmutable() && entity.builderType().isPresent()) {
             TypeName builderName = TypeName.get(entity.builderType().get().asType());
             TypeSpec.Builder typeFactory = TypeSpec.anonymousClassBuilder("")
-                .addSuperinterface(parameterizedTypeName(Supplier.class, builderName))
-                .addMethod(
-                    CodeGeneration.overridePublicMethod("get")
-                        .addStatement("return $T.builder()", targetName)
+                .addSuperinterface(parameterizedTypeName(Supplier.class, builderName));
+                MethodSpec buildMethod;
+            if (entity.buildMethod().isPresent()) {
+                buildMethod = CodeGeneration.overridePublicMethod("get")
+                        .addStatement("return $T.$L()", targetName,
+                            entity.buildMethod().get().getSimpleName().toString())
                         .returns(builderName)
-                        .build());
+                        .build();
+            } else {
+                buildMethod = CodeGeneration.overridePublicMethod("get")
+                        .addStatement("return new $T()", builderName)
+                        .returns(builderName)
+                        .build();
+            }
+            typeFactory.addMethod(buildMethod);
             typeBuilder.add(".setBuilderFactory($L)\n", typeFactory.build());
 
             TypeSpec.Builder buildFunction = TypeSpec.anonymousClassBuilder("")

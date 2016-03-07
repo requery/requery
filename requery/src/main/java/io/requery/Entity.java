@@ -73,6 +73,13 @@ public @interface Entity {
     boolean immutable() default false;
 
     /**
+     * @return the builder class used to construct this entity if it is {@link #immutable()}.
+     * Note the builder class must have a zero-argument constructor that is either package visible
+     * or public.
+     */
+    Class<?> builder() default void.class;
+
+    /**
      * Defines the name style of properties in the target entity e.g. for a property 'name' and
      * style set to {@link PropertyNameStyle#BEAN} would map to:
      * <pre><code>

@@ -19,6 +19,7 @@ package io.requery.processor;
 import io.requery.PropertyNameStyle;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.Map;
 import java.util.Optional;
@@ -97,6 +98,12 @@ interface EntityDescriptor {
      * the type is {@link #isImmutable()}
      */
     Optional<TypeElement> builderType();
+
+    /**
+     * @return {@link ExecutableElement} of the builder type that can build instances of the entity
+     * if the type is {@link #isImmutable()}
+     */
+    Optional<ExecutableElement> buildMethod();
 
     /**
      * @return map of elements to attributes
