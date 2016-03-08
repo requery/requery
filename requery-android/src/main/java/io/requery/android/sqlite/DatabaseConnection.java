@@ -45,7 +45,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * {@link java.sql.Connection} implementation using Android's local SQLite database.
+ * {@link java.sql.Connection} implementation using Android's local SQLite database Java API.
  *
  * @author Nikhil Purushe
  */
@@ -96,6 +96,14 @@ public class DatabaseConnection implements Connection {
 
     SQLiteDatabase getDatabase() {
         return db;
+    }
+
+    void execSQL(String sql) throws SQLException {
+        try {
+            db.execSQL(sql);
+        } catch (android.database.SQLException e) {
+            throwSQLException(e);
+        }
     }
 
     @Override
@@ -195,8 +203,6 @@ public class DatabaseConnection implements Connection {
 
     @Override
     public String nativeSQL(String sql) throws SQLException {
-        ensureTransaction();
-        db.execSQL(sql);
         return sql;
     }
 
@@ -265,11 +271,7 @@ public class DatabaseConnection implements Connection {
 
     @Override
     public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-        try {
-            db.execSQL("release savepoint " + savepoint.getSavepointName());
-        } catch (android.database.SQLException e) {
-            throwSQLException(e);
-        }
+        execSQL("release savepoint " + savepoint.getSavepointName());
     }
 
     @Override
@@ -282,11 +284,7 @@ public class DatabaseConnection implements Connection {
 
     @Override
     public void rollback(Savepoint savepoint) throws SQLException {
-        try {
-            db.execSQL("rollback to savepoint " + savepoint.getSavepointName());
-        } catch (android.database.SQLException e) {
-            throw new SQLException(e);
-        }
+        execSQL("rollback to savepoint " + savepoint.getSavepointName());
     }
 
     @Override
@@ -321,11 +319,7 @@ public class DatabaseConnection implements Connection {
         if (name == null) {
             name = "sp" + String.valueOf(savePointId);
         }
-        try {
-            db.execSQL("savepoint " + name);
-        } catch (android.database.SQLException e) {
-            throwSQLException(e);
-        }
+        execSQL("savepoint " + name);
         return new DatabaseSavepoint(savePointId, name);
     }
 
@@ -335,11 +329,11 @@ public class DatabaseConnection implements Connection {
             case TRANSACTION_NONE:
             case TRANSACTION_SERIALIZABLE:
             case TRANSACTION_READ_COMMITTED:
-                db.execSQL("PRAGMA read_uncommitted = false");
+                execSQL("PRAGMA read_uncommitted = false");
                 transactionIsolation = level;
                 break;
             case TRANSACTION_READ_UNCOMMITTED:
-                db.execSQL("PRAGMA read_uncommitted = true");
+                execSQL("PRAGMA read_uncommitted = true");
                 transactionIsolation = level;
                 break;
             case TRANSACTION_REPEATABLE_READ:

@@ -88,11 +88,7 @@ class StatementAdapter implements Statement {
     @Override
     public boolean execute(String sql) throws SQLException {
         throwIfClosed();
-        try {
-            connection.getDatabase().execSQL(sql);
-        } catch (android.database.SQLException e) {
-            DatabaseConnection.throwSQLException(e);
-        }
+        connection.execSQL(sql);
         return false;
     }
 
