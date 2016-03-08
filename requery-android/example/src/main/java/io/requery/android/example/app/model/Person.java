@@ -30,8 +30,6 @@ import io.requery.Key;
 import io.requery.OneToMany;
 import io.requery.OneToOne;
 import io.requery.Persistable;
-import io.requery.android.BindingResource;
-import io.requery.android.example.app.Binding;
 import io.requery.query.MutableResult;
 
 import java.util.Date;
@@ -39,7 +37,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@BindingResource(Binding.BR_CLASS)
 public interface Person extends Observable, Parcelable, Persistable {
 
     @Key @Generated

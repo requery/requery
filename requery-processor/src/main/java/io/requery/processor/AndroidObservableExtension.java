@@ -21,7 +21,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
@@ -39,7 +38,6 @@ import java.util.Optional;
  */
 class AndroidObservableExtension implements TypeGenerationExtension, PropertyGenerationExtension {
 
-    private static final String BR_ANNOTATION_NAME = "io.requery.android.BindingResource";
     private static final String BINDING_PACKAGE = "android.databinding";
 
     private final EntityDescriptor entity;
@@ -87,17 +85,25 @@ class AndroidObservableExtension implements TypeGenerationExtension, PropertyGen
             return;
         }
         Elements elements = processingEnvironment.getElementUtils();
-        // since we don't know BR package exactly class must be annotated with @BindingResource
-        // in those cases
-        Optional<? extends AnnotationMirror> mirror =
-            Mirrors.findAnnotationMirror(entity.element(), BR_ANNOTATION_NAME);
 
-        ClassName BRclass;
-        if (mirror.isPresent()) {
-            Object value = Mirrors.findAnnotationValue(mirror.get())
-                .map(AnnotationValue::getValue).map(Object::toString).get();
-            BRclass = ClassName.bestGuess(value.toString());
-        } else {
+        // data binding compiler will create a useful set of classes in /data-binding-info
+        String bindingInfo = BINDING_PACKAGE + ".layouts.DataBindingInfo";
+        TypeElement dataBindingType = elements.getTypeElement(bindingInfo);
+        ClassName BRclass = null;
+
+        if (dataBindingType != null) {
+            Optional<String> modulePackage = Mirrors.findAnnotationMirror(
+                dataBindingType, BINDING_PACKAGE + ".BindingBuildInfo")
+            .map(mirror -> Mirrors.findAnnotationValue(mirror, "modulePackage"))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(AnnotationValue::toString);
+            if (modulePackage.isPresent()) {
+                // not actually checking the BR class exists since it maybe generated later
+                BRclass = ClassName.get(modulePackage.get().replaceAll("\"", ""), "BR");
+            }
+        }
+        if (BRclass == null) {
             PackageElement packageElement = elements.getPackageOf(entity.element());
             String packageName = packageElement.getQualifiedName().toString();
             BRclass = ClassName.get(packageName, "BR");

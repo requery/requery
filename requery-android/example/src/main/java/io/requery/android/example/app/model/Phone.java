@@ -24,11 +24,8 @@ import io.requery.Generated;
 import io.requery.Key;
 import io.requery.ManyToOne;
 import io.requery.Persistable;
-import io.requery.android.BindingResource;
-import io.requery.android.example.app.Binding;
 
 @Entity
-@BindingResource(Binding.BR_CLASS)
 public interface Phone extends Observable, Parcelable, Persistable {
 
     @Key @Generated

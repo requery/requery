@@ -20,6 +20,7 @@ package io.requery.android;
  * When using Android databinding and BaseObservables use this annotation to provide the processor
  * the location of the BR class so that appropriate change notifications can be triggered.
  */
+@Deprecated
 public @interface BindingResource {
 
     /**
