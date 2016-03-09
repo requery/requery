@@ -82,8 +82,8 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     private final ClassMap<EntityWriter<?, ?>> writers;
     private final CompositeEntityListener<T> stateListeners;
     private final CompositeStatementListener statementListeners;
-    private final UpdateOperation updateExecutor;
-    private final SelectCountOperation countExecutor;
+    private final UpdateOperation updateOperation;
+    private final SelectCountOperation countOperation;
     private final Executor writeExecutor;
     private final Supplier<EntityProxyTransaction> transactionProvider;
     private final TransactionIsolation defaultIsolation;
@@ -161,8 +161,8 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         }
         context = new DataContext();
         transactionProvider = new TransactionProvider(context);
-        updateExecutor = new UpdateOperation(context);
-        countExecutor = new SelectCountOperation(context);
+        updateOperation = new UpdateOperation(context);
+        countOperation = new SelectCountOperation(context);
         if (configuration.useDefaultLogging()) {
             LoggingListener<T> logListener = new LoggingListener<>();
             stateListeners.addPostLoadListener(logListener);
@@ -349,13 +349,13 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     @Override
     public Update<Scalar<Integer>> update() {
         checkClosed();
-        return new QueryElement<>(UPDATE, entityModel, updateExecutor);
+        return new QueryElement<>(UPDATE, entityModel, updateOperation);
     }
 
     @Override
     public Deletion<Scalar<Integer>> delete() {
         checkClosed();
-        return new QueryElement<>(DELETE, entityModel, updateExecutor);
+        return new QueryElement<>(DELETE, entityModel, updateOperation);
     }
 
     @Override
@@ -399,27 +399,27 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     @Override
     public <E extends T> Update<Scalar<Integer>> update(Class<E> type) {
         checkClosed();
-        return new QueryElement<>(UPDATE, entityModel, updateExecutor).from(type);
+        return new QueryElement<>(UPDATE, entityModel, updateOperation).from(type);
     }
 
     @Override
     public <E extends T> Deletion<Scalar<Integer>> delete(Class<E> type) {
         checkClosed();
-        return new QueryElement<>(DELETE, entityModel, updateExecutor).from(type);
+        return new QueryElement<>(DELETE, entityModel, updateOperation).from(type);
     }
 
     @Override
     public <E extends T> Selection<Scalar<Integer>> count(Class<E> type) {
         checkClosed();
         Objects.requireNotNull(type);
-        return new QueryElement<>(SELECT, entityModel, countExecutor)
+        return new QueryElement<>(SELECT, entityModel, countOperation)
             .select(Count.count(type)).from(type);
     }
 
     @Override
     public Selection<Scalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
         checkClosed();
-        return new QueryElement<>(SELECT, entityModel, countExecutor)
+        return new QueryElement<>(SELECT, entityModel, countOperation)
             .select(Count.count(attributes));
     }
 
