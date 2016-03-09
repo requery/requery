@@ -37,6 +37,16 @@ interface EntityDescriptor {
     TypeElement element();
 
     /**
+     * @return map of elements to attributes
+     */
+    Map<Element, ? extends AttributeDescriptor> attributes();
+
+    /**
+     * @return map of elements to listener methods
+     */
+    Map<Element, ? extends ListenerDescriptor> listeners();
+
+    /**
      * @return {@link QualifiedName} qualified name of the class to be generated
      */
     QualifiedName typeName();
@@ -100,18 +110,32 @@ interface EntityDescriptor {
     Optional<TypeElement> builderType();
 
     /**
-     * @return {@link ExecutableElement} of the builder type that can build instances of the entity
-     * if the type is {@link #isImmutable()}
+     * @return {@link ExecutableElement} of the builder type that can create builder instances for
+     * the entity if the type is {@link #isImmutable()} such as:
+     * <pre><code>
+     *     &#064;Entity
+     *     &#064;AutoValue
+     *     public abstract class Phone {
+     *         static Phone.Builder builder() {
+     *             return new AutoValue_Phone.Builder();
+     *         }
+     *     }
+     * </code></pre>
      */
-    Optional<ExecutableElement> buildMethod();
+    Optional<ExecutableElement> builderFactoryMethod();
 
     /**
-     * @return map of elements to attributes
+     * @return {@link ExecutableElement} of the type can create instances of the entity if the type
+     * is {@link #isImmutable()}, such as:
+     * <pre><code>
+     *     &#064;Entity
+     *     &#064;AutoValue
+     *     public abstract class Phone {
+     *         static Phone create(int id, String phone) {
+     *             return new AutoValue_Phone(id, phone);
+     *         }
+     *     }
+     * </code></pre>
      */
-    Map<Element, ? extends AttributeDescriptor> attributes();
-
-    /**
-     * @return map of elements to listener methods
-     */
-    Map<Element, ? extends ListenerDescriptor> listeners();
+    Optional<ExecutableElement> factoryMethod();
 }

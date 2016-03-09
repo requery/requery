@@ -17,9 +17,14 @@
 package io.requery.processor;
 
 import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import io.requery.util.function.Supplier;
 
 import javax.annotation.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -38,6 +43,16 @@ class CodeGeneration {
             builder.addAnnotation(AnnotationSpec.builder(Generated.class)
                 .addMember("value", "$S", EntityProcessor.class.getCanonicalName()).build());
         }
+    }
+
+    static TypeSpec createAnonymousSupplier(TypeName type, CodeBlock block) {
+        return TypeSpec.anonymousClassBuilder("")
+            .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Supplier.class), type))
+            .addMethod(CodeGeneration.overridePublicMethod("get")
+                .addCode(block)
+                .returns(type)
+                .build())
+            .build();
     }
 
     static MethodSpec.Builder overridePublicMethod(String name) {

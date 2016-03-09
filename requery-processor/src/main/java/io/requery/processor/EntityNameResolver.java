@@ -25,7 +25,7 @@ import java.util.Optional;
 
 class EntityNameResolver {
 
-    private EntityGraph graph;
+    private final EntityGraph graph;
 
     EntityNameResolver(EntityGraph graph) {
         this.graph = graph;
@@ -51,5 +51,14 @@ class EntityNameResolver {
             .filter(entity -> entity.element().getQualifiedName()
                 .equals(typeElement.getQualifiedName()))
             .map(this::typeNameOf).findFirst();
+    }
+
+    String generatedJoinEntityName(AssociativeEntityDescriptor descriptor,
+                                   EntityDescriptor a, EntityDescriptor b) {
+        if (Names.isEmpty(descriptor.name())) {
+            return a.typeName().className() + "_" + b.typeName().className();
+        } else {
+            return Names.upperCaseFirst(descriptor.name());
+        }
     }
 }

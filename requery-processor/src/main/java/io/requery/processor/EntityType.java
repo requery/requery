@@ -185,10 +185,13 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
-    public PropertyNameStyle propertyNameStyle() {
-        return annotationOf(Entity.class)
-            .map(Entity::propertyNameStyle)
-            .orElse(PropertyNameStyle.BEAN);
+    public Map<Element, ? extends AttributeDescriptor> attributes() {
+        return attributes;
+    }
+
+    @Override
+    public Map<Element, ? extends ListenerDescriptor> listeners() {
+        return listeners;
     }
 
     @Override
@@ -238,7 +241,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         } else {
             entityName = Names.removeClassPrefixes(typeName);
             if (entityName.equals(typeName)) {
-                entityName = typeName + "Entity";
+                entityName = typeName + (isImmutable() ? "Type" : "Entity");
             }
         }
         return new QualifiedName(packageName, entityName);
@@ -247,6 +250,13 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     @Override
     public String staticTypeName() {
         return "$TYPE";
+    }
+
+    @Override
+    public PropertyNameStyle propertyNameStyle() {
+        return annotationOf(Entity.class)
+            .map(Entity::propertyNameStyle)
+            .orElse(PropertyNameStyle.BEAN);
     }
 
     @Override
@@ -282,7 +292,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public boolean isImmutable() {
-        // check known immutable type annotations then check the immutable value
+        // check known immutable type annotations then check the annotation value
         return Stream.of("com.google.auto.value.AutoValue",
                          "auto.parcel.AutoParcel",
                          "org.immutables.value.Value.Immutable")
@@ -306,10 +316,21 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
-    public Optional<ExecutableElement> buildMethod() {
+    public Optional<ExecutableElement> builderFactoryMethod() {
         return ElementFilter.methodsIn(element().getEnclosedElements()).stream()
+            .filter(element -> element.getModifiers().contains(Modifier.STATIC))
             .filter(element -> element.getSimpleName().toString().equals("builder"))
             .findFirst();
+    }
+
+    @Override
+    public Optional<ExecutableElement> factoryMethod() {
+        // TODO also need to check factory arguments
+        return ElementFilter.methodsIn(element().getEnclosedElements()).stream()
+            .filter(element -> element.getModifiers().contains(Modifier.STATIC))
+            .filter(element -> element.getSimpleName().toString().equalsIgnoreCase("create"))
+            .filter(element -> element.getReturnType().equals(element().asType()))
+            .findAny();
     }
 
     @Override
@@ -319,15 +340,4 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             .flatMap(Mirrors::findAnnotationValue)
             .map(value -> value.getValue().toString()).orElse(null);
     }
-
-    @Override
-    public Map<Element, ? extends AttributeDescriptor> attributes() {
-        return attributes;
-    }
-
-    @Override
-    public Map<Element, ? extends ListenerDescriptor> listeners() {
-        return listeners;
-    }
-
 }

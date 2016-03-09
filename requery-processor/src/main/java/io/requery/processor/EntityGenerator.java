@@ -16,7 +16,6 @@
 
 package io.requery.processor;
 
-import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -27,12 +26,9 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import io.requery.CascadeAction;
 import io.requery.Entity;
-import io.requery.ForeignKey;
-import io.requery.Key;
 import io.requery.Persistable;
 import io.requery.PropertyNameStyle;
 import io.requery.ReferentialAction;
-import io.requery.Table;
 import io.requery.meta.Attribute;
 import io.requery.meta.Cardinality;
 import io.requery.meta.QueryAttribute;
@@ -65,10 +61,10 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.io.IOException;
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -149,6 +145,8 @@ class EntityGenerator implements SourceGenerator {
             // private constructor
             typeBuilder.addMethod(MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PRIVATE).build());
+            generateMembers(typeBuilder); // members for builder if needed
+            generateImmutableTypeBuildMethod(typeBuilder);
         }
         for (TypeGenerationExtension typePart : typeExtensions) {
             typePart.generate(entity, typeBuilder);
@@ -171,29 +169,32 @@ class EntityGenerator implements SourceGenerator {
                 typeBuilder.addField(field);
             }
         }
-        if (!typeElement.getKind().isInterface()) {
-            return; //only used when generating from a interface
-        }
-        for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
-            entity.attributes().entrySet()) {
-            Element element = entry.getKey();
-            AttributeDescriptor attribute = entry.getValue();
-            if (element.getKind() == ElementKind.METHOD) {
-                ExecutableElement methodElement = (ExecutableElement) element;
-                TypeMirror typeMirror = methodElement.getReturnType();
-                TypeName fieldTypeName;
-                if (attribute.isIterable()) {
-                    fieldTypeName = getParameterizedCollectionName(typeMirror);
-                } else if (attribute.isOptional()) {
-                    typeMirror = tryFirstTypeArgument(attribute.typeMirror());
-                    fieldTypeName = TypeName.get(typeMirror);
-                } else {
-                    fieldTypeName = nameResolver.tryGeneratedTypeName(typeMirror);
+
+        // only generate for interfaces or if the entity is immutable but has no builder
+        boolean generateMembers = typeElement.getKind().isInterface() ||
+            (entity.isImmutable() && !entity.builderType().isPresent());
+        if (generateMembers) {
+            for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
+                entity.attributes().entrySet()) {
+                Element element = entry.getKey();
+                AttributeDescriptor attribute = entry.getValue();
+                if (element.getKind() == ElementKind.METHOD) {
+                    ExecutableElement methodElement = (ExecutableElement) element;
+                    TypeMirror typeMirror = methodElement.getReturnType();
+                    TypeName fieldTypeName;
+                    if (attribute.isIterable()) {
+                        fieldTypeName = parameterizedCollectionName(typeMirror);
+                    } else if (attribute.isOptional()) {
+                        typeMirror = tryFirstTypeArgument(attribute.typeMirror());
+                        fieldTypeName = TypeName.get(typeMirror);
+                    } else {
+                        fieldTypeName = nameResolver.tryGeneratedTypeName(typeMirror);
+                    }
+                    FieldSpec field = FieldSpec
+                        .builder(fieldTypeName, attribute.fieldName(), Modifier.PRIVATE)
+                        .build();
+                    typeBuilder.addField(field);
                 }
-                FieldSpec field = FieldSpec
-                    .builder(fieldTypeName, attribute.fieldName(), Modifier.PRIVATE)
-                    .build();
-                typeBuilder.addField(field);
             }
         }
     }
@@ -254,7 +255,7 @@ class EntityGenerator implements SourceGenerator {
             TypeMirror typeMirror = attribute.typeMirror();
             TypeName unboxedTypeName;
             if (attribute.isIterable()) {
-                unboxedTypeName = getParameterizedCollectionName(typeMirror);
+                unboxedTypeName = parameterizedCollectionName(typeMirror);
             } else if (attribute.isOptional()) {
                 unboxedTypeName = TypeName.get(tryFirstTypeArgument(attribute.typeMirror()));
             } else {
@@ -401,15 +402,19 @@ class EntityGenerator implements SourceGenerator {
         String factoryName = entity.classFactoryName();
         if (factoryName != null) {
             typeBuilder.add(".setFactory(new $L())\n", ClassName.bestGuess(factoryName));
-        } else if (entity.isImmutable() && entity.builderType().isPresent()) {
-            TypeName builderName = TypeName.get(entity.builderType().get().asType());
+        } else if (entity.isImmutable()) {
+
+            // the builder name (if there is no builder than this class is the builder)
+            TypeName builderName = entity.builderType().isPresent() ?
+                TypeName.get(entity.builderType().get().asType()) : typeName;
+
             TypeSpec.Builder typeFactory = TypeSpec.anonymousClassBuilder("")
                 .addSuperinterface(parameterizedTypeName(Supplier.class, builderName));
                 MethodSpec buildMethod;
-            if (entity.buildMethod().isPresent()) {
+            if (entity.builderFactoryMethod().isPresent()) {
                 buildMethod = CodeGeneration.overridePublicMethod("get")
                         .addStatement("return $T.$L()", targetName,
-                            entity.buildMethod().get().getSimpleName().toString())
+                            entity.builderFactoryMethod().get().getSimpleName().toString())
                         .returns(builderName)
                         .build();
             } else {
@@ -471,6 +476,47 @@ class EntityGenerator implements SourceGenerator {
         typeSpecBuilder.addField(schemaFieldBuilder.build());
     }
 
+    private void generateImmutableTypeBuildMethod(TypeSpec.Builder builder) {
+        if (entity.isImmutable() &&
+            !entity.builderType().isPresent() && entity.factoryMethod().isPresent()) {
+
+            ExecutableElement createMethod = entity.factoryMethod().get();
+            // now match the builder fields to the parameters...
+            Map<Element, AttributeDescriptor> attributes = new LinkedHashMap<>();
+            attributes.putAll(entity.attributes());
+
+            List<? extends VariableElement> parameters = createMethod.getParameters();
+            List<String> argumentNames = new ArrayList<>();
+
+            for (VariableElement parameter : parameters) {
+                Element matched = null;
+                // straight forward case type and name are the same
+                for (Map.Entry<Element, AttributeDescriptor> entry : attributes.entrySet()) {
+                    AttributeDescriptor attribute = entry.getValue();
+                    String fieldName = attribute.fieldName();
+                    if (fieldName.equalsIgnoreCase(parameter.getSimpleName().toString())) {
+                        argumentNames.add(fieldName);
+                        matched = entry.getKey();
+                    }
+                }
+                // remove this element since it was found
+                if (matched != null) {
+                    attributes.remove(matched);
+                }
+            }
+            // TODO need more validation here
+            StringJoiner joiner = new StringJoiner(",");
+            argumentNames.forEach(name -> joiner.add("$L"));
+            Object[] args = new Object[2 + argumentNames.size()];
+            args[0] = ClassName.get(entity.element());
+            args[1] = createMethod.getSimpleName();
+            System.arraycopy(argumentNames.toArray(), 0, args, 2, argumentNames.size());
+            builder.addMethod(MethodSpec.methodBuilder("build")
+                .returns(ClassName.get(entity.element()))
+                .addStatement("return $T.$L(" + joiner.toString() + ")", args).build());
+        }
+    }
+
     private void addPropertyMethods(TypeSpec.Builder builder, GeneratedProperty property) {
         String suffix = property.methodSuffix();
         TypeName targetName = property.targetName();
@@ -509,7 +555,7 @@ class EntityGenerator implements SourceGenerator {
         builder.addMethod(setMethod.build());
     }
 
-    private void generateStaticMetadata(TypeSpec.Builder typeBuilder) throws IOException {
+    private void generateStaticMetadata(TypeSpec.Builder typeBuilder) {
         // attributes
         TypeName targetName = entity.isImmutable() ? ClassName.get(entity.element()) : typeName;
         for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
@@ -523,7 +569,7 @@ class EntityGenerator implements SourceGenerator {
             TypeName attributeTypeName;
             if (attribute.isIterable()) {
                 typeMirror = tryFirstTypeArgument(attribute.typeMirror());
-                attributeTypeName = getParameterizedCollectionName(attribute.typeMirror());
+                attributeTypeName = parameterizedCollectionName(attribute.typeMirror());
             } else if (attribute.isOptional()) {
                 typeMirror = tryFirstTypeArgument(attribute.typeMirror());
                 attributeTypeName = TypeName.get(typeMirror);
@@ -625,7 +671,7 @@ class EntityGenerator implements SourceGenerator {
                         referencedAttribute -> {
 
                         String name = Names.upperCaseUnderscore(referencedAttribute.fieldName());
-                        TypeSpec provider = createAnonymousSupplier(
+                        TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                             ClassName.get(Attribute.class),
                             CodeBlock.builder().addStatement("return $T.$L",
                                 nameResolver.typeNameOf(referenced), name).build());
@@ -676,13 +722,13 @@ class EntityGenerator implements SourceGenerator {
                         String junctionType = null;
                         if (attribute.associativeEntity() != null) {
                             // generate a special type for the junction table (with attributes)
-                            junctionType = getJunctionTypeName(
-                                false, attribute.associativeEntity(), entity, referenced);
+                            junctionType = nameResolver.generatedJoinEntityName(
+                                attribute.associativeEntity(), entity, referenced);
                             generateJunctionType(attribute);
                         } else if ( mappings.size() == 1) {
                             AttributeDescriptor mapped = mappings.iterator().next();
-                            junctionType = getJunctionTypeName(
-                                false, mapped.associativeEntity(), referenced, entity);
+                            junctionType = nameResolver.generatedJoinEntityName(
+                                mapped.associativeEntity(), referenced, entity);
                         }
                         if (junctionType != null) {
                             builder.add(".setReferencedClass($T.class)\n",
@@ -694,7 +740,7 @@ class EntityGenerator implements SourceGenerator {
                         String staticMemberName =
                             Names.upperCaseUnderscore(mapped.fieldName());
 
-                        TypeSpec provider = createAnonymousSupplier(
+                        TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                             ClassName.get(Attribute.class),
                             CodeBlock.builder().addStatement("return $T.$L",
                                     nameResolver.typeNameOf(referenced), staticMemberName)
@@ -761,39 +807,49 @@ class EntityGenerator implements SourceGenerator {
         }
 
         // if immutable add setter for the builder
-        if (entity.isImmutable() && entity.builderType().isPresent()) {
-            TypeElement builderType = entity.builderType().get();
-            TypeName builderName = TypeName.get(builderType.asType());
+        if (entity.isImmutable()) {
+            String propertyName;
+            TypeName builderName;
+            boolean useSetter;
+            if (entity.builderType().isPresent()) {
+                TypeElement builderType = entity.builderType().get();
+                propertyName = attribute.setterName();
+                builderName = TypeName.get(builderType.asType());
+                useSetter = true;
+                for (ExecutableElement method :
+                    ElementFilter.methodsIn(builderType.getEnclosedElements())) {
+                    List<? extends VariableElement> parameters = method.getParameters();
+                    String name = Names.removeMethodPrefixes(method.getSimpleName());
+                    // probable setter for this attribute
+                    // (some builders have with<Property> setters so strip that
+                    if ((name.startsWith("with") && name.length() > 4 &&
+                        Character.isUpperCase(name.charAt(4))) ||
+                        name.equalsIgnoreCase(attribute.fieldName()) && parameters.size() == 1) {
+                        propertyName = method.getSimpleName().toString();
+                        break;
+                    }
+                }
+            } else {
+                propertyName = attribute.fieldName();
+                builderName = typeName;
+                useSetter = false;
+            }
             propertyType = propertyName(propertyClass, builderName, attributeTypeName);
             TypeSpec.Builder builderProperty = TypeSpec.anonymousClassBuilder("")
                 .addSuperinterface(propertyType);
 
-            String setterName = attribute.setterName();
-            for (ExecutableElement method :
-                ElementFilter.methodsIn(builderType.getEnclosedElements())) {
-                List<? extends VariableElement> parameters = method.getParameters();
-                String name = Names.removeMethodPrefixes(method.getSimpleName());
-                // probable setter for this attribute
-                // (some builders have with<Property> setters so strip that
-                if ((name.startsWith("with") && name.length() > 4 &&
-                    Character.isUpperCase(name.charAt(4))) ||
-                    name.equalsIgnoreCase(attribute.fieldName()) && parameters.size() == 1) {
-                    setterName = method.getSimpleName().toString();
-                    break;
-                }
-            }
             addPropertyMethods(builderProperty,
-                new GeneratedProperty.Builder(setterName, builderName, attributeTypeName)
+                new GeneratedProperty.Builder(propertyName, builderName, attributeTypeName)
                     .setWriteOnly(true)
-                    .setSetter(true)
+                    .setSetter(useSetter)
                     .build());
             if (propertyClass != Property.class) {
                 TypeName primitiveType = TypeName.get(attribute.typeMirror());
                 String name = Names.upperCaseFirst(attribute.typeMirror().toString());
                 addPropertyMethods(builderProperty, new GeneratedProperty.Builder(
-                    setterName, builderName, primitiveType)
+                    propertyName, builderName, primitiveType)
                     .setSuffix(name)
-                    .setSetter(true)
+                    .setSetter(useSetter)
                     .setWriteOnly(true)
                     .build());
             }
@@ -801,12 +857,12 @@ class EntityGenerator implements SourceGenerator {
         }
     }
 
-    private ParameterizedTypeName propertyName(Class propertyClass,
-                                               TypeName targetName, TypeName fieldTypeName) {
-        if (propertyClass == Property.class) {
-            return parameterizedTypeName(propertyClass, targetName, fieldTypeName);
+    private ParameterizedTypeName propertyName(Class type,
+                                               TypeName targetName, TypeName fieldName) {
+        if (type == Property.class) {
+            return parameterizedTypeName(type, targetName, fieldName);
         } else {
-            return parameterizedTypeName(propertyClass, targetName);
+            return parameterizedTypeName(type, targetName);
         }
     }
 
@@ -841,88 +897,16 @@ class EntityGenerator implements SourceGenerator {
         return "$" + attribute.fieldName() + "_state";
     }
 
-    private static String getJunctionTypeName(boolean isAbstract,
-                                              AssociativeEntityDescriptor descriptor,
-                                              EntityDescriptor a,
-                                              EntityDescriptor b) {
-        String prefix = isAbstract? "Abstract" : "";
-        if (Names.isEmpty(descriptor.name())) {
-            return prefix + a.typeName().className() + "_" + b.typeName().className();
-        } else {
-            return prefix + Names.upperCaseFirst(descriptor.name());
-        }
-    }
-
-    private void generateJunctionType(AttributeDescriptor attribute) throws IOException {
-
-        EntityDescriptor otherEntity = graph.referencingEntity(attribute).orElse(null);
-        if (otherEntity == null) {
-            return;
-        }
-        AssociativeEntityDescriptor associativeDescriptor = attribute.associativeEntity();
-        String name = associativeDescriptor.name();
-        if (Names.isEmpty(name)) {
-            // create junction table name with TableA_TableB
-            name = entity.tableName() + "_" + otherEntity.tableName();
-        }
-        String className = getJunctionTypeName(true, associativeDescriptor, entity, otherEntity);
-
-        TypeSpec.Builder junctionType = TypeSpec.classBuilder(className)
-                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .addSuperinterface(Serializable.class)
-                .addAnnotation(AnnotationSpec.builder(Entity.class)
-                        .addMember("model", "$S", entity.modelName()).build())
-                .addAnnotation(AnnotationSpec.builder(Table.class)
-                        .addMember("name", "$S", name).build());
-        CodeGeneration.addGeneratedAnnotation(processingEnvironment, junctionType);
-
-        Set<AssociativeReference> references = associativeDescriptor.columns();
-        EntityDescriptor[] types = new EntityDescriptor[] { entity, otherEntity };
-        if (references.isEmpty()) {
-            // generate with defaults
-            for (EntityDescriptor type : types) {
-                AssociativeReference reference = new AssociativeReference(
-                    type.tableName() + "Id",
-                    ReferentialAction.CASCADE,
-                    type.element());
-                references.add(reference);
+    private void generateJunctionType(AttributeDescriptor attribute) {
+        graph.referencingEntity(attribute).ifPresent(referencing -> {
+            JoinEntityGenerator generator = new JoinEntityGenerator(
+                processingEnvironment, nameResolver, entity, referencing, attribute);
+            try {
+                generator.generate();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        }
-
-        int typeIndex = 0;
-        for (AssociativeReference reference : references) {
-            AnnotationSpec.Builder key = AnnotationSpec.builder(ForeignKey.class)
-                    .addMember("action", "$T.$L",
-                            ClassName.get(ReferentialAction.class),
-                        reference.referentialAction().toString());
-
-            TypeElement referenceElement = reference.referencedType();
-            if (referenceElement == null && typeIndex < types.length) {
-                referenceElement = types[typeIndex++].element();
-            }
-            if (referenceElement != null) {
-                key.addMember("references", "$L.class",
-                    nameResolver.generatedTypeNameOf(referenceElement).get());
-            }
-            AnnotationSpec.Builder id = AnnotationSpec.builder(Key.class);
-            FieldSpec.Builder field = FieldSpec.builder(Integer.class, reference.name(),
-                    Modifier.PROTECTED)
-                    .addAnnotation(key.build())
-                    .addAnnotation(id.build());
-            junctionType.addField(field.build());
-        }
-        CodeGeneration.writeType(processingEnvironment,
-            typeName.packageName(), junctionType.build());
-    }
-
-    private static TypeSpec createAnonymousSupplier(TypeName type, CodeBlock block) {
-        return TypeSpec.anonymousClassBuilder("")
-            .addSuperinterface(parameterizedTypeName(Supplier.class, type))
-            .addMethod(CodeGeneration.overridePublicMethod("get")
-                .addCode(block)
-                .returns(type)
-                .build())
-            .build();
+        });
     }
 
     private TypeName boxedTypeName(TypeMirror typeMirror) {
@@ -933,7 +917,7 @@ class EntityGenerator implements SourceGenerator {
         return TypeName.get(typeMirror);
     }
 
-    private ParameterizedTypeName getParameterizedCollectionName(TypeMirror typeMirror) {
+    private ParameterizedTypeName parameterizedCollectionName(TypeMirror typeMirror) {
         TypeMirror genericType = tryFirstTypeArgument(typeMirror);
         TypeName elementName = nameResolver.tryGeneratedTypeName(genericType);
         TypeElement collectionElement = (TypeElement) types.asElement(typeMirror);

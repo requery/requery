@@ -404,9 +404,6 @@ public class SchemaModifier {
                 .attribute(a)
                 .closeParenthesis();
         }
-        if (!attribute.isNullable()) {
-            qb.keyword(NOT, NULL);
-        }
         if (attribute.referentialAction() != null) {
             ReferentialAction action = attribute.referentialAction();
             qb.keyword(ON, DELETE);

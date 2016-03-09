@@ -27,7 +27,9 @@ import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.SQLite;
 import io.requery.test.modelautovalue.Models;
 import io.requery.test.modelautovalue.Person;
-import io.requery.test.modelautovalue.PersonEntity;
+import io.requery.test.modelautovalue.PersonType;
+import io.requery.test.modelautovalue.Phone;
+import io.requery.test.modelautovalue.PhoneType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +45,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class AutoValueModelTest {
@@ -61,14 +64,14 @@ public class AutoValueModelTest {
         calendar.set(1900 + random.nextInt(90), random.nextInt(12), random.nextInt(30));
 
         return data.insert(Person.class)
-            .value(PersonEntity.NAME, name)
-            .value(PersonEntity.AGE, random.nextInt(50))
-            .value(PersonEntity.EMAIL, name.replaceAll(" ", "").toLowerCase() + "@example.com")
-            .value(PersonEntity.UUID, UUID.randomUUID())
-            .value(PersonEntity.BIRTHDAY, calendar.getTime())
-            .value(PersonEntity.ABOUT, "About this person")
-            .value(PersonEntity.HOMEPAGE, new URL("http://www.google.com"))
-            .get().first().get(PersonEntity.ID);
+            .value(PersonType.NAME, name)
+            .value(PersonType.AGE, random.nextInt(50))
+            .value(PersonType.EMAIL, name.replaceAll(" ", "").toLowerCase() + "@example.com")
+            .value(PersonType.UUID, UUID.randomUUID())
+            .value(PersonType.BIRTHDAY, calendar.getTime())
+            .value(PersonType.ABOUT, "About this person")
+            .value(PersonType.HOMEPAGE, new URL("http://www.google.com"))
+            .get().first().get(PersonType.ID);
     }
 
     @Before
@@ -110,5 +113,25 @@ public class AutoValueModelTest {
         for (Person p : result) {
             assertTrue(added.contains(p.getId()));
         }
+    }
+
+    @Test
+    public void testInsertReference() {
+        try {
+            randomPerson();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+        Result<Person> result = data.select(Person.class).get();
+        Person person = result.first();
+        int id = data.insert(Phone.class)
+            .value(PhoneType.PHONE_NUMBER, "5555555")
+            .value(PhoneType.NORMALIZED, false)
+            .value(PhoneType.OWNER_ID, person.getId())
+            .get().first().get(PhoneType.ID);
+        assertTrue(id != 0);
+
+        Phone phone = data.select(Phone.class).get().first();
+        assertSame(phone.getOwnerId(), person.getId());
     }
 }
