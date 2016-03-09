@@ -1,11 +1,12 @@
 ![requery](http://requery.github.io/logo.png)
 
 A light but powerful ORM and SQL query generator for Java/Android with RxJava and Java 8 support.
+Easily map to or create databases, perform queries and updates on any platform that uses Java.
 
 Examples
 --------
 
-**Entities:**
+Define entities from an abstract class:
 
 ```java
 @Entity
@@ -32,7 +33,7 @@ abstract class AbstractPerson {
 }
 
 ```
-or from an **interface:**
+or from an interface:
 
 ```java
 @Entity
@@ -50,7 +51,7 @@ public interface Person {
 }
 ```
 
-**Queries:**
+**Queries:** dsl based query that maps to SQL
 
 ```java
 Result<Person> query = data
@@ -124,40 +125,40 @@ Observable<Person> observable = data
     .toSelfObservable().subscribe(::updateFromResult);
 ```
 
-**Immutable types** You can combine requery/JPA attributes on [@AutoValue](https://github.com/google/auto/tree/master/value)
-and other generated immutable types and use requery object mapping in queries.
+**Immutable types** Combine requery/JPA attributes on [@AutoValue](https://github.com/google/auto/tree/master/value)
+and other generated immutable types.
 
 ```java
 @AutoValue
 @Entity
-public abstract class Person implements Serializable {
+abstract class Person {
 
     @AutoValue.Builder
-    public static abstract class Builder {
-        public abstract Builder setId(int id);
-        public abstract Builder setName(String name);
-        public abstract Builder setBirthday(Date date);
-        public abstract Builder setAge(int age);
-        public abstract Person build();
+    static abstract class Builder {
+        abstract Builder setId(int id);
+        abstract Builder setName(String name);
+        abstract Builder setBirthday(Date date);
+        abstract Builder setAge(int age);
+        abstract Person build();
     }
 
-    public static Builder builder() {
+    static Builder builder() {
         return new AutoValue_Person.Builder();
     }
 
     @Id @GeneratedValue
-    public abstract int getId();
+    abstract int getId();
 
-    public abstract String getName();
-    public abstract Date getBirthday();
-    public abstract int getAge();
+    abstract String getName();
+    abstract Date getBirthday();
+    abstract int getAge();
 }
 ```
 (Note some features will not be available when using immutable types, see the
-[wiki](https://github.com/requery/requery/wiki/Immutable-types) for more info)
+[wiki](https://github.com/requery/requery/wiki/Immutable-types))
 
-**Read/write separation** Along with immutable types you can choose to separate querying (reading)
-and modifications (writing):
+**Read/write separation** Along with immutable types optionally separate queries (reading)
+and updates (writing):
 
 ```java
 int rows = data.update(Person.class)
@@ -188,9 +189,9 @@ Features
 Reflection free
 ---------------
 
-requery uses compile time annotation processing to generate your entity model classes. On Android
-this means you get about the same performance reading objects from a query as if it was populated
-using the standard Cursor and ContentValues API.
+requery uses compile time annotation processing to generate entity model classes and mapping
+attributes. On Android this means you get about the same performance reading objects from a query
+as if it was populated using the standard Cursor and ContentValues API.
 
 Type safe query
 ---------------
@@ -277,7 +278,7 @@ repositories {
 dependencies {
     compile 'io.requery:requery:1.0-SNAPSHOT'
     compile 'io.requery:requery-android:1.0-SNAPSHOT' // for android
-    apt 'io.requery:requery-processor:1.0-SNAPSHOT'   // prefer an APT plugin
+    apt 'io.requery:requery-processor:1.0-SNAPSHOT'   // use an APT plugin
 }
 ```
 
