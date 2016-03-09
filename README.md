@@ -1,7 +1,10 @@
 ![requery](http://requery.github.io/logo.png)
 
 A light but powerful ORM and SQL query generator for Java/Android with RxJava and Java 8 support.
-Easily map to or create databases, perform queries and updates on any platform that uses Java.
+Easily map to or create databases, perform queries and updates from any platform that uses Java.
+
+[![Build Status](https://travis-ci.org/requery/requery.svg?branch=master)](https://travis-ci.org/requery/requery)
+[ ![Download](https://api.bintray.com/packages/requery/requery/requery/images/download.svg) ](https://bintray.com/requery/requery/requery/_latestVersion)
 
 Examples
 --------
@@ -267,24 +270,21 @@ See [here](https://github.com/requery/requery/wiki/JPA-Annotations) for more inf
 Using it
 --------
 
-Currently SNAPSHOT versions are available on http://oss.jfrog.org.
+Currently beta versions are available on bintray.
 
 ```gradle
 repositories {
     jcenter()
-    maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local' }
 }
 
 dependencies {
-    compile 'io.requery:requery:1.0-SNAPSHOT'
-    compile 'io.requery:requery-android:1.0-SNAPSHOT' // for android
-    apt 'io.requery:requery-processor:1.0-SNAPSHOT'   // use an APT plugin
+    compile 'io.requery:requery:1.0.0-beta1'
+    compile 'io.requery:requery-android:1.0.0-beta1' // for android
+    apt 'io.requery:requery-processor:1.0.0-beta1'   // use an APT plugin
 }
 ```
 
 For more information on gradle and annotation processing & gradle see the [wiki](https://github.com/requery/requery/wiki/Gradle-&-Annotation-processing#annotation-processing).
-
-Beta release on bintray will arrive soon!
 
 License
 -------
