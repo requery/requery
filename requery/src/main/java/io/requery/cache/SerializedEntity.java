@@ -44,6 +44,7 @@ class SerializedEntity<E> implements Serializable {
         for (Attribute<E, ?> attribute : type.attributes()) {
             // currently only non-associative properties are serialized
             if (attribute.isAssociation()) {
+                proxy.setState(attribute, PropertyState.FETCH);
                 continue;
             }
             Object value = stream.readObject();
