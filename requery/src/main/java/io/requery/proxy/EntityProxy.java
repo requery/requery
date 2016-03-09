@@ -53,6 +53,18 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
         this.stateless = type.isStateless();
     }
 
+    private PropertyState loadProperty(Attribute<E, ?> attribute) {
+        if (!stateless) {
+            PropertyState state = getState(attribute);
+            if (state == PropertyState.FETCH && loader != null) {
+                // lazy loaded, get from store then set the value
+                loader.load(entity, this, attribute);
+            }
+            return state;
+        }
+        return null;
+    }
+
     @Override
     public <V> V get(Attribute<E, V> attribute) {
         return get(attribute, true);
@@ -60,11 +72,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
 
     @Override
     public <V> V get(Attribute<E, V> attribute, boolean fetch) {
-        PropertyState state = getState(attribute);
-        if (fetch && state == PropertyState.FETCH && loader != null) {
-            // lazy loaded, get from store then set the value
-            loader.load(entity, this, attribute);
-        }
+        PropertyState state = fetch ? loadProperty(attribute) : getState(attribute);
         V value = attribute.property().get(entity);
         if (value == null && state == PropertyState.FETCH &&
             attribute.initializer() != null) {
@@ -78,36 +86,42 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     @Override
     public int getInt(Attribute<E, Integer> attribute) {
         IntProperty<E> property = (IntProperty<E>) attribute.property();
+        loadProperty(attribute);
         return property.getInt(entity);
     }
 
     @Override
     public long getLong(Attribute<E, Long> attribute) {
         LongProperty<E> property = (LongProperty<E>) attribute.property();
+        loadProperty(attribute);
         return property.getLong(entity);
     }
 
     @Override
     public short getShort(Attribute<E, Short> attribute) {
         ShortProperty<E> property = (ShortProperty<E>) attribute.property();
+        loadProperty(attribute);
         return property.getShort(entity);
     }
 
     @Override
     public float getFloat(Attribute<E, Float> attribute) {
         FloatProperty<E> property = (FloatProperty<E>) attribute.property();
+        loadProperty(attribute);
         return property.getFloat(entity);
     }
 
     @Override
     public double getDouble(Attribute<E, Double> attribute) {
         DoubleProperty<E> property = (DoubleProperty<E>) attribute.property();
+        loadProperty(attribute);
         return property.getDouble(entity);
     }
 
     @Override
     public boolean getBoolean(Attribute<E, Boolean> attribute) {
         BooleanProperty<E> property = (BooleanProperty<E>) attribute.property();
+        loadProperty(attribute);
         return property.getBoolean(entity);
     }
 
