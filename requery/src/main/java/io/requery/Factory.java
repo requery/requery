@@ -47,8 +47,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *            return new Phone("555-5555");
  *         }
  *     }
- * }
- * }</code></pre>
+ * </code></pre>
  *
  * @author Nikhil Purushe
  */
