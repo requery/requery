@@ -18,6 +18,10 @@ package io.requery.sql;
 
 import io.requery.PersistenceException;
 
+/**
+ * Exception thrown when the expected {@link io.requery.Version} column doesn't match the value
+ * stored.
+ */
 public class OptimisticLockException extends PersistenceException {
 
     private final Object entity;
@@ -28,6 +32,9 @@ public class OptimisticLockException extends PersistenceException {
         this.entity = entity;
     }
 
+    /**
+     * @return the entity containing the mismatched version value
+     */
     public Object entity() {
         return entity;
     }

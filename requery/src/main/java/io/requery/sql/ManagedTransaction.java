@@ -40,6 +40,11 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Set;
 
+/**
+ * Transaction for use when running in a container or managed environment.
+ *
+ * @author Nikhil Purushe
+ */
 class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, Synchronization {
 
     private final ConnectionProvider connectionProvider;
