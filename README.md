@@ -179,7 +179,7 @@ Features
 - Typed query language
 - Table generation
 - Supports JDBC and many popular databases
-- Supports Android (SQLite, RecyclerView, Databinding)
+- Supports Android (SQLite, RecyclerView, Databinding, SQLCipher)
 - RxJava support
 - Blocking and non-blocking API
 - Partial objects/refresh
