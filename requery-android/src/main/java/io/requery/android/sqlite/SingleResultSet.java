@@ -16,7 +16,6 @@
 
 package io.requery.android.sqlite;
 
-
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -45,7 +44,10 @@ public class SingleResultSet extends NonUpdateableResultSet {
     private final Statement statement;
     private final long value;
 
-    SingleResultSet(Statement statement, long value) {
+    public SingleResultSet(Statement statement, long value) throws SQLException {
+        if (value == -1) {
+            throw new SQLException("invalid row id");
+        }
         this.statement = statement;
         this.value = value;
     }

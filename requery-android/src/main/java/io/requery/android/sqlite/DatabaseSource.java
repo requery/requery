@@ -21,35 +21,24 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.location.Location;
 import android.os.Build;
-import android.os.ParcelUuid;
 import android.text.TextUtils;
+import io.requery.android.DefaultMapping;
 import io.requery.android.LoggingListener;
-import io.requery.android.ParcelConverter;
-import io.requery.android.UriConverter;
-import io.requery.meta.Attribute;
 import io.requery.meta.EntityModel;
-import io.requery.meta.Type;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
 import io.requery.sql.ConnectionProvider;
-import io.requery.sql.GenericMapping;
 import io.requery.sql.Mapping;
 import io.requery.sql.Platform;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.SQLite;
+import io.requery.util.function.Function;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Wrapper for working with Android SQLite databases. This provides a {@link Connection} wrapping
@@ -143,11 +132,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
      * @return the configured mapping.
      */
     protected Mapping onCreateMapping() {
-        GenericMapping mapping = new GenericMapping(platform);
-        mapping.addConverter(new UriConverter());
-        mapping.addConverter(new ParcelConverter<>(ParcelUuid.class, ParcelUuid.CREATOR));
-        mapping.addConverter(new ParcelConverter<>(Location.class, Location.CREATOR));
-        return mapping;
+        return new DefaultMapping(platform);
     }
 
     /**
@@ -167,7 +152,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
             if (!db.isOpen()) {
                 throw new SQLNonTransientConnectionException();
             }
-            return new DatabaseConnection(db);
+            return new SqliteConnection(db);
         }
     }
 
@@ -176,16 +161,9 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
             ConfigurationBuilder builder = new ConfigurationBuilder(this, model)
                 .setMapping(mapping)
                 .setPlatform(platform)
-                .setStatementCacheSize(0)
-                .setBatchUpdateSize(1000)
-                .setQuoteColumnNames(false)
-                .setQuoteTableNames(false);
+                .setBatchUpdateSize(1000);
             onConfigure(builder);
             configuration = builder.build();
-
-            if (!(configuration.platform() instanceof SQLite)) {
-                throw new IllegalStateException();
-            }
         }
         return configuration;
     }
@@ -206,49 +184,16 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void onUpgrade(final SQLiteDatabase db, int oldVersion, int newVersion) {
         this.db = db;
-        SchemaModifier schema = new SchemaModifier(getConfiguration());
-        schema.createTables(TableCreationMode.CREATE_NOT_EXISTS);
-        // check for missing columns
-        List<Attribute> missingAttributes = new ArrayList<>();
-        for (Type<?> type : model.allTypes()) {
-            String tableName = type.name();
-            Cursor cursor = db.rawQuery("PRAGMA table_info(" + tableName + ")", null);
-            Map<String, Attribute> map = new LinkedHashMap<>();
-            for (Attribute attribute : type.attributes()) {
-                if (attribute.isAssociation() && !attribute.isForeignKey()) {
-                    continue;
-                }
-                map.put(attribute.name(), attribute);
-            }
-            if (cursor.getCount() > 0) {
-                int nameIndex = cursor.getColumnIndex("name");
-                while (cursor.moveToNext()) {
-                    String name = cursor.getString(nameIndex);
-                    map.remove(name);
-                }
-            }
-            cursor.close();
-            // whats left in the map are are the missing columns for this type
-            missingAttributes.addAll(map.values());
-        }
-        // foreign keys are created last
-        Collections.sort(missingAttributes, new Comparator<Attribute>() {
+        SchemaUpdater updater = new SchemaUpdater(getConfiguration(),
+            new Function<String, Cursor>() {
             @Override
-            public int compare(Attribute lhs, Attribute rhs) {
-                if (lhs.isForeignKey() && rhs.isForeignKey()) {
-                    return 0;
-                }
-                if (lhs.isForeignKey()) {
-                    return 1;
-                }
-                return -1;
+            public Cursor apply(String s) {
+                return db.rawQuery(s, null);
             }
         });
-        for (Attribute<?, ?> attribute : missingAttributes) {
-            schema.addColumn(attribute);
-        }
+        updater.update();
     }
 
     @Override

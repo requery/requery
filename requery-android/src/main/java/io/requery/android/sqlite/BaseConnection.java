@@ -16,26 +16,17 @@
 
 package io.requery.android.sqlite;
 
-import android.database.sqlite.SQLiteAccessPermException;
-import android.database.sqlite.SQLiteCantOpenDatabaseException;
-import android.database.sqlite.SQLiteConstraintException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabaseCorruptException;
-
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
@@ -45,66 +36,28 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * {@link java.sql.Connection} implementation using Android's local SQLite database Java API.
+ * Base {@link Connection} implementation.
  *
  * @author Nikhil Purushe
  */
-public class DatabaseConnection implements Connection {
+public abstract class BaseConnection implements Connection {
 
-    private final SQLiteDatabase db;
-    private final BasicDatabaseMetaData metaData;
-    private boolean autoCommit;
-    private int transactionIsolation;
-    private int holdability;
-    private Properties clientInfo;
-    private int savePointId;
-    private boolean enteredTransaction;
+    protected boolean autoCommit;
+    protected int transactionIsolation;
+    protected int holdability;
+    protected Properties clientInfo;
+    protected int savePointId;
 
-    public DatabaseConnection(SQLiteDatabase db) {
-        if(db == null) {
-            throw new IllegalArgumentException("null db");
-        }
-        this.db = db;
+    protected BaseConnection() {
         autoCommit = true;
         holdability = ResultSet.HOLD_CURSORS_OVER_COMMIT;
         clientInfo = new Properties();
         transactionIsolation = TRANSACTION_SERIALIZABLE;
-        metaData = new BasicDatabaseMetaData(this);
     }
 
-    static void throwSQLException(android.database.SQLException exception) throws SQLException {
-        if(exception instanceof SQLiteConstraintException) {
-            throw new SQLIntegrityConstraintViolationException(exception);
+    protected abstract void ensureTransaction();
 
-        } else if(exception instanceof SQLiteCantOpenDatabaseException ||
-                exception instanceof SQLiteDatabaseCorruptException ||
-                exception instanceof SQLiteAccessPermException) {
-
-            throw new SQLNonTransientException(exception);
-        }
-        throw new SQLException(exception);
-    }
-
-    private void ensureTransaction() {
-        if (!autoCommit) {
-            if (!db.inTransaction()) {
-                db.beginTransactionNonExclusive();
-                enteredTransaction = true;
-            }
-        }
-    }
-
-    SQLiteDatabase getDatabase() {
-        return db;
-    }
-
-    void execSQL(String sql) throws SQLException {
-        try {
-            db.execSQL(sql);
-        } catch (android.database.SQLException e) {
-            throwSQLException(e);
-        }
-    }
+    protected abstract void execSQL(String sql) throws SQLException;
 
     @Override
     public void clearWarnings() throws SQLException {
@@ -117,43 +70,14 @@ public class DatabaseConnection implements Connection {
 
     @Override
     public void commit() throws SQLException {
-        if (autoCommit) {
-            throw new SQLException("commit called while in autoCommit mode");
-        }
-        if (db.inTransaction() && enteredTransaction) {
-            try {
-                db.setTransactionSuccessful();
-            } catch (IllegalStateException e) {
-                throw new SQLException(e);
-            } finally {
-                db.endTransaction();
-                enteredTransaction = false;
-            }
-        }
-    }
 
-    @Override
-    public Statement createStatement() throws SQLException {
-        ensureTransaction();
-        return new StatementAdapter(this);
     }
 
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency)
             throws SQLException {
-        ensureTransaction();
         return createStatement(resultSetType,
                 resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
-    }
-
-    @Override
-    public Statement createStatement(int resultSetType, int resultSetConcurrency,
-                                     int resultSetHoldability) throws SQLException {
-        if (resultSetConcurrency == ResultSet.CONCUR_UPDATABLE) {
-            throw new SQLFeatureNotSupportedException("CONCUR_UPDATABLE not supported");
-        }
-        ensureTransaction();
-        return new StatementAdapter(this);
     }
 
     @Override
@@ -172,11 +96,6 @@ public class DatabaseConnection implements Connection {
     }
 
     @Override
-    public DatabaseMetaData getMetaData() throws SQLException {
-        return metaData;
-    }
-
-    @Override
     public int getTransactionIsolation() throws SQLException {
         return transactionIsolation;
     }
@@ -189,16 +108,6 @@ public class DatabaseConnection implements Connection {
     @Override
     public SQLWarning getWarnings() throws SQLException {
         return null;
-    }
-
-    @Override
-    public boolean isClosed() throws SQLException {
-        return !db.isOpen();
-    }
-
-    @Override
-    public boolean isReadOnly() throws SQLException {
-        return db.isReadOnly();
     }
 
     @Override
@@ -229,12 +138,6 @@ public class DatabaseConnection implements Connection {
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
-        ensureTransaction();
-        return new PreparedStatementAdapter(this, sql, autoGeneratedKeys);
-    }
-
-    @Override
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
@@ -247,39 +150,8 @@ public class DatabaseConnection implements Connection {
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql,
-                                              int resultSetType,
-                                              int resultSetConcurrency,
-                                              int resultSetHoldability) throws SQLException {
-        if (resultSetConcurrency == ResultSet.CONCUR_UPDATABLE) {
-            throw new SQLFeatureNotSupportedException("CONCUR_UPDATABLE not supported");
-        }
-        ensureTransaction();
-        return new PreparedStatementAdapter(this, sql, Statement.NO_GENERATED_KEYS);
-    }
-
-    @Override
-    public PreparedStatement prepareStatement(String sql, String[] columnNames)
-            throws SQLException {
-        if (columnNames.length != 1) {
-            throw new SQLFeatureNotSupportedException();
-        }
-
-        ensureTransaction();
-        return new PreparedStatementAdapter(this, sql, Statement.RETURN_GENERATED_KEYS);
-    }
-
-    @Override
     public void releaseSavepoint(Savepoint savepoint) throws SQLException {
         execSQL("release savepoint " + savepoint.getSavepointName());
-    }
-
-    @Override
-    public void rollback() throws SQLException {
-        if (autoCommit) {
-            throw new SQLException("commit called while in autoCommit mode");
-        }
-        db.endTransaction();
     }
 
     @Override
@@ -355,7 +227,7 @@ public class DatabaseConnection implements Connection {
 
     @Override
     public Blob createBlob() throws SQLException {
-        return new ByteArrayBlob(new byte[2048]);
+        throw new SQLFeatureNotSupportedException();
     }
 
     @Override
@@ -370,7 +242,7 @@ public class DatabaseConnection implements Connection {
 
     @Override
     public boolean isValid(int timeout) throws SQLException {
-        return db.isOpen();
+        return !isClosed();
     }
 
     @Override
@@ -403,19 +275,6 @@ public class DatabaseConnection implements Connection {
     @Override
     public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
         throw new SQLFeatureNotSupportedException();
-    }
-
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (iface == SQLiteDatabase.class) {
-            return iface.cast(getDatabase());
-        }
-        return null;
-    }
-
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface == SQLiteDatabase.class;
     }
 
     private static class DatabaseSavepoint implements Savepoint {

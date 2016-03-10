@@ -25,11 +25,11 @@ import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 
-class BasicDatabaseMetaData implements DatabaseMetaData {
+public class SqliteMetaData implements DatabaseMetaData {
 
-    private final DatabaseConnection connection;
+    private final BaseConnection connection;
 
-    BasicDatabaseMetaData(DatabaseConnection connection) {
+    protected SqliteMetaData(BaseConnection connection) {
         this.connection = connection;
     }
 

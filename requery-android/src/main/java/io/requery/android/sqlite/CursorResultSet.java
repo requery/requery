@@ -50,14 +50,14 @@ import java.util.Map;
  *
  * @author Nikhil Purushe
  */
-class CursorResultSet extends NonUpdateableResultSet {
+public class CursorResultSet extends NonUpdateableResultSet {
 
     private final Statement statement;
     private final Cursor cursor;
     private final boolean closeCursor;
     private int lastColumnIndex;
 
-    CursorResultSet(Statement statement, Cursor cursor, boolean closeCursor) {
+    public CursorResultSet(Statement statement, Cursor cursor, boolean closeCursor) {
         if(cursor == null) {
             throw new IllegalArgumentException("null cursor");
         }
@@ -652,7 +652,6 @@ class CursorResultSet extends NonUpdateableResultSet {
     public Reader getNCharacterStream(String columnLabel) throws SQLException {
         return getNCharacterStream(findColumn(columnLabel));
     }
-
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
