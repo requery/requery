@@ -26,7 +26,7 @@ idea {
     }
 }
 
-version = '1.0.0-beta1'
+version = '1.0.0-beta2'
 
 Properties properties = new Properties()
 File localProperties = project.rootProject.file('local.properties')
@@ -96,7 +96,3 @@ configure([project(':requery'), project(':requery-processor'), project(':requery
         }
     }
 }
-
-
-
-
