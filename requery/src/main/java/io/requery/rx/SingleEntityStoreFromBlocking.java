@@ -180,7 +180,7 @@ class SingleEntityStoreFromBlocking<T> implements SingleEntityStore<T> {
 
     @Override
     public Transaction transaction() {
-        return null;
+        return delegate.transaction();
     }
 
     @Override
