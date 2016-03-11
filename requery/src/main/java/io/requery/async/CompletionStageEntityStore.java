@@ -17,8 +17,11 @@
 package io.requery.async;
 
 import io.requery.EntityStore;
+import io.requery.TransactionIsolation;
+import io.requery.Transactionable;
 import io.requery.meta.Attribute;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -29,7 +32,8 @@ import java.util.concurrent.CompletionStage;
  *
  * @author Nikhil Purushe
  */
-public interface CompletionStageEntityStore<T> extends EntityStore<T, CompletionStage<?>> {
+public interface CompletionStageEntityStore<T> extends EntityStore<T, CompletionStage<?>>,
+    Transactionable<CompletionStage<?>> {
 
     @Override
     <E extends T> CompletionStage<E> insert(E entity);
@@ -61,4 +65,9 @@ public interface CompletionStageEntityStore<T> extends EntityStore<T, Completion
     @Override
     <E extends T, K> CompletionStage<E> findByKey(Class<E> type, K key);
 
+    @Override
+    <V> CompletionStage<V> runInTransaction(Callable<V> callable);
+
+    @Override
+    <V> CompletionStage<V> runInTransaction(Callable<V> callable, TransactionIsolation isolation);
 }

@@ -18,19 +18,22 @@ package io.requery.async;
 
 import io.requery.BlockingEntityStore;
 import io.requery.EntityStore;
-import io.requery.query.Tuple;
+import io.requery.Transaction;
+import io.requery.TransactionIsolation;
 import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
 import io.requery.query.Insertion;
 import io.requery.query.Result;
-import io.requery.query.Selection;
 import io.requery.query.Scalar;
+import io.requery.query.Selection;
+import io.requery.query.Tuple;
 import io.requery.query.Update;
 import io.requery.util.Objects;
 
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
@@ -238,5 +241,31 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     @Override
     public BlockingEntityStore<T> toBlocking() {
         return delegate;
+    }
+
+    @Override
+    public Transaction transaction() {
+        return delegate.transaction();
+    }
+
+    @Override
+    public <V> CompletionStage<V> runInTransaction(final Callable<V> callable) {
+        return CompletableFuture.supplyAsync(new Supplier<V>() {
+            @Override
+            public V get() {
+                return delegate.runInTransaction(callable);
+            }
+        }, executor);
+    }
+
+    @Override
+    public <V> CompletionStage<V> runInTransaction(final Callable<V> callable,
+                                                   final TransactionIsolation isolation) {
+        return CompletableFuture.supplyAsync(new Supplier<V>() {
+            @Override
+            public V get() {
+                return delegate.runInTransaction(callable, isolation);
+            }
+        }, executor);
     }
 }
