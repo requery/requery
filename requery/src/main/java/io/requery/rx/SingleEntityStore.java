@@ -17,9 +17,13 @@
 package io.requery.rx;
 
 import io.requery.EntityStore;
+import io.requery.TransactionIsolation;
+import io.requery.Transactionable;
 import io.requery.meta.Attribute;
 import io.requery.query.Result;
 import rx.Single;
+
+import java.util.concurrent.Callable;
 
 /**
  * Extends {@link EntityStore} where all return values are single {@link rx.Single} instances
@@ -30,7 +34,8 @@ import rx.Single;
  *
  * @author Nikhil Purushe
  */
-public interface SingleEntityStore<T> extends EntityStore<T, Single<?>> {
+public interface SingleEntityStore<T> extends EntityStore<T, Single<?>>,
+    Transactionable<Single<?>> {
 
     @Override
     <E extends T> Single<E> insert(E entity);
@@ -61,4 +66,10 @@ public interface SingleEntityStore<T> extends EntityStore<T, Single<?>> {
 
     @Override
     <E extends T, K> Single<E> findByKey(Class<E> type, K key);
+
+    @Override
+    <V> Single<V> runInTransaction(Callable<V> callable);
+
+    @Override
+    <V> Single<V> runInTransaction(Callable<V> callable, TransactionIsolation isolation);
 }
