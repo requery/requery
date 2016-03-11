@@ -56,6 +56,11 @@ public interface Type<T> extends Expression<T> {
     boolean isCacheable();
 
     /**
+     * @return true if the type being represented is immutable and its values cannot be modified.
+     */
+    boolean isImmutable();
+
+    /**
      * @return true if instances of this type are read only and can't be modified, false otherwise.
      */
     boolean isReadOnly();

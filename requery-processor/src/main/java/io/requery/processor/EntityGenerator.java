@@ -396,8 +396,9 @@ class EntityGenerator implements SourceGenerator {
                     schemaName, targetName, targetName, entity.tableName());
 
         typeBuilder.add(".setBaseType($T.class)\n", ClassName.get(typeElement))
-            .add(".setReadOnly($L)\n", entity.isReadOnly())
             .add(".setCacheable($L)\n", entity.isCacheable())
+            .add(".setImmutable($L)\n", entity.isImmutable())
+            .add(".setReadOnly($L)\n", entity.isReadOnly())
             .add(".setStateless($L)\n", entity.isStateless());
         String factoryName = entity.classFactoryName();
         if (factoryName != null) {

@@ -57,6 +57,11 @@ public class TypeBuilder<T> extends BaseType<T> {
         return this;
     }
 
+    public TypeBuilder<T> setImmutable(boolean immutable) {
+        this.immutable = immutable;
+        return this;
+    }
+
     public TypeBuilder<T> setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;
         return this;

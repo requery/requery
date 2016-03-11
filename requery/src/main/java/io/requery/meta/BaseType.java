@@ -34,6 +34,7 @@ abstract class BaseType<T> implements Type<T> {
     protected boolean cacheable;
     protected boolean stateless;
     protected boolean readOnly;
+    protected boolean immutable;
     protected Set<Attribute<T, ?>> attributes;
     protected Supplier<T> factory;
     protected Function<T, EntityProxy<T>> proxyProvider;
@@ -72,6 +73,11 @@ abstract class BaseType<T> implements Type<T> {
     @Override
     public boolean isCacheable() {
         return cacheable;
+    }
+
+    @Override
+    public boolean isImmutable() {
+        return immutable;
     }
 
     @Override
