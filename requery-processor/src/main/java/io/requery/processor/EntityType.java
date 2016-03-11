@@ -34,6 +34,7 @@ import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
@@ -118,9 +119,12 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     private boolean isMethodProcessable(ExecutableElement element) {
-        // must be a getter style method with no args
+        // must be a getter style method with no args, can't return void or itself or its builder
         return element.getReturnType().getKind() != TypeKind.VOID &&
                element.getParameters().isEmpty() &&
+               !element.getReturnType().equals(element().asType()) &&
+               !element.getReturnType().equals(builderType().isPresent() ?
+                   builderType().get().asType() : null) &&
                !element.getModifiers().contains(Modifier.STATIC);
     }
 
@@ -303,12 +307,19 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public Optional<TypeElement> builderType() {
-        Optional<Class<?>> fromAnnotation = annotationOf(Entity.class)
-            .map(Entity::builder)
-            .filter(type -> !type.equals(void.class));
-        if (fromAnnotation.isPresent()) {
-            Elements elements = processingEnvironment.getElementUtils();
-            return fromAnnotation.map(cls -> elements.getTypeElement(cls.getCanonicalName()));
+        Optional<Entity> entityAnnotation = annotationOf(Entity.class);
+        if (entityAnnotation.isPresent()) {
+            Entity entity = entityAnnotation.get();
+            try {
+                entity.builder(); // easiest way to get the class TypeMirror
+            } catch (MirroredTypeException typeException) {
+                TypeMirror mirror = typeException.getTypeMirror();
+                Elements elements = processingEnvironment.getElementUtils();
+                TypeElement element = elements.getTypeElement(mirror.toString());
+                if (element != null) {
+                    return Optional.of(element);
+                }
+            }
         }
         return ElementFilter.typesIn(element().getEnclosedElements()).stream()
             .filter(element -> element.getSimpleName().toString().equals("Builder"))

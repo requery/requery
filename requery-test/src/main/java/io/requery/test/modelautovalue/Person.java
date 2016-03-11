@@ -49,6 +49,8 @@ public abstract class Person implements Serializable {
         return new AutoValue_Person.Builder().setId(-1);
     }
 
+    public abstract Builder toBuilder();
+
     @Id @GeneratedValue
     public abstract int getId();
 
