@@ -276,9 +276,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.0.0-beta2'
-    compile 'io.requery:requery-android:1.0.0-beta2' // for android
-    apt 'io.requery:requery-processor:1.0.0-beta2'   // use an APT plugin
+    compile 'io.requery:requery:1.0.0-beta3'
+    compile 'io.requery:requery-android:1.0.0-beta3' // for android
+    apt 'io.requery:requery-processor:1.0.0-beta3'   // use an APT plugin
 }
 ```
 
