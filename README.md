@@ -1,6 +1,6 @@
 ![requery](http://requery.github.io/logo.png)
 
-A light but powerful ORM and SQL query language for Java/Android with RxJava and Java 8 support.
+A light but powerful ORM and SQL generator for Java/Android with RxJava and Java 8 support.
 Easily map to or create databases, perform queries and updates from any platform that uses Java.
 
 [![Build Status](https://travis-ci.org/requery/requery.svg?branch=master)](https://travis-ci.org/requery/requery)
