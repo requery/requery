@@ -31,7 +31,6 @@ abstract class AbstractPerson {
     void afterLoad() {
         updatePeopleList();
     }
-
     // getter, setters, equals & hashCode automatically generated into Person.java
 }
 
@@ -165,9 +164,8 @@ and updates (writing):
 
 ```java
 int rows = data.update(Person.class)
-    .set(Person.ABOUT, "nothing")
-    .set(Person.AGE, 50)
-    .where(Person.AGE.equal(100)).get();
+    .set(Person.ABOUT, "student")
+    .where(Person.AGE.lt(21)).get();
 ```
 
 Features
