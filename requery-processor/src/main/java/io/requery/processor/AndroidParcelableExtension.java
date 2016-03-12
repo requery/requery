@@ -98,6 +98,6 @@ class AndroidParcelableExtension implements TypeGenerationExtension {
                 FieldSpec.builder(parcelerType, "PARCELER",
                     Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                     .initializer("new $T($L)", parcelerType,
-                            entity.staticTypeName()).build());
+                        EntityGenerator.TYPE_NAME).build());
     }
 }

@@ -81,8 +81,8 @@ import java.util.StringJoiner;
  */
 class EntityGenerator implements SourceGenerator {
 
-    private static final String PROXY_NAME = "$proxy";
-    private static final String TYPE_NAME = "$TYPE";
+    static final String PROXY_NAME = "$proxy";
+    static final String TYPE_NAME = "$TYPE";
 
     private final ProcessingEnvironment processingEnvironment;
     private final Elements elements;
