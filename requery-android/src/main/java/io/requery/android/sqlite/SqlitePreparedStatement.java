@@ -175,17 +175,4 @@ class SqlitePreparedStatement extends BasePreparedStatement {
         }
         return 0;
     }
-
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (iface == SQLiteStatement.class) {
-            return iface.cast(statement);
-        }
-        return super.unwrap(iface);
-    }
-
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface == SQLiteStatement.class || super.isWrapperFor(iface);
-    }
 }

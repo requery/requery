@@ -179,18 +179,4 @@ public class SqliteConnection extends BaseConnection {
         }
         db.endTransaction();
     }
-
-
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (iface == SQLiteDatabase.class) {
-            return iface.cast(getDatabase());
-        }
-        return null;
-    }
-
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface == SQLiteDatabase.class;
-    }
 }
