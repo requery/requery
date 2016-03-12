@@ -78,7 +78,7 @@ class ModelGenerator implements SourceGenerator {
             fieldType.add("new $T($S)\n", ClassName.get(EntityModelBuilder.class), model);
 
             types.forEach(e -> fieldType.add(".addType($T.$L)\n",
-                    ClassName.bestGuess(e.typeName().toString()), e.staticTypeName()));
+                    ClassName.bestGuess(e.typeName().toString()), EntityGenerator.TYPE_NAME));
 
             fieldType.add(".build()");
             field.initializer("$L", fieldType.build());
