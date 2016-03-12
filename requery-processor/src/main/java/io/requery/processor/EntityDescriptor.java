@@ -52,11 +52,6 @@ interface EntityDescriptor {
     QualifiedName typeName();
 
     /**
-     * @return Name for the Type member in the generated entity
-     */
-    String staticTypeName();
-
-    /**
      * @return Name of the model this entity belongs to
      */
     String modelName();

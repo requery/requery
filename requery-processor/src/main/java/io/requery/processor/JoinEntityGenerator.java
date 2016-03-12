@@ -61,14 +61,17 @@ class JoinEntityGenerator implements SourceGenerator {
 
     @Override
     public void generate() throws IOException {
-        AssociativeEntityDescriptor associativeDescriptor = attribute.associativeEntity();
+        if (!attribute.associativeEntity().isPresent()) {
+            throw new IllegalStateException();
+        }
+        AssociativeEntityDescriptor associativeDescriptor = attribute.associativeEntity().get();
         String name = associativeDescriptor.name();
         if (Names.isEmpty(name)) {
             // create junction table name with TableA_TableB
             name = from.tableName() + "_" + to.tableName();
         }
         String className = "Abstract" + nameResolver.generatedJoinEntityName(
-            attribute.associativeEntity(), from, to);
+            associativeDescriptor, from, to);
         TypeSpec.Builder junctionType = TypeSpec.classBuilder(className)
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addSuperinterface(Serializable.class)

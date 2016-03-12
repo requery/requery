@@ -21,6 +21,7 @@ import io.requery.Factory;
 import io.requery.PropertyNameStyle;
 import io.requery.ReadOnly;
 import io.requery.Table;
+import io.requery.Transient;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -119,12 +120,13 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     private boolean isMethodProcessable(ExecutableElement element) {
+        TypeMirror type = element.getReturnType();
         // must be a getter style method with no args, can't return void or itself or its builder
-        return element.getReturnType().getKind() != TypeKind.VOID &&
+        return type.getKind() != TypeKind.VOID &&
                element.getParameters().isEmpty() &&
-               !element.getReturnType().equals(element().asType()) &&
-               !element.getReturnType().equals(builderType().isPresent() ?
-                   builderType().get().asType() : null) &&
+               !type.equals(element().asType()) &&
+               !type.equals(builderType().isPresent() ? builderType().get().asType() : null) &&
+               !Mirrors.findAnnotationMirror(element, Transient.class).isPresent() &&
                !element.getModifiers().contains(Modifier.STATIC);
     }
 
@@ -185,7 +187,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     boolean generatesAdditionalTypes() {
-        return attributes.values().stream().anyMatch(member -> member.associativeEntity() != null);
+        return attributes.values().stream()
+            .anyMatch(member -> member.associativeEntity().isPresent());
     }
 
     @Override
@@ -249,11 +252,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             }
         }
         return new QualifiedName(packageName, entityName);
-    }
-
-    @Override
-    public String staticTypeName() {
-        return "$TYPE";
     }
 
     @Override

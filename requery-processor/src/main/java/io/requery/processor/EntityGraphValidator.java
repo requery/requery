@@ -146,13 +146,13 @@ class EntityGraphValidator {
             String message = mappingErrorMessage(source, mapped, expectedCardinality);
             validator.error(message);
         } else if (sourceCardinality == Cardinality.MANY_TO_MANY) {
-            AssociativeEntityDescriptor sourceAssociation = source.associativeEntity();
-            AssociativeEntityDescriptor mappedAssociation = mapped.associativeEntity();
-            if (sourceAssociation == null && mappedAssociation == null) {
+            Optional<AssociativeEntityDescriptor> sourceAssociation = source.associativeEntity();
+            Optional<AssociativeEntityDescriptor> mappedAssociation = mapped.associativeEntity();
+            if (!sourceAssociation.isPresent() && !mappedAssociation.isPresent()) {
                 validator.error("One side of the ManyToMany relationship must specify the " +
                     "@JunctionTable annotation");
             }
-            if (sourceAssociation != null && mappedAssociation != null) {
+            if (sourceAssociation.isPresent() && mappedAssociation.isPresent()) {
                 validator.warning("@JunctionTable should be specified on only one side of a " +
                     "ManyToMany relationship");
             }

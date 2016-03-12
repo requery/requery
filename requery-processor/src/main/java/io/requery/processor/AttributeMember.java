@@ -47,7 +47,6 @@ import io.requery.meta.SetAttributeBuilder;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -68,7 +67,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -560,19 +558,37 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         if (element().getKind() == ElementKind.METHOD) {
             ExecutableElement executableElement = (ExecutableElement) element();
             AccessorNamePrefix prefix = AccessorNamePrefix.fromElement(executableElement);
-            String name = elementName;
             switch (prefix) {
                 case GET:
-                    name = elementName.replaceFirst("get", "");
+                    elementName = elementName.replaceFirst("get", "");
                     break;
                 case IS:
-                    name = elementName.replaceFirst("is", "");
+                    elementName = elementName.replaceFirst("is", "");
                     break;
             }
-            return Names.isAllUpper(name) ? name :
-                   Names.lowerCaseFirst(name);
+            return Names.isAllUpper(elementName) ? elementName : Names.lowerCaseFirst(elementName);
         }
         return elementName;
+    }
+
+    @Override
+    public String collate() {
+        return collate;
+    }
+
+    @Override
+    public Integer columnLength() {
+        return length;
+    }
+
+    @Override
+    public String converterName() {
+        return converterType;
+    }
+
+    @Override
+    public String indexName() {
+        return indexName;
     }
 
     @Override
@@ -581,13 +597,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     }
 
     @Override
-    public boolean isKey() {
-        return isKey;
-    }
-
-    @Override
-    public boolean isTransient() {
-        return isTransient;
+    public boolean isForeignKey() {
+        return isForeignKey;
     }
 
     @Override
@@ -596,13 +607,23 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     }
 
     @Override
-    public boolean isUnique() {
-        return isUnique;
+    public boolean isGenerated() {
+        return isGenerated;
     }
 
     @Override
-    public boolean isGenerated() {
-        return isGenerated;
+    public boolean isIndexed() {
+        return isIndexed;
+    }
+
+    @Override
+    public boolean isIterable() {
+        return isIterable;
+    }
+
+    @Override
+    public boolean isKey() {
+        return isKey;
     }
 
     @Override
@@ -611,8 +632,13 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     }
 
     @Override
-    public boolean isForeignKey() {
-        return isForeignKey;
+    public boolean isMap() {
+        return isMap;
+    }
+
+    @Override
+    public boolean isOptional() {
+        return isOptional;
     }
 
     @Override
@@ -621,13 +647,18 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     }
 
     @Override
-    public boolean isVersion() {
-        return isVersion;
+    public boolean isTransient() {
+        return isTransient;
     }
 
     @Override
-    public Integer columnLength() {
-        return length;
+    public boolean isUnique() {
+        return isUnique;
+    }
+
+    @Override
+    public boolean isVersion() {
+        return isVersion;
     }
 
     @Override
@@ -670,48 +701,13 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     }
 
     @Override
-    public String converterName() {
-        return converterType;
-    }
-
-    @Override
-    public boolean isIndexed() {
-        return isIndexed;
-    }
-
-    @Override
-    public String indexName() {
-        return indexName;
-    }
-
-    @Override
-    public String collate() {
-        return collate;
-    }
-
-    @Override
-    public boolean isMap() {
-        return isMap;
-    }
-
-    @Override
-    public boolean isIterable() {
-        return isIterable;
-    }
-
-    @Override
-    public boolean isOptional() {
-        return isOptional;
-    }
-
-    @Override
     public Class<? extends AttributeBuilder> builderClass() {
         return builderClass;
     }
 
     @Override
-    public AssociativeEntityDescriptor associativeEntity() {
-        return associativeDescriptor;
+    public Optional<AssociativeEntityDescriptor> associativeEntity() {
+        return Optional.ofNullable(associativeDescriptor);
     }
 
     @Override
@@ -772,88 +768,4 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             return actions.toArray(new CascadeAction[actions.size()]);
         }
     }
-
-    static class JunctionTableAssociation implements AssociativeEntityDescriptor {
-
-        private final JunctionTable table;
-        private final Set<AssociativeReference> columns;
-
-        JunctionTableAssociation(Elements elements, AttributeMember member, JunctionTable table) {
-            this.table = table;
-            this.columns = new LinkedHashSet<>();
-            for (Column column : table.columns()) {
-                ForeignKey key = column.foreignKey()[0];
-                String columnName = column.name();
-                ReferentialAction action = ReferentialAction.CASCADE;
-                TypeElement referenceType = null;
-
-                if (key != null) {
-                    action = key.action();
-                    Optional<? extends AnnotationValue> value =
-                        Mirrors.findAnnotationMirror(member.element(), JunctionTable.class)
-                            .flatMap(m -> Mirrors.findAnnotationValue(m, "columns"));
-
-                    if (value.isPresent()) {
-                        List mirrors = (List) value.get().getValue();
-                        for (Object m : mirrors) {
-                            Optional<? extends AnnotationValue> keyValue =
-                                Mirrors.findAnnotationValue((AnnotationMirror) m, "foreignKey");
-                            if (keyValue.isPresent()) {
-                                List children = (List) keyValue.get().getValue();
-                                Optional<? extends AnnotationValue> annotationValue =
-                                    Mirrors.findAnnotationValue(
-                                        (AnnotationMirror) children.get(0), "references");
-                                if (annotationValue.isPresent()) {
-                                    referenceType = elements.getTypeElement(
-                                        annotationValue.get().getValue().toString());
-                                }
-                            }
-                        }
-                    }
-                }
-                columns.add(new AssociativeReference(columnName, action, referenceType));
-            }
-        }
-
-        @Override
-        public String name() {
-            return table.name();
-        }
-
-        @Override
-        public Set<AssociativeReference> columns() {
-            return columns;
-        }
-    }
-
-    static class JoinTableAssociation implements AssociativeEntityDescriptor {
-
-        private final JoinTable table;
-        private final Set<AssociativeReference> columns;
-
-        JoinTableAssociation(JoinTable table) {
-            this.table = table;
-            this.columns = new LinkedHashSet<>();
-            for (JoinColumn column : table.joinColumns()) {
-                String columnName = column.name();
-                ReferentialAction action = ReferentialAction.CASCADE;
-                columns.add(new AssociativeReference(columnName, action, null));
-            }
-            for (JoinColumn column : table.inverseJoinColumns()) {
-                String columnName = column.name();
-                ReferentialAction action = ReferentialAction.CASCADE;
-                columns.add(new AssociativeReference(columnName, action, null));
-            }
-        }
-
-        @Override
-        public String name() {
-            return table.name();
-        }
-
-        @Override
-        public Set<AssociativeReference> columns() {
-            return columns;
-        }
-    }
- }
+}

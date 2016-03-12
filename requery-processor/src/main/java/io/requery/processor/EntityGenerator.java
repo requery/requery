@@ -82,6 +82,7 @@ import java.util.StringJoiner;
 class EntityGenerator implements SourceGenerator {
 
     private static final String PROXY_NAME = "$proxy";
+    private static final String TYPE_NAME = "$TYPE";
 
     private final ProcessingEnvironment processingEnvironment;
     private final Elements elements;
@@ -243,7 +244,7 @@ class EntityGenerator implements SourceGenerator {
         TypeName proxyName = parameterizedTypeName(EntityProxy.class, typeName);
         FieldSpec.Builder proxyField = FieldSpec.builder(proxyName, PROXY_NAME,
                 Modifier.PRIVATE, Modifier.FINAL, Modifier.TRANSIENT);
-        proxyField.initializer("new $T(this, $L)", proxyName, entity.staticTypeName());
+        proxyField.initializer("new $T(this, $L)", proxyName, TYPE_NAME);
         typeBuilder.addField(proxyField.build());
 
         for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
@@ -388,11 +389,10 @@ class EntityGenerator implements SourceGenerator {
         TypeName targetName = entity.isImmutable() ? ClassName.get(entity.element()) : typeName;
         ClassName schemaName = ClassName.get(TypeBuilder.class);
         ParameterizedTypeName type = parameterizedTypeName(Type.class, targetName);
-        FieldSpec.Builder schemaFieldBuilder = FieldSpec.builder(type, entity.staticTypeName(),
+        FieldSpec.Builder schemaFieldBuilder = FieldSpec.builder(type, TYPE_NAME,
                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
 
-        CodeBlock.Builder typeBuilder = CodeBlock.builder()
-                .add("new $T<$T>($T.class, $S)\n",
+        CodeBlock.Builder typeBuilder = CodeBlock.builder().add("new $T<$T>($T.class, $S)\n",
                     schemaName, targetName, targetName, entity.tableName());
 
         typeBuilder.add(".setBaseType($T.class)\n", ClassName.get(typeElement))
@@ -401,7 +401,7 @@ class EntityGenerator implements SourceGenerator {
             .add(".setReadOnly($L)\n", entity.isReadOnly())
             .add(".setStateless($L)\n", entity.isStateless());
         String factoryName = entity.classFactoryName();
-        if (factoryName != null) {
+        if (!Names.isEmpty(factoryName)) {
             typeBuilder.add(".setFactory(new $L())\n", ClassName.bestGuess(factoryName));
         } else if (entity.isImmutable()) {
 
@@ -455,8 +455,7 @@ class EntityGenerator implements SourceGenerator {
             .addParameter(targetName, "entity")
             .returns(proxyType);
         if (entity.isImmutable()) {
-            proxyFunction.addStatement("return new $T(entity, $L)",
-                proxyType, entity.staticTypeName());
+            proxyFunction.addStatement("return new $T(entity, $L)", proxyType, TYPE_NAME);
         } else {
             proxyFunction.addStatement("return entity.$L", PROXY_NAME);
         }
@@ -692,13 +691,8 @@ class EntityGenerator implements SourceGenerator {
                         ClassName.get(ReferentialAction.class), attribute.referentialAction());
             }
             if (!attribute.cascadeActions().isEmpty()) {
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < attribute.cascadeActions().size(); i++) {
-                    if (i > 0) {
-                        sb.append(", ");
-                    }
-                    sb.append("$T.$L");
-                }
+                StringJoiner joiner = new StringJoiner(",");
+                attribute.cascadeActions().forEach(action -> joiner.add("$T.$L"));
                 int index = 0;
                 ClassName cascadeClass = ClassName.get(CascadeAction.class);
                 Object[] args = new Object[attribute.cascadeActions().size()*2];
@@ -706,7 +700,7 @@ class EntityGenerator implements SourceGenerator {
                     args[index++] = cascadeClass;
                     args[index++] = action;
                 }
-                builder.add(".setCascadeAction(" + sb +  ")\n", args);
+                builder.add(".setCascadeAction(" + joiner +  ")\n", args);
             }
             if (attribute.cardinality() != null) {
                 builder.add(".setCardinality($T.$L)\n",
@@ -721,15 +715,17 @@ class EntityGenerator implements SourceGenerator {
 
                     if (attribute.cardinality() == Cardinality.MANY_TO_MANY) {
                         String junctionType = null;
-                        if (attribute.associativeEntity() != null) {
+                        if (attribute.associativeEntity().isPresent()) {
                             // generate a special type for the junction table (with attributes)
                             junctionType = nameResolver.generatedJoinEntityName(
-                                attribute.associativeEntity(), entity, referenced);
+                                attribute.associativeEntity().get(), entity, referenced);
                             generateJunctionType(attribute);
                         } else if ( mappings.size() == 1) {
                             AttributeDescriptor mapped = mappings.iterator().next();
-                            junctionType = nameResolver.generatedJoinEntityName(
-                                mapped.associativeEntity(), referenced, entity);
+                            if (mapped.associativeEntity().isPresent()) {
+                                junctionType = nameResolver.generatedJoinEntityName(
+                                    mapped.associativeEntity().get(), referenced, entity);
+                            }
                         }
                         if (junctionType != null) {
                             builder.add(".setReferencedClass($T.class)\n",
@@ -738,8 +734,7 @@ class EntityGenerator implements SourceGenerator {
                     }
                     if (mappings.size() == 1) {
                         AttributeDescriptor mapped = mappings.iterator().next();
-                        String staticMemberName =
-                            Names.upperCaseUnderscore(mapped.fieldName());
+                        String staticMemberName = Names.upperCaseUnderscore(mapped.fieldName());
 
                         TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                             ClassName.get(Attribute.class),
