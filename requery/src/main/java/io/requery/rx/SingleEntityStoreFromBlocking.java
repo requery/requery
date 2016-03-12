@@ -17,8 +17,6 @@
 package io.requery.rx;
 
 import io.requery.BlockingEntityStore;
-import io.requery.Transaction;
-import io.requery.TransactionIsolation;
 import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Deletion;
@@ -36,7 +34,6 @@ import rx.Single;
 import rx.schedulers.Schedulers;
 
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -90,6 +87,27 @@ class SingleEntityStoreFromBlocking<T> implements SingleEntityStore<T> {
             @Override
             public Iterable<E> get() {
                 return delegate.insert(entities);
+            }
+        }, subscribeOn);
+    }
+
+    @Override
+    public <K, E extends T> Single<K> insert(final E entity, final Class<K> keyClass) {
+        return RxSupport.toSingle(new Supplier<K>() {
+            @Override
+            public K get() {
+                return delegate.insert(entity, keyClass);
+            }
+        }, subscribeOn);
+    }
+
+    @Override
+    public <K, E extends T> Single<Iterable<K>> insert(final Iterable<E> entities,
+                                                       final Class<K> keyClass) {
+        return RxSupport.toSingle(new Supplier<Iterable<K>>() {
+            @Override
+            public Iterable<K> get() {
+                return delegate.insert(entities, keyClass);
             }
         }, subscribeOn);
     }
@@ -176,32 +194,6 @@ class SingleEntityStoreFromBlocking<T> implements SingleEntityStore<T> {
                 return delegate.findByKey(type, key);
             }
         }, subscribeOn);
-    }
-
-    @Override
-    public Transaction transaction() {
-        return delegate.transaction();
-    }
-
-    @Override
-    public <V> Single<V> runInTransaction(Callable<V> callable) {
-        return runInTransaction(callable, null);
-    }
-
-    @Override
-    public <V> Single<V> runInTransaction(final Callable<V> callable,
-                                          final TransactionIsolation isolation) {
-        return Single.fromCallable(new Callable<V>() {
-            @Override
-            public V call() {
-                return delegate.runInTransaction(callable, isolation);
-            }
-        }).compose(new Single.Transformer<V, V>() {
-            @Override
-            public Single<V> call(Single<V> single) {
-                return subscribeOn == null ? single : single.subscribeOn(subscribeOn);
-            }
-        });
     }
 
     @Override

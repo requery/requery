@@ -28,6 +28,7 @@ import io.requery.meta.Type;
 import io.requery.proxy.CollectionChanges;
 import io.requery.proxy.EntityProxy;
 import io.requery.proxy.PropertyState;
+import io.requery.proxy.Settable;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
 import io.requery.query.FieldExpression;
@@ -163,7 +164,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     private void cascadeBatch(Map<Class<? extends S>, List<S>> map) {
         for (Map.Entry<Class<? extends S>, List<S>> entry : map.entrySet()) {
             Class<? extends S> key = entry.getKey();
-            context.write(key).batchInsert(entry.getValue());
+            context.write(key).batchInsert(entry.getValue(), false);
         }
     }
 
@@ -193,12 +194,14 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         }
     }
 
-    void batchInsert(Iterable<E> entities) {
+    GeneratedKeys<E> batchInsert(Iterable<E> entities, boolean returnKeys) {
         // true if using JDBC batching
         final boolean batchInStatement = canBatchInStatement();
         final int batchSize = context.batchUpdateSize();
         final EntityReader<E, S> reader = context.read(entityClass);
         final Iterator<E> iterator = entities.iterator();
+        final boolean isImmtuable = type.isImmutable();
+        final GeneratedKeys<E> keys = returnKeys && hasGeneratedKey? new GeneratedKeys<E>() : null;
 
         int collectionSize = entities instanceof Collection ? ((Collection)entities).size() : -1;
         @SuppressWarnings("unchecked")
@@ -228,25 +231,16 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 generatedKeyReader = new GeneratedResultReader() {
                     @Override
                     public void read(int index, ResultSet results) throws SQLException {
-                        if (batchInStatement) {
-                            // reading batch keys
-                            int keysRead = 0;
-                            for (int i = 0; i < count ; i++) {
-                                if (!results.next()) {
-                                    throw new IllegalStateException();
-                                }
-                                EntityProxy<E> proxy = proxyProvider.apply(elements[i]);
-                                readGeneratedKeys(proxy, results);
-                                keysRead++;
-                            }
-                            if (keysRead != count) {
+                        // check if reading batch keys, otherwise read 1
+                        int readCount = batchInStatement? count : 1;
+                        for (int i = index; i < index + readCount ; i++) {
+                            if (!results.next()) {
                                 throw new IllegalStateException();
                             }
-                        } else if (results.next()) {
-                            // reading single generated key
-                            E entity = elements[index];
-                            EntityProxy<E> proxy = proxyProvider.apply(entity);
-                            readGeneratedKeys(proxy, results);
+                            EntityProxy<E> proxy = proxyProvider.apply(elements[i]);
+                            Settable<E> keyProxy = keys == null ?
+                                proxy : keys.proxy(isImmtuable ? null : proxy);
+                            readGeneratedKeys(keyProxy, results);
                         }
                     }
                     @Override
@@ -277,9 +271,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 }
             }
         }
+        return keys;
     }
 
-    private void readGeneratedKeys(EntityProxy<E> proxy, ResultSet results) throws SQLException {
+    private void readGeneratedKeys(Settable<E> proxy, ResultSet results) throws SQLException {
         // optimal case (1 key)
         if (keyAttribute != null) {
             readKeyFromResult(keyAttribute, proxy, results);
@@ -291,7 +286,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     }
 
     @SuppressWarnings("unchecked") // checked by primitiveKind()
-    private void readKeyFromResult(Attribute<E, ?> key, EntityProxy<E> proxy, ResultSet results)
+    private void readKeyFromResult(Attribute<E, ?> key, Settable<E> proxy, ResultSet results)
         throws SQLException {
 
         Object generatedKey;
@@ -383,14 +378,19 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         }
     }
 
-    public void insert(E entity, final EntityProxy<E> proxy) {
+    public GeneratedKeys<E> insert(E entity, final EntityProxy<E> proxy, boolean returnKeys) {
         GeneratedResultReader keyReader = null;
+        // if the type is immutable return the key(s) to the caller instead of modifying the object
+        final GeneratedKeys<E> keys =
+            returnKeys && hasGeneratedKey?
+                new GeneratedKeys<>(type.isImmutable() ? null : proxy) : null;
+
         if (hasGeneratedKey) {
             keyReader = new GeneratedResultReader() {
                 @Override
                 public void read(int index, ResultSet results) throws SQLException {
                     if (results.next()) {
-                        readGeneratedKeys(proxy, results);
+                        readGeneratedKeys(keys == null ? proxy : keys, results);
                     }
                 }
                 @Override
@@ -429,6 +429,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (cacheable) {
             cache.put(entityClass, proxy.key(), entity);
         }
+        return keys;
     }
 
     public void update(E entity, final EntityProxy<E> proxy) {
@@ -734,7 +735,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         EntityProxy<U> proxy = context.proxyOf(entity, false);
         if (proxy != null && !proxy.isLinked()) {
             EntityWriter<U, S> writer = context.write(proxy.type().classType());
-            writer.insert(entity, proxy);
+            writer.insert(entity, proxy, false);
         }
     }
 
@@ -747,7 +748,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             if (proxy.isLinked()) {
                 writer.update(entity, proxy);
             } else {
-                writer.insert(entity, proxy);
+                writer.insert(entity, proxy, false);
             }
         }
     }

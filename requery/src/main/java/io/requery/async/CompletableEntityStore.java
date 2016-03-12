@@ -18,8 +18,6 @@ package io.requery.async;
 
 import io.requery.BlockingEntityStore;
 import io.requery.EntityStore;
-import io.requery.Transaction;
-import io.requery.TransactionIsolation;
 import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Deletion;
@@ -33,7 +31,6 @@ import io.requery.query.Update;
 import io.requery.util.Objects;
 
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
@@ -83,6 +80,27 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
             @Override
             public Iterable<E> get() {
                 return delegate.insert(entities);
+            }
+        }, executor);
+    }
+
+    @Override
+    public <K, E extends T> CompletionStage<K> insert(final E entity, final Class<K> keyClass) {
+        return CompletableFuture.supplyAsync(new Supplier<K>() {
+            @Override
+            public K get() {
+                return delegate.insert(entity, keyClass);
+            }
+        }, executor);
+    }
+
+    @Override
+    public <K, E extends T> CompletionStage<Iterable<K>> insert(final Iterable<E> entities,
+                                                                final Class<K> keyClass) {
+        return CompletableFuture.supplyAsync(new Supplier<Iterable<K>>() {
+            @Override
+            public Iterable<K> get() {
+                return delegate.insert(entities, keyClass);
             }
         }, executor);
     }
@@ -241,31 +259,5 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     @Override
     public BlockingEntityStore<T> toBlocking() {
         return delegate;
-    }
-
-    @Override
-    public Transaction transaction() {
-        return delegate.transaction();
-    }
-
-    @Override
-    public <V> CompletionStage<V> runInTransaction(final Callable<V> callable) {
-        return CompletableFuture.supplyAsync(new Supplier<V>() {
-            @Override
-            public V get() {
-                return delegate.runInTransaction(callable);
-            }
-        }, executor);
-    }
-
-    @Override
-    public <V> CompletionStage<V> runInTransaction(final Callable<V> callable,
-                                                   final TransactionIsolation isolation) {
-        return CompletableFuture.supplyAsync(new Supplier<V>() {
-            @Override
-            public V get() {
-                return delegate.runInTransaction(callable, isolation);
-            }
-        }, executor);
     }
 }

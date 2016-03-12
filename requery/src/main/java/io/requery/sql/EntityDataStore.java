@@ -182,30 +182,50 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
     @Override
     public <E extends T> E insert(E entity) {
+        insert(entity, null);
+        return entity;
+    }
+
+    @Override
+    public <K, E extends T> K insert(E entity, Class<K> keyClass) {
         try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
-                context.write(proxy.type().classType()).insert(entity, proxy);
+                EntityWriter<E, T> writer = context.write(proxy.type().classType());
+                GeneratedKeys<E> key = writer.insert(entity, proxy, keyClass != null);
                 transaction.commit();
-                return entity;
+                if (key != null && key.size() > 0 && keyClass != null) {
+                    return keyClass.cast(key.get(0));
+                }
             }
         }
+        return null;
     }
 
     @Override
     public <E extends T> Iterable<E> insert(Iterable<E> entities) {
+        insert(entities, null);
+        return entities;
+    }
+
+    @Override
+    public <K, E extends T> Iterable<K> insert(Iterable<E> entities, Class<K> keyClass) {
         Iterator<E> iterator = entities.iterator();
         if (iterator.hasNext()) {
             try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
-                EntityWriter<E, T> writer;
                 E entity = iterator.next();
                 EntityProxy<E> proxy = context.proxyOf(entity, true);
-                writer = context.write(proxy.type().classType());
-                writer.batchInsert(entities);
+                EntityWriter<E, T> writer = context.write(proxy.type().classType());
+                GeneratedKeys<E> keys = writer.batchInsert(entities, keyClass != null);
+                if (keys != null) {
+                    @SuppressWarnings("unchecked")
+                    Iterable<K> result = (Iterable<K>) keys;
+                    return result;
+                }
                 transaction.commit();
             }
         }
-        return entities;
+        return null;
     }
 
     @Override
@@ -246,7 +266,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             E entity = iterator.next();
             EntityProxy<E> proxy = context.proxyOf(entity, false);
             EntityReader<E, T> reader = context.read(proxy.type().classType());
-            reader.batchRefresh(entities, (Attribute<E, ?>[])attributes);
+            return reader.batchRefresh(entities, (Attribute<E, ?>[])attributes);
         }
         return entities;
     }

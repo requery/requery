@@ -140,6 +140,9 @@ public abstract class FunctionalTest extends RandomData {
             persons.add(person);
         }
         data.insert(persons);
+        for (Person person : persons) {
+            assertTrue(person.getId() != 0);
+        }
         int people = 0;
         for (Person ignored : data.select(Person.class).get()) {
             people++;

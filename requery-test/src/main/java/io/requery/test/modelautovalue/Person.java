@@ -23,14 +23,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import java.io.Serializable;
-import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
 
 @AutoValue
 @Entity
-public abstract class Person implements Serializable {
+public abstract class Person {
 
     @AutoValue.Builder
     public static abstract class Builder {
@@ -41,7 +39,6 @@ public abstract class Person implements Serializable {
         public abstract Builder setAge(int age);
         public abstract Builder setAbout(String about);
         public abstract Builder setUUID(UUID uuid);
-        public abstract Builder setHomepage(URL url);
         public abstract Person build();
     }
 
@@ -64,6 +61,4 @@ public abstract class Person implements Serializable {
 
     @Column(unique = true)
     public abstract UUID getUUID();
-
-    public abstract URL getHomepage();
 }

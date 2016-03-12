@@ -47,6 +47,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -176,8 +178,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         return refresh(entity, proxy, elements);
     }
 
-    private E refresh(E entity, EntityProxy<E> proxy,
-                      final Set<Attribute<E, ?>> attributes) {
+    private E refresh(E entity, EntityProxy<E> proxy, final Set<Attribute<E, ?>> attributes) {
 
         Predicate<Attribute<E, ?>> basicFilter = new Predicate<Attribute<E, ?>>() {
             @Override
@@ -227,7 +228,13 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 if (results.next()) {
                     Attribute[] selection = new Attribute[attributes.size()];
                     attributes.toArray(selection);
-                    fromResult(entity, results, selection);
+                    // if the type is immutable create a new entity and return it, otherwise
+                    // modify the given entity
+                    if (type.isImmutable()) {
+                        entity = fromBuilder(results, selection);
+                    } else {
+                        entity = fromResult(entity, results, selection);
+                    }
                 }
             } catch (SQLException e) {
                 throw new PersistenceException(e);
@@ -327,11 +334,17 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     }
 
     @SafeVarargs
-    final void batchRefresh(Iterable<E> entities, Attribute<E, ?>... attributes) {
+    final Iterable<E> batchRefresh(Iterable<E> entities, Attribute<E, ?>... attributes) {
+        // if the type is immutable return a new collection with the rebuilt objects
+        final Collection<E> collection = type.isImmutable() ? new ArrayList<E>() : null;
+
         if (keyAttribute == null) {
             // non optimal case objects with multiple keys or no keys
             for (E entity : entities) {
-                refresh(entity, type.proxyProvider().apply(entity), attributes);
+                entity = refresh(entity, type.proxyProvider().apply(entity), attributes);
+                if (collection != null) {
+                    collection.add(entity);
+                }
             }
         } else {
             Set<Expression<?>> selection = new LinkedHashSet<>();
@@ -365,9 +378,12 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             }
             Condition<?, ?> condition = Attributes.query(keyAttribute).in(map.keySet());
             if (type.isCacheable()) {
-                final Consumer<E> empty = new Consumer<E>() {
+                final Consumer<E> collector = new Consumer<E>() {
                     @Override
                     public void accept(E e) {
+                        if (collection != null) {
+                            collection.add(e);
+                        }
                     }
                 };
                 // readResult will merge the results into the target object in cache mode
@@ -378,7 +394,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     new QueryElement<>(QueryType.SELECT, context.model(), select);
 
                 try (Result<E> result = query.select(selection).where(condition).get()) {
-                    result.each(empty);
+                    result.each(collector);
                 }
             } else {
                 try (Result<Tuple> result = queryable.select(selection).where(condition).get()) {
@@ -400,7 +416,6 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     }
                 }
             }
-
             // associations TODO can be optimized
             if (attributes != null) {
                 for (Attribute<E, ?> attribute : attributes) {
@@ -412,6 +427,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 }
             }
         }
+        return collection == null ? entities : collection;
     }
 
     private E createEntity() {
@@ -443,7 +459,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         return key;
     }
 
-    E fromResult(E entity, ResultSet results, Attribute[] selection) throws SQLException {
+    final E fromResult(E entity, ResultSet results, Attribute[] selection) throws SQLException {
         // if refreshing (entity not null) overwrite the properties
         boolean overwrite = entity != null || stateless;
         boolean wasCached = false;
@@ -524,7 +540,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         return entity;
     }
 
-    <B> E fromBuilder(ResultSet results, Attribute[] selection) throws SQLException {
+    final <B> E fromBuilder(ResultSet results, Attribute[] selection) throws SQLException {
         EntityBuilderProxy<B, E> proxy = new EntityBuilderProxy<>(type);
         int index = 1;
         for (Attribute expression : selection) {

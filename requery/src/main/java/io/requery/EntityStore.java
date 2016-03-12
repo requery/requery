@@ -61,6 +61,31 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
     <E extends T> R insert(Iterable<E> entities);
 
     /**
+     * Inserts the given entity returning the generated key after the entity is inserted. This
+     * entity must not have previously been inserted otherwise an {@link PersistenceException}
+     * may be thrown.
+     *
+     * @param entity   non null entity to insert
+     * @param keyClass key class
+     * @param <K>      key type
+     * @param <E>      entity type
+     * @return the operation result.
+     */
+    <K, E extends T> R insert(E entity, Class<K> keyClass);
+
+    /**
+     * Insert a collection of entities returning the generated keys for the inserted entities in
+     * the order they were inserted.
+     *
+     * @param entities to insert
+     * @param keyClass key class
+     * @param <K>      key type
+     * @param <E>      entity type
+     * @return the operation result.
+     */
+    <K, E extends T> R insert(Iterable<E> entities, Class<K> keyClass);
+
+    /**
      * Update the given entity. If the given entity has modified properties those changes will be
      * persisted otherwise the method will do nothing.
      *

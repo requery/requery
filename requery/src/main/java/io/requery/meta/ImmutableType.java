@@ -29,6 +29,7 @@ final class ImmutableType<T> extends BaseType<T> {
         this.name = builder.name();
         this.cacheable = builder.isCacheable();
         this.readOnly = builder.isReadOnly();
+        this.immutable = builder.isImmutable();
         this.stateless = builder.isStateless();
         this.factory = builder.factory();
         this.proxyProvider = builder.proxyProvider();

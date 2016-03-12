@@ -35,6 +35,12 @@ public interface BlockingEntityStore<T> extends EntityStore<T, Object>, Transact
     <E extends T> Iterable<E> insert(Iterable<E> entities);
 
     @Override
+    <K, E extends T> K insert(E entity, Class<K> keyClass);
+
+    @Override
+    <K, E extends T> Iterable<K> insert(Iterable<E> entities, Class<K> keyClass);
+
+    @Override
     <E extends T> E update(E entity);
 
     @Override

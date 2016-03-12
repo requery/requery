@@ -23,11 +23,10 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import java.io.Serializable;
 
 @Entity
 @AutoValue
-public abstract class Phone implements Serializable {
+public abstract class Phone {
 
     public static Phone create(int id, String phoneNumber, boolean normalized, int ownerId) {
         return new AutoValue_Phone(id, phoneNumber, normalized, ownerId);
