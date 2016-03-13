@@ -268,7 +268,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                    .map(javax.persistence.Table::name).orElse(
             element().getKind().isInterface() || isImmutable() ?
                 element().getSimpleName().toString() :
-                typeName().className()));
+                Names.removeClassPrefixes(element().getSimpleName())));
     }
 
     @Override
