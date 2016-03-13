@@ -708,10 +708,6 @@ public abstract class FunctionalTest extends RandomData {
         person.setName(null);
         data.insert(person);
         try (Result<Person> query = data.select(Person.class)
-                .where(Person.NAME.equal(null)).get()) {
-            assertEquals(1, query.toList().size());
-        }
-        try (Result<Person> query = data.select(Person.class)
                 .where(Person.NAME.isNull()).get()) {
             assertEquals(1, query.toList().size());
         }

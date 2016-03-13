@@ -168,6 +168,42 @@ public abstract class FieldExpression<V> implements
     }
 
     @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        equal(Expression<V> value) {
+        return new ExpressionCondition<>(this, Operator.EQUAL, value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        notEqual(Expression<V> value) {
+        return new ExpressionCondition<>(this, Operator.NOT_EQUAL, value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        lessThan(Expression<V> value) {
+        return new ExpressionCondition<>(this, Operator.LESS_THAN, value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        greaterThan(Expression<V> value) {
+        return new ExpressionCondition<>(this, Operator.GREATER_THAN, value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        lessThanOrEqual(Expression<V> value) {
+        return new ExpressionCondition<>(this, Operator.LESS_THAN_OR_EQUAL, value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        greaterThanOrEqual(Expression<V> value) {
+        return new ExpressionCondition<>(this, Operator.GREATER_THAN_OR_EQUAL, value);
+    }
+
+    @Override
     public LogicalCondition<? extends Expression<V>, V> eq(V value) {
         return equal(value);
     }
@@ -194,6 +230,42 @@ public abstract class FieldExpression<V> implements
 
     @Override
     public LogicalCondition<? extends Expression<V>, V> gte(V value) {
+        return greaterThanOrEqual(value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        eq(Expression<V> value) {
+        return equal(value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        ne(Expression<V> value) {
+        return notEqual(value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        lt(Expression<V> value) {
+        return lessThan(value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        gt(Expression<V> value) {
+        return greaterThan(value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        lte(Expression<V> value) {
+        return lessThanOrEqual(value);
+    }
+
+    @Override
+    public LogicalCondition<? extends Expression<V>, ? extends Expression<V>>
+        gte(Expression<V> value) {
         return greaterThanOrEqual(value);
     }
 

@@ -124,6 +124,103 @@ public interface Conditional<Q, V> {
     Q gte(V value);
 
     /**
+     * Applies the equal condition
+     *
+     * @param value to compare, maybe null, which is equivalent to {@link #isNull()}
+     * @return next query step
+     */
+    Q equal(Expression<V> value);
+
+    /**
+     * Applies the not equal condition, maybe null, which is equivalent to {@link #notNull()}
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q notEqual(Expression<V> value);
+
+    /**
+     * Applies the less than condition
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q lessThan(Expression<V> value);
+
+    /**
+     * Applies the greater than condition
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q greaterThan(Expression<V> value);
+
+    /**
+     * Applies the less than or equal to condition
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q lessThanOrEqual(Expression<V> value);
+
+    /**
+     * Applies the greater than or equal to condition
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q greaterThanOrEqual(Expression<V> value);
+
+    /**
+     * Applies the equal condition, equivalent to {@link #equal(Object)}.
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q eq(Expression<V> value);
+
+    /**
+     * Applies the not equal condition, equivalent to {@link #notEqual(Object)}.
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q ne(Expression<V> value);
+
+    /**
+     * Applies the less than condition, equivalent to {@link #lessThan(Object)}.
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q lt(Expression<V> value);
+
+    /**
+     * Applies the greater than condition, equivalent to {@link #greaterThan(Object)}.
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q gt(Expression<V> value);
+
+    /**
+     * Applies the less than or equal to condition, equivalent to {@link #lessThanOrEqual(Object)}.
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q lte(Expression<V> value);
+
+    /**
+     * Applies the greater than or equal to condition, equivalent to
+     * {@link #greaterThanOrEqual(Object)}.
+     *
+     * @param value to compare
+     * @return next query step
+     */
+    Q gte(Expression<V> value);
+
+    /**
      * Applies the in condition, checking if the condition is applicable to the values in the given
      * collection.
      *
