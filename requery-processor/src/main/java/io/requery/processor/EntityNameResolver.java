@@ -53,12 +53,15 @@ class EntityNameResolver {
             .map(this::typeNameOf).findFirst();
     }
 
-    String generatedJoinEntityName(AssociativeEntityDescriptor descriptor,
-                                   EntityDescriptor a, EntityDescriptor b) {
+    ClassName generatedJoinEntityName(AssociativeEntityDescriptor descriptor,
+                                      EntityDescriptor a,
+                                      EntityDescriptor b) {
+        String className;
         if (Names.isEmpty(descriptor.name())) {
-            return a.typeName().className() + "_" + b.typeName().className();
+            className = a.typeName().className() + "_" + b.typeName().className();
         } else {
-            return Names.upperCaseFirst(descriptor.name());
+            className = Names.upperCaseFirst(descriptor.name());
         }
+        return ClassName.get(a.typeName().packageName(), className);
     }
 }

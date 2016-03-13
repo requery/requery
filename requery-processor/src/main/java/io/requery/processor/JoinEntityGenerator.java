@@ -70,8 +70,9 @@ class JoinEntityGenerator implements SourceGenerator {
             // create junction table name with TableA_TableB
             name = from.tableName() + "_" + to.tableName();
         }
-        String className = "Abstract" + nameResolver.generatedJoinEntityName(
+        ClassName joinEntityName = nameResolver.generatedJoinEntityName(
             associativeDescriptor, from, to);
+        String className = "Abstract" + joinEntityName.simpleName();
         TypeSpec.Builder junctionType = TypeSpec.classBuilder(className)
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addSuperinterface(Serializable.class)
@@ -117,6 +118,6 @@ class JoinEntityGenerator implements SourceGenerator {
             junctionType.addField(field.build());
         }
         CodeGeneration.writeType(processingEnvironment,
-            from.typeName().packageName(), junctionType.build());
+            joinEntityName.packageName(), junctionType.build());
     }
 }

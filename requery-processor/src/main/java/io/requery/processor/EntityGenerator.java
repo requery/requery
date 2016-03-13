@@ -714,7 +714,7 @@ class EntityGenerator implements SourceGenerator {
                         graph.mappedAttributes(entity, attribute, referenced);
 
                     if (attribute.cardinality() == Cardinality.MANY_TO_MANY) {
-                        String junctionType = null;
+                        TypeName junctionType = null;
                         if (attribute.associativeEntity().isPresent()) {
                             // generate a special type for the junction table (with attributes)
                             junctionType = nameResolver.generatedJoinEntityName(
@@ -728,8 +728,7 @@ class EntityGenerator implements SourceGenerator {
                             }
                         }
                         if (junctionType != null) {
-                            builder.add(".setReferencedClass($T.class)\n",
-                                ClassName.get(typeName.packageName(), junctionType));
+                            builder.add(".setReferencedClass($T.class)\n", junctionType);
                         }
                     }
                     if (mappings.size() == 1) {
