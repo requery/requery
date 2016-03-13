@@ -1,6 +1,6 @@
 ![requery](http://requery.github.io/logo.png)
 
-A light but powerful ORM and SQL generator for Java/Android with RxJava and Java 8 support.
+A light but powerful object mapping and SQL generator for Java/Android with RxJava and Java 8 support.
 Easily map to or create databases, perform queries and updates from any platform that uses Java.
 
 [![Build Status](https://travis-ci.org/requery/requery.svg?branch=master)](https://travis-ci.org/requery/requery)
@@ -63,8 +63,7 @@ abstract class Person {
     static abstract class Builder {
         abstract Builder setId(int id);
         abstract Builder setName(String name);
-        abstract Builder setBirthday(Date date);
-        abstract Builder setAge(int age);
+        abstract Builder setEmail(String email);
         abstract Person build();
     }
 
@@ -76,8 +75,7 @@ abstract class Person {
     abstract int getId();
 
     abstract String getName();
-    abstract Date getBirthday();
-    abstract int getAge();
+    abstract String getEmail();
 }
 ```
 (Note some features will not be available when using immutable types, see [here](https://github.com/requery/requery/wiki/Immutable-types))
