@@ -37,7 +37,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:recyclerview-v7:23.1.1'
     compile 'com.android.databinding:library:1.0-rc5'
-    // compile scope seems to be ok
     compile 'net.zetetic:android-database-sqlcipher:3.3.1-2'
     androidTestCompile project(':requery-test')
     androidTestCompile 'com.android.support.test:runner:0.4'
@@ -54,12 +53,16 @@ android.libraryVariants
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId 'io.requery'
+            // leaving out dependencies (components.java) intentionally
+            groupId rootProject.group
             artifactId project.name
             version rootProject.version
             artifact "build/outputs/aar/${project.name}-release.aar"
             artifact(javadocJar) {
                 classifier 'javadoc'
+            }
+            pom.withXml {
+                asNode().children().last() + project.pomXml
             }
         }
     }

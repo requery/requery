@@ -26,7 +26,9 @@ idea {
     }
 }
 
+group = 'io.requery'
 version = '1.0.0-beta3'
+description = 'A light but powerful object mapper and SQL generator for Java/Android'
 
 Properties properties = new Properties()
 File localProperties = project.rootProject.file('local.properties')
@@ -54,12 +56,16 @@ configure([project(':requery'), project(':requery-processor')]) {
         publications {
             maven(MavenPublication) {
                 from components.java
-                groupId 'io.requery'
+                groupId rootProject.group
                 artifactId project.name
                 version rootProject.version
 
                 artifact sourcesJar
                 artifact javadocJar
+
+                pom.withXml {
+                    asNode().children().last() + project.pomXml
+                }
             }
         }
 
@@ -90,8 +96,35 @@ configure([project(':requery'), project(':requery-processor'), project(':requery
             vcsUrl = 'https://github.com/requery/requery.git'
             version {
                 name = rootProject.version
-                desc = 'requery ORM'
+                desc = rootProject.description
                 released  = new Date()
+            }
+        }
+    }
+
+    ext {
+        pomXml = {
+            resolveStrategy = Closure.DELEGATE_FIRST
+            name project.name
+            description project.description ?: rootProject.description
+            url 'https://github.com/requery/requery'
+            scm {
+                url 'https://github.com/requery/requery.git'
+                connection 'scm:git:git://github.com/requery/requery.git'
+                developerConnection 'scm:git:git@github.com/requery/requery.git'
+            }
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/license/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+            developers {
+                developer {
+                    id 'npurushe'
+                    name 'Nikhil Purushe'
+                }
             }
         }
     }
