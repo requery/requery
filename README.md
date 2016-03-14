@@ -160,7 +160,7 @@ and updates (writing):
 ```java
 int rows = data.update(Person.class)
     .set(Person.ABOUT, "student")
-    .where(Person.AGE.lt(21)).get();
+    .where(Person.AGE.lt(21)).get().value();
 ```
 
 Features
@@ -263,9 +263,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.0.0-beta4'
-    compile 'io.requery:requery-android:1.0.0-beta4' // for android
-    apt 'io.requery:requery-processor:1.0.0-beta4'   // use an APT plugin
+    compile 'io.requery:requery:1.0.0-beta5'
+    compile 'io.requery:requery-android:1.0.0-beta5' // for android
+    apt 'io.requery:requery-processor:1.0.0-beta5'   // use an APT plugin
 }
 ```
 
