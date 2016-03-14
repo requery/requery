@@ -40,6 +40,7 @@ import io.requery.sql.type.FloatType;
 import io.requery.sql.type.IntegerType;
 import io.requery.sql.type.JavaDateType;
 import io.requery.sql.type.PrimitiveBooleanType;
+import io.requery.sql.type.PrimitiveByteType;
 import io.requery.sql.type.PrimitiveDoubleType;
 import io.requery.sql.type.PrimitiveFloatType;
 import io.requery.sql.type.PrimitiveIntType;
@@ -84,6 +85,7 @@ public class GenericMapping implements Mapping {
     private PrimitiveIntType primitiveIntType;
     private PrimitiveLongType primitiveLongType;
     private PrimitiveShortType primitiveShortType;
+    private PrimitiveByteType primitiveByteType;
     private PrimitiveBooleanType primitiveBooleanType;
     private PrimitiveFloatType primitiveFloatType;
     private PrimitiveDoubleType primitiveDoubleType;
@@ -96,6 +98,7 @@ public class GenericMapping implements Mapping {
         primitiveBooleanType = new BooleanType(boolean.class);
         primitiveFloatType = new FloatType(float.class);
         primitiveDoubleType = new RealType(double.class);
+        primitiveByteType = new TinyIntType(byte.class);
         types.put(boolean.class, new BooleanType(boolean.class));
         types.put(Boolean.class, new BooleanType(Boolean.class));
         types.put(int.class, new IntegerType(int.class));
@@ -181,6 +184,9 @@ public class GenericMapping implements Mapping {
         } else if (
             sqlType == primitiveDoubleType.sqlType() && replace instanceof PrimitiveDoubleType) {
             primitiveDoubleType = (PrimitiveDoubleType) replace;
+        } else if (
+            sqlType == primitiveByteType.sqlType() && replace instanceof PrimitiveByteType) {
+            primitiveByteType = (PrimitiveByteType) replace;
         }
     }
 
@@ -280,6 +286,16 @@ public class GenericMapping implements Mapping {
     }
 
     @Override
+    public byte readByte(ResultSet results, int column) throws SQLException {
+        return primitiveByteType.readByte(results, column);
+    }
+
+    @Override
+    public short readShort(ResultSet results, int column) throws SQLException {
+        return primitiveShortType.readShort(results, column);
+    }
+
+    @Override
     public int readInt(ResultSet results, int column) throws SQLException {
         return primitiveIntType.readInt(results, column);
     }
@@ -287,11 +303,6 @@ public class GenericMapping implements Mapping {
     @Override
     public long readLong(ResultSet results, int column) throws SQLException {
         return primitiveLongType.readLong(results, column);
-    }
-
-    @Override
-    public short readShort(ResultSet results, int column) throws SQLException {
-        return primitiveShortType.readShort(results, column);
     }
 
     @Override
@@ -339,6 +350,17 @@ public class GenericMapping implements Mapping {
     }
 
     @Override
+    public void writeByte(PreparedStatement statement, int index, byte value) throws SQLException {
+        primitiveByteType.writeByte(statement, index, value);
+    }
+
+    @Override
+    public void writeShort(PreparedStatement statement, int index, short value)
+        throws SQLException {
+        primitiveShortType.writeShort(statement, index, value);
+    }
+
+    @Override
     public void writeInt(PreparedStatement statement, int index, int value) throws SQLException {
         primitiveIntType.writeInt(statement, index, value);
     }
@@ -346,12 +368,6 @@ public class GenericMapping implements Mapping {
     @Override
     public void writeLong(PreparedStatement statement, int index, long value) throws SQLException {
         primitiveLongType.writeLong(statement, index, value);
-    }
-
-    @Override
-    public void writeShort(PreparedStatement statement, int index, short value)
-        throws SQLException {
-        primitiveShortType.writeShort(statement, index, value);
     }
 
     @Override

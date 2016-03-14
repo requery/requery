@@ -19,11 +19,12 @@ package io.requery.sql.type;
 import io.requery.sql.Keyword;
 import io.requery.sql.BasicType;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class TinyIntType extends BasicType<Byte> {
+public class TinyIntType extends BasicType<Byte> implements PrimitiveByteType {
 
     public TinyIntType(Class<Byte> type) {
         super(type, Types.TINYINT);
@@ -37,5 +38,15 @@ public class TinyIntType extends BasicType<Byte> {
     @Override
     public Keyword identifier() {
         return Keyword.TINYINT;
+    }
+
+    @Override
+    public byte readByte(ResultSet results, int column) throws SQLException {
+        return results.getByte(column);
+    }
+
+    @Override
+    public void writeByte(PreparedStatement statement, int index, byte value) throws SQLException {
+        statement.setByte(index, value);
     }
 }

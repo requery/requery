@@ -577,6 +577,11 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 short shortValue = mapping.readShort(results, index);
                 proxy.setShort(shortAttribute, shortValue, PropertyState.LOADED);
                 break;
+            case BYTE:
+                Attribute<E, Byte> byteAttribute = (Attribute<E, Byte>) attribute;
+                byte byteValue = mapping.readByte(results, index);
+                proxy.setByte(byteAttribute, byteValue, PropertyState.LOADED);
+                break;
             case BOOLEAN:
                 Attribute<E, Boolean> booleanAttribute = (Attribute<E, Boolean>) attribute;
                 boolean booleanValue = mapping.readBoolean(results, index);

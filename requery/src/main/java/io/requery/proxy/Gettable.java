@@ -41,15 +41,17 @@ public interface Gettable<E> {
      */
     <V> V get(Attribute<E, V> attribute, boolean fetch);
 
+    boolean getBoolean(Attribute<E, Boolean> attribute);
+
+    byte getByte(Attribute<E, Byte> attribute);
+
+    short getShort(Attribute<E, Short> attribute);
+
     int getInt(Attribute<E, Integer> attribute);
 
     long getLong(Attribute<E, Long> attribute);
 
-    short getShort(Attribute<E, Short> attribute);
-
     float getFloat(Attribute<E, Float> attribute);
 
     double getDouble(Attribute<E, Double> attribute);
-
-    boolean getBoolean(Attribute<E, Boolean> attribute);
 }

@@ -76,6 +76,18 @@ public class EntityBuilderProxy<B, E> implements Settable<E> {
     }
 
     @Override
+    public void setByte(Attribute<E, Byte> attribute, byte value, PropertyState state) {
+        ByteProperty<B> property = (ByteProperty<B>) attribute.builderProperty();
+        property.setByte(builder, value);
+    }
+
+    @Override
+    public void setShort(Attribute<E, Short> attribute, short value, PropertyState state) {
+        ShortProperty<B> property = (ShortProperty<B>) attribute.builderProperty();
+        property.setShort(builder, value);
+    }
+
+    @Override
     public void setInt(Attribute<E, Integer> attribute, int value, PropertyState state) {
         IntProperty<B> property = (IntProperty<B>) attribute.builderProperty();
         property.setInt(builder, value);
@@ -85,12 +97,6 @@ public class EntityBuilderProxy<B, E> implements Settable<E> {
     public void setLong(Attribute<E, Long> attribute, long value, PropertyState state) {
         LongProperty<B> property = (LongProperty<B>) attribute.builderProperty();
         property.setLong(builder, value);
-    }
-
-    @Override
-    public void setShort(Attribute<E, Short> attribute, short value, PropertyState state) {
-        ShortProperty<B> property = (ShortProperty<B>) attribute.builderProperty();
-        property.setShort(builder, value);
     }
 
     public E build() {

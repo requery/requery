@@ -93,6 +93,22 @@ class GeneratedKeys<E> extends ArrayList<Object> implements Settable<E> {
     }
 
     @Override
+    public void setByte(Attribute<E, Byte> attribute, byte value, PropertyState state) {
+        if (proxy != null) {
+            proxy.setByte(attribute, value, state);
+        }
+        add(value);
+    }
+
+    @Override
+    public void setShort(Attribute<E, Short> attribute, short value, PropertyState state) {
+        if (proxy != null) {
+            proxy.setShort(attribute, value, state);
+        }
+        add(value);
+    }
+
+    @Override
     public void setInt(Attribute<E, Integer> attribute, int value, PropertyState state) {
         if (proxy != null) {
             proxy.setInt(attribute, value, state);
@@ -104,14 +120,6 @@ class GeneratedKeys<E> extends ArrayList<Object> implements Settable<E> {
     public void setLong(Attribute<E, Long> attribute, long value, PropertyState state) {
         if (proxy != null) {
             proxy.setLong(attribute, value, state);
-        }
-        add(value);
-    }
-
-    @Override
-    public void setShort(Attribute<E, Short> attribute, short value, PropertyState state) {
-        if (proxy != null) {
-            proxy.setShort(attribute, value, state);
         }
         add(value);
     }

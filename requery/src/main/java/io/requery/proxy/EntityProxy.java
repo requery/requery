@@ -105,6 +105,13 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     }
 
     @Override
+    public byte getByte(Attribute<E, Byte> attribute) {
+        ByteProperty<E> property = (ByteProperty<E>) attribute.property();
+        loadProperty(attribute);
+        return property.getByte(entity);
+    }
+
+    @Override
     public float getFloat(Attribute<E, Float> attribute) {
         FloatProperty<E> property = (FloatProperty<E>) attribute.property();
         loadProperty(attribute);
@@ -166,6 +173,13 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     public void setShort(Attribute<E, Short> attribute, short value, PropertyState state) {
         ShortProperty<E> property = (ShortProperty<E>) attribute.property();
         property.setShort(entity, value);
+        setState(attribute, state);
+    }
+
+    @Override
+    public void setByte(Attribute<E, Byte> attribute, byte value, PropertyState state) {
+        ByteProperty<E> property = (ByteProperty<E>) attribute.property();
+        property.setByte(entity, value);
         setState(attribute, state);
     }
 

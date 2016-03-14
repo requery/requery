@@ -83,6 +83,16 @@ public interface Mapping {
     boolean readBoolean(ResultSet results, int column) throws SQLException;
 
     /**
+     * Reads a byte value.
+     *
+     * @param results {@link ResultSet} instance
+     * @param column  column index
+     * @return read value
+     * @throws SQLException on a failure to read from the {@link ResultSet}
+     */
+    byte readByte(ResultSet results, int column) throws SQLException;
+
+    /**
      * Reads a boolean value.
      *
      * @param results {@link ResultSet} instance
@@ -154,6 +164,16 @@ public interface Mapping {
      * @throws SQLException on a failure to set the expression on the {@link PreparedStatement}
      */
     void writeBoolean(PreparedStatement statement, int index, boolean value) throws SQLException;
+
+    /**
+     * Sets a byte value
+     *
+     * @param statement prepared statement
+     * @param index     statement index
+     * @param value     type to be bound
+     * @throws SQLException on a failure to set the expression on the {@link PreparedStatement}
+     */
+    void writeByte(PreparedStatement statement, int index, byte value) throws SQLException;
 
     /**
      * Sets a short value

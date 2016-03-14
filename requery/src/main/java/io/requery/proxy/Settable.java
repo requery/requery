@@ -51,13 +51,15 @@ public interface Settable<E> {
 
     void setBoolean(Attribute<E, Boolean> attribute, boolean value, PropertyState state);
 
-    void setDouble(Attribute<E, Double> attribute, double value, PropertyState state);
+    void setByte(Attribute<E, Byte> attribute, byte value, PropertyState state);
 
-    void setFloat(Attribute<E, Float> attribute, float value, PropertyState state);
+    void setShort(Attribute<E, Short> attribute, short value, PropertyState state);
 
     void setInt(Attribute<E, Integer> attribute, int value, PropertyState state);
 
     void setLong(Attribute<E, Long> attribute, long value, PropertyState state);
 
-    void setShort(Attribute<E, Short> attribute, short value, PropertyState state);
+    void setDouble(Attribute<E, Double> attribute, double value, PropertyState state);
+
+    void setFloat(Attribute<E, Float> attribute, float value, PropertyState state);
 }

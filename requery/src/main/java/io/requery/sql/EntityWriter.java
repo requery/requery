@@ -359,6 +359,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 long longValue = proxy.getLong((Attribute<E, Long>) attribute);
                 mapping.writeLong(statement, index, longValue);
                 break;
+            case BYTE:
+                byte byteValue = proxy.getByte((Attribute<E, Byte>) attribute);
+                mapping.writeByte(statement, index, byteValue);
+                break;
             case SHORT:
                 short shortValue = proxy.getShort((Attribute<E, Short>) attribute);
                 mapping.writeShort(statement, index, shortValue);

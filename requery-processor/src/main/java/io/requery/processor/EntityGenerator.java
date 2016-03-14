@@ -35,6 +35,7 @@ import io.requery.meta.QueryAttribute;
 import io.requery.meta.Type;
 import io.requery.meta.TypeBuilder;
 import io.requery.proxy.BooleanProperty;
+import io.requery.proxy.ByteProperty;
 import io.requery.proxy.DoubleProperty;
 import io.requery.proxy.EntityProxy;
 import io.requery.proxy.FloatProperty;
@@ -867,6 +868,9 @@ class EntityGenerator implements SourceGenerator {
             switch (typeMirror.getKind()) {
                 case BOOLEAN:
                     propertyClass = BooleanProperty.class;
+                    break;
+                case BYTE:
+                    propertyClass = ByteProperty.class;
                     break;
                 case SHORT:
                     propertyClass = ShortProperty.class;
