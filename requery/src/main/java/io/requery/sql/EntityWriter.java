@@ -33,11 +33,9 @@ import io.requery.query.Deletion;
 import io.requery.query.Expression;
 import io.requery.query.FieldExpression;
 import io.requery.query.Scalar;
-import io.requery.query.Update;
 import io.requery.query.Where;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryType;
-import io.requery.util.FilteringIterator;
 import io.requery.util.Objects;
 import io.requery.util.ObservableCollection;
 import io.requery.util.function.Function;
@@ -55,6 +53,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import static io.requery.query.element.QueryType.UPDATE;
 
 /**
  * Handles insert/update/delete operations for {@link io.requery.Entity} instances.
@@ -77,6 +77,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     private final Attribute<E, ?> keyAttribute;
     private final Attribute<E, ?> versionAttribute;
     private final Attribute<E, ?>[] bindableAttributes;
+    private final Attribute<E, ?>[] updateAttributes;
     private final Attribute<E, ?>[] associativeAttributes;
     private final String[] generatedColumnNames;
     private final Class<E> entityClass;
@@ -121,9 +122,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         cacheable = !type.keyAttributes().isEmpty() && type.isCacheable();
         stateless = type.isStateless();
 
-        // create bindable attributes as an array for performance
-        bindableAttributes = Attributes.attributesToArray(type.attributes(),
-            new Predicate<Attribute<E, ?>>() {
+        Predicate<Attribute<E, ?>> bindable = new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
                 boolean isGeneratedKey = value.isGenerated() && value.isKey();
@@ -131,7 +130,9 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 boolean isAssociation = value.isAssociation() && !value.isForeignKey();
                 return !(isGeneratedKey || isSystemVersion) && !isAssociation;
             }
-        });
+        };
+        // create bindable attributes as an array for performance
+        bindableAttributes = Attributes.attributesToArray(type.attributes(), bindable);
         associativeAttributes = Attributes.attributesToArray(type.attributes(),
             new Predicate<Attribute<E, ?>>() {
             @Override
@@ -139,6 +140,17 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 return value.isAssociation();
             }
         });
+        // for the update statement add key/version conditions
+        int keyCount = keyAttribute != null ? 1 : type.keyAttributes().size();
+        boolean hasVersion = versionAttribute != null;
+        updateAttributes = Attributes.newArray(keyCount + (hasVersion ? 1 : 0));
+        int index = 0;
+        for (Attribute<E, ?> attribute : keys) {
+            updateAttributes[index++] = attribute;
+        }
+        if (hasVersion) {
+            updateAttributes[index] = versionAttribute;
+        }
     }
 
     private void checkRowsAffected(int count, E entity, EntityProxy<E> proxy) {
@@ -317,10 +329,16 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         }
     }
 
-    public void bindParameters(E element, PreparedStatement statement) throws SQLException {
+    @Override
+    public int bindParameters(PreparedStatement statement,
+                               E element,
+                               Predicate<Attribute<E, ?>> filter) throws SQLException {
         int i = 0;
+        EntityProxy<E> proxy = type.proxyProvider().apply(element);
         for (Attribute<E, ?> attribute : bindableAttributes) {
-            EntityProxy<E> proxy = type.proxyProvider().apply(element);
+            if (filter != null && !filter.test(attribute)) {
+                continue;
+            }
             if (attribute.isAssociation()) {
                 // get the referenced value
                 Object value = proxy.get(attribute);
@@ -344,6 +362,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             proxy.setState(attribute, PropertyState.LOADED);
             i++;
         }
+        return i;
     }
 
     @SuppressWarnings("unchecked") // checked by primitiveKind()
@@ -351,14 +370,6 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                                   Attribute<E, ?> attribute,
                                   PreparedStatement statement, int index) throws SQLException {
         switch (attribute.primitiveKind()) {
-            case INT:
-                int intValue = proxy.getInt((Attribute<E, Integer>) attribute);
-                mapping.writeInt(statement, index, intValue);
-                break;
-            case LONG:
-                long longValue = proxy.getLong((Attribute<E, Long>) attribute);
-                mapping.writeLong(statement, index, longValue);
-                break;
             case BYTE:
                 byte byteValue = proxy.getByte((Attribute<E, Byte>) attribute);
                 mapping.writeByte(statement, index, byteValue);
@@ -366,6 +377,14 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             case SHORT:
                 short shortValue = proxy.getShort((Attribute<E, Short>) attribute);
                 mapping.writeShort(statement, index, shortValue);
+                break;
+            case INT:
+                int intValue = proxy.getInt((Attribute<E, Integer>) attribute);
+                mapping.writeInt(statement, index, intValue);
+                break;
+            case LONG:
+                long longValue = proxy.getLong((Attribute<E, Long>) attribute);
+                mapping.writeLong(statement, index, longValue);
                 break;
             case BOOLEAN:
                 boolean booleanValue = proxy.getBoolean((Attribute<E, Boolean>) attribute);
@@ -403,7 +422,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 }
             };
         }
-        InsertOperation<E> insert = new InsertOperation<>(context, entity, this, keyReader);
+        EntityUpdateOperation<E> insert =
+            new EntityUpdateOperation<>(context, entity, this, null, keyReader);
         QueryElement<Scalar<Integer>> query = new QueryElement<>(QueryType.INSERT, model, insert);
         query.from(entityClass);
 
@@ -438,21 +458,27 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
     public void update(E entity, final EntityProxy<E> proxy) {
         context.stateListener().preUpdate(entity, proxy);
-        FilteringIterator<Attribute<E, ?>> filterator = new FilteringIterator<>(
-            type.attributes().iterator(),
-            new Predicate<Attribute<E, ?>>() {
+        // updates the entity using a query (not the query values are not specified but instead
+        // mapped directly to avoid boxing)
+        Predicate<Attribute<E, ?>> updateable = new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
-                return stateless || (value.isVersion() && !hasSystemVersionColumn()) ||
+                return stateless ||
                     ((proxy.getState(value) == PropertyState.MODIFIED) &&
-                        (!value.isAssociation() || value.isForeignKey()));
+                    (!value.isAssociation() || value.isForeignKey()));
             }
-        });
-        if (filterator.hasNext()) {
-            // handle versioning property
-            Object version = null;
-            if (versionAttribute != null) {
-                version = proxy.get(versionAttribute, true);
+        };
+        boolean hasVersion = versionAttribute != null;
+        final Object version = hasVersion ? proxy.get(versionAttribute, true) : null;
+        boolean modified = false;
+        if (hasVersion) {
+            for (Attribute<E, ?> attribute : bindableAttributes) {
+                if (attribute != versionAttribute && updateable.test(attribute)) {
+                    modified = true;
+                    break;
+                }
+            }
+            if (modified) {
                 if (version == null) {
                     throw new MissingVersionException(proxy);
                 }
@@ -460,25 +486,62 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     incrementVersion(proxy);
                 }
             }
-
-            Update<Scalar<Integer>> update = queryable.update(entityClass);
-            while (filterator.hasNext()) {
-                Attribute<E, ?> attribute = filterator.next();
-                // persist the foreign key object if needed
-                S referenced = foreignKeyReference(proxy, attribute);
-                if (referenced != null) {
-                    cascadeInsert(referenced);
+        }
+        ParameterBinder<E> binder = new ParameterBinder<E>() {
+            @Override
+            public int bindParameters(PreparedStatement statement, E element,
+                                      Predicate<Attribute<E, ?>> filter) throws SQLException {
+                // first write the changed properties
+                int index = EntityWriter.this.bindParameters(statement, element, filter);
+                // write the where arguments
+                for (Attribute<E, ?> attribute : updateAttributes) {
+                    if (attribute == versionAttribute) {
+                        mapping.write((Expression) attribute, statement, index + 1, version);
+                    } else {
+                        if (attribute.primitiveKind() != null) {
+                            mapPrimitiveType(proxy, attribute, statement, index + 1);
+                        } else {
+                            Object value = proxy.get(attribute);
+                            mapping.write((Expression) attribute, statement, index + 1, value);
+                        }
+                    }
+                    index++;
                 }
-                Expression<Object> expression = Attributes.query(attribute);
-                update.set(expression, proxy.get(attribute));
-                proxy.setState(attribute, PropertyState.LOADED);
+                return index;
             }
-            for (Attribute<E, ?> attribute : type.keyAttributes()) {
-                QueryAttribute<E, Object> id = Attributes.query(attribute);
-                update.where(id.equal(proxy.get(attribute)));
+        };
+        EntityUpdateOperation<E> operation =
+            new EntityUpdateOperation<>(context, entity, binder, updateable, null);
+        QueryElement<Scalar<Integer>> query = new QueryElement<>(UPDATE, model, operation);
+        query.from(entityClass);
+        int count = 0;
+        for (Attribute<E, ?> attribute : bindableAttributes) {
+            if (!updateable.test(attribute)) {
+                continue;
             }
-            addVersionCondition(update, version);
-            checkRowsAffected(update.get().value(), entity, proxy);
+            // persist the foreign key object if needed
+            S referenced = foreignKeyReference(proxy, attribute);
+            if (referenced != null) {
+                cascadeInsert(referenced);
+            }
+            Expression<Object> expression = Attributes.query(attribute);
+            query.set(expression, null);
+            count++;
+        }
+        if (count > 0) {
+            if (keyAttribute != null) {
+                QueryAttribute<E, Object> id = Attributes.query(keyAttribute);
+                query.where(id.equal("?"));
+            } else {
+                for (Attribute<E, ?> attribute : type.keyAttributes()) {
+                    QueryAttribute<E, Object> id = Attributes.query(attribute);
+                    query.where(id.equal("?"));
+                }
+            }
+            if (hasVersion) {
+                addVersionCondition(query, version);
+            }
+            checkRowsAffected(query.get().value(), entity, proxy);
         }
         updateAssociations(entity, proxy);
         context.stateListener().postUpdate(entity, proxy);

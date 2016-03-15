@@ -39,7 +39,8 @@ class BatchUpdateOperation<E> extends PreparedQueryOperation implements QueryOpe
     private final boolean batchInStatement;
 
     BatchUpdateOperation(RuntimeConfiguration configuration,
-                         E[] elements, int length,
+                         E[] elements,
+                         int length,
                          ParameterBinder<E> parameterBinder,
                          GeneratedResultReader generatedResultReader,
                          boolean batchInStatement) {
@@ -61,10 +62,9 @@ class BatchUpdateOperation<E> extends PreparedQueryOperation implements QueryOpe
             StatementListener listener = configuration.statementListener();
 
             try (PreparedStatement statement = prepare(sql, connection)) {
-
                 for (int i = 0; i < length; i++) {
                     E element = elements[i];
-                    parameterBinder.bindParameters(element, statement);
+                    parameterBinder.bindParameters(statement, element, null);
                     if (batchInStatement) {
                         statement.addBatch();
                     } else {

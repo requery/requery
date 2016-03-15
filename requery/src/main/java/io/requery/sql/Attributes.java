@@ -27,15 +27,19 @@ import java.util.LinkedHashSet;
 @SuppressWarnings("unchecked")
 final class Attributes {
 
-    static <E,V> QueryAttribute<E, V> query(Attribute attribute) {
+    static <E, V> QueryAttribute<E, V> query(Attribute attribute) {
         return (QueryAttribute<E, V>) attribute;
     }
 
-    static <E,V> QueryAttribute<E, V> get(Supplier supplier) {
+    static <E, V> QueryAttribute<E, V> get(Supplier supplier) {
         return (QueryAttribute<E, V>) supplier.get();
     }
 
-    static <E> Attribute<E, ?>[] attributesToArray(Collection<Attribute<E,?>> attributes,
+    static <E> Attribute<E, ?>[] newArray(int size) {
+        return new Attribute[size];
+    }
+
+    static <E> Attribute<E, ?>[] attributesToArray(Collection<Attribute<E, ?>> attributes,
                                                    Predicate<Attribute<E, ?>> filter) {
         LinkedHashSet<Attribute> filtered = new LinkedHashSet<>();
         for (Attribute<E, ?> attribute : attributes) {

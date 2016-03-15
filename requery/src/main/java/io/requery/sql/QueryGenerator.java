@@ -38,7 +38,6 @@ import io.requery.query.element.QueryWrapper;
 import io.requery.query.element.WhereElement;
 import io.requery.query.function.Case;
 import io.requery.query.function.Function;
-import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
 
 import java.util.Collection;
@@ -47,8 +46,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.requery.sql.Keyword.*;
-import static io.requery.sql.Keyword.AND;
-import static io.requery.sql.Keyword.OR;
 
 /**
  * Generates a parameterizable SQL statement from a given query.
@@ -61,6 +58,7 @@ class QueryGenerator<E> {
 
     private final QueryElement<E> query;
     private final Aliases inheritedAliases;
+    private final boolean parameterize;
     private QueryBuilder qb;
     private Aliases aliases;
     private boolean autoAlias;
@@ -72,8 +70,13 @@ class QueryGenerator<E> {
     }
 
     QueryGenerator(QueryElement<E> query, Aliases inherited) {
-        this.query = Objects.requireNotNull(query);
+        this(query, inherited, true);
+    }
+
+    QueryGenerator(QueryElement<E> query, Aliases inherited, boolean parameterize) {
+        this.query = query;
         this.inheritedAliases = inherited;
+        this.parameterize = parameterize;
     }
 
     public BoundParameters parameters() {
@@ -84,7 +87,9 @@ class QueryGenerator<E> {
         this.qb = qb;
         this.platform = platform;
         aliases = inheritedAliases == null ? new Aliases() : inheritedAliases;
-        parameters = new BoundParameters();
+        if (parameterize) {
+            parameters = new BoundParameters();
+        }
         Set<Expression<?>> from = query.fromExpressions();
         Set<JoinOnElement<E>> joins = query.joinElements();
         autoAlias = from.size() > 1 || (joins != null && joins.size() > 0);
@@ -589,7 +594,9 @@ class QueryGenerator<E> {
             appendColumn(a);
         } else {
             if (parameterize) {
-                parameters.add(expression, value);
+                if (parameters != null) {
+                    parameters.add(expression, value);
+                }
                 qb.append("?").space();
             } else {
                 if (value instanceof CharSequence) {
@@ -692,7 +699,9 @@ class QueryGenerator<E> {
         QueryElement<?> query = wrapper.unwrapQuery();
         QueryGenerator generator = new QueryGenerator<>(query, aliases);
         generator.toSql(qb, platform);
-        parameters.addAll(generator.parameters());
+        if (parameters != null) {
+            parameters.addAll(generator.parameters());
+        }
     }
 
     private static class Aliases {

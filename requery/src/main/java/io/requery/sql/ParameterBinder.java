@@ -16,10 +16,14 @@
 
 package io.requery.sql;
 
+import io.requery.meta.Attribute;
+import io.requery.util.function.Predicate;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 interface ParameterBinder<E> {
 
-    void bindParameters(E element, PreparedStatement statement) throws SQLException;
+    int bindParameters(PreparedStatement statement,
+                       E element, Predicate<Attribute<E, ?>> filter) throws SQLException;
 }
