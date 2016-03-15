@@ -212,6 +212,10 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
         } else {
             if (theObject instanceof String) {
                 setString(parameterIndex, theObject.toString());
+            } else if (theObject instanceof Byte) {
+                setByte(parameterIndex, (Byte) theObject);
+            } else if (theObject instanceof Short) {
+                setShort(parameterIndex, (Short) theObject);
             } else if (theObject instanceof Integer) {
                 setInt(parameterIndex, (Integer) theObject);
             } else if (theObject instanceof Long) {
@@ -251,6 +255,11 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
                     bindLong(parameterIndex, (Long) theObject);
                 } else if (theObject instanceof Short) {
                     bindLong(parameterIndex, ((Short) theObject).longValue());
+                }
+                break;
+            case Types.TINYINT:
+                if (theObject instanceof Byte) {
+                    bindLong(parameterIndex, ((Byte) theObject).longValue());
                 }
                 break;
             case Types.DOUBLE:
