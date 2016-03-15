@@ -133,13 +133,14 @@ public class SqliteMetaData implements DatabaseMetaData {
     @Override
     public String getDatabaseProductVersion() throws SQLException {
         try {
-            Cursor cursor = SQLiteDatabase.openOrCreateDatabase(":memory:", null)
-                    .rawQuery("select sqlite_version() AS sqlite_version", null);
+            SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(":memory:", null);
+            Cursor cursor = database.rawQuery("select sqlite_version() AS sqlite_version", null);
             String version = "";
-            if(cursor.moveToNext()) {
+            if (cursor.moveToNext()) {
                 version = cursor.getString(0);
             }
             cursor.close();
+            database.close();
             return version;
         } catch (android.database.SQLException e) {
             throw new SQLException(e);
