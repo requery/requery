@@ -21,7 +21,7 @@ import io.requery.TransactionListener;
 import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
 import io.requery.util.function.Supplier;
-import rx.subjects.BehaviorSubject;
+import rx.subjects.PublishSubject;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -34,12 +34,12 @@ import java.util.Set;
  */
 class TypeChangeListener implements Supplier<TransactionListener> {
 
-    private final BehaviorSubject<Type<?>> commitSubject;
-    private final BehaviorSubject<Type<?>> rollbackSubject;
+    private final PublishSubject<Type<?>> commitSubject;
+    private final PublishSubject<Type<?>> rollbackSubject;
 
     TypeChangeListener() {
-        commitSubject = BehaviorSubject.create();
-        rollbackSubject = BehaviorSubject.create();
+        commitSubject = PublishSubject.create();
+        rollbackSubject = PublishSubject.create();
     }
 
     @Override
@@ -75,11 +75,11 @@ class TypeChangeListener implements Supplier<TransactionListener> {
         };
     }
 
-    BehaviorSubject<Type<?>> commitSubject() {
+    PublishSubject<Type<?>> commitSubject() {
         return commitSubject;
     }
 
-    private void emitTypes(BehaviorSubject<Type<?>> subject, Set<EntityProxy<?>> entities) {
+    private void emitTypes(PublishSubject<Type<?>> subject, Set<EntityProxy<?>> entities) {
         Set<Type<?>> types = new LinkedHashSet<>();
         for (EntityProxy proxy : entities) {
             types.add(proxy.type());
