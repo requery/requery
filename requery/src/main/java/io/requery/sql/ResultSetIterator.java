@@ -44,6 +44,7 @@ public class ResultSetIterator<E> implements CloseableIterator<E>, IndexAccessib
     private final ResultSet results;
     private final ResultReader<E> reader;
     private final boolean closeStatement;
+    private final boolean closeConnection;
     private int position;
     private boolean closed;
     private boolean advanced;
@@ -51,11 +52,13 @@ public class ResultSetIterator<E> implements CloseableIterator<E>, IndexAccessib
     ResultSetIterator(ResultReader<E> reader,
                       ResultSet results,
                       Set<? extends Expression<?>> selection,
-                      boolean closeStatement) {
+                      boolean closeStatement,
+                      boolean closeConnection) {
         this.reader = Objects.requireNotNull(reader);
         this.results = Objects.requireNotNull(results);
         this.selection = selection;
         this.closeStatement = closeStatement;
+        this.closeConnection = closeConnection;
     }
 
     @Override
@@ -169,7 +172,9 @@ public class ResultSetIterator<E> implements CloseableIterator<E>, IndexAccessib
                     } catch (SQLException ignored) {
                     }
                     closeSuppressed(statement);
-                    closeSuppressed(connection);
+                    if (closeConnection) {
+                        closeSuppressed(connection);
+                    }
                 }
                 closed = true;
             }

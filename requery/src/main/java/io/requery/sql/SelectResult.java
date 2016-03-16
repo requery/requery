@@ -52,6 +52,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
     private String sql;
     private Statement statement;
     private Connection connection;
+    private boolean closeConnection;
 
     SelectResult(RuntimeConfiguration configuration,
                  QueryElement<?> query, ResultReader<E> reader) {
@@ -61,6 +62,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
         this.reader = reader;
         selection = query.selection();
         limit = query.getLimit();
+        closeConnection = true;
         keepStatement = false;
         resultSetType = ResultSet.TYPE_FORWARD_ONLY;
         resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
@@ -71,6 +73,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
             return statement;
         }
         Connection connection = configuration.connectionProvider().getConnection();
+        closeConnection = !(connection instanceof UncloseableConnection);
         Statement statement;
         if (!prepared) {
             statement = connection.createStatement(resultSetType, resultSetConcurrency);
@@ -120,7 +123,8 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
             }
             listener.afterExecuteQuery(statement);
 
-            return new ResultSetIterator<>(reader, results, selection, !keepStatement);
+            return new ResultSetIterator<>(
+                reader, results, selection, !keepStatement, closeConnection);
         } catch (SQLException e) {
             throw new PersistenceException(e);
         }

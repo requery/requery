@@ -47,7 +47,7 @@ class GeneratedKeyResult extends BaseResult<Tuple> {
 
     @Override
     public CloseableIterator<Tuple> iterator(int skip, int take) {
-        return new ResultSetIterator<>(reader, results, selection, true);
+        return new ResultSetIterator<>(reader, results, selection, true, true);
     }
 
     @Override
