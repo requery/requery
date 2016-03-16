@@ -33,11 +33,13 @@ public class AbstractEvent {
     @Key
     protected UUID id;
 
+    protected String name;
+
     protected LocalDate localDate;
 
     protected LocalDateTime localDateTime;
 
-    protected LocalTime localime;
+    protected LocalTime localTime;
 
     protected OffsetDateTime offsetDateTime;
 

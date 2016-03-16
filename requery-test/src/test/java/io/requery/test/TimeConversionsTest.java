@@ -83,10 +83,10 @@ public class TimeConversionsTest {
         UUID id = UUID.randomUUID();
         LocalTime localTimeNow = LocalTime.now();
         event.setId(id);
-        event.setLocalime(localTimeNow);
+        event.setLocalTime(localTimeNow);
         data.insert(event);
         event = data.findByKey(Event.class, id);
-        Assert.assertEquals(localTimeNow.withNano(0), event.getLocalime());
+        Assert.assertEquals(localTimeNow.withNano(0), event.getLocalTime());
     }
 
     @Test
