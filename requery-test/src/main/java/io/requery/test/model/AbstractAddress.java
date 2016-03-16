@@ -9,7 +9,7 @@ import io.requery.Key;
 import io.requery.OneToOne;
 
 @Entity
-public class AbstractAddress {
+public class AbstractAddress extends Coordinate {
 
     @Key @Generated
     protected int id;
@@ -32,11 +32,6 @@ public class AbstractAddress {
 
     @Convert(AddressTypeConverter.class)
     protected AddressType type;
-
-    @Column(value = "0.0", nullable = false)
-    protected float latitude;
-    @Column(value = "0.0", nullable = false)
-    protected float longitude;
 
     @Override
     public String toString() {

@@ -66,24 +66,25 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         this.processingEnvironment = processingEnvironment;
         attributes = new LinkedHashMap<>();
         listeners = new LinkedHashMap<>();
+    }
+
+    @Override
+    public Set<ElementValidator> process(ProcessingEnvironment processingEnvironment) {
         // create attributes for fields that have no annotations
-        Elements elements = processingEnvironment.getElementUtils();
-        if (element().getKind().isInterface() || isImmutable()) {
+        TypeElement typeElement = element();
+        if (typeElement.getKind().isInterface() || isImmutable()) {
             ElementFilter.methodsIn(typeElement.getEnclosedElements()).stream()
                 .filter(this::isMethodProcessable)
                 .forEach(this::computeAttribute);
         } else {
             // private/static/final members fields are skipped
-            ElementFilter.fieldsIn(elements.getAllMembers(typeElement)).stream()
+            ElementFilter.fieldsIn(typeElement.getEnclosedElements()).stream()
                 .filter(element -> !element.getModifiers().contains(Modifier.PRIVATE) &&
                     !element.getModifiers().contains(Modifier.STATIC) &&
                     (!element.getModifiers().contains(Modifier.FINAL) || isImmutable()))
                 .forEach(this::computeAttribute);
         }
-    }
 
-    @Override
-    public Set<ElementValidator> process(ProcessingEnvironment processingEnvironment) {
         Set<ProcessableElement<?>> elements = new LinkedHashSet<>();
         attributes().values().forEach(
             attribute -> elements.add((ProcessableElement<?>) attribute));

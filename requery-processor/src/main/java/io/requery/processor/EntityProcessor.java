@@ -17,6 +17,7 @@
 package io.requery.processor;
 
 import io.requery.Entity;
+import io.requery.Superclass;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -26,6 +27,9 @@ import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.io.IOException;
@@ -56,6 +60,7 @@ public final class EntityProcessor extends AbstractProcessor {
     static final String GENERATE_JPA = "generate.jpa";
 
     private Map<String, EntityGraph> graphs;
+    private Map<TypeElement, SuperType> superTypes;
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -66,6 +71,7 @@ public final class EntityProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         graphs = new LinkedHashMap<>();
+        superTypes = new LinkedHashMap<>();
     }
 
     @Override
@@ -76,24 +82,48 @@ public final class EntityProcessor extends AbstractProcessor {
 
         for (TypeElement annotation : annotations) {
             for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
-                Optional<TypeElement> typeElement = typeElementOf(element);
 
-                if (typeElement.isPresent() &&
-                    typeElement.map(this::isTypeProcessable).orElse(false)) {
-                    // create or get the entity for the annotation
-                    EntityType entity = entities.computeIfAbsent(typeElement.get(),
-                        key -> new EntityType(processingEnv, key));
-                    entity.addAnnotationElement(annotation, element);
-                    // create or get the graph for it
-                    String key = entity.modelName();
-                    graphs.computeIfAbsent(key, k -> new EntityGraph(types)).add(entity);
-                }
+                typeElementOf(element).ifPresent(typeElement -> {
+                    if (isEntityType(typeElement)) {
+                        // create or get the entity for the annotation
+                        EntityType entity = entities.computeIfAbsent(typeElement,
+                            key -> new EntityType(processingEnv, key));
+                        entity.addAnnotationElement(annotation, element);
+                        // create or get the graph for it
+                        String key = entity.modelName();
+                        graphs.computeIfAbsent(key, k -> new EntityGraph(types)).add(entity);
+
+                    } else if (isSuperclassType(typeElement)) {
+                        SuperType superType =
+                            superTypes.computeIfAbsent(typeElement, SuperType::new);
+                        superType.addAnnotationElement(annotation, element);
+                        superTypes.put(typeElement, superType);
+                    }
+                });
             }
         }
         // process
         boolean hasErrors = false;
         Set<ElementValidator> validators = new LinkedHashSet<>();
         for (EntityType entity : entities.values()) {
+            // add the annotated elements from the super type (if any)
+            TypeMirror typeMirror = entity.element().getSuperclass();
+            if (typeMirror.getKind() != TypeKind.NONE) {
+                Elements elements = processingEnv.getElementUtils();
+                TypeElement superTypeElement = elements.getTypeElement(typeMirror.toString());
+                if (superTypeElement != null) {
+                    SuperType superType = superTypes.get(superTypeElement);
+                    if (superType != null) {
+                        for (Map.Entry<TypeElement, Set<Element>> entry :
+                            superType.annotatedElements().entrySet()) {
+                            for (Element element : entry.getValue()) {
+                                entity.addAnnotationElement(entry.getKey(), element);
+                            }
+                        }
+                    }
+                }
+            }
+            // process the entity
             Set<ElementValidator> results = entity.process(processingEnv);
             validators.addAll(results);
         }
@@ -154,10 +184,16 @@ public final class EntityProcessor extends AbstractProcessor {
         return false;
     }
 
-    private boolean isTypeProcessable(TypeElement element) {
+    private boolean isEntityType(TypeElement element) {
         return Mirrors.findAnnotationMirror(element, Entity.class).isPresent() ||
             (getBooleanOption(GENERATE_JPA, true) &&
              Mirrors.findAnnotationMirror(element, javax.persistence.Entity.class).isPresent());
+    }
+
+    private boolean isSuperclassType(TypeElement element) {
+        return Mirrors.findAnnotationMirror(element, Superclass.class).isPresent() ||
+            (getBooleanOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
+                javax.persistence.MappedSuperclass.class).isPresent());
     }
 
     private Optional<TypeElement> typeElementOf(Element element) {
