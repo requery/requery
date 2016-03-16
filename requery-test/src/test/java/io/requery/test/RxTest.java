@@ -203,7 +203,7 @@ public class RxTest extends RandomData {
         Person person = randomPerson();
         data.insert(person).toBlocking().value();
         data.delete(person).toBlocking().value();
-        assertEquals(2, count.get());
+        assertEquals(3, count.get());
     }
 
     @Test

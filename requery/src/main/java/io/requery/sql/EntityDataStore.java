@@ -281,9 +281,12 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
     @Override
     public <E extends T> Void delete(E entity) {
-        EntityProxy<E> proxy = context.proxyOf(entity, true);
-        synchronized (proxy.syncObject()) {
-            context.write(proxy.type().classType()).delete(entity, proxy);
+        try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
+            EntityProxy<E> proxy = context.proxyOf(entity, true);
+            synchronized (proxy.syncObject()) {
+                context.write(proxy.type().classType()).delete(entity, proxy);
+                transaction.commit();
+            }
         }
         return null;
     }
