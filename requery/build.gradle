@@ -4,29 +4,19 @@ apply plugin: 'idea'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
-configurations {
-    provided // https://issues.gradle.org/browse/GRADLE-784
-}
-
 dependencies {
-    provided 'javax.transaction:javax.transaction-api:1.2'
-    provided 'javax.cache:cache-api:1.0.0'
-    provided 'io.reactivex:rxjava:1.1.1'
-}
-
-sourceSets {
-    main {
-        compileClasspath += configurations.provided
-    }
+    compileOnly 'javax.transaction:javax.transaction-api:1.2'
+    compileOnly 'javax.cache:cache-api:1.0.0'
+    compileOnly 'io.reactivex:rxjava:1.1.1'
 }
 
 javadoc {
-    classpath += configurations.provided
+    classpath += configurations.compileOnly
 }
 
 idea {
     module {
-        scopes.PROVIDED.plus += [configurations.provided]
+        scopes.PROVIDED.plus += [configurations.compileOnly]
     }
 }
 
