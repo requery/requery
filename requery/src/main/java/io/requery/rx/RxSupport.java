@@ -22,15 +22,12 @@ import io.requery.query.BaseResult;
 import io.requery.query.Result;
 import io.requery.query.Scalar;
 import io.requery.query.element.QueryElement;
-import io.requery.util.CloseableIterator;
 import io.requery.util.function.Supplier;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Single;
 import rx.functions.Action0;
 import rx.functions.Func1;
-
-import java.util.Iterator;
 
 /**
  * Support utility class for use with RxJava
@@ -69,29 +66,18 @@ public final class RxSupport {
         }).startWith(result);
     }
 
-    private static <E> Observable<E> toObservable(final CloseableIterator<E> iterator) {
-        return Observable.from(new Iterable<E>() {
-            // use single iterator
-            @Override
-            public Iterator<E> iterator() {
-                return iterator;
-            }
-        }).doOnTerminate(new Action0() {
-            @Override
-            public void call() {
-                iterator.close();
-            }
-        });
-    }
-
-    public static <E> Observable<E> toObservable(BaseResult<E> result, Integer limit) {
+    public static <E> Observable<E> toObservable(final BaseResult<E> result, Integer limit) {
         // if a limit on the query is set then just create a plain observable via iterator.
         // Otherwise create a Observable with a custom subscriber that can modify the limit
         if (limit == null) {
             return Observable.create(new OnSubscribeFromQuery<>(result));
         } else {
-            CloseableIterator<E> iterator = result.iterator();
-            return toObservable(iterator);
+            return Observable.from(result).doOnTerminate(new Action0() {
+                @Override
+                public void call() {
+                    result.close();
+                }
+            });
         }
     }
 
