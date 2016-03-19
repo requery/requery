@@ -220,16 +220,14 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             annotationOf(GeneratedValue.class).isPresent()) {
             isGenerated = true;
             isReadOnly = true;
-
             // check generation strategy
-            if (annotationOf(GeneratedValue.class).isPresent()) {
-                GeneratedValue generatedValue = annotationOf(GeneratedValue.class).get();
+            annotationOf(GeneratedValue.class).ifPresent(generatedValue -> {
                 if (generatedValue.strategy() != GenerationType.IDENTITY  &&
                     generatedValue.strategy() != GenerationType.AUTO) {
                     validator.warning("GeneratedValue.strategy() " +
                         generatedValue.strategy() + " not supported", generatedValue.getClass());
                 }
-            }
+            });
         }
         if (annotationOf(Lazy.class).isPresent()) {
             if (isKey) {
@@ -282,54 +280,49 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             referentialAction = foreignKey.action();
             referencedColumn = foreignKey.referencedColumn();
         }
-        if (annotationOf(Index.class).isPresent()) {
+        annotationOf(Index.class).ifPresent(index -> {
             isIndexed = true;
-            indexName = annotationOf(Index.class).get().name();
-        }
+            indexName = index.name();
+        });
 
         // JPA specific
-        if (annotationOf(Basic.class).isPresent()) {
-            Basic basic = annotationOf(Basic.class).get();
+        annotationOf(Basic.class).ifPresent(basic -> {
             isNullable = basic.optional();
             isLazy = basic.fetch() == FetchType.LAZY;
-        }
-        if (annotationOf(JoinColumn.class).isPresent()) {
-            JoinColumn joinColumn = annotationOf(JoinColumn.class).get();
+        });
+
+        annotationOf(JoinColumn.class).ifPresent(joinColumn -> {
             javax.persistence.ForeignKey joinForeignKey = joinColumn.foreignKey();
-            if (joinForeignKey != null) {
-                this.isForeignKey = true;
-                ConstraintMode constraintMode = joinForeignKey.value();
-                switch (constraintMode) {
-                    default:
-                    case PROVIDER_DEFAULT:
-                    case CONSTRAINT:
-                        referentialAction = ReferentialAction.CASCADE;
-                        break;
-                    case NO_CONSTRAINT:
-                        referentialAction = ReferentialAction.NO_ACTION;
-                        break;
-                }
+            this.isForeignKey = true;
+            ConstraintMode constraintMode = joinForeignKey.value();
+            switch (constraintMode) {
+                default:
+                case PROVIDER_DEFAULT:
+                case CONSTRAINT:
+                    referentialAction = ReferentialAction.CASCADE;
+                    break;
+                case NO_CONSTRAINT:
+                    referentialAction = ReferentialAction.NO_ACTION;
+                    break;
             }
             this.referencedTable = joinColumn.table();
             this.referencedColumn = joinColumn.referencedColumnName();
-        }
+        });
 
-        if (annotationOf(javax.persistence.Column.class).isPresent()) {
-            javax.persistence.Column persistenceColumn =
-                annotationOf(javax.persistence.Column.class).get();
+        annotationOf(javax.persistence.Column.class).ifPresent(persistenceColumn -> {
             name = "".equals(persistenceColumn.name()) ? null : persistenceColumn.name();
             isUnique = persistenceColumn.unique();
             isNullable = persistenceColumn.nullable();
             length = persistenceColumn.length();
             isReadOnly = !persistenceColumn.updatable();
-        }
+        });
 
-        if (annotationOf(Enumerated.class).isPresent()) {
-            EnumType enumType = annotationOf(Enumerated.class).get().value();
+        annotationOf(Enumerated.class).ifPresent(enumerated -> {
+            EnumType enumType = enumerated.value();
             if (enumType == EnumType.ORDINAL) {
                 converterType = EnumOrdinalConverter.class.getCanonicalName();
             }
-        }
+        });
     }
 
     private void processAssociativeAnnotations(ProcessingEnvironment processingEnvironment,
@@ -715,7 +708,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         return entity.typeName() + "." + name();
     }
 
-    static class ReflectiveAssociation {
+    private static class ReflectiveAssociation {
 
         private final Annotation annotation;
 
