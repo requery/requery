@@ -336,10 +336,10 @@ class EntityGenerator implements SourceGenerator {
 
     private void generateHashCode(TypeSpec.Builder typeBuilder) {
         if (!Mirrors.overridesMethod(types, typeElement, "hashCode")) {
-            MethodSpec.Builder equals = CodeGeneration.overridePublicMethod("hashCode")
+            MethodSpec.Builder hashCode = CodeGeneration.overridePublicMethod("hashCode")
                     .returns(TypeName.INT)
                     .addStatement("return $L.hashCode()", PROXY_NAME);
-            typeBuilder.addMethod(equals.build());
+            typeBuilder.addMethod(hashCode.build());
         }
     }
 
@@ -566,110 +566,113 @@ class EntityGenerator implements SourceGenerator {
             if (attribute.isTransient()) {
                 continue;
             }
-            TypeMirror typeMirror = attribute.typeMirror();
-            TypeName attributeTypeName;
-            if (attribute.isIterable()) {
-                typeMirror = tryFirstTypeArgument(attribute.typeMirror());
-                attributeTypeName = parameterizedCollectionName(attribute.typeMirror());
-            } else if (attribute.isOptional()) {
-                typeMirror = tryFirstTypeArgument(attribute.typeMirror());
-                attributeTypeName = TypeName.get(typeMirror);
-            } else {
-                attributeTypeName = nameResolver.generatedTypeNameOf(typeMirror).orElse(null);
+            FieldSpec field = generateAttribute(attribute, targetName);
+            typeBuilder.addField(field);
+        }
+        generateType(typeBuilder);
+    }
+
+    private FieldSpec generateAttribute(AttributeDescriptor attribute, TypeName targetName) {
+        TypeMirror typeMirror = attribute.typeMirror();
+        TypeName attributeTypeName;
+        if (attribute.isIterable()) {
+            typeMirror = tryFirstTypeArgument(attribute.typeMirror());
+            attributeTypeName = parameterizedCollectionName(attribute.typeMirror());
+        } else if (attribute.isOptional()) {
+            typeMirror = tryFirstTypeArgument(attribute.typeMirror());
+            attributeTypeName = TypeName.get(typeMirror);
+        } else {
+            attributeTypeName = nameResolver.generatedTypeNameOf(typeMirror).orElse(null);
+        }
+        if (attributeTypeName == null) {
+            attributeTypeName = boxedTypeName(typeMirror);
+        }
+
+        // if it's an association don't make it available as a query attribute
+        boolean isQueryable = attribute.cardinality() == null || attribute.isForeignKey();
+        Class<?> attributeType = isQueryable ? QueryAttribute.class : Attribute.class;
+
+        ParameterizedTypeName type =
+            parameterizedTypeName(attributeType, targetName, attributeTypeName);
+        String attributeName = Names.upperCaseUnderscore(
+            Names.removeMemberPrefixes(attribute.fieldName()));
+        fieldNames.add(attributeName);
+
+        FieldSpec.Builder fieldBuilder = FieldSpec.builder(type, attributeName,
+            Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+
+        CodeBlock.Builder builder = CodeBlock.builder();
+
+        if (attribute.isIterable()) {
+            typeMirror = tryFirstTypeArgument(typeMirror);
+            TypeName name = nameResolver.tryGeneratedTypeName(typeMirror);
+            TypeElement collectionElement = (TypeElement) types.asElement(attribute.typeMirror());
+
+            ParameterizedTypeName builderName = parameterizedTypeName(
+                attribute.builderClass(), targetName, attributeTypeName, name);
+
+            builder.add("\nnew $T($S, $T.class, $T.class)\n",
+                builderName, attribute.name(), ClassName.get(collectionElement), name);
+
+        } else if (attribute.isMap()) {
+            List<TypeMirror> parameters = Mirrors.listGenericTypeArguments(typeMirror);
+            // key type
+            TypeName keyName = TypeName.get(parameters.get(0));
+            // value type
+            typeMirror = parameters.get(1);
+            TypeName valueName = nameResolver.tryGeneratedTypeName(typeMirror);
+
+            TypeElement valueElement = (TypeElement) types.asElement(attribute.typeMirror());
+            ParameterizedTypeName builderName = parameterizedTypeName(
+                attribute.builderClass(), targetName, attributeTypeName, keyName, valueName);
+
+            builder.add("\nnew $T($S, $T.class, $T.class, $T.class)\n", builderName,
+                attribute.name(), ClassName.get(valueElement), keyName, valueName);
+        } else {
+            ParameterizedTypeName builderName = parameterizedTypeName(
+                attribute.builderClass(), targetName, attributeTypeName);
+            TypeName classType = attributeTypeName;
+            if (typeMirror.getKind().isPrimitive()) {
+                classType = TypeName.get(typeMirror);
             }
-            if (attributeTypeName == null) {
-                attributeTypeName = boxedTypeName(typeMirror);
-            }
+            builder.add("\nnew $T($S, $T.class)\n", builderName, attribute.name(), classType);
+        }
+        generateProperties(attribute, typeMirror, targetName, attributeTypeName, builder);
+        // attribute builder properties
+        if (attribute.isKey()) {
+            builder.add(".setKey(true)\n");
+        }
+        builder.add(".setGenerated($L)\n", attribute.isGenerated());
+        builder.add(".setLazy($L)\n", attribute.isLazy());
+        builder.add(".setNullable($L)\n", attribute.isNullable());
+        builder.add(".setUnique($L)\n", attribute.isUnique());
+        if (!Names.isEmpty(attribute.defaultValue())) {
+            builder.add(".setDefaultValue($S)\n", attribute.defaultValue());
+        }
+        if (!Names.isEmpty(attribute.collate())) {
+            builder.add(".setCollate($S)\n", attribute.collate());
+        }
+        if (attribute.columnLength() != null) {
+            builder.add(".setLength($L)\n", attribute.columnLength());
+        }
+        if (attribute.isVersion()) {
+            builder.add(".setVersion($L)\n", attribute.isVersion());
+        }
+        if (attribute.converterName() != null) {
+            builder.add(".setConverter(new $L())\n", attribute.converterName());
+        }
+        if (attribute.isForeignKey()) {
+            builder.add(".setForeignKey($L)\n", attribute.isForeignKey());
 
-            // if it's an association don't make it available as a query attribute
-            boolean isAssociation = attribute.cardinality() != null;
-            Class<?> attributeType = isAssociation ? Attribute.class : QueryAttribute.class;
+            graph.referencingEntity(attribute).ifPresent(referenced -> {
 
-            ParameterizedTypeName type =
-                parameterizedTypeName(attributeType, targetName, attributeTypeName);
-            String attributeName = Names.upperCaseUnderscore(
-                Names.removeMemberPrefixes(attribute.fieldName()));
-            fieldNames.add(attributeName);
+                builder.add(".setReferencedClass($T.class)\n",
+                    referenced.isImmutable() ?
+                        TypeName.get(referenced.element().asType()) :
+                        nameResolver.typeNameOf(referenced));
 
-            FieldSpec.Builder fieldBuilder = FieldSpec.builder(type, attributeName,
-                    Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
-
-            CodeBlock.Builder builder = CodeBlock.builder();
-
-            if (attribute.isIterable()) {
-                typeMirror = tryFirstTypeArgument(typeMirror);
-                TypeName name = nameResolver.tryGeneratedTypeName(typeMirror);
-                TypeElement collectionElement =
-                    (TypeElement) types.asElement(attribute.typeMirror());
-
-                ParameterizedTypeName builderName = parameterizedTypeName(
-                    attribute.builderClass(), targetName, attributeTypeName, name);
-
-                builder.add("\nnew $T($S, $T.class, $T.class)\n",
-                        builderName, attribute.name(), ClassName.get(collectionElement),
-                        name);
-
-            } else if (attribute.isMap()) {
-                List<TypeMirror> parameters = Mirrors.listGenericTypeArguments(typeMirror);
-                // key type
-                TypeName keyName = TypeName.get(parameters.get(0));
-                // value type
-                typeMirror = parameters.get(1);
-                TypeName valueName = nameResolver.tryGeneratedTypeName(typeMirror);
-
-                TypeElement valueElement = (TypeElement) types.asElement(attribute.typeMirror());
-                ParameterizedTypeName builderName = parameterizedTypeName(
-                    attribute.builderClass(), targetName, attributeTypeName, keyName, valueName);
-
-                builder.add("\nnew $T($S, $T.class, $T.class, $T.class)\n", builderName,
-                        attribute.name(),
-                        ClassName.get(valueElement), keyName, valueName);
-            } else {
-                ParameterizedTypeName builderName = parameterizedTypeName(
-                        attribute.builderClass(), targetName, attributeTypeName);
-                TypeName classType = attributeTypeName;
-                if (typeMirror.getKind().isPrimitive()) {
-                    classType = TypeName.get(typeMirror);
-                }
-                builder.add("\nnew $T($S, $T.class)\n",
-                        builderName, attribute.name(), classType);
-            }
-            generateProperties(attribute, typeMirror, targetName, attributeTypeName, builder);
-            // attribute builder properties
-            if (attribute.isKey()) {
-                builder.add(".setKey(true)\n");
-            }
-            builder.add(".setGenerated($L)\n", attribute.isGenerated());
-            builder.add(".setLazy($L)\n", attribute.isLazy());
-            builder.add(".setNullable($L)\n", attribute.isNullable());
-            builder.add(".setUnique($L)\n", attribute.isUnique());
-            if (!Names.isEmpty(attribute.defaultValue())) {
-                builder.add(".setDefaultValue($S)\n", attribute.defaultValue());
-            }
-            if (!Names.isEmpty(attribute.collate())) {
-                builder.add(".setCollate($S)\n", attribute.collate());
-            }
-            if (attribute.columnLength() != null) {
-                builder.add(".setLength($L)\n", attribute.columnLength());
-            }
-            if (attribute.isVersion()) {
-                builder.add(".setVersion($L)\n", attribute.isVersion());
-            }
-            if (attribute.converterName() != null) {
-                builder.add(".setConverter(new $L())\n", attribute.converterName());
-            }
-            if (attribute.isForeignKey()) {
-                builder.add(".setForeignKey($L)\n", attribute.isForeignKey());
-
-                graph.referencingEntity(attribute).ifPresent(referenced -> {
-
-                    builder.add(".setReferencedClass($T.class)\n",
-                        referenced.isImmutable() ?
-                            TypeName.get(referenced.element().asType()) :
-                            nameResolver.typeNameOf(referenced));
-
-                    graph.referencingAttribute(attribute, referenced).ifPresent(
-                        referencedAttribute -> {
+                graph.referencingAttribute(attribute, referenced).ifPresent(
+                    referencedAttribute -> {
 
                         String name = Names.upperCaseUnderscore(referencedAttribute.fieldName());
                         TypeSpec provider = CodeGeneration.createAnonymousSupplier(
@@ -679,77 +682,73 @@ class EntityGenerator implements SourceGenerator {
 
                         builder.add(".setReferencedAttribute($L)\n", provider);
                     });
-                });
-            }
-            if (attribute.isIndexed()) {
-                builder.add(".setIndexed($L)\n", attribute.isIndexed());
-                if (!Names.isEmpty(attribute.indexName())) {
-                    builder.add(".setIndexName($S)\n", attribute.indexName());
-                }
-            }
-            if (attribute.referentialAction() != null) {
-                builder.add(".setReferentialAction($T.$L)\n",
-                        ClassName.get(ReferentialAction.class), attribute.referentialAction());
-            }
-            if (!attribute.cascadeActions().isEmpty()) {
-                StringJoiner joiner = new StringJoiner(",");
-                attribute.cascadeActions().forEach(action -> joiner.add("$T.$L"));
-                int index = 0;
-                ClassName cascadeClass = ClassName.get(CascadeAction.class);
-                Object[] args = new Object[attribute.cascadeActions().size()*2];
-                for (CascadeAction action : attribute.cascadeActions()) {
-                    args[index++] = cascadeClass;
-                    args[index++] = action;
-                }
-                builder.add(".setCascadeAction(" + joiner +  ")\n", args);
-            }
-            if (attribute.cardinality() != null) {
-                builder.add(".setCardinality($T.$L)\n",
-                        ClassName.get(Cardinality.class), attribute.cardinality());
-
-                Optional<EntityDescriptor> referencingEntity = graph.referencingEntity(attribute);
-
-                if (referencingEntity.isPresent()) {
-                    EntityDescriptor referenced = referencingEntity.get();
-                    Set<AttributeDescriptor> mappings =
-                        graph.mappedAttributes(entity, attribute, referenced);
-
-                    if (attribute.cardinality() == Cardinality.MANY_TO_MANY) {
-                        TypeName junctionType = null;
-                        if (attribute.associativeEntity().isPresent()) {
-                            // generate a special type for the junction table (with attributes)
-                            junctionType = nameResolver.generatedJoinEntityName(
-                                attribute.associativeEntity().get(), entity, referenced);
-                            generateJunctionType(attribute);
-                        } else if ( mappings.size() == 1) {
-                            AttributeDescriptor mapped = mappings.iterator().next();
-                            if (mapped.associativeEntity().isPresent()) {
-                                junctionType = nameResolver.generatedJoinEntityName(
-                                    mapped.associativeEntity().get(), referenced, entity);
-                            }
-                        }
-                        if (junctionType != null) {
-                            builder.add(".setReferencedClass($T.class)\n", junctionType);
-                        }
-                    }
-                    if (mappings.size() == 1) {
-                        AttributeDescriptor mapped = mappings.iterator().next();
-                        String staticMemberName = Names.upperCaseUnderscore(mapped.fieldName());
-
-                        TypeSpec provider = CodeGeneration.createAnonymousSupplier(
-                            ClassName.get(Attribute.class),
-                            CodeBlock.builder().addStatement("return $T.$L",
-                                    nameResolver.typeNameOf(referenced), staticMemberName)
-                                .build());
-                        builder.add(".setMappedAttribute($L)\n", provider);
-                    }
-                }
-            }
-            builder.add(".build()");
-            fieldBuilder.initializer("$L", builder.build());
-            typeBuilder.addField(fieldBuilder.build());
+            });
         }
-        generateType(typeBuilder);
+        if (attribute.isIndexed()) {
+            builder.add(".setIndexed($L)\n", attribute.isIndexed());
+            if (!Names.isEmpty(attribute.indexName())) {
+                builder.add(".setIndexName($S)\n", attribute.indexName());
+            }
+        }
+        if (attribute.referentialAction() != null) {
+            builder.add(".setReferentialAction($T.$L)\n",
+                ClassName.get(ReferentialAction.class), attribute.referentialAction());
+        }
+        if (!attribute.cascadeActions().isEmpty()) {
+            StringJoiner joiner = new StringJoiner(",");
+            attribute.cascadeActions().forEach(action -> joiner.add("$T.$L"));
+            int index = 0;
+            ClassName cascadeClass = ClassName.get(CascadeAction.class);
+            Object[] args = new Object[attribute.cascadeActions().size()*2];
+            for (CascadeAction action : attribute.cascadeActions()) {
+                args[index++] = cascadeClass;
+                args[index++] = action;
+            }
+            builder.add(".setCascadeAction(" + joiner +  ")\n", args);
+        }
+        if (attribute.cardinality() != null) {
+            builder.add(".setCardinality($T.$L)\n",
+                ClassName.get(Cardinality.class), attribute.cardinality());
+
+            Optional<EntityDescriptor> referencingEntity = graph.referencingEntity(attribute);
+
+            if (referencingEntity.isPresent()) {
+                EntityDescriptor referenced = referencingEntity.get();
+                Set<AttributeDescriptor> mappings =
+                    graph.mappedAttributes(entity, attribute, referenced);
+
+                if (attribute.cardinality() == Cardinality.MANY_TO_MANY) {
+                    TypeName junctionType = null;
+                    if (attribute.associativeEntity().isPresent()) {
+                        // generate a special type for the junction table (with attributes)
+                        junctionType = nameResolver.generatedJoinEntityName(
+                            attribute.associativeEntity().get(), entity, referenced);
+                        generateJunctionType(attribute);
+                    } else if ( mappings.size() == 1) {
+                        AttributeDescriptor mapped = mappings.iterator().next();
+                        if (mapped.associativeEntity().isPresent()) {
+                            junctionType = nameResolver.generatedJoinEntityName(
+                                mapped.associativeEntity().get(), referenced, entity);
+                        }
+                    }
+                    if (junctionType != null) {
+                        builder.add(".setReferencedClass($T.class)\n", junctionType);
+                    }
+                }
+                if (mappings.size() == 1) {
+                    AttributeDescriptor mapped = mappings.iterator().next();
+                    String staticMemberName = Names.upperCaseUnderscore(mapped.fieldName());
+
+                    TypeSpec provider = CodeGeneration.createAnonymousSupplier(
+                        ClassName.get(Attribute.class),
+                        CodeBlock.builder().addStatement("return $T.$L",
+                            nameResolver.typeNameOf(referenced), staticMemberName).build());
+                    builder.add(".setMappedAttribute($L)\n", provider);
+                }
+            }
+        }
+        builder.add(".build()");
+        return fieldBuilder.initializer("$L", builder.build()).build();
     }
 
     private void generateProperties(AttributeDescriptor attribute,

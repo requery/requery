@@ -18,6 +18,7 @@ package io.requery.sql;
 
 import io.requery.PersistenceException;
 import io.requery.TransactionListener;
+import io.requery.meta.Attribute;
 import io.requery.query.BaseResult;
 import io.requery.query.Expression;
 import io.requery.query.element.QueryElement;
@@ -117,7 +118,20 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
                 Mapping mapping = configuration.mapping();
                 for (int i = 0; i < parameters.count(); i++) {
                     Expression expression = parameters.expressionAt(i);
-                    mapping.write(expression, preparedStatement, i + 1, parameters.valueAt(i));
+                    Object value = parameters.valueAt(i);
+                    if (expression instanceof Attribute) {
+                        // extract foreign key reference
+                        Attribute attribute = (Attribute) expression;
+                        if (attribute.isForeignKey() && attribute.isAssociation()) {
+                            // get the referenced value
+                            if (value != null &&
+                                ((Expression<?>)expression).classType()
+                                    .isAssignableFrom(value.getClass())) {
+                                value = Attributes.replaceForeignKeyReference(value, attribute);
+                            }
+                        }
+                    }
+                    mapping.write(expression, preparedStatement, i + 1, value);
                 }
                 results = preparedStatement.executeQuery();
             }

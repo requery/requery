@@ -50,4 +50,12 @@ final class Attributes {
         Attribute<E, ?>[] array = new Attribute[filtered.size()];
         return filtered.toArray(array);
     }
+
+    static Object replaceForeignKeyReference(Object value, Attribute attribute) {
+        if (value != null) {
+            Attribute<Object, Object> referenced = get(attribute.referencedAttribute());
+            value = referenced.declaringType().proxyProvider().apply(value).get(referenced);
+        }
+        return value;
+    }
 }

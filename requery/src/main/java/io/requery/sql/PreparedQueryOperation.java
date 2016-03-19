@@ -17,9 +17,7 @@
 package io.requery.sql;
 
 import io.requery.meta.Attribute;
-import io.requery.proxy.EntityProxy;
 import io.requery.query.Expression;
-import io.requery.util.function.Function;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -68,13 +66,7 @@ abstract class PreparedQueryOperation {
                 Attribute attribute = (Attribute) expression;
                 if (attribute.isAssociation()) {
                     // get the referenced value
-                    if (value != null) {
-                        Attribute<Object, Object> referenced =
-                            Attributes.get(attribute.referencedAttribute());
-                        Function<Object, EntityProxy<Object>> proxyProvider =
-                            referenced.declaringType().proxyProvider();
-                        value = proxyProvider.apply(value).get(referenced);
-                    }
+                    value = Attributes.replaceForeignKeyReference(value, attribute);
                 }
             }
             configuration.mapping().write(expression, statement, i + 1, value);
