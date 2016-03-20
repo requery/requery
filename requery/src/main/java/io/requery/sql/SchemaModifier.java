@@ -437,11 +437,6 @@ public class SchemaModifier {
 
             // type id
             Object identifier = fieldType.identifier();
-            /*
-            if (attribute.elementClass() != null) {
-                List<FieldType> types = mapping.mapCollectionAttribute(attribute);
-                identifier = fieldType.identifierForCollection(types);
-            }*/
             // type length
             Converter converter = attribute.converter();
             if (converter == null && mapping instanceof GenericMapping) {
