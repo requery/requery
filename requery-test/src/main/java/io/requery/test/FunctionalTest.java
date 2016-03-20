@@ -739,6 +739,23 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testQueryByForeignKey() {
+        Person person = randomPerson();
+        data.insert(person);
+        Phone phone1 = randomPhone();
+        Phone phone2 = randomPhone();
+        person.getPhoneNumbers().add(phone1);
+        person.getPhoneNumbers().add(phone2);
+        data.update(person);
+        assertTrue(person.getPhoneNumbersSet().contains(phone1));
+        try (Result<Phone> result = data.select(Phone.class).where(Phone.OWNER.eq(person)).get()) {
+            assertTrue(person.getPhoneNumbersList().containsAll(result.toList()));
+            assertEquals(2, person.getPhoneNumbersList().size());
+            assertEquals(2, result.toList().size());
+        }
+    }
+
+    @Test
     public void testQuerySelectDistinct() {
         for (int i = 0; i < 10; i++) {
             Person person = randomPerson();
