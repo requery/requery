@@ -854,6 +854,17 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testQuerySelectSubstr() {
+        // TODO fix for SQLServer
+        Person person = randomPerson();
+        person.setName("  Name");
+        data.insert(person);
+        Tuple result = data.select(Person.NAME.substr(3, 6).as("name")).get().first();
+        String name = result.get(0);
+        assertEquals(name, "Name");
+    }
+
+    @Test
     public void testQueryOrderBy() {
         for (int i = 0; i < 5; i++) {
             Person person = randomPerson();

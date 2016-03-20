@@ -24,6 +24,7 @@ import io.requery.query.AliasedExpression;
 import io.requery.query.Condition;
 import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
+import io.requery.query.NamedExpression;
 import io.requery.query.Operator;
 import io.requery.query.Order;
 import io.requery.query.OrderingExpression;
@@ -478,6 +479,8 @@ class QueryGenerator<E> {
                     }
                 } else if (arg instanceof Class) {
                     qb.append("*");
+                } else {
+                    appendConditionValue(function.expressionForArgument(index), arg);
                 }
                 index++;
             }
@@ -592,6 +595,9 @@ class QueryGenerator<E> {
         if (value instanceof QueryAttribute) {
             QueryAttribute a = (QueryAttribute) value;
             appendColumn(a);
+        } else if (value instanceof NamedExpression) {
+            NamedExpression namedExpression = (NamedExpression) value;
+            qb.append(namedExpression.name());
         } else {
             if (parameterize) {
                 if (parameters != null) {

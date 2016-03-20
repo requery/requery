@@ -16,8 +16,10 @@
 
 package io.requery.query.function;
 
+import io.requery.query.Expression;
 import io.requery.query.FieldExpression;
 import io.requery.query.ExpressionType;
+import io.requery.query.NamedExpression;
 import io.requery.util.Objects;
 
 public abstract class Function<V> extends FieldExpression<V> {
@@ -59,6 +61,19 @@ public abstract class Function<V> extends FieldExpression<V> {
 
     public abstract Object[] arguments();
 
+    public Expression<?> expressionForArgument(int i) {
+        Object value = arguments()[i];
+        if (value instanceof Expression) {
+            return (Expression<?>) value;
+        } else {
+            if (value == null) {
+                return NamedExpression.of("null", type);
+            } else {
+                return new ArgumentExpression<>(value.getClass());
+            }
+        }
+    }
+
     @Override
     public boolean equals(Object obj) {
         if(obj == this) {
@@ -77,5 +92,29 @@ public abstract class Function<V> extends FieldExpression<V> {
     @Override
     public int hashCode() {
         return Objects.hash(name(), classType(), aliasName(), arguments());
+    }
+
+    private static class ArgumentExpression<X> implements Expression<X> {
+
+        private final Class<X> type;
+
+        ArgumentExpression(Class<X> type) {
+            this.type = type;
+        }
+
+        @Override
+        public String name() {
+            return "";
+        }
+
+        @Override
+        public Class<X> classType() {
+            return type;
+        }
+
+        @Override
+        public ExpressionType type() {
+            return ExpressionType.FUNCTION;
+        }
     }
 }

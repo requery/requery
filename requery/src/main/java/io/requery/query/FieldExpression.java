@@ -22,6 +22,7 @@ import io.requery.query.function.Lower;
 import io.requery.query.function.Max;
 import io.requery.query.function.Min;
 import io.requery.query.function.Round;
+import io.requery.query.function.Substr;
 import io.requery.query.function.Sum;
 import io.requery.query.function.Trim;
 import io.requery.query.function.Upper;
@@ -117,6 +118,11 @@ public abstract class FieldExpression<V> implements
     @Override
     public Trim<V> trim() {
         return trim(null);
+    }
+
+    @Override
+    public Substr<V> substr(int offset, int length) {
+        return Substr.substr(this, offset, length);
     }
 
     @Override
