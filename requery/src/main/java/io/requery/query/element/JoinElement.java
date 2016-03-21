@@ -86,6 +86,21 @@ public class JoinElement<E> extends BaseLogicalElement<JoinElement<E>, JoinAndOr
     }
 
     @Override
+    public <J> JoinOn<E> join(Return<J> query) {
+        return this.query.join(query);
+    }
+
+    @Override
+    public <J> JoinOn<E> leftJoin(Return<J> query) {
+        return this.query.leftJoin(query);
+    }
+
+    @Override
+    public <J> JoinOn<E> rightJoin(Return<J> query) {
+        return this.query.rightJoin(query);
+    }
+
+    @Override
     public <V> Limit<E> orderBy(Expression<V> expression) {
         return query.orderBy(expression);
     }

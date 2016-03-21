@@ -521,10 +521,19 @@ class QueryGenerator<E> {
                 qb.keyword(RIGHT, JOIN);
                 break;
         }
-        if (autoAlias) {
-            aliases.append(qb, join.tableName());
-        } else {
-            qb.tableName(join.tableName());
+        if (join.tableName() != null) {
+            if (autoAlias) {
+                aliases.append(qb, join.tableName());
+            } else {
+                qb.tableName(join.tableName());
+            }
+        } else if (join.subQuery() != null) {
+            qb.openParenthesis();
+            mergeQuery((QueryWrapper<?>) join.subQuery());
+            qb.closeParenthesis().space();
+            if (join.subQuery().aliasName() != null) {
+                qb.append(join.subQuery().aliasName()).space();
+            }
         }
         qb.keyword(ON);
         for (JoinElement<E> where : join.conditions()) {
@@ -730,16 +739,13 @@ class QueryGenerator<E> {
         void append(QueryBuilder qb, String table) {
             String key = table.replaceAll("\"", "");
             String alias = alias(key);
-            qb.tableName(table)
-                    //.keyword(AS)
-                    .value(alias);
+            qb.tableName(table).value(alias);
         }
 
         void prefix(QueryBuilder qb, Attribute attribute) {
             String key = attribute.declaringType().name();
             String alias = alias(key);
-            qb.append(alias + ".")
-                    .attribute(attribute);
+            qb.append(alias + ".").attribute(attribute);
         }
 
         void prefix(QueryBuilder qb, Expression expression) {

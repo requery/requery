@@ -303,13 +303,23 @@ public class QueryElement<E> implements Selectable<E>,
         return this;
     }
 
-    private <J> JoinOn<E> createJoin(Class<J> type, JoinType joinType) {
-        String table = model.typeOf(type).name();
-        JoinOnElement<E> join = new JoinOnElement<>(this, table, joinType);
+    private void addJoinElement(JoinOnElement<E> element) {
         if (joins == null) {
             joins = new LinkedHashSet<>();
         }
-        joins.add(join);
+        joins.add(element);
+    }
+
+    private <J> JoinOn<E> createJoin(Class<J> type, JoinType joinType) {
+        String table = model.typeOf(type).name();
+        JoinOnElement<E> join = new JoinOnElement<>(this, table, joinType);
+        addJoinElement(join);
+        return join;
+    }
+
+    private <J> JoinOn<E> createJoin(Return<J> query, JoinType joinType) {
+        JoinOnElement<E> join = new JoinOnElement<>(this, query, joinType);
+        addJoinElement(join);
         return join;
     }
 
@@ -326,6 +336,21 @@ public class QueryElement<E> implements Selectable<E>,
     @Override
     public <J> JoinOn<E> rightJoin(Class<J> type) {
         return createJoin(type, JoinType.RIGHT);
+    }
+
+    @Override
+    public <J> JoinOn<E> join(Return<J> query) {
+        return createJoin(query, JoinType.INNER);
+    }
+
+    @Override
+    public <J> JoinOn<E> leftJoin(Return<J> query) {
+        return createJoin(query, JoinType.LEFT);
+    }
+
+    @Override
+    public <J> JoinOn<E> rightJoin(Return<J> query) {
+        return createJoin(query, JoinType.RIGHT);
     }
 
     @Override

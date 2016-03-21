@@ -49,4 +49,31 @@ public interface Join<E> {
      * @return joining condition
      */
     <J> JoinOn<E> rightJoin(Class<J> type);
+
+    /**
+     * inner join on the type
+     *
+     * @param query query
+     * @param <J>   corresponding join type
+     * @return joining condition
+     */
+    <J> JoinOn<E> join(Return<J> query);
+
+    /**
+     * left inner join on the type
+     *
+     * @param query query
+     * @param <J>   corresponding join type
+     * @return joining condition
+     */
+    <J> JoinOn<E> leftJoin(Return<J> query);
+
+    /**
+     * right inner join on the type
+     *
+     * @param query query
+     * @param <J>   corresponding join type
+     * @return joining condition
+     */
+    <J> JoinOn<E> rightJoin(Return<J> query);
 }

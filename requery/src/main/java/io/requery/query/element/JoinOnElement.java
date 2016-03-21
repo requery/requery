@@ -19,6 +19,7 @@ package io.requery.query.element;
 import io.requery.query.Condition;
 import io.requery.query.JoinAndOr;
 import io.requery.query.JoinOn;
+import io.requery.query.Return;
 import io.requery.util.Objects;
 
 import java.util.LinkedHashSet;
@@ -28,18 +29,32 @@ public class JoinOnElement<E> implements JoinOn<E> {
 
     private final QueryElement<E> query;
     private final String table;
+    private final Return<?> subQuery;
     private final JoinType joinType;
     private final Set<JoinElement<E>> conditions;
 
     JoinOnElement(QueryElement<E> query, String table, JoinType joinType) {
         this.query = query;
         this.table = table;
+        this.subQuery = null;
         this.joinType = joinType;
+        this.conditions = new LinkedHashSet<>();
+    }
+
+    JoinOnElement(QueryElement<E> query, Return subQuery, JoinType joinType) {
+        this.query = query;
+        this.subQuery = subQuery;
+        this.joinType = joinType;
+        this.table = null;
         this.conditions = new LinkedHashSet<>();
     }
 
     public String tableName() {
         return table;
+    }
+
+    public Return<?> subQuery() {
+        return subQuery;
     }
 
     public JoinType joinType() {
