@@ -166,10 +166,16 @@ public interface Attribute<T, V> {
     Cardinality cardinality();
 
     /**
-     * @return For a {@link #isForeignKey()} attribute the action to take when referenced entity is
-     * deleted, otherwise null.
+     * @return For a {@link #isForeignKey()} attribute the action to take when the referenced entity
+     * is deleted, otherwise null.
      */
-    ReferentialAction referentialAction();
+    ReferentialAction deleteAction();
+
+    /**
+     * @return For a {@link #isForeignKey()} attribute the action to take when the referenced entity
+     * is updated, otherwise null.
+     */
+    ReferentialAction updateAction();
 
     /**
      * @return For an associative attribute the action to take when the association is modified.

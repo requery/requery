@@ -39,7 +39,13 @@ public @interface ForeignKey {
      * @return action when the object is deleted, defaults to {@link ReferentialAction#CASCADE}
      * @see ReferentialAction
      */
-    ReferentialAction action() default ReferentialAction.CASCADE;
+    ReferentialAction delete() default ReferentialAction.CASCADE;
+
+    /**
+     * @return action when the object is updated, defaults to {@link ReferentialAction#CASCADE}
+     * @see ReferentialAction
+     */
+    ReferentialAction update() default ReferentialAction.CASCADE;
 
     /**
      * @return column name in the foreign table this key references.

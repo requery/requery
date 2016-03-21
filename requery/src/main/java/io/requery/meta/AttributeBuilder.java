@@ -129,8 +129,13 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
         return this;
     }
 
-    public AttributeBuilder<T, V> setReferentialAction(ReferentialAction action) {
-        this.referentialAction = action;
+    public AttributeBuilder<T, V> setDeleteAction(ReferentialAction action) {
+        this.deleteAction = action;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setUpdateAction(ReferentialAction action) {
+        this.updateAction = action;
         return this;
     }
 

@@ -392,38 +392,46 @@ public class SchemaModifier {
         }
         qb.keyword(REFERENCES);
         qb.tableName(referenced.name());
+        Attribute referencedAttribute;
         if (attribute.referencedAttribute() != null) {
-            Attribute a = attribute.referencedAttribute().get();
+            referencedAttribute = attribute.referencedAttribute().get();
             qb.openParenthesis()
-                .attribute(a)
+                .attribute(referencedAttribute)
                 .closeParenthesis()
                 .space();
         } else {
-            Attribute a = referenced.keyAttributes().iterator().next();
+            referencedAttribute = referenced.keyAttributes().iterator().next();
             qb.openParenthesis()
-                .attribute(a)
+                .attribute(referencedAttribute)
                 .closeParenthesis();
         }
-        if (attribute.referentialAction() != null) {
-            ReferentialAction action = attribute.referentialAction();
+        if (attribute.deleteAction() != null) {
             qb.keyword(ON, DELETE);
-            switch (action) {
-                case CASCADE:
-                    qb.keyword(CASCADE);
-                    break;
-                case NO_ACTION:
-                    qb.keyword(NO, ACTION);
-                    break;
-                case RESTRICT:
-                    qb.keyword(RESTRICT);
-                    break;
-                case SET_DEFAULT:
-                    qb.keyword(SET, DEFAULT);
-                    break;
-                case SET_NULL:
-                    qb.keyword(SET, NULL);
-                    break;
-            }
+            appendReferentialAction(qb, attribute.deleteAction());
+        }
+        if (!referencedAttribute.isGenerated() && attribute.updateAction() != null) {
+            qb.keyword(ON, UPDATE);
+            appendReferentialAction(qb, attribute.updateAction());
+        }
+    }
+
+    private void appendReferentialAction(QueryBuilder qb, ReferentialAction action) {
+        switch (action) {
+            case CASCADE:
+                qb.keyword(CASCADE);
+                break;
+            case NO_ACTION:
+                qb.keyword(NO, ACTION);
+                break;
+            case RESTRICT:
+                qb.keyword(RESTRICT);
+                break;
+            case SET_DEFAULT:
+                qb.keyword(SET, DEFAULT);
+                break;
+            case SET_NULL:
+                qb.keyword(SET, NULL);
+                break;
         }
     }
 

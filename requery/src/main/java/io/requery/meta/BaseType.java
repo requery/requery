@@ -28,24 +28,25 @@ import java.util.Set;
 
 abstract class BaseType<T> implements Type<T> {
 
-    protected Class<T> type;
-    protected Class<? super T> baseType;
-    protected String name;
-    protected boolean cacheable;
-    protected boolean stateless;
-    protected boolean readOnly;
-    protected boolean immutable;
-    protected Set<Attribute<T, ?>> attributes;
-    protected Supplier<T> factory;
-    protected Function<T, EntityProxy<T>> proxyProvider;
-    protected Set<Class<?>> referencedTypes;
-    protected Set<Attribute<T, ?>> keyAttributes;
-    protected Attribute<T, ?> keyAttribute;
-    protected String[] tableCreateAttributes;
-    protected Supplier<?> builderFactory;
-    protected Function<?, T> buildFunction;
+    Class<T> type;
+    Class<? super T> baseType;
+    String name;
+    boolean cacheable;
+    boolean stateless;
+    boolean readOnly;
+    boolean immutable;
+    Set<Attribute<T, ?>> attributes;
+    Supplier<T> factory;
+    Function<T, EntityProxy<T>> proxyProvider;
+    Set<Class<?>> referencedTypes;
+    String[] tableCreateAttributes;
+    Supplier<?> builderFactory;
+    Function<?, T> buildFunction;
 
-    public BaseType() {
+    private Set<Attribute<T, ?>> keyAttributes;
+    private Attribute<T, ?> keyAttribute;
+
+    BaseType() {
         cacheable = true;
         referencedTypes = new LinkedHashSet<>();
     }
@@ -171,6 +172,8 @@ abstract class BaseType<T> implements Type<T> {
         return "classType: " + type.toString() +
             " name: " + name +
             " readonly: " + readOnly +
+            " immutable: " + immutable +
+            " stateless: " + stateless +
             " cacheable: " + cacheable;
     }
 }

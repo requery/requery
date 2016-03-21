@@ -29,12 +29,17 @@ import java.util.Objects;
 class AssociativeReference {
 
     private final String name;
-    private final ReferentialAction action;
+    private final ReferentialAction deleteAction;
+    private final ReferentialAction updateAction;
     private final TypeElement referenceType;
 
-    AssociativeReference(String name, ReferentialAction action, TypeElement referenceType) {
+    AssociativeReference(String name,
+                         TypeElement referenceType,
+                         ReferentialAction deleteAction,
+                         ReferentialAction updateAction) {
         this.name = name;
-        this.action = action;
+        this.deleteAction = deleteAction;
+        this.updateAction = updateAction;
         this.referenceType = referenceType;
     }
 
@@ -42,8 +47,12 @@ class AssociativeReference {
         return name;
     }
 
-    ReferentialAction referentialAction() {
-        return action;
+    ReferentialAction deleteAction() {
+        return deleteAction;
+    }
+
+    ReferentialAction updateAction() {
+        return updateAction;
     }
 
     TypeElement referencedType() {
@@ -55,7 +64,8 @@ class AssociativeReference {
         if (obj instanceof AssociativeReference) {
             AssociativeReference other = (AssociativeReference) obj;
             return Objects.equals(name, other.name) &&
-                Objects.equals(action, other.action) &&
+                Objects.equals(deleteAction, other.deleteAction) &&
+                Objects.equals(updateAction, other.updateAction) &&
                 Objects.equals(referenceType, other.referenceType);
         }
         return false;
@@ -63,6 +73,6 @@ class AssociativeReference {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, action, referenceType);
+        return Objects.hash(name, deleteAction, updateAction, referenceType);
     }
 }

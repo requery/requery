@@ -30,38 +30,38 @@ import io.requery.util.function.Supplier;
 import java.util.Collections;
 import java.util.Set;
 
-public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
-        QueryAttribute<T, V> {
+abstract class BaseAttribute<T, V> extends FieldExpression<V> implements QueryAttribute<T, V> {
 
-    protected String name;
-    protected Initializer<T, V> initializer;
-    protected Class<V> classType;
-    protected PrimitiveKind primitiveKind;
-    protected Property<T, V> property;
-    protected Property<?, V> builderProperty;
-    protected Property<T, PropertyState> propertyState;
-    protected boolean isLazy;
-    protected boolean isKey;
-    protected boolean isUnique;
-    protected boolean isGenerated;
-    protected boolean isNullable;
-    protected boolean isVersion;
-    protected boolean isForeignKey;
-    protected boolean isIndex;
-    protected Integer length;
-    protected String defaultValue;
-    protected String indexName;
-    protected String collate;
-    protected Cardinality cardinality;
-    protected ReferentialAction referentialAction;
-    protected Set<CascadeAction> cascadeActions;
-    protected Converter<V, ?> converter;
-    protected Type<T> declaringType;
-    protected Class<?> mapKeyClass;
-    protected Class<?> elementClass;
-    protected Class<?> referencedClass;
-    protected Supplier<Attribute> mappedAttribute;
-    protected Supplier<Attribute> referencedAttribute;
+    String name;
+    Initializer<T, V> initializer;
+    Class<V> classType;
+    PrimitiveKind primitiveKind;
+    Property<T, V> property;
+    Property<?, V> builderProperty;
+    Property<T, PropertyState> propertyState;
+    boolean isLazy;
+    boolean isKey;
+    boolean isUnique;
+    boolean isGenerated;
+    boolean isNullable;
+    boolean isVersion;
+    boolean isForeignKey;
+    boolean isIndex;
+    Integer length;
+    String defaultValue;
+    String indexName;
+    String collate;
+    Cardinality cardinality;
+    ReferentialAction deleteAction;
+    ReferentialAction updateAction;
+    Set<CascadeAction> cascadeActions;
+    Converter<V, ?> converter;
+    Type<T> declaringType;
+    Class<?> mapKeyClass;
+    Class<?> elementClass;
+    Class<?> referencedClass;
+    Supplier<Attribute> mappedAttribute;
+    Supplier<Attribute> referencedAttribute;
 
     @Override
     public Initializer<T, V> initializer() {
@@ -194,8 +194,13 @@ public abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     }
 
     @Override
-    public ReferentialAction referentialAction() {
-        return referentialAction;
+    public ReferentialAction deleteAction() {
+        return deleteAction;
+    }
+
+    @Override
+    public ReferentialAction updateAction() {
+        return updateAction;
     }
 
     @Override

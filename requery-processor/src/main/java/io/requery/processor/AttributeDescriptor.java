@@ -171,9 +171,14 @@ interface AttributeDescriptor {
     Optional<AssociativeEntityDescriptor> associativeEntity();
 
     /**
-     * @return for a foreign key action the {@link ReferentialAction} to take for the key
+     * @return for a foreign key action the delete {@link ReferentialAction} to take for the key
      */
-    ReferentialAction referentialAction();
+    ReferentialAction deleteAction();
+
+    /**
+     * @return for a foreign key action the update {@link ReferentialAction} to take for the key
+     */
+    ReferentialAction updateAction();
 
     /**
      * @return for associative attributes the set of {@link CascadeAction} actions to take during

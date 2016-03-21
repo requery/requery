@@ -39,7 +39,8 @@ final class ImmutableAttribute<T, V> extends BaseAttribute<T, V> {
         collate = builder.collate();
         indexName = builder.indexName();
         cardinality = builder.cardinality();
-        referentialAction = builder.referentialAction();
+        deleteAction = builder.deleteAction();
+        updateAction = builder.updateAction();
         cascadeActions = builder.cascadeActions();
         referencedAttribute = builder.referencedAttribute();
         referencedClass = builder.referencedClass();

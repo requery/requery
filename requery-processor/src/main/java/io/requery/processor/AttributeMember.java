@@ -106,7 +106,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private Cardinality cardinality;
     private String converterType;
     private CascadeAction[] cascadeActions;
-    private ReferentialAction referentialAction;
+    private ReferentialAction deleteAction;
+    private ReferentialAction updateAction;
     private String referencedColumn;
     private String referencedType;
     private String referencedTable;
@@ -277,7 +278,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         }
         if (foreignKey != null) {
             this.isForeignKey = true;
-            referentialAction = foreignKey.action();
+            deleteAction = foreignKey.delete();
+            updateAction = foreignKey.update();
             referencedColumn = foreignKey.referencedColumn();
         }
         annotationOf(Index.class).ifPresent(index -> {
@@ -299,10 +301,12 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                 default:
                 case PROVIDER_DEFAULT:
                 case CONSTRAINT:
-                    referentialAction = ReferentialAction.CASCADE;
+                    deleteAction = ReferentialAction.CASCADE;
+                    updateAction = ReferentialAction.CASCADE;
                     break;
                 case NO_CONSTRAINT:
-                    referentialAction = ReferentialAction.NO_ACTION;
+                    deleteAction = ReferentialAction.NO_ACTION;
+                    updateAction = ReferentialAction.NO_ACTION;
                     break;
             }
             this.referencedTable = joinColumn.table();
@@ -371,8 +375,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             isForeignKey = true;
             ReflectiveAssociation reflect = new ReflectiveAssociation(manyToOne.get());
             cascadeActions = reflect.cascade();
-            if (referentialAction == null) {
-                referentialAction = ReferentialAction.CASCADE;
+            if (deleteAction == null) {
+                deleteAction = ReferentialAction.CASCADE;
+            }
+            if (updateAction == null) {
+                updateAction = ReferentialAction.CASCADE;
             }
         }
         if (manyToMany.isPresent()) {
@@ -397,7 +404,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             checkIterable(validator);
         }
         if (isForeignKey()) {
-            if (referentialAction == ReferentialAction.SET_NULL && !isNullable()) {
+            if (deleteAction == ReferentialAction.SET_NULL && !isNullable()) {
                 validator.error("Cannot SET_NULL on optional attribute", ForeignKey.class);
             }
             // user mirror so generated type can be referenced
@@ -660,8 +667,13 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     }
 
     @Override
-    public ReferentialAction referentialAction() {
-        return referentialAction;
+    public ReferentialAction deleteAction() {
+        return deleteAction;
+    }
+
+    @Override
+    public ReferentialAction updateAction() {
+        return updateAction;
     }
 
     @Override

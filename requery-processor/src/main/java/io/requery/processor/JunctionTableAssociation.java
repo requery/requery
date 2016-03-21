@@ -41,11 +41,13 @@ class JunctionTableAssociation implements AssociativeEntityDescriptor {
         for (Column column : table.columns()) {
             ForeignKey key = column.foreignKey()[0];
             String columnName = column.name();
-            ReferentialAction action = ReferentialAction.CASCADE;
+            ReferentialAction deleteAction = ReferentialAction.CASCADE;
+            ReferentialAction updateAction = ReferentialAction.CASCADE;
             TypeElement referenceType = null;
 
             if (key != null) {
-                action = key.action();
+                deleteAction = key.delete();
+                updateAction = key.update();
                 Optional<? extends AnnotationValue> value =
                     Mirrors.findAnnotationMirror(member.element(), JunctionTable.class)
                         .flatMap(m -> Mirrors.findAnnotationValue(m, "columns"));
@@ -68,7 +70,8 @@ class JunctionTableAssociation implements AssociativeEntityDescriptor {
                     }
                 }
             }
-            columns.add(new AssociativeReference(columnName, action, referenceType));
+            columns.add(
+                new AssociativeReference(columnName, referenceType, deleteAction, updateAction));
         }
     }
 

@@ -61,10 +61,9 @@ class JoinEntityGenerator implements SourceGenerator {
 
     @Override
     public void generate() throws IOException {
-        if (!attribute.associativeEntity().isPresent()) {
-            throw new IllegalStateException();
-        }
-        AssociativeEntityDescriptor associativeDescriptor = attribute.associativeEntity().get();
+        AssociativeEntityDescriptor associativeDescriptor = attribute.associativeEntity()
+            .orElseThrow(IllegalStateException::new);
+
         String name = associativeDescriptor.name();
         if (Names.isEmpty(name)) {
             // create junction table name with TableA_TableB
@@ -89,8 +88,9 @@ class JoinEntityGenerator implements SourceGenerator {
             for (EntityDescriptor type : types) {
                 AssociativeReference reference = new AssociativeReference(
                     type.tableName() + "Id",
+                    type.element(),
                     ReferentialAction.CASCADE,
-                    type.element());
+                    ReferentialAction.CASCADE );
                 references.add(reference);
             }
         }
@@ -98,9 +98,10 @@ class JoinEntityGenerator implements SourceGenerator {
         int typeIndex = 0;
         for (AssociativeReference reference : references) {
             AnnotationSpec.Builder key = AnnotationSpec.builder(ForeignKey.class)
-                .addMember("action", "$T.$L",
-                    ClassName.get(ReferentialAction.class),
-                    reference.referentialAction().toString());
+                .addMember("delete", "$T.$L",
+                    ClassName.get(ReferentialAction.class), reference.deleteAction().toString())
+                .addMember("update", "$T.$L",
+                    ClassName.get(ReferentialAction.class), reference.updateAction().toString());
 
             TypeElement referenceElement = reference.referencedType();
             if (referenceElement == null && typeIndex < types.length) {

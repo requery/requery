@@ -690,9 +690,13 @@ class EntityGenerator implements SourceGenerator {
                 builder.add(".setIndexName($S)\n", attribute.indexName());
             }
         }
-        if (attribute.referentialAction() != null) {
-            builder.add(".setReferentialAction($T.$L)\n",
-                ClassName.get(ReferentialAction.class), attribute.referentialAction());
+        if (attribute.deleteAction() != null) {
+            builder.add(".setDeleteAction($T.$L)\n",
+                ClassName.get(ReferentialAction.class), attribute.deleteAction());
+        }
+        if (attribute.updateAction() != null) {
+            builder.add(".setUpdateAction($T.$L)\n",
+                ClassName.get(ReferentialAction.class), attribute.updateAction());
         }
         if (!attribute.cascadeActions().isEmpty()) {
             StringJoiner joiner = new StringJoiner(",");
