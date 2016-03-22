@@ -1,5 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'idea'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -13,10 +12,3 @@ dependencies {
 javadoc {
     classpath += configurations.compileOnly
 }
-
-idea {
-    module {
-        scopes.PROVIDED.plus += [configurations.compileOnly]
-    }
-}
-
