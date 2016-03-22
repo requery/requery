@@ -44,12 +44,6 @@ dependencies {
     androidTestCompile 'com.android.support.test:rules:0.4'
 }
 
-Properties properties = new Properties()
-File localProperties = project.rootProject.file('local.properties')
-if (localProperties.exists()) {
-    properties.load(localProperties.newDataInputStream())
-}
-
 android.libraryVariants
 publishing {
     publications {
@@ -71,8 +65,8 @@ publishing {
     repositories {
         maven {
             credentials {
-                username = properties.getProperty('bintray.user')
-                password = properties.getProperty('bintray.apikey')
+                username = bintray.user
+                password = bintray.key
             }
             url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
         }

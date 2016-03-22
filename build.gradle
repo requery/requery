@@ -72,8 +72,8 @@ configure([project(':requery'), project(':requery-processor')]) {
         repositories {
             maven {
                 credentials {
-                    username = properties.getProperty('bintray.user')
-                    password = properties.getProperty('bintray.apikey')
+                    username = bintray.user
+                    password = bintray.key
                 }
                 url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
             }
