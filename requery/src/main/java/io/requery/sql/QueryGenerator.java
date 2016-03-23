@@ -381,8 +381,7 @@ class QueryGenerator<E> {
             qb.openParenthesis();
             mergeQuery(wrapper);
             qb.closeParenthesis().space();
-            //qb.append(AS).space();
-            qb.append(alias);
+            qb.append(alias).space();
         } else {
             qb.append(expression.name());
         }
