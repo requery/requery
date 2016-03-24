@@ -65,10 +65,10 @@ public @interface Entity {
     boolean stateless() default false;
 
     /**
-     * @return true if the entity object is immutable. If true the entity can be constructed via
-     * queries only and cannot be modified/refreshed or contain changeable relations. Defaults to
-     * false however if this annotation is placed in conjunction with immutable type annotations
-     * e.g. @AutoValue from Google on an object then defaults to true.
+     * @return true if the entity object is immutable. If true the entity cannot have changeable
+     * relations and will not have any state, this implies {@link #stateless()} is true.
+     * Defaults to false however if this annotation is placed in conjunction with immutable type
+     * annotations e.g. @AutoValue from Google on an object then defaults to true.
      */
     boolean immutable() default false;
 
