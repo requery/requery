@@ -39,7 +39,6 @@ public class CollectionInitializer<E, V> implements Initializer<E, V>,
     @Override
     public <U> V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute,
                             Supplier<Result<U>> query) {
-
         Class<?> type = attribute.classType();
         CollectionChanges<E, U> changes = new CollectionChanges<>(proxy, attribute);
         Result<U> result = query == null ? null : query.get();
@@ -59,8 +58,6 @@ public class CollectionInitializer<E, V> implements Initializer<E, V>,
         } else {
             throw new IllegalStateException("Unsupported collection type " + type);
         }
-        V value = attribute.classType().cast(collection);
-        proxy.set(attribute, value, PropertyState.LOADED);
-        return value;
+        return attribute.classType().cast(collection);
     }
 }

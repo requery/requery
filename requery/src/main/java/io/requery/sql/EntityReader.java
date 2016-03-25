@@ -264,7 +264,8 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 if (initializer instanceof QueryInitializer) {
                     @SuppressWarnings("unchecked")
                     QueryInitializer<E, V> queryInitializer = (QueryInitializer<E, V>) initializer;
-                    queryInitializer.initialize(proxy, attribute, query);
+                    V result = queryInitializer.initialize(proxy, attribute, query);
+                    proxy.set(attribute, result, PropertyState.LOADED);
                 }
                 break;
             default:

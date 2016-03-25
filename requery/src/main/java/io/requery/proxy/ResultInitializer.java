@@ -40,8 +40,6 @@ public class ResultInitializer<E, V> implements Initializer<E, V>, QueryInitiali
         } else {
             throw new IllegalStateException("Unsupported result type " + type);
         }
-        V value = attribute.classType().cast(collection);
-        proxy.set(attribute, value, PropertyState.LOADED);
-        return value;
+        return attribute.classType().cast(collection);
     }
 }
