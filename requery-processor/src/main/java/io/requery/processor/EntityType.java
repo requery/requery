@@ -102,9 +102,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         if (element().getNestingKind() == NestingKind.ANONYMOUS) {
             validator.error("Entity annotation cannot be applied to anonymous class");
         }
-        if (element().getKind().isClass() && element().getModifiers().contains(Modifier.FINAL)) {
-            validator.error("Entity annotation cannot be applied to final class");
-        }
         if (element().getKind() == ElementKind.ENUM) {
             validator.error("Entity annotation cannot be applied to an enum class");
         }
@@ -249,7 +246,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         } else {
             entityName = Names.removeClassPrefixes(typeName);
             if (entityName.equals(typeName)) {
-                entityName = typeName + (isImmutable() ? "Type" : "Entity");
+                entityName = typeName + (isImmutable() || isFinal() ? "Type" : "Entity");
             }
         }
         return new QualifiedName(packageName, entityName);
@@ -290,7 +287,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public boolean isStateless() {
-        return isImmutable() || annotationOf(Entity.class).map(Entity::stateless).orElse(false);
+        return isImmutable() || isFinal() ||
+            annotationOf(Entity.class).map(Entity::stateless).orElse(false);
     }
 
     @Override
@@ -302,6 +300,11 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             .filter(type -> Mirrors.findAnnotationMirror(element(), type).isPresent())
             .findAny().isPresent() ||
             annotationOf(Entity.class).map(Entity::immutable).orElse(false);
+    }
+
+    @Override
+    public boolean isFinal() {
+        return element().getKind().isClass() && element().getModifiers().contains(Modifier.FINAL);
     }
 
     @Override

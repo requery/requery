@@ -23,87 +23,101 @@ import com.squareup.javapoet.TypeName;
  */
 class GeneratedProperty {
 
-    private final String attributeName;
+    private final String readName;
+    private final String writeName;
     private final String methodSuffix;
     private final TypeName targetName;
     private final TypeName propertyTypeName;
-    private final boolean isSetter;
+    private final boolean useMethod;
     private final boolean isNullable;
     private final boolean isReadOnly;
     private final boolean isWriteOnly;
 
-    private GeneratedProperty(String attributeName,
+    private GeneratedProperty(String readName,
+                              String writeName,
                               TypeName targetName,
                               TypeName propertyTypeName,
                               String methodSuffix,
-                              boolean isSetter,
+                              boolean useMethod,
                               boolean isNullable,
                               boolean isReadOnly,
                               boolean isWriteOnly) {
-        this.attributeName = attributeName;
+        this.readName = readName;
+        this.writeName = writeName;
         this.targetName = targetName;
         this.propertyTypeName = propertyTypeName;
         this.methodSuffix = methodSuffix;
-        this.isSetter = isSetter;
+        this.useMethod = useMethod;
         this.isNullable = isNullable;
         this.isReadOnly = isReadOnly;
         this.isWriteOnly = isWriteOnly;
     }
 
-    public String attributeName() {
-        return attributeName;
+    String readName() {
+        return readName;
     }
 
-    public String methodSuffix() {
+    String writeName() {
+        return writeName;
+    }
+
+    String methodSuffix() {
         return methodSuffix;
     }
 
-    public boolean isSetter() {
-        return isSetter;
+    boolean useMethod() {
+        return useMethod;
     }
 
-    public TypeName targetName() {
+    TypeName targetName() {
         return targetName;
     }
 
-    public TypeName propertyTypeName() {
+    TypeName propertyTypeName() {
         return propertyTypeName;
     }
 
-    public boolean isNullable() {
+    boolean isNullable() {
         return isNullable;
     }
 
-    public boolean isReadOnly() {
+    boolean isReadOnly() {
         return isReadOnly;
     }
 
-    public boolean isWriteOnly() {
+    boolean isWriteOnly() {
         return isWriteOnly;
     }
 
     static class Builder {
 
-        private String attributeName;
+        private String readName;
+        private String writeName;
         private String methodSuffix;
         private TypeName targetName;
         private TypeName propertyTypeName;
-        private boolean isSetter;
+        private boolean useMethod;
         private boolean isNullable;
         private boolean isReadOnly;
         private boolean isWriteOnly;
 
-        Builder(String attributeName,
+        Builder(String propertyName, TypeName targetName, TypeName propertyTypeName) {
+            this(propertyName, propertyName, targetName, propertyTypeName);
+        }
+
+        Builder(String readName,
+                String writeName,
                 TypeName targetName,
                 TypeName propertyTypeName) {
             this.methodSuffix = "";
-            this.attributeName = attributeName;
+            this.readName = readName;
+            this.writeName = writeName;
             this.targetName = targetName;
             this.propertyTypeName = propertyTypeName;
         }
 
-        Builder setSetter(boolean setter) {
-            this.isSetter = setter;
+        Builder setUseMethod(boolean useMethod) {
+            this.useMethod = useMethod;
             return this;
         }
 
@@ -129,11 +143,12 @@ class GeneratedProperty {
 
         GeneratedProperty build() {
             return new GeneratedProperty(
-                attributeName,
+                readName,
+                writeName,
                 targetName,
                 propertyTypeName,
                 methodSuffix,
-                isSetter,
+                useMethod,
                 isNullable,
                 isReadOnly,
                 isWriteOnly);

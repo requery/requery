@@ -99,6 +99,11 @@ interface EntityDescriptor {
     boolean isImmutable();
 
     /**
+     * @return true if the annotated type is class that is marked final (cannot be extended)
+     */
+    boolean isFinal();
+
+    /**
      * @return {@link TypeElement} of the builder class that can build instances of the entity if
      * the type is {@link #isImmutable()}
      */

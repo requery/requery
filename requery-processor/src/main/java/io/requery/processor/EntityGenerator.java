@@ -125,18 +125,18 @@ class EntityGenerator implements SourceGenerator {
         TypeSpec.Builder typeBuilder = TypeSpec.classBuilder(typeName.simpleName())
                 .addModifiers(Modifier.PUBLIC);
         typeBuilder.addOriginatingElement(typeElement);
-
+        boolean metadataOnly = entity.isImmutable() || entity.isFinal();
         if (typeElement.getKind().isInterface()) {
             typeBuilder.addSuperinterface(ClassName.get(typeElement));
             typeBuilder.addSuperinterface(ClassName.get(Persistable.class));
 
-        } else if (!entity.isImmutable()) {
+        } else if (!metadataOnly) {
             typeBuilder.superclass(ClassName.get(typeElement));
             typeBuilder.addSuperinterface(ClassName.get(Persistable.class));
         }
         CodeGeneration.addGeneratedAnnotation(processingEnvironment, typeBuilder);
-        generateStaticMetadata(typeBuilder);
-        if (!entity.isImmutable()) {
+        generateStaticMetadata(typeBuilder, metadataOnly);
+        if (!metadataOnly) {
             generateConstructors(typeBuilder);
             generateMembers(typeBuilder);
             generateProxyMethods(typeBuilder);
@@ -385,9 +385,7 @@ class EntityGenerator implements SourceGenerator {
         }
     }
 
-    private void generateType(TypeSpec.Builder typeSpecBuilder) {
-
-        TypeName targetName = entity.isImmutable() ? ClassName.get(entity.element()) : typeName;
+    private void generateType(TypeSpec.Builder typeSpecBuilder, TypeName targetName) {
         ClassName schemaName = ClassName.get(TypeBuilder.class);
         ParameterizedTypeName type = parameterizedTypeName(Type.class, targetName);
         FieldSpec.Builder schemaFieldBuilder = FieldSpec.builder(type, TYPE_NAME,
@@ -455,7 +453,7 @@ class EntityGenerator implements SourceGenerator {
         MethodSpec.Builder proxyFunction = CodeGeneration.overridePublicMethod("apply")
             .addParameter(targetName, "entity")
             .returns(proxyType);
-        if (entity.isImmutable()) {
+        if (entity.isImmutable() || entity.isFinal()) {
             proxyFunction.addStatement("return new $T(entity, $L)", proxyType, TYPE_NAME);
         } else {
             proxyFunction.addStatement("return entity.$L", PROXY_NAME);
@@ -522,8 +520,6 @@ class EntityGenerator implements SourceGenerator {
         String suffix = property.methodSuffix();
         TypeName targetName = property.targetName();
         TypeName propertyTypeName = property.propertyTypeName();
-        String propertyName = property.attributeName();
-
         // get
         MethodSpec.Builder getMethod = CodeGeneration.overridePublicMethod("get" + suffix)
             .addParameter(targetName, "entity")
@@ -531,7 +527,8 @@ class EntityGenerator implements SourceGenerator {
         if (property.isWriteOnly()) {
             getMethod.addStatement("throw new UnsupportedOperationException()");
         } else {
-            getMethod.addStatement("return entity.$L", propertyName);
+            getMethod.addStatement(property.useMethod() ?
+                "return entity.$L()" : "return entity.$L", property.readName());
         }
         // set
         MethodSpec.Builder setMethod = CodeGeneration.overridePublicMethod("set" + suffix)
@@ -539,26 +536,24 @@ class EntityGenerator implements SourceGenerator {
             .addParameter(propertyTypeName, "value");
         if (property.isReadOnly()) {
             setMethod.addStatement("throw new UnsupportedOperationException()");
-        } else if (property.isNullable()) {
-            CodeBlock setterBlock = CodeBlock.builder()
-                .beginControlFlow("if(value != null)")
-                .addStatement("entity.$L = value", propertyName)
-                .endControlFlow().build();
-            setMethod.addCode(setterBlock);
         } else {
-            if (property.isSetter()) {
-                setMethod.addStatement("entity.$L(value)", propertyName);
-            } else {
-                setMethod.addStatement("entity.$L = value", propertyName);
+            CodeBlock.Builder setterBlock = CodeBlock.builder();
+            if (property.isNullable()) {
+                setterBlock.beginControlFlow("if(value != null)");
             }
+            setterBlock.addStatement(property.useMethod() ?
+                "entity.$L(value)" : "entity.$L = value", property.writeName());
+            if (property.isNullable()) {
+                setterBlock.endControlFlow();
+            }
+            setMethod.addCode(setterBlock.build());
         }
         builder.addMethod(getMethod.build());
         builder.addMethod(setMethod.build());
     }
 
-    private void generateStaticMetadata(TypeSpec.Builder typeBuilder) {
-        // attributes
-        TypeName targetName = entity.isImmutable() ? ClassName.get(entity.element()) : typeName;
+    private void generateStaticMetadata(TypeSpec.Builder typeBuilder, boolean metadataOnly) {
+        TypeName targetName = metadataOnly? ClassName.get(entity.element()) : typeName;
         for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
             entity.attributes().entrySet()) {
 
@@ -569,7 +564,7 @@ class EntityGenerator implements SourceGenerator {
             FieldSpec field = generateAttribute(attribute, targetName);
             typeBuilder.addField(field);
         }
-        generateType(typeBuilder);
+        generateType(typeBuilder, targetName);
     }
 
     private FieldSpec generateAttribute(AttributeDescriptor attribute, TypeName targetName) {
@@ -666,8 +661,7 @@ class EntityGenerator implements SourceGenerator {
 
             graph.referencingEntity(attribute).ifPresent(referenced -> {
 
-                builder.add(".setReferencedClass($T.class)\n",
-                    referenced.isImmutable() ?
+                builder.add(".setReferencedClass($T.class)\n", referenced.isImmutable() ?
                         TypeName.get(referenced.element().asType()) :
                         nameResolver.typeNameOf(referenced));
 
@@ -758,23 +752,24 @@ class EntityGenerator implements SourceGenerator {
     private void generateProperties(AttributeDescriptor attribute,
                                     TypeMirror typeMirror,
                                     TypeName targetName,
-                                    TypeName attributeTypeName,
+                                    TypeName attributeName,
                                     CodeBlock.Builder builder) {
         // boxed get/set using Objects
         Class propertyClass = propertyClassFor(typeMirror);
-        ParameterizedTypeName propertyType =
-            propertyName(propertyClass, targetName, attributeTypeName);
+        ParameterizedTypeName propertyType = propertyName(propertyClass, targetName, attributeName);
 
         TypeSpec.Builder propertyBuilder = TypeSpec.anonymousClassBuilder("")
             .addSuperinterface(propertyType);
 
         boolean isNullable = typeMirror.getKind().isPrimitive() && attribute.isNullable();
-        String fieldName = entity.isImmutable() ?
-            attribute.getterName()+"()" : attribute.fieldName();
+        boolean accessWithMethod = entity.isImmutable() || entity.isFinal();
+        String getName = accessWithMethod? attribute.getterName() : attribute.fieldName();
+        String setName = entity.isFinal() ? attribute.setterName() : getName;
         GeneratedProperty boxed =
-            new GeneratedProperty.Builder(fieldName, targetName, attributeTypeName)
+            new GeneratedProperty.Builder(getName, setName, targetName, attributeName)
                 .setNullable(isNullable)
                 .setReadOnly(entity.isImmutable())
+                .setUseMethod(accessWithMethod)
                 .build();
         addPropertyMethods(propertyBuilder, boxed);
 
@@ -784,9 +779,10 @@ class EntityGenerator implements SourceGenerator {
             String name = Names.upperCaseFirst(attribute.typeMirror().toString());
 
             addPropertyMethods(propertyBuilder, new GeneratedProperty.Builder(
-                fieldName, targetName, primitiveType)
+                getName, setName, targetName, primitiveType)
                 .setSuffix(name)
                 .setReadOnly(entity.isImmutable())
+                .setUseMethod(accessWithMethod)
                 .build());
         }
         builder.add(".setProperty($L)\n", propertyBuilder.build());
@@ -794,15 +790,12 @@ class EntityGenerator implements SourceGenerator {
         // property state get/set
         if (!entity.isStateless()) {
             ClassName stateClass = ClassName.get(PropertyState.class);
-            TypeSpec.Builder propertyStateType = TypeSpec.anonymousClassBuilder("")
-                .addSuperinterface(
-                    parameterizedTypeName(Property.class, targetName, stateClass));
-
-            addPropertyMethods(propertyStateType,
-                new GeneratedProperty.Builder(
-                    propertyStateFieldName(attribute), targetName, stateClass)
-                    .build());
-            builder.add(".setPropertyState($L)\n", propertyStateType.build());
+            TypeSpec.Builder stateType = TypeSpec.anonymousClassBuilder("")
+                .addSuperinterface(parameterizedTypeName(Property.class, targetName, stateClass));
+            String fieldName = propertyStateFieldName(attribute);
+            addPropertyMethods(stateType,
+                new GeneratedProperty.Builder(fieldName, targetName, stateClass).build());
+            builder.add(".setPropertyState($L)\n", stateType.build());
         }
 
         // if immutable add setter for the builder
@@ -833,14 +826,14 @@ class EntityGenerator implements SourceGenerator {
                 builderName = typeName;
                 useSetter = false;
             }
-            propertyType = propertyName(propertyClass, builderName, attributeTypeName);
+            propertyType = propertyName(propertyClass, builderName, attributeName);
             TypeSpec.Builder builderProperty = TypeSpec.anonymousClassBuilder("")
                 .addSuperinterface(propertyType);
 
             addPropertyMethods(builderProperty,
-                new GeneratedProperty.Builder(propertyName, builderName, attributeTypeName)
+                new GeneratedProperty.Builder(propertyName, builderName, attributeName)
                     .setWriteOnly(true)
-                    .setSetter(useSetter)
+                    .setUseMethod(useSetter)
                     .build());
             if (propertyClass != Property.class) {
                 TypeName primitiveType = TypeName.get(attribute.typeMirror());
@@ -848,7 +841,7 @@ class EntityGenerator implements SourceGenerator {
                 addPropertyMethods(builderProperty, new GeneratedProperty.Builder(
                     propertyName, builderName, primitiveType)
                     .setSuffix(name)
-                    .setSetter(useSetter)
+                    .setUseMethod(useSetter)
                     .setWriteOnly(true)
                     .build());
             }
@@ -856,8 +849,8 @@ class EntityGenerator implements SourceGenerator {
         }
     }
 
-    private ParameterizedTypeName propertyName(Class type,
-                                               TypeName targetName, TypeName fieldName) {
+    private static ParameterizedTypeName propertyName(Class type,
+                                                      TypeName targetName, TypeName fieldName) {
         if (type == Property.class) {
             return parameterizedTypeName(type, targetName, fieldName);
         } else {
