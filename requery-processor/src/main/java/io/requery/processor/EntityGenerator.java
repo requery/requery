@@ -405,8 +405,8 @@ class EntityGenerator implements SourceGenerator {
         } else if (entity.isImmutable()) {
 
             // the builder name (if there is no builder than this class is the builder)
-            TypeName builderName = entity.builderType().isPresent() ?
-                TypeName.get(entity.builderType().get().asType()) : typeName;
+            TypeName builderName = entity.builderType().map(
+                element -> TypeName.get(element.asType())).orElse(typeName);
 
             TypeSpec.Builder typeFactory = TypeSpec.anonymousClassBuilder("")
                 .addSuperinterface(parameterizedTypeName(Supplier.class, builderName));

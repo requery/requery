@@ -123,7 +123,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         return type.getKind() != TypeKind.VOID &&
                element.getParameters().isEmpty() &&
                !type.equals(element().asType()) &&
-               !type.equals(builderType().isPresent() ? builderType().get().asType() : null) &&
+               !type.equals(builderType().map(Element::asType).orElse(null)) &&
                !Mirrors.findAnnotationMirror(element, Transient.class).isPresent() &&
                !element.getModifiers().contains(Modifier.STATIC);
     }

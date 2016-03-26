@@ -109,7 +109,8 @@ class JoinEntityGenerator implements SourceGenerator {
             }
             if (referenceElement != null) {
                 key.addMember("references", "$L.class",
-                    nameResolver.generatedTypeNameOf(referenceElement).get());
+                    nameResolver.generatedTypeNameOf(referenceElement)
+                        .orElseThrow(IllegalStateException::new));
             }
             AnnotationSpec.Builder id = AnnotationSpec.builder(Key.class);
             FieldSpec.Builder field = FieldSpec.builder(Integer.class, reference.name(),
