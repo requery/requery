@@ -153,7 +153,7 @@ public abstract class FunctionalTest extends RandomData {
     @Test
     public void testInsertConcurrent() throws InterruptedException {
         ExecutorService executorService = Executors.newFixedThreadPool(3);
-        final int count = 5;
+        final int count = 3;
         final CountDownLatch latch = new CountDownLatch(count);
         final Map<Integer, Person> map = new HashMap<>();
         for (int i = 0; i < count; i++) {
