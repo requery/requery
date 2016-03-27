@@ -26,6 +26,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Indicates a field as being an indexed column in a database table.
+ *
+ * Example:
+ * <pre><code>
+ *    {@literal @}Entity
+ *     public class AbstractPerson {
+ *         ...
+ *        {@literal @}Index(name = "email_index") String email;
+ *         ...
+ *     }
+ * </code></pre>
  */
 @Documented
 @Target({FIELD, METHOD})
