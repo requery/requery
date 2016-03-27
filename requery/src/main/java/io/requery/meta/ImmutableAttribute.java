@@ -37,7 +37,7 @@ final class ImmutableAttribute<T, V> extends BaseAttribute<T, V> {
         isIndex = builder.isIndexed();
         defaultValue = builder.defaultValue();
         collate = builder.collate();
-        indexName = builder.indexName();
+        indexNames = builder.indexNames();
         cardinality = builder.cardinality();
         deleteAction = builder.deleteAction();
         updateAction = builder.updateAction();

@@ -69,6 +69,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -102,7 +103,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private boolean isIndexed;
     private Class<? extends AttributeBuilder> builderClass;
     private Integer length;
-    private String indexName;
+    private Set<String> indexNames;
     private Cardinality cardinality;
     private String converterType;
     private CascadeAction[] cascadeActions;
@@ -122,6 +123,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             throw new IllegalStateException();
         }
         this.entity = entity;
+        this.indexNames = new LinkedHashSet<>();
     }
 
     @Override
@@ -284,13 +286,18 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         }
         annotationOf(Index.class).ifPresent(index -> {
             isIndexed = true;
-            indexName = index.name();
+            Collections.addAll(indexNames, index.value());
         });
 
         // JPA specific
         annotationOf(Basic.class).ifPresent(basic -> {
             isNullable = basic.optional();
             isLazy = basic.fetch() == FetchType.LAZY;
+        });
+
+        annotationOf(javax.persistence.Index.class).ifPresent(index -> {
+            isIndexed = true;
+            Collections.addAll(indexNames, index.name());
         });
 
         annotationOf(JoinColumn.class).ifPresent(joinColumn -> {
@@ -587,8 +594,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     }
 
     @Override
-    public String indexName() {
-        return indexName;
+    public Set<String> indexNames() {
+        return indexNames;
     }
 
     @Override

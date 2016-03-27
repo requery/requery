@@ -37,8 +37,9 @@ public class AbstractPerson implements Serializable {
     @Key @Generated
     protected int id;
 
+    @Index(value = "name_email_index")
     protected String name;
-    @Index(name = "email_index")
+    @Index(value = {"name_email_index", "email_index"})
     protected String email;
     protected Date birthday;
     @Nullable

@@ -26,7 +26,9 @@ import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 
 /**
  * Builds information about an attribute on a specific {@link Type}.
@@ -119,8 +121,9 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
         return this;
     }
 
-    public AttributeBuilder<T, V> setIndexName(String name) {
-        this.indexName = name;
+    public AttributeBuilder<T, V> setIndexNames(String... names) {
+        this.indexNames = new LinkedHashSet<>();
+        Collections.addAll(indexNames, names);
         return this;
     }
 

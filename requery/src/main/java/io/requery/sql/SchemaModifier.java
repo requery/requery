@@ -34,7 +34,9 @@ import java.sql.Statement;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static io.requery.sql.Keyword.*;
@@ -175,14 +177,14 @@ public class SchemaModifier {
         ArrayList<Type<?>> reversed = sortTypes();
         Collections.reverse(reversed);
         for (Type<?> type : reversed) {
-            QueryBuilder sb = createQueryBuilder();
-            sb.keyword(DROP, TABLE);
+            QueryBuilder qb = createQueryBuilder();
+            qb.keyword(DROP, TABLE);
             if (platform.supportsIfExists()) {
-                sb.keyword(IF, EXISTS);
+                qb.keyword(IF, EXISTS);
             }
-            sb.tableName(type.name());
+            qb.tableName(type.name());
             try {
-                String sql = sb.toString();
+                String sql = qb.toString();
                 statementListeners.beforeExecuteUpdate(statement, sql, null);
                 statement.execute(sql);
                 statementListeners.afterExecuteUpdate(statement);
@@ -249,8 +251,15 @@ public class SchemaModifier {
     }
 
     private void executeSql(QueryBuilder qb) {
-        try (Connection connection = getConnection();
-             Statement statement = connection.createStatement()) {
+        try (Connection connection = getConnection()) {
+            executeSql(connection, qb);
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+    }
+
+    private void executeSql(Connection connection, QueryBuilder qb) {
+        try (Statement statement = connection.createStatement()) {
             String sql = qb.toString();
             statementListeners.beforeExecuteUpdate(statement, sql, null);
             statement.execute(sql);
@@ -515,22 +524,34 @@ public class SchemaModifier {
 
     private <T> void createIndexes(Connection connection, TableCreationMode mode, Type<T> type) {
         Set<Attribute<T, ?>> attributes = type.attributes();
-        for (Attribute attribute : attributes) {
+        Map<String, Set<Attribute<?, ?>>> indexes = new LinkedHashMap<>();
+        for (Attribute<T, ?> attribute : attributes) {
             if (attribute.isIndexed()) {
-                QueryBuilder qb = createQueryBuilder();
-                createIndex(connection, qb, attribute, type, mode);
+                for(String indexName : attribute.indexNames()) {
+                    if (indexName == null || "".equals(indexName)) {
+                        indexName = attribute.name() + "_index";
+                    }
+                    Set<Attribute<?, ?>> indexColumns = indexes.get(indexName);
+                    if (indexColumns == null) {
+                        indexes.put(indexName, indexColumns = new LinkedHashSet<>());
+                    }
+                    indexColumns.add(attribute);
+                }
             }
+        }
+        for (Map.Entry<String, Set<Attribute<?, ?>>> entry : indexes.entrySet()) {
+            QueryBuilder qb = createQueryBuilder();
+            createIndex(qb, entry.getKey(), entry.getValue(), type, mode);
+            executeSql(connection, qb);
         }
     }
 
-    private void createIndex(Connection connection, QueryBuilder qb, Attribute attribute,
+    private void createIndex(QueryBuilder qb,
+                             String indexName,
+                             Set<Attribute<?,?>> attributes,
                              Type<?> type, TableCreationMode mode) {
-        String indexName = attribute.indexName();
-        if (indexName == null || "".equals(indexName)) {
-            indexName = attribute.name() + "_index";
-        }
         qb.keyword(CREATE);
-        if (attribute.isUnique()) {
+        if (attributes.size() == 1 && attributes.iterator().next().isUnique()) {
             qb.keyword(UNIQUE);
         }
         qb.keyword(INDEX);
@@ -539,19 +560,15 @@ public class SchemaModifier {
             qb.keyword(IF, NOT, EXISTS);
         }
         qb.append(indexName).space()
-                .keyword(ON)
-                .tableName(type.name())
-                .openParenthesis()
-                .attribute(attribute)
-                .closeParenthesis();
-
-        try (Statement statement = connection.createStatement()) {
-            String sql = qb.toString();
-            statementListeners.beforeExecuteUpdate(statement, sql, null);
-            statement.execute(sql);
-            statementListeners.afterExecuteUpdate(statement);
-        } catch (SQLException e) {
-            throw new TableModificationException(e);
-        }
+            .keyword(ON)
+            .tableName(type.name())
+            .openParenthesis()
+            .commaSeparated(attributes, new QueryBuilder.Appender<Attribute>() {
+                @Override
+                public void append(QueryBuilder qb, Attribute value) {
+                    qb.attribute(value);
+                }
+            })
+            .closeParenthesis();
     }
 }

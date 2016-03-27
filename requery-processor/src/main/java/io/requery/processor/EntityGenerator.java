@@ -680,8 +680,10 @@ class EntityGenerator implements SourceGenerator {
         }
         if (attribute.isIndexed()) {
             builder.add(".setIndexed($L)\n", attribute.isIndexed());
-            if (!Names.isEmpty(attribute.indexName())) {
-                builder.add(".setIndexName($S)\n", attribute.indexName());
+            if (!attribute.indexNames().isEmpty()) {
+                StringJoiner joiner = new StringJoiner(",");
+                attribute.indexNames().forEach(name -> joiner.add("$S"));
+                builder.add(".setIndexNames(" + joiner + ")\n", attribute.indexNames().toArray());
             }
         }
         if (attribute.deleteAction() != null) {

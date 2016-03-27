@@ -135,10 +135,10 @@ public interface Attribute<T, V> {
     Integer length();
 
     /**
-     * @return for an {@link #isIndexed()} true attribute the index name, defaults to empty
+     * @return for an {@link #isIndexed()} true attribute the index name(s), defaults to empty
      * (auto created).
      */
-    String indexName();
+    Set<String> indexNames();
 
     /**
      * @return the collation for the attribute, defaults to null

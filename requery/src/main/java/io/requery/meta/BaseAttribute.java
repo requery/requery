@@ -49,7 +49,7 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements QueryAt
     boolean isIndex;
     Integer length;
     String defaultValue;
-    String indexName;
+    Set<String> indexNames;
     String collate;
     Cardinality cardinality;
     ReferentialAction deleteAction;
@@ -164,8 +164,8 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements QueryAt
     }
 
     @Override
-    public String indexName() {
-        return indexName;
+    public Set<String> indexNames() {
+        return indexNames;
     }
 
     @Override

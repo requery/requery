@@ -80,9 +80,9 @@ interface AttributeDescriptor {
     String fieldName();
 
     /**
-     * @return optional if this column is indexed the name of the index
+     * @return optional if this column is indexed the name(s) of the indexes
      */
-    String indexName();
+    Set<String> indexNames();
 
     /**
      * @return name of the getter accessor method used to access the backing field
