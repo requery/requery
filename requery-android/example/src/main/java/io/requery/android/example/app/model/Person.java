@@ -46,7 +46,7 @@ public interface Person extends Observable, Parcelable, Persistable {
     String getName();
 
     @Bindable
-    @Index(name = "email_index")
+    @Index(value = "email_index")
     String getEmail();
 
     @Bindable
