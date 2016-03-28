@@ -527,10 +527,13 @@ public class SchemaModifier {
         Map<String, Set<Attribute<?, ?>>> indexes = new LinkedHashMap<>();
         for (Attribute<T, ?> attribute : attributes) {
             if (attribute.isIndexed()) {
-                for(String indexName : attribute.indexNames()) {
-                    if (indexName == null || "".equals(indexName)) {
-                        indexName = attribute.name() + "_index";
-                    }
+                Set<String> names = new LinkedHashSet<>(attribute.indexNames());
+                if (names.isEmpty()) {
+                    // if no name set create a default one
+                    String indexName = attribute.name() + "_index";
+                    names.add(indexName);
+                }
+                for(String indexName : names) {
                     Set<Attribute<?, ?>> indexColumns = indexes.get(indexName);
                     if (indexColumns == null) {
                         indexes.put(indexName, indexColumns = new LinkedHashSet<>());
