@@ -105,11 +105,12 @@ public final class EntityProcessor extends AbstractProcessor {
         // process
         boolean hasErrors = false;
         Set<ElementValidator> validators = new LinkedHashSet<>();
+        Elements elements = processingEnv.getElementUtils();
+
         for (EntityType entity : entities.values()) {
             // add the annotated elements from the super type (if any)
             TypeMirror typeMirror = entity.element().getSuperclass();
-            if (typeMirror.getKind() != TypeKind.NONE) {
-                Elements elements = processingEnv.getElementUtils();
+            while (typeMirror.getKind() != TypeKind.NONE) {
                 TypeElement superTypeElement = elements.getTypeElement(typeMirror.toString());
                 if (superTypeElement != null) {
                     SuperType superType = superTypes.get(superTypeElement);
@@ -121,6 +122,9 @@ public final class EntityProcessor extends AbstractProcessor {
                             }
                         }
                     }
+                    typeMirror = superTypeElement.getSuperclass();
+                } else {
+                    break;
                 }
             }
             // process the entity
