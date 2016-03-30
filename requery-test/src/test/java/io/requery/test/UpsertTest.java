@@ -28,7 +28,6 @@ import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.H2;
 import io.requery.sql.platform.HSQL;
 import io.requery.sql.platform.MySQL;
-import io.requery.sql.platform.PostgresSQL;
 import io.requery.sql.platform.SQLite;
 import io.requery.test.model3.Event;
 import io.requery.test.model3.Models;
@@ -55,7 +54,7 @@ public class UpsertTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Platform> data() {
         return Arrays.<Platform>asList(
-            new PostgresSQL(),
+            //new PostgresSQL(),
             new MySQL(),
             new H2(),
             new HSQL(),
