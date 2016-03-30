@@ -123,6 +123,16 @@ class SingleEntityStoreFromBlocking<T> implements SingleEntityStore<T> {
     }
 
     @Override
+    public <E extends T> Single<E> upsert(final E entity) {
+        return RxSupport.toSingle(new Supplier<E>() {
+            @Override
+            public E get() {
+                return delegate.upsert(entity);
+            }
+        }, subscribeOn);
+    }
+
+    @Override
     public <E extends T> Single<E> refresh(final E entity) {
         return RxSupport.toSingle(new Supplier<E>() {
             @Override

@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-package io.requery.query.element;
+package io.requery.sql;
 
-public enum QueryType {
-    SELECT,
-    INSERT,
-    UPDATE,
-    UPSERT,
-    DELETE,
-    TRUNCATE,
-    MERGE,
+import io.requery.meta.Attribute;
+
+/**
+ * Builds an UPSERT query fragment.
+ *
+ * @author Nikhil Purushe
+ */
+public interface UpsertDefinition {
+
+    interface Parameterizer<E> {
+        void addParameter(Attribute<E, ?> attribute);
+    }
+
+    <E> void appendUpsert(QueryBuilder qb, Iterable<Attribute<E, ?>> attributes,
+                          Parameterizer<E> parameterizer);
 }

@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package io.requery.query.element;
+package io.requery.test.model3;
 
-public enum QueryType {
-    SELECT,
-    INSERT,
-    UPDATE,
-    UPSERT,
-    DELETE,
-    TRUNCATE,
-    MERGE,
+
+import io.requery.Entity;
+import io.requery.Key;
+
+@Entity(model = "model3")
+public class AbstractEvent {
+
+    @Key
+    protected String id;
+
+    protected String name;
+
 }

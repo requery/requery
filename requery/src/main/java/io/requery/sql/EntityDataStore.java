@@ -241,6 +241,19 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
+    public <E extends T> E upsert(E entity) {
+        try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
+            EntityProxy<E> proxy = context.proxyOf(entity, true);
+            synchronized (proxy.syncObject()) {
+                EntityWriter<E, T> writer = context.write(proxy.type().classType());
+                writer.upsert(entity, proxy);
+                transaction.commit();
+                return entity;
+            }
+        }
+    }
+
+    @Override
     public <E extends T> E refresh(E entity) {
         EntityProxy<E> proxy = context.proxyOf(entity, false);
         synchronized (proxy.syncObject()) {
@@ -296,10 +309,9 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         Iterator<E> iterator = entities.iterator();
         if (iterator.hasNext()) {
             try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
-                EntityWriter<E, T> writer;
                 E entity = iterator.next();
                 EntityProxy<E> proxy = context.proxyOf(entity, false);
-                writer = context.write(proxy.type().classType());
+                EntityWriter<E, T> writer = context.write(proxy.type().classType());
                 writer.batchDelete(entities);
                 transaction.commit();
             }

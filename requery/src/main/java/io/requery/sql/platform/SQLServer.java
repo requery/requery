@@ -24,6 +24,8 @@ import io.requery.sql.LimitDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.OffsetFetchLimitDefinition;
 import io.requery.sql.QueryBuilder;
+import io.requery.sql.UpsertDefinition;
+import io.requery.sql.UpsertMergeDefinition;
 import io.requery.sql.type.PrimitiveBooleanType;
 
 import java.sql.PreparedStatement;
@@ -32,9 +34,55 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 /**
- * Platform for Microsoft SQL Server 2012 or later T-SQL.
+ * Microsoft SQL Server 2012 or later
  */
 public class SQLServer extends Generic {
+
+    private final GeneratedColumnDefinition generatedColumnDefinition;
+    private final LimitDefinition limitDefinition;
+    private final UpsertMergeDefinition upsertMergeDefinition;
+
+    public SQLServer() {
+        generatedColumnDefinition = new IdentityColumnDefinition();
+        limitDefinition = new OrderByOffsetFetchLimit();
+        upsertMergeDefinition = new MergeDefinition();
+    }
+
+    @Override
+    public boolean supportsIfExists() {
+        return false;
+    }
+
+    @Override
+    public GeneratedColumnDefinition generatedColumnDefinition() {
+        return generatedColumnDefinition;
+    }
+
+    @Override
+    public LimitDefinition limitDefinition() {
+        return limitDefinition;
+    }
+
+    @Override
+    public UpsertDefinition upsertDefinition() {
+        return upsertMergeDefinition;
+    }
+
+    @Override
+    public void addMappings(Mapping mapping) {
+        super.addMappings(mapping);
+        mapping.replaceType(Types.BOOLEAN, new BitBooleanType());
+    }
+
+    private static class MergeDefinition extends UpsertMergeDefinition {
+        @Override
+        public <E> void appendUpsert(QueryBuilder qb, Iterable<Attribute<E, ?>> attributes,
+                                     Parameterizer<E> parameterizer) {
+            super.appendUpsert(qb, attributes, parameterizer);
+            qb.append(";");
+            // for some reason insists on having a semicolon on a merge statement only
+        }
+    }
 
     private static class IdentityColumnDefinition implements GeneratedColumnDefinition {
 
@@ -54,8 +102,8 @@ public class SQLServer extends Generic {
             int increment = 1;
             qb.keyword(Keyword.IDENTITY);
             qb.openParenthesis()
-              .value(start).comma().value(increment)
-              .closeParenthesis();
+                .value(start).comma().value(increment)
+                .closeParenthesis();
         }
     }
 
@@ -101,34 +149,5 @@ public class SQLServer extends Generic {
             throws SQLException {
             statement.setBoolean(index, value);
         }
-    }
-
-    private final GeneratedColumnDefinition generatedColumnDefinition;
-    private final LimitDefinition limitDefinition;
-
-    public SQLServer() {
-        generatedColumnDefinition = new IdentityColumnDefinition();
-        limitDefinition = new OrderByOffsetFetchLimit();
-    }
-
-    @Override
-    public boolean supportsIfExists() {
-        return false;
-    }
-
-    @Override
-    public GeneratedColumnDefinition generatedColumnDefinition() {
-        return generatedColumnDefinition;
-    }
-
-    @Override
-    public LimitDefinition limitDefinition() {
-        return limitDefinition;
-    }
-
-    @Override
-    public void addMappings(Mapping mapping) {
-        super.addMappings(mapping);
-        mapping.replaceType(Types.BOOLEAN, new BitBooleanType());
     }
 }

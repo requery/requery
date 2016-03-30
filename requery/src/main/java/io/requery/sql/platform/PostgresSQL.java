@@ -17,12 +17,14 @@
 package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
+import io.requery.meta.Type;
 import io.requery.sql.BaseType;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.LimitDefinition;
 import io.requery.sql.LimitOffsetDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.QueryBuilder;
+import io.requery.sql.UpsertDefinition;
 import io.requery.sql.VersionColumnDefinition;
 import io.requery.sql.type.VarCharType;
 
@@ -32,10 +34,70 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.UUID;
 
+import static io.requery.sql.Keyword.CONFLICT;
+import static io.requery.sql.Keyword.DO;
+import static io.requery.sql.Keyword.INSERT;
+import static io.requery.sql.Keyword.INTO;
+import static io.requery.sql.Keyword.ON;
+import static io.requery.sql.Keyword.SET;
+import static io.requery.sql.Keyword.UPDATE;
+import static io.requery.sql.Keyword.VALUES;
+
 /**
- * Platform configuration for PostgresSQL PL/pgSQL (9+)
+ * PostgresSQL PL/pgSQL (9+)
  */
 public class PostgresSQL extends Generic {
+
+    private final SerialColumnDefinition serialColumnDefinition;
+    private final LimitDefinition limitDefinition;
+    private final VersionColumnDefinition versionColumnDefinition;
+    private final UpsertDefinition upsertDefinition;
+
+    public PostgresSQL() {
+        serialColumnDefinition = new SerialColumnDefinition();
+        limitDefinition = new LimitOffsetDefinition();
+        versionColumnDefinition = new SystemVersionColumnDefinition();
+        upsertDefinition = new UpsertOnConflictDoUpdate();
+    }
+
+    @Override
+    public boolean supportsInlineForeignKeyReference() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsGeneratedKeysInBatchUpdate() {
+        return true;
+    }
+
+    @Override
+    public GeneratedColumnDefinition generatedColumnDefinition() {
+        return serialColumnDefinition;
+    }
+
+    @Override
+    public void addMappings(Mapping mapping) {
+        super.addMappings(mapping);
+        mapping.replaceType(Types.BINARY, new ByteArrayType(Types.BINARY));
+        mapping.replaceType(Types.VARBINARY, new ByteArrayType(Types.VARBINARY));
+        mapping.replaceType(Types.NVARCHAR, new VarCharType());
+        mapping.putType(UUID.class, new UUIDType());
+    }
+
+    @Override
+    public LimitDefinition limitDefinition() {
+        return limitDefinition;
+    }
+
+    @Override
+    public VersionColumnDefinition versionColumnDefinition() {
+        return versionColumnDefinition;
+    }
+
+    @Override
+    public UpsertDefinition upsertDefinition() {
+        return upsertDefinition;
+    }
 
     private static class ByteArrayType extends BaseType<byte[]> {
 
@@ -68,7 +130,7 @@ public class PostgresSQL extends Generic {
 
         @Override
         public void write(PreparedStatement statement, int index, UUID value)
-                throws SQLException {
+            throws SQLException {
             statement.setObject(index, value);
         }
     }
@@ -104,47 +166,45 @@ public class PostgresSQL extends Generic {
         }
     }
 
-    private final SerialColumnDefinition serialColumnDefinition;
-    private final LimitDefinition limitDefinition;
-    private final VersionColumnDefinition versionColumnDefinition;
+    /**
+     * Performs an upsert (insert/update) using insert on conflict do update.
+     */
+    private static class UpsertOnConflictDoUpdate implements UpsertDefinition {
 
-    public PostgresSQL() {
-        serialColumnDefinition = new SerialColumnDefinition();
-        limitDefinition = new LimitOffsetDefinition();
-        versionColumnDefinition = new SystemVersionColumnDefinition();
-    }
-
-    @Override
-    public boolean supportsInlineForeignKeyReference() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsGeneratedKeysInBatchUpdate() {
-        return true;
-    }
-
-    @Override
-    public GeneratedColumnDefinition generatedColumnDefinition() {
-        return serialColumnDefinition;
-    }
-
-    @Override
-    public void addMappings(Mapping mapping) {
-        super.addMappings(mapping);
-        mapping.replaceType(Types.BINARY, new ByteArrayType(Types.BINARY));
-        mapping.replaceType(Types.VARBINARY, new ByteArrayType(Types.VARBINARY));
-        mapping.replaceType(Types.NVARCHAR, new VarCharType());
-        mapping.putType(UUID.class, new UUIDType());
-    }
-
-    @Override
-    public LimitDefinition limitDefinition() {
-        return limitDefinition;
-    }
-
-    @Override
-    public VersionColumnDefinition versionColumnDefinition() {
-        return versionColumnDefinition;
+        @Override
+        public <E> void appendUpsert(QueryBuilder qb,
+                                     Iterable<Attribute<E, ?>> attributes,
+                                     final Parameterizer<E> parameterizer) {
+            Type<E> type = attributes.iterator().next().declaringType();
+            // insert into <table> (<columns>) values (<values)
+            // on conflict do update (<column>=EXCLUDED.<value>...
+            qb.keyword(INSERT, INTO)
+                .tableName(type.name())
+                .openParenthesis()
+                .commaSeparatedAttributes(attributes)
+                .closeParenthesis().space()
+                .keyword(VALUES)
+                .openParenthesis()
+                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                    @Override
+                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
+                        qb.append("?");
+                        parameterizer.addParameter(value);
+                    }
+                })
+                .closeParenthesis().space()
+                .keyword(ON, CONFLICT)
+                .openParenthesis()
+                .attribute(type.singleKeyAttribute())
+                .closeParenthesis().space()
+                .keyword(DO, UPDATE, SET)
+                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                    @Override
+                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
+                        qb.attribute(value);
+                        qb.append("= EXCLUDED." + value.name());
+                    }
+                });
+        }
     }
 }

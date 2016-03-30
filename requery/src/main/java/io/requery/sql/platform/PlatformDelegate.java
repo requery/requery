@@ -20,6 +20,7 @@ import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.LimitDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.Platform;
+import io.requery.sql.UpsertDefinition;
 import io.requery.sql.VersionColumnDefinition;
 
 import java.sql.Connection;
@@ -69,6 +70,11 @@ public class PlatformDelegate implements Platform {
     }
 
     @Override
+    public boolean supportsUpsert() {
+        return platform.supportsUpsert();
+    }
+
+    @Override
     public GeneratedColumnDefinition generatedColumnDefinition() {
         return platform.generatedColumnDefinition();
     }
@@ -81,6 +87,11 @@ public class PlatformDelegate implements Platform {
     @Override
     public VersionColumnDefinition versionColumnDefinition() {
         return platform.versionColumnDefinition();
+    }
+
+    @Override
+    public UpsertDefinition upsertDefinition() {
+        return platform.upsertDefinition();
     }
 
     @Override

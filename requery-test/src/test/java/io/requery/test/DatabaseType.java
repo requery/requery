@@ -91,6 +91,7 @@ public enum DatabaseType {
             dataSource.setPassword("");
             dataSource.setDatabaseName("dbtest");
             dataSource.setCreateDatabase("create");
+            dataSource.setConnectionAttributes("upgrade=true");
             return dataSource;
         }
     };

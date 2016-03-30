@@ -88,4 +88,9 @@ public class Derby extends Generic {
     public boolean supportsGeneratedColumnsInPrepareStatement() {
         return false;
     }
+
+    @Override
+    public boolean supportsUpsert() {
+        return true;
+    }
 }

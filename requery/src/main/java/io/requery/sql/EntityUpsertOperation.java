@@ -17,37 +17,27 @@
 package io.requery.sql;
 
 import io.requery.meta.Attribute;
+import io.requery.proxy.EntityProxy;
+import io.requery.query.Expression;
 import io.requery.query.Scalar;
 import io.requery.query.SuppliedScalar;
 import io.requery.query.element.QueryElement;
-import io.requery.util.function.Predicate;
 import io.requery.util.function.Supplier;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-/**
- * Extends {@link UpdateOperation} specifically for binding to an entity, skipping the query
- * parameters to avoid boxing overhead.
- *
- * @param <E> entity type
- */
-class EntityUpdateOperation<E> extends UpdateOperation {
+class EntityUpsertOperation<E> extends UpdateOperation {
 
-    private final E element;
-    private final ParameterBinder<E> parameterBinder;
-    private final Predicate<Attribute<E, ?>> filter;
+    private final Iterable<Attribute<E, ?>> attributes;
+    private final EntityProxy<E> proxy;
 
-    EntityUpdateOperation(RuntimeConfiguration configuration,
-                          E element,
-                          ParameterBinder<E> parameterBinder,
-                          Predicate<Attribute<E, ?>> filter,
-                          GeneratedResultReader resultReader) {
-        super(configuration, resultReader);
-        this.element = element;
-        this.filter = filter;
-        this.parameterBinder = parameterBinder;
+    EntityUpsertOperation(RuntimeConfiguration configuration, EntityProxy<E> proxy,
+                          Iterable<Attribute<E, ?>> attributes) {
+        super(configuration, null);
+        this.proxy = proxy;
+        this.attributes = attributes;
     }
 
     @Override
@@ -55,19 +45,30 @@ class EntityUpdateOperation<E> extends UpdateOperation {
         return new SuppliedScalar<>(new Supplier<Integer>() {
             @Override
             public Integer get() {
-                // doesn't use the query params, just maps to the parameterBinder callback
-                QueryGenerator generator = new QueryGenerator<>(query, null, false);
                 QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
-                String sql = generator.toSql(qb, configuration.platform());
+                Platform platform = configuration.platform();
+                UpsertDefinition upsertDefinition = platform.upsertDefinition();
+                final BoundParameters parameters = new BoundParameters();
+                UpsertDefinition.Parameterizer<E> parameterizer =
+                    new UpsertDefinition.Parameterizer<E>() {
+                    @Override
+                    public void addParameter(Attribute<E, ?> attribute) {
+                        Object value = proxy.get(attribute);
+                        @SuppressWarnings("unchecked")
+                        Expression<Object> expression = (Expression<Object>) attribute;
+                        parameters.add(expression, value);
+                    }
+                };
+                upsertDefinition.appendUpsert(qb, attributes, parameterizer);
+                String sql = qb.toString();
                 int result;
                 try (Connection connection = configuration.connectionProvider().getConnection()) {
                     StatementListener listener = configuration.statementListener();
                     try (PreparedStatement statement = prepare(sql, connection)) {
-                        parameterBinder.bindParameters(statement, element, filter);
-                        listener.beforeExecuteUpdate(statement, sql, null);
+                        listener.beforeExecuteUpdate(statement, sql, parameters);
+                        mapParameters(statement, parameters);
                         result = statement.executeUpdate();
                         listener.afterExecuteUpdate(statement);
-                        readGeneratedKeys(0, statement);
                     }
                 } catch (SQLException e) {
                     throw new StatementExecutionException(e, sql);

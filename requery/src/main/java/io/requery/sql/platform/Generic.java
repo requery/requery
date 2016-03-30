@@ -22,6 +22,8 @@ import io.requery.sql.LimitDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.OffsetFetchLimitDefinition;
 import io.requery.sql.Platform;
+import io.requery.sql.UpsertDefinition;
+import io.requery.sql.UpsertMergeDefinition;
 import io.requery.sql.UserVersionColumnDefinition;
 import io.requery.sql.VersionColumnDefinition;
 
@@ -31,13 +33,15 @@ import io.requery.sql.VersionColumnDefinition;
 public class Generic implements Platform {
 
     private final GeneratedColumnDefinition generatedColumnDefinition;
-    private final LimitDefinition limitSupport;
+    private final LimitDefinition limitDefinition;
     private final VersionColumnDefinition versionColumnDefinition;
+    private final UpsertDefinition upsertDefinition;
 
     public Generic() {
         generatedColumnDefinition = new IdentityColumnDefinition();
-        limitSupport = new OffsetFetchLimitDefinition();
+        limitDefinition = new OffsetFetchLimitDefinition();
         versionColumnDefinition = new UserVersionColumnDefinition();
+        upsertDefinition = new UpsertMergeDefinition();
     }
 
     @Override
@@ -71,18 +75,28 @@ public class Generic implements Platform {
     }
 
     @Override
+    public boolean supportsUpsert() {
+        return true;
+    }
+
+    @Override
     public GeneratedColumnDefinition generatedColumnDefinition() {
         return generatedColumnDefinition;
     }
 
     @Override
     public LimitDefinition limitDefinition() {
-        return limitSupport;
+        return limitDefinition;
     }
 
     @Override
     public VersionColumnDefinition versionColumnDefinition() {
         return versionColumnDefinition;
+    }
+
+    @Override
+    public UpsertDefinition upsertDefinition() {
+        return upsertDefinition;
     }
 
     @Override

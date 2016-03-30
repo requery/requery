@@ -47,6 +47,9 @@ public interface CompletionStageEntityStore<T> extends EntityStore<T, Completion
     <E extends T> CompletionStage<E> update(E entity);
 
     @Override
+    <E extends T> CompletionStage<E> upsert(E entity);
+
+    @Override
     <E extends T> CompletionStage<E> refresh(E entity);
 
     @Override

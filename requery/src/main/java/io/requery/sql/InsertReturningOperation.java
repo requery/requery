@@ -17,21 +17,17 @@
 package io.requery.sql;
 
 import io.requery.PersistenceException;
-import io.requery.query.BaseResult;
 import io.requery.query.Expression;
 import io.requery.query.NamedExpression;
 import io.requery.query.Result;
 import io.requery.query.Tuple;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryOperation;
-import io.requery.util.CloseableIterator;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -86,27 +82,7 @@ class InsertReturningOperation extends PreparedQueryOperation implements
                 connection.close();
                 ResultTuple tuple = new ResultTuple(1);
                 tuple.set(0, NamedExpression.ofInteger("count"), count);
-                final Iterator<Tuple> iterator = Collections.<Tuple>singleton(tuple).iterator();
-                return new BaseResult<Tuple>(1) {
-                    @Override
-                    public CloseableIterator<Tuple> iterator(int skip, int take) {
-                        return new CloseableIterator<Tuple>() {
-                            @Override
-                            public void close() {
-                            }
-
-                            @Override
-                            public boolean hasNext() {
-                                return iterator.hasNext();
-                            }
-
-                            @Override
-                            public Tuple next() {
-                                return iterator.next();
-                            }
-                        };
-                    }
-                };
+                return new SingleResult<Tuple>(tuple);
             } else {
                 ResultSet results = statement.getGeneratedKeys();
                 return new GeneratedKeyResult(configuration, selection, connection, results, count);

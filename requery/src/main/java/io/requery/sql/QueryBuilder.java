@@ -117,6 +117,12 @@ public class QueryBuilder implements CharSequence {
         return space();
     }
 
+    public QueryBuilder aliasAttribute(String alias, Attribute value) {
+        append(alias);
+        append(".");
+        return attribute(value);
+    }
+
     public QueryBuilder append(Object value) {
         return append(value, false);
     }
@@ -157,6 +163,15 @@ public class QueryBuilder implements CharSequence {
             index++;
         }
         return this;
+    }
+
+    public <E> QueryBuilder commaSeparatedAttributes(Iterable<Attribute<E, ?>> values) {
+        return commaSeparated(values, new QueryBuilder.Appender<Attribute<E, ?>>() {
+            @Override
+            public void append(QueryBuilder qb, Attribute<E, ?> value) {
+                qb.attribute(value);
+            }
+        });
     }
 
     public <T> QueryBuilder commaSeparated(Iterable<? extends T> values) {

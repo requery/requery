@@ -16,7 +16,6 @@
 
 package io.requery.sql;
 
-import io.requery.PersistenceException;
 import io.requery.query.Scalar;
 import io.requery.query.SuppliedScalar;
 import io.requery.query.element.QueryElement;
@@ -39,8 +38,7 @@ class UpdateOperation extends PreparedQueryOperation implements QueryOperation<S
         super(configuration, null);
     }
 
-    UpdateOperation(RuntimeConfiguration configuration,
-                    GeneratedResultReader resultReader) {
+    UpdateOperation(RuntimeConfiguration configuration, GeneratedResultReader resultReader) {
         super(configuration, resultReader);
     }
 
@@ -73,7 +71,7 @@ class UpdateOperation extends PreparedQueryOperation implements QueryOperation<S
                         }
                     }
                 } catch (SQLException e) {
-                    throw new PersistenceException(e);
+                    throw new StatementExecutionException(e, sql);
                 }
                 return result;
             }

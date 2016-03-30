@@ -47,6 +47,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -456,7 +457,45 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         return keys;
     }
 
+    public void upsert(E entity, final EntityProxy<E> proxy) {
+        if (hasGeneratedKey) {
+            throw new UnsupportedOperationException("Can't upsert entity with generated key");
+        }
+        if (context.platform().supportsUpsert()) {
+            for (Attribute<E, ?> attribute : associativeAttributes) {
+                S referenced = foreignKeyReference(proxy, attribute);
+                if (referenced != null) {
+                    cascadeUpsert(referenced);
+                    proxy.setState(attribute, PropertyState.LOADED);
+                }
+            }
+            if (versionAttribute != null && !hasSystemVersionColumn()) {
+                incrementVersion(proxy);
+            }
+            List<Attribute<E, ?>> attributes = Arrays.asList(bindableAttributes);
+            EntityUpsertOperation<E> upsert = new EntityUpsertOperation<>(context, proxy, attributes);
+            int rows = upsert.execute(null).value();
+            if (rows <= 0) {
+                throw new RowCountException(1, rows);
+            }
+            proxy.link(context.read(entityClass));
+            updateAssociations(entity, proxy);
+            if (cacheable) {
+                cache.put(entityClass, proxy.key(), entity);
+            }
+        } else {
+            // not a real upsert, but can be ok for embedded databases
+            if (update(entity, proxy, false) == 0) {
+                insert(entity, proxy, false);
+            }
+        }
+    }
+
     public void update(E entity, final EntityProxy<E> proxy) {
+        update(entity, proxy, true);
+    }
+
+    public int update(E entity, final EntityProxy<E> proxy, boolean checkRowCount) {
         context.stateListener().preUpdate(entity, proxy);
         // updates the entity using a query (not the query values are not specified but instead
         // mapped directly to avoid boxing)
@@ -528,6 +567,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             query.set(expression, null);
             count++;
         }
+        int result = 0;
         if (count > 0) {
             if (keyAttribute != null) {
                 QueryAttribute<E, Object> id = Attributes.query(keyAttribute);
@@ -541,10 +581,18 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             if (hasVersion) {
                 addVersionCondition(query, version);
             }
-            checkRowsAffected(query.get().value(), entity, proxy);
+            result = query.get().value();
+            if (checkRowCount) {
+                checkRowsAffected(result, entity, proxy);
+            }
+            if (result > 0) {
+                updateAssociations(entity, proxy);
+            }
+        } else {
+            updateAssociations(entity, proxy);
         }
-        updateAssociations(entity, proxy);
         context.stateListener().postUpdate(entity, proxy);
+        return result;
     }
 
     private void addVersionCondition(Where<?> where, Object version) {
@@ -803,6 +851,14 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (proxy != null && !proxy.isLinked()) {
             EntityWriter<U, S> writer = context.write(proxy.type().classType());
             writer.insert(entity, proxy, false);
+        }
+    }
+
+    private <U extends S> void cascadeUpsert(U entity) {
+        EntityProxy<U> proxy = context.proxyOf(entity, false);
+        if (proxy != null && !proxy.isLinked()) {
+            EntityWriter<U, S> writer = context.write(proxy.type().classType());
+            writer.upsert(entity, proxy);
         }
     }
 

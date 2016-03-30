@@ -96,6 +96,16 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
     <E extends T> R update(E entity);
 
     /**
+     * Upserts (insert or update) the given entity. Note that upserting may be an expensive
+     * operation on some platforms and may not be supported in all cases or platforms.
+     *
+     * @param entity non null entity to insert
+     * @param <E>    entity type
+     * @return the operation result.
+     */
+    <E extends T> R upsert(E entity);
+
+    /**
      * Refresh the given entity. This refreshes the already loaded properties in the entity. If no
      * properties are loaded then the default properties will be loaded.
      *

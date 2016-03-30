@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package io.requery.query.element;
+package io.requery.sql;
 
-public enum QueryType {
-    SELECT,
-    INSERT,
-    UPDATE,
-    UPSERT,
-    DELETE,
-    TRUNCATE,
-    MERGE,
+import io.requery.PersistenceException;
+
+public class StatementExecutionException extends PersistenceException {
+
+    private final String sql;
+
+    StatementExecutionException(Throwable throwable, String sql) {
+        super("Exception executing statement: " + sql, throwable);
+        this.sql = sql;
+    }
+
+    public String getSql() {
+        return sql;
+    }
 }

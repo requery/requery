@@ -45,6 +45,9 @@ public interface SingleEntityStore<T> extends EntityStore<T, Single<?>> {
     <K, E extends T> Single<Iterable<K>> insert(Iterable<E> entities, Class<K> keyClass);
 
     @Override
+    <E extends T> Single<E> upsert(E entity);
+
+    @Override
     <E extends T> Single<E> update(E entity);
 
     @Override

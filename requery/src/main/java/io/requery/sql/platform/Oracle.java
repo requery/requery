@@ -22,6 +22,8 @@ import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.IdentityColumnDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.QueryBuilder;
+import io.requery.sql.UpsertDefinition;
+import io.requery.sql.UpsertMergeDefinition;
 import io.requery.sql.type.PrimitiveBooleanType;
 
 import java.sql.PreparedStatement;
@@ -32,17 +34,71 @@ import java.sql.Types;
 import static io.requery.sql.Keyword.ALWAYS;
 import static io.requery.sql.Keyword.AS;
 import static io.requery.sql.Keyword.BY;
+import static io.requery.sql.Keyword.FROM;
 import static io.requery.sql.Keyword.GENERATED;
 import static io.requery.sql.Keyword.IDENTITY;
 import static io.requery.sql.Keyword.INCREMENT;
+import static io.requery.sql.Keyword.SELECT;
 import static io.requery.sql.Keyword.START;
 import static io.requery.sql.Keyword.WITH;
 
 /**
- * platform configuration for Oracle 12c and later PL/SQL.
+ * Oracle 12c and later PL/SQL.
  */
 public class Oracle extends Generic {
 
+    private final OracleIdentityColumnDefinition generatedColumn;
+    private final UpsertMergeDefinition upsertMergeDefinition;
+
+    public Oracle() {
+        generatedColumn = new OracleIdentityColumnDefinition();
+        upsertMergeDefinition = new UpsertMergeDual();
+    }
+
+    @Override
+    public void addMappings(Mapping mapping) {
+        super.addMappings(mapping);
+        mapping.replaceType(Types.BINARY, new RawType(Types.BINARY));
+        mapping.replaceType(Types.VARBINARY, new RawType(Types.VARBINARY));
+        mapping.replaceType(Types.BOOLEAN, new NumericBooleanType());
+    }
+
+    @Override
+    public boolean supportsIfExists() {
+        return false;
+    }
+
+    @Override
+    public GeneratedColumnDefinition generatedColumnDefinition() {
+        return generatedColumn;
+    }
+
+    @Override
+    public UpsertDefinition upsertDefinition() {
+        return upsertMergeDefinition;
+    }
+
+    private static class UpsertMergeDual extends UpsertMergeDefinition {
+        @Override
+        protected <E> void appendUsing(QueryBuilder qb,
+                                       Iterable<Attribute<E, ?>> attributes,
+                                       final Parameterizer<E> parameterizer) {
+            qb.openParenthesis()
+                .keyword(SELECT)
+                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                    @Override
+                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
+                        qb.append("? ");
+                        parameterizer.addParameter(value);
+                        qb.append(value.name());
+                    }
+                }).space()
+                .keyword(FROM)
+                .append("DUAL ")
+                .closeParenthesis()
+                .append(" " + alias + " ");
+        }
+    }
     // binary type
     private static class RawType extends BaseType<byte[]> {
 
@@ -123,35 +179,12 @@ public class Oracle extends Generic {
             int increment = 1;
             qb.keyword(GENERATED, ALWAYS, AS, IDENTITY);
             qb.openParenthesis()
-                    .keyword(START, WITH).value(start)
-                    //.comma() just off the standard...
-                    .keyword(INCREMENT, BY).value(increment)
-                    .closeParenthesis()
-                    .space();
+                .keyword(START, WITH).value(start)
+                //.comma() just off the standard...
+                .keyword(INCREMENT, BY).value(increment)
+                .closeParenthesis()
+                .space();
         }
     }
 
-    private final OracleIdentityColumnDefinition generatedColumn;
-
-    public Oracle() {
-        generatedColumn = new OracleIdentityColumnDefinition();
-    }
-
-    @Override
-    public void addMappings(Mapping mapping) {
-        super.addMappings(mapping);
-        mapping.replaceType(Types.BINARY, new RawType(Types.BINARY));
-        mapping.replaceType(Types.VARBINARY, new RawType(Types.VARBINARY));
-        mapping.replaceType(Types.BOOLEAN, new NumericBooleanType());
-    }
-
-    @Override
-    public boolean supportsIfExists() {
-        return false;
-    }
-
-    @Override
-    public GeneratedColumnDefinition generatedColumnDefinition() {
-        return generatedColumn;
-    }
 }

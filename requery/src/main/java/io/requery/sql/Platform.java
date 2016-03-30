@@ -62,6 +62,12 @@ public interface Platform {
     boolean supportsGeneratedKeysInBatchUpdate();
 
     /**
+     * @return true if the platform supports an upsert (insert or update) operation either via
+     * merge or an alternate syntax that is defined in {@link #upsertDefinition()}
+     */
+    boolean supportsUpsert();
+
+    /**
      * @return the type of generated key type DDL this database supports.
      */
     GeneratedColumnDefinition generatedColumnDefinition();
@@ -75,4 +81,9 @@ public interface Platform {
      * @return the type of version column this database supports.
      */
     VersionColumnDefinition versionColumnDefinition();
+
+    /**
+     * @return the type of upsert definition the platform supports.
+     */
+    UpsertDefinition upsertDefinition();
 }
