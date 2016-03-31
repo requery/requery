@@ -22,6 +22,7 @@ import io.requery.query.Tuple;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -58,9 +59,12 @@ class ResultTuple implements Tuple {
     private String keyFor(Expression<?> expression) {
         String key = expression.name();
         if (expression instanceof Aliasable) {
-            key = ((Aliasable) expression).aliasName();
+            String aliasName = ((Aliasable) expression).aliasName();
+            if (aliasName != null) {
+                key = aliasName;
+            }
         }
-        return key;
+        return key == null ? null : key.toLowerCase(Locale.US);
     }
 
     void set(int index, Expression<?> expression, Object value) {
@@ -92,7 +96,7 @@ class ResultTuple implements Tuple {
     @SuppressWarnings("unchecked")
     @Override
     public <V> V get(String key) {
-        return (V) keyMap.get(key);
+        return (V) keyMap.get(key.toLowerCase(Locale.US));
     }
 
     @Override
