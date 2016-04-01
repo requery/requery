@@ -37,3 +37,10 @@ dependencies {
     testCompile 'javax.cache:cache-api:1.0.0'
     compile 'junit:junit:4.12'
 }
+
+test {
+    testLogging {
+        exceptionFormat = 'full'
+        showStackTraces true
+    }
+}
