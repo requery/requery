@@ -1149,10 +1149,6 @@ public abstract class FunctionalTest extends RandomData {
                 assertEquals(people.get(i).getId(), id);
             }
         }
-        try (Result<Tuple> result = data.raw("select count(*) from Person")) {
-            Number number = result.first().get(0); // can be long or int depending on db
-            assertEquals(count, number.intValue());
-        }
     }
 
     @Test(expected = PersistenceException.class)
