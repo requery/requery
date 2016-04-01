@@ -1128,6 +1128,33 @@ public abstract class FunctionalTest extends RandomData {
         assertTrue(result.get(1).get(0).equals("Hello!"));
     }
 
+    @Test
+    public void testQueryRaw() {
+        final int count = 5;
+        List<Person> people = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            Person person = randomPerson();
+            person.setAge(i);
+            data.insert(person);
+            people.add(person);
+        }
+        try (Result<Tuple> result = data.raw("select * from Person")) {
+            List<Tuple> list = result.toList();
+            assertEquals(count, list.size());
+            for (int i = 0; i < people.size(); i++) {
+                Tuple tuple = list.get(i);
+                String name = tuple.get("name");
+                assertEquals(people.get(i).getName(), name);
+                int id = tuple.get("id");
+                assertEquals(people.get(i).getId(), id);
+            }
+        }
+        try (Result<Tuple> result = data.raw("select count(*) from Person")) {
+            Number number = result.first().get(0); // can be long or int depending on db
+            assertEquals(count, number.intValue());
+        }
+    }
+
     @Test(expected = PersistenceException.class)
     public void testViolateUniqueConstraint() {
         UUID uuid = UUID.randomUUID();

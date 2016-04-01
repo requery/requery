@@ -61,6 +61,14 @@ public interface Mapping {
     FieldType mapAttribute(Attribute<?, ?> attribute);
 
     /**
+     * Get the mapped storage type mapping for a given sql type.
+     *
+     * @param sqlType {@link java.sql.Types} type
+     * @return the mapped class for the given sql type.
+     */
+    Class<?> typeOf(int sqlType);
+
+    /**
      * Given the expression read it from {@link ResultSet} instance.
      *
      * @param expression expression to read

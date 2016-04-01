@@ -149,4 +149,15 @@ public interface Queryable<T> {
      * @return next query step
      */
     Deletion<Scalar<Integer>> delete();
+
+    /**
+     * Executes a raw query against the data store.
+     *
+     * @param query      raw query to execute
+     * @param parameters query arguments, the number of arguments must match the number of place
+     *                   holder values in the query or a {@link PersistenceException} will be
+     *                   thrown.
+     * @return the result of the query as a {@link Tuple}.
+     */
+    Result<Tuple> raw(String query, Object... parameters);
 }

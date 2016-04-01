@@ -267,6 +267,11 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     }
 
     @Override
+    public Result<Tuple> raw(String query, Object... parameters) {
+        return delegate.raw(query, parameters);
+    }
+
+    @Override
     public BlockingEntityStore<T> toBlocking() {
         return delegate;
     }

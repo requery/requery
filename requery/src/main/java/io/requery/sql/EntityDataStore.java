@@ -459,6 +459,12 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
+    public Result<Tuple> raw(final String query, final Object... parameters) {
+        checkClosed();
+        return new RawQueryOperation(context, query, parameters).execute(null);
+    }
+
+    @Override
     public <V> V runInTransaction(Callable<V> callable, TransactionIsolation isolation) {
         Objects.requireNotNull(callable);
         checkClosed();

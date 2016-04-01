@@ -231,6 +231,16 @@ public class GenericMapping implements Mapping {
         return fieldType;
     }
 
+    @Override
+    public Class<?> typeOf(int sqlType) {
+        for (Map.Entry<Class<?>, FieldType> entry : types.entrySet()) {
+            if (entry.getValue().sqlType() == sqlType) {
+                return entry.getKey();
+            }
+        }
+        return String.class; // fall back to string value
+    }
+
     private FieldType getSubstitutedType(Class<?> type) {
         FieldType fieldType = null;
         // check conversion

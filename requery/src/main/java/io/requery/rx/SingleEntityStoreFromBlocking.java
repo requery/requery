@@ -272,6 +272,11 @@ class SingleEntityStoreFromBlocking<T> implements SingleEntityStore<T> {
     }
 
     @Override
+    public Result<Tuple> raw(String query, Object... parameters) {
+        return delegate.raw(query, parameters);
+    }
+
+    @Override
     public BlockingEntityStore<T> toBlocking() {
         return delegate;
     }

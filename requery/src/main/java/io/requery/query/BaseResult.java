@@ -51,6 +51,10 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
     private final Queue<CloseableIterator<E>> iterators;
     private final AtomicBoolean closed;
 
+    protected BaseResult() {
+        this(null);
+    }
+
     protected BaseResult(Integer maxSize) {
         this.maxSize = maxSize;
         this.iterators = new ConcurrentLinkedQueue<>();
