@@ -145,13 +145,18 @@ class RawQueryOperation extends PreparedQueryOperation implements QueryOperation
                 int columns = metadata.getColumnCount();
                 expressions = new Expression[columns];
                 Mapping mapping = configuration.mapping();
-                for (int i = 0; i < columns; i++) {
-                    String name = metadata.getColumnName(i + 1);
-                    int sqlType = metadata.getColumnType(i + 1);
-                    Class type = mapping.typeOf(sqlType);
-                    expressions[i] = NamedExpression.of(name, type);
+
+                CloseableIterator<Tuple> iterator =
+                    new ResultSetIterator<>(this, results, null, true, true);
+                if (iterator.hasNext()) { // need to be position at some row
+                    for (int i = 0; i < columns; i++) {
+                        String name = metadata.getColumnName(i + 1);
+                        int sqlType = metadata.getColumnType(i + 1);
+                        Class type = mapping.typeOf(sqlType);
+                        expressions[i] = NamedExpression.of(name, type);
+                    }
                 }
-                return new ResultSetIterator<>(this, results, null, true, true);
+                return iterator;
             } catch (SQLException e) {
                 throw new PersistenceException(e);
             }
