@@ -1145,9 +1145,13 @@ public abstract class FunctionalTest extends RandomData {
                 Tuple tuple = list.get(i);
                 String name = tuple.get("name");
                 assertEquals(people.get(i).getName(), name);
-                int id = tuple.get("id");
-                assertEquals(people.get(i).getId(), id);
+                Number id = tuple.get("id");
+                assertEquals(people.get(i).getId(), id.intValue());
             }
+        }
+        try (Result<Tuple> result = data.raw("select count(*) from Person")) {
+            Number number = result.first().get(0); // can be long or int depending on db
+            assertEquals(count, number.intValue());
         }
     }
 
