@@ -473,7 +473,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 incrementVersion(proxy);
             }
             List<Attribute<E, ?>> attributes = Arrays.asList(bindableAttributes);
-            EntityUpsertOperation<E> upsert = new EntityUpsertOperation<>(context, proxy, attributes);
+            EntityUpsertOperation<E> upsert =
+                new EntityUpsertOperation<>(context, proxy, attributes);
             int rows = upsert.execute(null).value();
             if (rows <= 0) {
                 throw new RowCountException(1, rows);
@@ -868,7 +869,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 proxy = context.proxyOf(entity, false);
             }
             EntityWriter<U, S> writer = context.write(proxy.type().classType());
-            if (proxy.isLinked()) {
+            if (proxy.isLinked() || hasKey(proxy)) {
                 writer.update(entity, proxy);
             } else {
                 writer.insert(entity, proxy, false);
@@ -886,6 +887,20 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 writer.removeEntity(proxy, entity);
             }
         }
+    }
+
+    private <U extends S> boolean hasKey(EntityProxy<U> proxy) {
+        Type<U> type = proxy.type();
+        if (type.keyAttributes().size() > 0) {
+            for (Attribute<U, ?> attribute : type.keyAttributes()) {
+                PropertyState state = proxy.getState(attribute);
+                if (!(state == PropertyState.MODIFIED || state == PropertyState.LOADED)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     private void removeEntity(EntityProxy<E> proxy, Object entity) {
