@@ -22,10 +22,9 @@ import io.requery.query.Expression;
 import io.requery.query.NamedExpression;
 import io.requery.query.Result;
 import io.requery.query.Tuple;
-import io.requery.query.element.QueryElement;
-import io.requery.query.element.QueryOperation;
 import io.requery.query.element.QueryType;
 import io.requery.util.CloseableIterator;
+import io.requery.util.function.Supplier;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -41,23 +40,17 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-class RawQueryOperation extends PreparedQueryOperation implements QueryOperation<Result<Tuple>> {
+class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tuple>> {
 
     private final BoundParameters boundParameters;
     private final String sql;
     private final QueryType queryType;
 
-    RawQueryOperation(RuntimeConfiguration configuration, String sql, Object[] parameters) {
+    RawTupleQuery(RuntimeConfiguration configuration, String sql, Object[] parameters) {
         super(configuration, null);
         this.sql = sql;
         queryType = queryTypeOf(sql);
-        boundParameters = new BoundParameters();
-        int index = 0;
-        for (Object parameter : parameters) {
-            Class type = parameter == null ? Object.class : parameter.getClass();
-            Expression expression = NamedExpression.of(String.valueOf(index++), type);
-            boundParameters.add(expression, parameter);
-        }
+        boundParameters = new BoundParameters(parameters);
     }
 
     private static QueryType queryTypeOf(String sql) {
@@ -74,7 +67,7 @@ class RawQueryOperation extends PreparedQueryOperation implements QueryOperation
     }
 
     @Override
-    public Result<Tuple> execute(QueryElement<Result<Tuple>> query) {
+    public Result<Tuple> get() {
         try {
             Connection connection = configuration.connectionProvider().getConnection();
             PreparedStatement statement = prepare(sql, connection);
@@ -148,7 +141,7 @@ class RawQueryOperation extends PreparedQueryOperation implements QueryOperation
 
                 CloseableIterator<Tuple> iterator =
                     new ResultSetIterator<>(this, results, null, true, true);
-                if (iterator.hasNext()) { // need to be position at some row
+                if (iterator.hasNext()) { // need to be positioned at some row (for android)
                     for (int i = 0; i < columns; i++) {
                         String name = metadata.getColumnName(i + 1);
                         int sqlType = metadata.getColumnType(i + 1);

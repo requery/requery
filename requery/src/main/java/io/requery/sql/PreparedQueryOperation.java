@@ -32,16 +32,16 @@ import java.sql.Statement;
  */
 abstract class PreparedQueryOperation {
 
-    protected final RuntimeConfiguration configuration;
-    protected final GeneratedResultReader generatedResultReader;
+    final RuntimeConfiguration configuration;
+    final GeneratedResultReader generatedResultReader;
 
-    protected PreparedQueryOperation(RuntimeConfiguration configuration,
-                                     GeneratedResultReader generatedResultReader) {
+    PreparedQueryOperation(RuntimeConfiguration configuration,
+                           GeneratedResultReader generatedResultReader) {
         this.configuration = configuration;
         this.generatedResultReader = generatedResultReader;
     }
 
-    protected PreparedStatement prepare(String sql, Connection connection) throws SQLException {
+    PreparedStatement prepare(String sql, Connection connection) throws SQLException {
         PreparedStatement statement;
         if (generatedResultReader != null) {
             if (configuration.platform().supportsGeneratedColumnsInPrepareStatement()) {
@@ -56,7 +56,7 @@ abstract class PreparedQueryOperation {
         return statement;
     }
 
-    protected void mapParameters(PreparedStatement statement, BoundParameters parameters)
+    void mapParameters(PreparedStatement statement, BoundParameters parameters)
         throws SQLException {
 
         for (int i = 0; i < parameters.count(); i++) {
@@ -73,7 +73,7 @@ abstract class PreparedQueryOperation {
         }
     }
 
-    protected void readGeneratedKeys(int index, Statement statement) throws SQLException {
+    void readGeneratedKeys(int index, Statement statement) throws SQLException {
         if (generatedResultReader != null) {
             try (ResultSet results = statement.getGeneratedKeys()) {
                 generatedResultReader.read(index, results);

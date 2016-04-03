@@ -160,4 +160,16 @@ public interface Queryable<T> {
      * @return the result of the query as a {@link Tuple}.
      */
     Result<Tuple> raw(String query, Object... parameters);
+
+    /**
+     * Executes a raw query against the data store mapping on to a specific entity type.
+     *
+     * @param type       entity type
+     * @param query      raw query to execute
+     * @param parameters query arguments, the number of arguments must match the number of place
+     *                   holder values in the query or a {@link PersistenceException} will be
+     *                   thrown.
+     * @return the result of the query.
+     */
+    <E extends T> Result<E> raw(Class<E> type, String query, Object... parameters);
 }

@@ -1134,7 +1134,6 @@ public abstract class FunctionalTest extends RandomData {
         List<Person> people = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             Person person = randomPerson();
-            person.setAge(i);
             data.insert(person);
             people.add(person);
         }
@@ -1152,6 +1151,27 @@ public abstract class FunctionalTest extends RandomData {
         try (Result<Tuple> result = data.raw("select count(*) from Person")) {
             Number number = result.first().get(0); // can be long or int depending on db
             assertEquals(count, number.intValue());
+        }
+    }
+
+    @Test
+    public void testQueryRawEntities() {
+        final int count = 5;
+        List<Person> people = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            Person person = randomPerson();
+            data.insert(person);
+            people.add(person);
+        }
+        try (Result<Person> result = data.raw(Person.class, "select * from Person")) {
+            List<Person> list = result.toList();
+            assertEquals(count, list.size());
+            for (int i = 0; i < people.size(); i++) {
+                Person person = list.get(i);
+                String name = person.getName();
+                assertEquals(people.get(i).getName(), name);
+                assertEquals(people.get(i).getId(), person.getId());
+            }
         }
     }
 

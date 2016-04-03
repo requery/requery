@@ -461,7 +461,13 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     @Override
     public Result<Tuple> raw(final String query, final Object... parameters) {
         checkClosed();
-        return new RawQueryOperation(context, query, parameters).execute(null);
+        return new RawTupleQuery(context, query, parameters).get();
+    }
+
+    @Override
+    public <E extends T> Result<E> raw(Class<E> type, String query, Object... parameters) {
+        checkClosed();
+        return new RawEntityQuery<>(context, type, query, parameters).get();
     }
 
     @Override

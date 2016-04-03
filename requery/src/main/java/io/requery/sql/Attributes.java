@@ -43,7 +43,7 @@ final class Attributes {
                                                    Predicate<Attribute<E, ?>> filter) {
         LinkedHashSet<Attribute> filtered = new LinkedHashSet<>();
         for (Attribute<E, ?> attribute : attributes) {
-            if (filter.test(attribute)) {
+            if (filter == null || filter.test(attribute)) {
                 filtered.add(attribute);
             }
         }

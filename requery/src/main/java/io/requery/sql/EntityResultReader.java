@@ -28,7 +28,14 @@ class EntityResultReader<E extends S, S> implements ResultReader<E> {
     private final EntityReader<E, S> reader;
     private final Attribute[] attributes;
 
-    public EntityResultReader(EntityReader<E, S> reader, Attribute[] attributes) {
+    /**
+     * Creates a new reader instance for transforming a result to an entity.
+     *
+     * @param reader     to use
+     * @param attributes this is used instead of the set in
+     *                   {@link ResultReader#read(ResultSet, Set)} for performance reasons
+     */
+    EntityResultReader(EntityReader<E, S> reader, Attribute[] attributes) {
         this.reader = reader;
         this.attributes = attributes;
     }

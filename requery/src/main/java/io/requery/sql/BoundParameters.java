@@ -17,6 +17,7 @@
 package io.requery.sql;
 
 import io.requery.query.Expression;
+import io.requery.query.NamedExpression;
 import io.requery.util.Objects;
 
 import java.util.ArrayList;
@@ -36,16 +37,26 @@ public class BoundParameters {
         values = new ArrayList<>();
     }
 
+    BoundParameters(Object... parameters) {
+        this();
+        int index = 0;
+        for (Object parameter : parameters) {
+            Class type = parameter == null ? Object.class : parameter.getClass();
+            Expression expression = NamedExpression.of(String.valueOf(index++), type);
+            add(expression, parameter);
+        }
+    }
+
     public <V> void add(Expression<V> expression, V value) {
         expressions.add(expression);
         values.add(value);
     }
 
-    public Expression<?> expressionAt(int index) {
+    Expression<?> expressionAt(int index) {
         return expressions.get(index);
     }
 
-    public Object valueAt(int index) {
+    Object valueAt(int index) {
         return values.get(index);
     }
 
