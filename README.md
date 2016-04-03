@@ -4,7 +4,7 @@ A light but powerful object mapping and SQL generator for Java/Android with RxJa
 Easily map to or create databases, perform queries and updates from any platform that uses Java.
 
 [![Build Status](https://travis-ci.org/requery/requery.svg?branch=master)](https://travis-ci.org/requery/requery)
-[ ![Download](https://api.bintray.com/packages/requery/requery/requery/images/download.svg) ](https://bintray.com/requery/requery/requery/_latestVersion)
+[![Download](https://api.bintray.com/packages/requery/requery/requery/images/download.svg)](https://bintray.com/requery/requery/requery/_latestVersion)
 
 Examples
 --------
@@ -171,11 +171,11 @@ Features
 - No dependencies (RxJava is optional)
 - Typed query language
 - Table generation
-- Supports JDBC and many popular databases
+- Supports JDBC and most popular databases (MySQL, Oracle, SQL Server, Postgres and more)
 - Supports Android (SQLite, RecyclerView, Databinding, SQLCipher)
-- RxJava support
 - Blocking and non-blocking API
 - Partial objects/refresh
+- Upsert support
 - Caching
 - Lifecycle callbacks
 - Custom type converters
@@ -207,6 +207,17 @@ easily create a Stream, RxJava Observable, Iterator, List or Map.
 
 Many-to-Many junction tables can be generated automatically. Additionally the relation model is
 validated at compile time eliminating runtime errors.
+
+vs JPA
+------
+
+requery provides a modern set of interfaces for persisting and performing queries. Some key
+differences between requery and JPA providers like Hibernate or EclipseLink:
+
+- Queries maps directly to SQL as opposed to JPQL.
+- Dynamic Queries easily done through a DSL as opposed to the verbose `CriteriaQuery` API.
+- Uses easily understandable extended/generated code instead of reflection/bytecode weaving for
+  state tracking and member access
 
 Android
 -------
@@ -252,10 +263,18 @@ JPA Annotations
 A subset of the JPA annotations that map onto the requery annotations are supported.
 See [here](https://github.com/requery/requery/wiki/JPA-Annotations) for more information.
 
+Upserts
+-------
+
+Upserts are generated with the appropriate database specific query statements:
+- Oracle/SQL Server/HSQL: `merge into when matched/not matched`
+- PostgresSQL: `on conflict do update` (requires 9.5 or later)
+- MySQL: `on duplicate key update`
+
 Using it
 --------
 
-Currently beta versions are available on bintray jcenter.
+Currently beta versions are available on bintray jcenter / maven central.
 
 ```gradle
 repositories {
@@ -263,9 +282,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.0.0-beta10'
-    compile 'io.requery:requery-android:1.0.0-beta10' // for android
-    apt 'io.requery:requery-processor:1.0.0-beta10'   // use an APT plugin
+    compile 'io.requery:requery:1.0.0-beta11'
+    compile 'io.requery:requery-android:1.0.0-beta11' // for android
+    apt 'io.requery:requery-processor:1.0.0-beta11'   // use an APT plugin
 }
 ```
 

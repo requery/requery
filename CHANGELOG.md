@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+## 1.0.0-beta11
+
+- Support for Upserts
+- Support for raw queries
+- Fix cascading insert/updates based on primary key presence
+
 ## 1.0.0-beta10
 
 - Support for multi-column indexes
