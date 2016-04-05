@@ -562,7 +562,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             // persist the foreign key object if needed
             S referenced = foreignKeyReference(proxy, attribute);
             if (referenced != null) {
-                cascadeInsert(referenced);
+                cascadeSave(referenced, null);
             }
             Expression<Object> expression = Attributes.query(attribute);
             query.set(expression, null);
@@ -628,9 +628,9 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                                 "1-1 relationship can only be removed from the owning side");
                     }
                     Attribute<S, Object> mapped = Attributes.get(attribute.mappedAttribute());
-                    EntityProxy<S> refProxy = context.proxyOf(value, true);
-                    refProxy.set(mapped, entity, PropertyState.MODIFIED);
-                    context.write(mapped.declaringType().classType()).update(value, refProxy);
+                    EntityProxy<S> referredProxy = context.proxyOf(value, true);
+                    referredProxy.set(mapped, entity, PropertyState.MODIFIED);
+                    context.write(mapped.declaringType().classType()).update(value, referredProxy);
                     break;
                 case ONE_TO_MANY:
                     ObservableCollection<S> collection =
@@ -731,9 +731,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         proxy.setObject(versionAttribute, version, PropertyState.MODIFIED);
     }
 
-    private <U extends S> void updateInverseAssociation(U entity, Attribute p, Object value) {
+    private <U extends S> void updateInverseAssociation(U entity,
+                                                        Attribute attribute, Object value) {
         EntityProxy<U> proxy = context.proxyOf(entity, false);
-        Attribute<U, Object> inverse = Attributes.get(p.mappedAttribute());
+        Attribute<U, Object> inverse = Attributes.get(attribute.mappedAttribute());
         proxy.set(inverse, value, PropertyState.MODIFIED);
         cascadeSave(entity, proxy);
     }
