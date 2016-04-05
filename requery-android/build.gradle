@@ -53,6 +53,7 @@ publishing {
             artifactId project.name
             version rootProject.version
             artifact "build/outputs/aar/${project.name}-release.aar"
+            artifact sourcesJar
             artifact(javadocJar) {
                 classifier 'javadoc'
             }
