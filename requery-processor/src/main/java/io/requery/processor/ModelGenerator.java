@@ -59,7 +59,7 @@ class ModelGenerator implements SourceGenerator {
     @Override
     public void generate() throws IOException {
         ClassName typeName = ClassName.get(packageName, "Models");
-        TypeSpec.Builder type = TypeSpec.classBuilder(typeName.simpleName())
+        TypeSpec.Builder type = TypeSpec.classBuilder(typeName)
                 .addModifiers(Modifier.PUBLIC)
                 .addMethod(MethodSpec.constructorBuilder()
                         .addModifiers(Modifier.PRIVATE).build());

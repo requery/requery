@@ -53,9 +53,9 @@ class EntityNameResolver {
             .map(this::typeNameOf).findFirst();
     }
 
-    ClassName generatedJoinEntityName(AssociativeEntityDescriptor descriptor,
-                                      EntityDescriptor a,
-                                      EntityDescriptor b) {
+    ClassName joinEntityName(AssociativeEntityDescriptor descriptor,
+                             EntityDescriptor a,
+                             EntityDescriptor b) {
         String className;
         if (Names.isEmpty(descriptor.name())) {
             className = a.typeName().className() + "_" + b.typeName().className();

@@ -69,8 +69,7 @@ class JoinEntityGenerator implements SourceGenerator {
             // create junction table name with TableA_TableB
             name = from.tableName() + "_" + to.tableName();
         }
-        ClassName joinEntityName = nameResolver.generatedJoinEntityName(
-            associativeDescriptor, from, to);
+        ClassName joinEntityName = nameResolver.joinEntityName(associativeDescriptor, from, to);
         String className = "Abstract" + joinEntityName.simpleName();
         TypeSpec.Builder junctionType = TypeSpec.classBuilder(className)
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
