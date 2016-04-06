@@ -20,11 +20,11 @@ import android.content.Context;
 import android.database.Cursor;
 import io.requery.android.DefaultMapping;
 import io.requery.android.LoggingListener;
+import io.requery.android.sqlite.DatabaseProvider;
 import io.requery.android.sqlite.SchemaUpdater;
 import io.requery.meta.EntityModel;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
-import io.requery.sql.ConnectionProvider;
 import io.requery.sql.Mapping;
 import io.requery.sql.Platform;
 import io.requery.sql.SchemaModifier;
@@ -37,7 +37,8 @@ import net.sqlcipher.database.SQLiteOpenHelper;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class SecureDatabaseSource extends SQLiteOpenHelper implements ConnectionProvider {
+public class SqlCipherDatabaseSource extends SQLiteOpenHelper implements
+    DatabaseProvider<SQLiteDatabase> {
 
     private final Platform platform;
     private final EntityModel model;
@@ -46,12 +47,13 @@ public class SecureDatabaseSource extends SQLiteOpenHelper implements Connection
     private SQLiteDatabase db;
     private Configuration configuration;
     private boolean loggingEnabled;
+    private TableCreationMode mode;
 
-    public SecureDatabaseSource(Context context,
-                                EntityModel model,
-                                String name,
-                                String password,
-                                int version) {
+    public SqlCipherDatabaseSource(Context context,
+                                   EntityModel model,
+                                   String name,
+                                   String password,
+                                   int version) {
         super(context, name, null, version);
         if (model == null) {
             throw new IllegalArgumentException("null model");
@@ -60,11 +62,18 @@ public class SecureDatabaseSource extends SQLiteOpenHelper implements Connection
         this.mapping = onCreateMapping();
         this.model = model;
         this.password = password;
+        this.mode = TableCreationMode.CREATE_NOT_EXISTS;
         SQLiteDatabase.loadLibs(context);
     }
 
+    @Override
     public void setLoggingEnabled(boolean enable) {
         this.loggingEnabled = enable;
+    }
+
+    @Override
+    public void setTableCreationMode(TableCreationMode mode) {
+        this.mode = mode;
     }
 
     protected Mapping onCreateMapping() {
@@ -84,6 +93,7 @@ public class SecureDatabaseSource extends SQLiteOpenHelper implements Connection
         }
     }
 
+    @Override
     public Configuration getConfiguration() {
         if (configuration == null) {
             ConfigurationBuilder builder = new ConfigurationBuilder(this, model)
@@ -103,6 +113,11 @@ public class SecureDatabaseSource extends SQLiteOpenHelper implements Connection
     }
 
     @Override
+    public void onConfigure(SQLiteDatabase db) {
+        //
+    }
+
+    @Override
     public void onUpgrade(final SQLiteDatabase db, int oldVersion, int newVersion) {
         this.db = db;
         SchemaUpdater updater = new SchemaUpdater(getConfiguration(),
@@ -111,7 +126,7 @@ public class SecureDatabaseSource extends SQLiteOpenHelper implements Connection
             public Cursor apply(String s) {
                 return db.rawQuery(s, null);
             }
-        });
+        }, mode);
         updater.update();
     }
 
@@ -123,5 +138,15 @@ public class SecureDatabaseSource extends SQLiteOpenHelper implements Connection
             }
             return getConnection(db);
         }
+    }
+
+    @Override
+    public SQLiteDatabase getReadableDatabase() {
+        return getReadableDatabase(password);
+    }
+
+    @Override
+    public SQLiteDatabase getWritableDatabase() {
+        return getWritableDatabase(password);
     }
 }

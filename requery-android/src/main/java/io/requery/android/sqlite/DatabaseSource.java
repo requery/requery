@@ -28,7 +28,6 @@ import io.requery.android.LoggingListener;
 import io.requery.meta.EntityModel;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
-import io.requery.sql.ConnectionProvider;
 import io.requery.sql.Mapping;
 import io.requery.sql.Platform;
 import io.requery.sql.SchemaModifier;
@@ -53,7 +52,7 @@ import java.sql.SQLNonTransientConnectionException;
  *
  * @author Nikhil Purushe
  */
-public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvider {
+public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider<SQLiteDatabase> {
 
     private final Platform platform;
     private final EntityModel model;
@@ -62,6 +61,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
     private Configuration configuration;
     private boolean configured;
     private boolean loggingEnabled;
+    private TableCreationMode mode;
 
     /**
      * Creates a new {@link DatabaseSource} instance.
@@ -110,15 +110,17 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
         this.platform = new SQLite();
         this.mapping = onCreateMapping();
         this.model = model;
+        this.mode = TableCreationMode.CREATE_NOT_EXISTS;
     }
 
-    /**
-     * Enables statement logging. Not use for debugging only as it impacts performance.
-     *
-     * @param enable true to enable, false otherwise default is false.
-     */
+    @Override
     public void setLoggingEnabled(boolean enable) {
         this.loggingEnabled = enable;
+    }
+
+    @Override
+    public void setTableCreationMode(TableCreationMode mode) {
+        this.mode = mode;
     }
 
     private static String getDefaultDatabaseName(Context context, EntityModel model) {
@@ -156,6 +158,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
         }
     }
 
+    @Override
     public Configuration getConfiguration() {
         if (configuration == null) {
             ConfigurationBuilder builder = new ConfigurationBuilder(this, model)
@@ -192,7 +195,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements ConnectionProvid
             public Cursor apply(String s) {
                 return db.rawQuery(s, null);
             }
-        });
+        }, mode);
         updater.update();
     }
 

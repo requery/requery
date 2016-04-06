@@ -38,15 +38,22 @@ public class SchemaUpdater {
 
     private final Configuration configuration;
     private final Function<String, Cursor> queryFunction;
+    private final TableCreationMode mode;
 
-    public SchemaUpdater(Configuration configuration, Function<String, Cursor> queryFunction) {
+    public SchemaUpdater(Configuration configuration,
+                         Function<String, Cursor> queryFunction,
+                         TableCreationMode mode) {
         this.configuration = configuration;
         this.queryFunction = queryFunction;
+        this.mode = mode == null ? TableCreationMode.CREATE_NOT_EXISTS : mode;
     }
 
     public void update() {
         SchemaModifier schema = new SchemaModifier(configuration);
-        schema.createTables(TableCreationMode.CREATE_NOT_EXISTS);
+        schema.createTables(mode);
+        if (mode == TableCreationMode.DROP_CREATE) {
+            return; // don't need to check missing columns
+        }
         // check for missing columns
         List<Attribute> missingAttributes = new ArrayList<>();
         for (Type<?> type : configuration.entityModel().allTypes()) {
