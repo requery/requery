@@ -19,7 +19,7 @@ package io.requery.test;
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
-import io.requery.android.sqlcipher.SecureDatabaseSource;
+import io.requery.android.sqlcipher.SqlCipherDatabaseSource;
 import io.requery.meta.EntityModel;
 import io.requery.sql.EntityDataStore;
 import io.requery.test.model.Models;
@@ -30,7 +30,7 @@ import java.sql.SQLException;
 @RunWith(AndroidJUnit4.class)
 public class SqlCipherFunctionalTest extends FunctionalTest {
 
-    private SecureDatabaseSource dataSource;
+    private SqlCipherDatabaseSource dataSource;
 
     @Override
     public void setup() throws SQLException {
@@ -38,7 +38,7 @@ public class SqlCipherFunctionalTest extends FunctionalTest {
         final String dbName = "test_sqlcipher.db";
         context.deleteDatabase(dbName);
         EntityModel model = Models.DEFAULT;
-        dataSource = new SecureDatabaseSource(context, model, dbName, "test123", 1);
+        dataSource = new SqlCipherDatabaseSource(context, model, dbName, "test123", 1);
         dataSource.setLoggingEnabled(true);
         data = new EntityDataStore<>(dataSource.getConfiguration());
     }
