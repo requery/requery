@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 1.0.0-beta12
+
+- Support for Android SQLite support library
+- Support table creation mode in Android for development
+- Fix @Converter implementations using generic types
+- Fix cascade saving of foreign key references
+- Fix missing sources for requery-android artifact
+
 ## 1.0.0-beta11
 
 - Support for Upserts
