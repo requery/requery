@@ -132,11 +132,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         ElementValidator validator = new ElementValidator(element(), processingEnvironment);
         validators.add(validator);
         validateField(validator);
-        checkMemberType(processingEnvironment, typeMirror(), validators);
         processFieldAccessAnnotations(validator);
         processBasicColumnAnnotations(validator);
         processAssociativeAnnotations(processingEnvironment, validator);
         processConverterAnnotation(validator);
+        checkMemberType(processingEnvironment, typeMirror(), validators);
         if (cardinality() != null && entity.isImmutable()) {
             validator.error("Immutable value type cannot contain relational references");
         }
@@ -165,16 +165,19 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         if (type.getKind() == TypeKind.DECLARED) {
             TypeElement element = (TypeElement) types.asElement(type);
             if (element != null) {
-                isIterable = Mirrors.isInstance(types, element, Iterable.class);
+                // only set if the attribute is relational
+                if (cardinality != null) {
+                    isIterable = Mirrors.isInstance(types, element, Iterable.class);
+                }
                 isMap = Mirrors.isInstance(types, element, Map.class);
+                if (isMap) {
+                    builderClass = MapAttributeBuilder.class;
+                }
                 isOptional = Mirrors.isInstance(types, element, Optional.class);
             }
         }
         if (isIterable) {
             validators.add(validateCollectionType(processingEnvironment));
-        }
-        if (isMap) {
-            builderClass = MapAttributeBuilder.class;
         }
     }
 

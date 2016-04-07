@@ -1,5 +1,7 @@
 package io.requery.test.model;
 
+import io.requery.Column;
+import io.requery.Convert;
 import io.requery.Entity;
 import io.requery.Factory;
 import io.requery.Generated;
@@ -7,27 +9,32 @@ import io.requery.Key;
 import io.requery.ManyToOne;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 @Entity
 @Factory(PhoneFactory.class)
 public class AbstractPhone implements Serializable {
 
-    public AbstractPhone(String phoneNumber) {
+    AbstractPhone(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
-    public AbstractPhone(String phoneNumber, boolean normalized) {
+    AbstractPhone(String phoneNumber, boolean normalized) {
         this.phoneNumber = phoneNumber;
         this.normalized = normalized;
     }
 
-    public AbstractPhone() {
+    AbstractPhone() {
     }
 
     @Key @Generated
     protected int id;
     protected String phoneNumber;
     protected boolean normalized;
+
+    @Column
+    @Convert(IntegerListConverter.class)
+    protected ArrayList<Integer> extensions;
 
     @ManyToOne
     protected Person owner;

@@ -581,16 +581,6 @@ class EntityGenerator implements SourceGenerator {
         // if it's an association don't make it available as a query attribute
         boolean isQueryable = attribute.cardinality() == null || attribute.isForeignKey();
         Class<?> attributeType = isQueryable ? QueryAttribute.class : Attribute.class;
-
-        ParameterizedTypeName type =
-            parameterizedTypeName(attributeType, targetName, attributeTypeName);
-        String attributeName = Names.upperCaseUnderscore(
-            Names.removeMemberPrefixes(attribute.fieldName()));
-        fieldNames.add(attributeName);
-
-        FieldSpec.Builder fieldBuilder = FieldSpec.builder(type, attributeName,
-            Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
-
         CodeBlock.Builder builder = CodeBlock.builder();
 
         if (attribute.isIterable()) {
@@ -623,10 +613,29 @@ class EntityGenerator implements SourceGenerator {
                 attribute.builderClass(), targetName, attributeTypeName);
             TypeName classType = attributeTypeName;
             if (typeMirror.getKind().isPrimitive()) {
+                // if primitive just use the primitive class not the boxed version
                 classType = TypeName.get(typeMirror);
             }
-            builder.add("\nnew $T($S, $T.class)\n", builderName, attribute.name(), classType);
+            String statement;
+            if (Mirrors.listGenericTypeArguments(typeMirror).size() > 0) {
+                // use the erased type and cast to class
+                classType = TypeName.get(types.erasure(typeMirror));
+                statement = "\nnew $T($S, (Class)$T.class)\n";
+            } else {
+                statement ="\nnew $T($S, $T.class)\n";
+            }
+            builder.add(statement, builderName, attribute.name(), classType);
         }
+
+        ParameterizedTypeName type =
+            parameterizedTypeName(attributeType, targetName, attributeTypeName);
+        String attributeName = Names.upperCaseUnderscore(
+            Names.removeMemberPrefixes(attribute.fieldName()));
+        fieldNames.add(attributeName);
+
+        FieldSpec.Builder fieldBuilder = FieldSpec.builder(type, attributeName,
+            Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+
         generateProperties(attribute, typeMirror, targetName, attributeTypeName, builder);
         // attribute builder properties
         if (attribute.isKey()) {
