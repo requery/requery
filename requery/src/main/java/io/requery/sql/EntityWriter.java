@@ -32,6 +32,7 @@ import io.requery.proxy.Settable;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
 import io.requery.query.FieldExpression;
+import io.requery.query.MutableResult;
 import io.requery.query.Scalar;
 import io.requery.query.Where;
 import io.requery.query.element.QueryElement;
@@ -633,17 +634,28 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     context.write(mapped.declaringType().classType()).update(value, referredProxy);
                     break;
                 case ONE_TO_MANY:
-                    ObservableCollection<S> collection =
-                        (ObservableCollection<S>) proxy.get(attribute, false);
-                    CollectionChanges<?, S> changes =
-                        (CollectionChanges<?, S>) collection.observer();
-                    for (S added : changes.addedElements()) {
-                        updateInverseAssociation(added, attribute, entity);
+                    Object relation = proxy.get(attribute, false);
+                    if (relation instanceof ObservableCollection) {
+                        ObservableCollection<S> collection = (ObservableCollection<S>) relation;
+                        CollectionChanges<?, S> changes =
+                            (CollectionChanges<?, S>) collection.observer();
+                        if (changes != null) {
+                            for (S added : changes.addedElements()) {
+                                updateInverseAssociation(added, attribute, entity);
+                            }
+                            for (S removed : changes.removedElements()) {
+                                updateInverseAssociation(removed, attribute, null);
+                            }
+                            changes.clear();
+                        }
+                    } else if (relation instanceof Iterable) {
+                        Iterable<S> iterable = (Iterable<S>) relation;
+                        for (S added : iterable) {
+                            updateInverseAssociation(added, attribute, entity);
+                        }
+                    } else {
+                        throw new IllegalStateException("unsupported relation type " + relation);
                     }
-                    for (S removed : changes.removedElements()) {
-                        updateInverseAssociation(removed, attribute, null);
-                    }
-                    changes.clear();
                     break;
                 case MANY_TO_MANY:
                     Class referencedClass = attribute.referencedClass();
@@ -662,9 +674,17 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     Attribute<E, Object> tRef = Attributes.get(tKey.referencedAttribute());
                     Attribute<S, Object> uRef = Attributes.get(uKey.referencedAttribute());
 
-                    collection = (ObservableCollection<S>) proxy.get(attribute, false);
-                    changes = (CollectionChanges<?, S>) collection.observer();
-                    for (S added : changes.addedElements()) {
+                    CollectionChanges<?, S> changes = null;
+                    relation = proxy.get(attribute, false);
+                    Iterable<S> addedElements = (Iterable<S>) relation;
+                    if (relation instanceof ObservableCollection) {
+                        ObservableCollection<S> collection = (ObservableCollection<S>) relation;
+                        changes = (CollectionChanges<?, S>) collection.observer();
+                        if (changes != null) {
+                            addedElements = changes.addedElements();
+                        }
+                    }
+                    for (S added : addedElements) {
                         S junction = (S) referencedType.factory().get();
                         EntityProxy<S> junctionProxy = context.proxyOf(junction, false);
                         EntityProxy<S> uProxy = context.proxyOf(added, false);
@@ -680,23 +700,24 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
                         cascadeInsert(junction);
                     }
+                    if (changes != null) {
+                        Object keyValue = proxy.get(tRef);
+                        for (S removed : changes.removedElements()) {
+                            EntityProxy<S> toRemove = context.proxyOf(removed, false);
+                            Object otherValue = toRemove.get(uRef);
+                            Class<? extends S> removeType = (Class<? extends S>)
+                                referencedType.classType();
 
-                    Object keyValue = proxy.get(tRef);
-                    for (S removed : changes.removedElements()) {
-                        EntityProxy<S> toRemove = context.proxyOf(removed, false);
-                        Object otherValue = toRemove.get(uRef);
-                        Class<? extends S> removeType = (Class<? extends S>)
-                            referencedType.classType();
-
-                        Supplier<Scalar<Integer>> query = queryable.delete(removeType)
+                            Supplier<Scalar<Integer>> query = queryable.delete(removeType)
                                 .where(tKey.equal(keyValue))
                                 .and(uKey.equal(otherValue));
-                        int count = query.get().value();
-                        if (count != 1) {
-                            throw new RowCountException(1, count);
+                            int count = query.get().value();
+                            if (count != 1) {
+                                throw new RowCountException(1, count);
+                            }
                         }
+                        changes.clear();
                     }
-                    changes.clear();
                     break;
                 case MANY_TO_ONE:
                 default:
@@ -919,6 +940,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     if (value instanceof Collection) {
                         Collection collection = (Collection) value;
                         collection.remove(entity);
+                    } else if (value instanceof MutableResult) {
+                        @SuppressWarnings("unchecked")
+                        MutableResult<Object> result = (MutableResult) value;
+                        result.remove(entity);
                     }
                     break;
             }
