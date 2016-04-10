@@ -1,14 +1,28 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
+}
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile 'com.squareup:javapoet:1.6.1'
     compile 'org.eclipse.persistence:javax.persistence:2.1.1'
     compile project(':requery')
+    compile 'com.squareup:javapoet:1.6.1'
 }
+
+shadowJar {
+    dependencies {
+        include(dependency('com.squareup:javapoet:.*'))
+    }
+    relocate 'com.squareup', 'io.requery.com.squareup'
+    archiveName "${project.name}.jar"
+}
+
+jar.finalizedBy shadowJar
 
 // set idea language level
 idea.module.iml {
