@@ -108,7 +108,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
             setWriteAheadLoggingEnabled(true);
         }
         this.platform = new SQLite();
-        this.mapping = onCreateMapping();
+        this.mapping = onCreateMapping(platform);
         this.model = model;
         this.mode = TableCreationMode.CREATE_NOT_EXISTS;
     }
@@ -131,9 +131,10 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
     /**
      * Override to change the default {@link Mapping}.
      *
+     * @param platform platform instance
      * @return the configured mapping.
      */
-    protected Mapping onCreateMapping() {
+    protected Mapping onCreateMapping(Platform platform) {
         return new DefaultMapping(platform);
     }
 

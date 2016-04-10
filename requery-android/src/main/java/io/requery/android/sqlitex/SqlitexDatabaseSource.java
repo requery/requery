@@ -76,7 +76,7 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
             throw new IllegalArgumentException("null model");
         }
         this.platform = new SQLite();
-        this.mapping = onCreateMapping();
+        this.mapping = onCreateMapping(platform);
         this.model = model;
         this.mode = TableCreationMode.CREATE_NOT_EXISTS;
     }
@@ -96,7 +96,7 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
         this.mode = mode;
     }
 
-    protected Mapping onCreateMapping() {
+    protected Mapping onCreateMapping(Platform platform) {
         return new DefaultMapping(platform);
     }
 
