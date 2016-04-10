@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+## 1.0.0-beta13
+
+- Support non observable collections in relations
+- Annotation processor dependencies shadowed to prevent conflicts with other libraries
+
 ## 1.0.0-beta12
 
 - Support for Android SQLite support library
