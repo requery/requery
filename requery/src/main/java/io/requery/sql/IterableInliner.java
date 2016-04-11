@@ -62,7 +62,7 @@ final class IterableInliner {
         }
 
         StringBuilder inlineBuilder = new StringBuilder(sql);
-        List<Object> newParameters = new ArrayList<>(Arrays.asList(parameters)); // Modifiable copy
+        List<Object> newParameters = new ArrayList<>(); // Modifiable copy
 
         // Iterate backwords to avoid modifying the indices of
         // parameters in the front
