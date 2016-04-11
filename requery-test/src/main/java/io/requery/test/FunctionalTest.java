@@ -1152,6 +1152,9 @@ public abstract class FunctionalTest extends RandomData {
             Number number = result.first().get(0); // can be long or int depending on db
             assertEquals(count, number.intValue());
         }
+        try (Result<Tuple> result = data.raw("select * from Person WHERE id = ?", people.get(0))) {
+            assertEquals(result.first().<Number>get("id").intValue(), people.get(0).getId());
+        }
     }
 
     @Test
@@ -1172,6 +1175,9 @@ public abstract class FunctionalTest extends RandomData {
                 assertEquals(people.get(i).getName(), name);
                 assertEquals(people.get(i).getId(), person.getId());
             }
+        }
+        try (Result<Person> result = data.raw(Person.class, "select * from Person WHERE id = ?", people.get(0))) {
+            assertEquals(result.first().getId(), people.get(0).getId());
         }
     }
 

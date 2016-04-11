@@ -48,6 +48,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
 
     RawTupleQuery(RuntimeConfiguration configuration, String sql, Object[] parameters) {
         super(configuration, null);
+        EntityKeyMapper.mapEntitiesToKeys(configuration, parameters);
         this.sql = sql;
         queryType = queryTypeOf(sql);
         boundParameters = new BoundParameters(parameters);
