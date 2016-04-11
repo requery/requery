@@ -1176,7 +1176,7 @@ public abstract class FunctionalTest extends RandomData {
             data.insert(person);
             people.add(person);
         }
-        List<Long> resultIds = new ArrayList<>();
+        List<Integer> resultIds = new ArrayList<>();
         try (Result<Person> result = data.raw(Person.class, "select * from Person")) {
             List<Person> list = result.toList();
             assertEquals(count, list.size());
@@ -1185,14 +1185,14 @@ public abstract class FunctionalTest extends RandomData {
                 String name = person.getName();
                 assertEquals(people.get(i).getName(), name);
                 assertEquals(people.get(i).getId(), person.getId());
-                resultIds.add(person.getId().longValue());
+                resultIds.add(person.getId());
             }
         }
         try (Result<Person> result = data.raw(Person.class, "select * from Person WHERE id IN ?", resultIds)) {
             List<Person> list = result.toList();
-            List<Long> thisResultIds = new ArrayList<>(list.size());
+            List<Integer> thisResultIds = new ArrayList<>(list.size());
             for (Person tuple : list) {
-                thisResultIds.add(tuple.getId().longValue());
+                thisResultIds.add(tuple.getId());
             }
             assertEquals(resultIds, thisResultIds);
         }
