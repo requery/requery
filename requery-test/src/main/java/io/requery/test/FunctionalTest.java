@@ -1137,6 +1137,7 @@ public abstract class FunctionalTest extends RandomData {
             data.insert(person);
             people.add(person);
         }
+        List<Long> resultIds = new ArrayList<>();
         try (Result<Tuple> result = data.raw("select * from Person")) {
             List<Tuple> list = result.toList();
             assertEquals(count, list.size());
@@ -1146,7 +1147,16 @@ public abstract class FunctionalTest extends RandomData {
                 assertEquals(people.get(i).getName(), name);
                 Number id = tuple.get("id");
                 assertEquals(people.get(i).getId(), id.intValue());
+                resultIds.add(id.longValue());
             }
+        }
+        try (Result<Tuple> result = data.raw("select * from Person WHERE id IN ?", resultIds)) {
+            List<Tuple> list = result.toList();
+            List<Long> thisResultIds = new ArrayList<>(list.size());
+            for (Tuple tuple : list) {
+                thisResultIds.add(tuple.<Number>get("id").longValue());
+            }
+            assertEquals(resultIds, thisResultIds);
         }
         try (Result<Tuple> result = data.raw("select count(*) from Person")) {
             Number number = result.first().get(0); // can be long or int depending on db
@@ -1166,6 +1176,7 @@ public abstract class FunctionalTest extends RandomData {
             data.insert(person);
             people.add(person);
         }
+        List<Long> resultIds = new ArrayList<>();
         try (Result<Person> result = data.raw(Person.class, "select * from Person")) {
             List<Person> list = result.toList();
             assertEquals(count, list.size());
@@ -1174,7 +1185,16 @@ public abstract class FunctionalTest extends RandomData {
                 String name = person.getName();
                 assertEquals(people.get(i).getName(), name);
                 assertEquals(people.get(i).getId(), person.getId());
+                resultIds.add(person.getId().longValue());
             }
+        }
+        try (Result<Person> result = data.raw(Person.class, "select * from Person WHERE id IN ?", resultIds)) {
+            List<Person> list = result.toList();
+            List<Long> thisResultIds = new ArrayList<>(list.size());
+            for (Person tuple : list) {
+                thisResultIds.add(tuple.getId().longValue());
+            }
+            assertEquals(resultIds, thisResultIds);
         }
         try (Result<Person> result = data.raw(Person.class, "select * from Person WHERE id = ?", people.get(0))) {
             assertEquals(result.first().getId(), people.get(0).getId());
