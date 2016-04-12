@@ -120,7 +120,7 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
         return CompletableFuture.supplyAsync(new Supplier<E>() {
             @Override
             public E get() {
-                return delegate.update(entity);
+                return delegate.upsert(entity);
             }
         }, executor);
     }
