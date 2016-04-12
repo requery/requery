@@ -13,79 +13,87 @@ public final class CollectionUtils {
     }
 
     /**
-     * Copies the array into a modifiable list.
+     * Inserts the array at index 0 in the supplied list.
      */
-    public static List<Byte> toList(byte[] arr) {
-        List<Byte> list = new ArrayList<>(arr.length);
-        for (byte value : arr) {
-            list.add(value);
+    public static void insertIntoListBeginning(byte[] arr, ArrayList<? super Byte> list) {
+        list.ensureCapacity(list.size() + arr.length);
+        for (int i = arr.length - 1; i >= 0; i--) {
+            list.add(0, arr[i]);
         }
-        return list;
     }
 
     /**
-     * Copies the array into a modifiable list.
+     * Inserts the array at index 0 in the supplied list.
      */
-    public static List<Short> toList(short[] arr) {
-        List<Short> list = new ArrayList<>(arr.length);
-        for (short value : arr) {
-            list.add(value);
+    public static void insertIntoListBeginning(short[] arr, ArrayList<? super Short> list) {
+        list.ensureCapacity(list.size() + arr.length);
+        for (int i = arr.length - 1; i >= 0; i--) {
+            list.add(0, arr[i]);
         }
-        return list;
     }
 
     /**
-     * Copies the array into a modifiable list.
+     * Inserts the array at index 0 in the supplied list.
      */
-    public static List<Integer> toList(int[] arr) {
-        List<Integer> list = new ArrayList<>(arr.length);
-        for (int value : arr) {
-            list.add(value);
+    public static void insertIntoListBeginning(int[] arr, ArrayList<? super Integer> list) {
+        list.ensureCapacity(list.size() + arr.length);
+        for (int i = arr.length - 1; i >= 0; i--) {
+            list.add(0, arr[i]);
         }
-        return list;
     }
 
     /**
-     * Copies the array into a modifiable list.
+     * Inserts the array at index 0 in the supplied list.
      */
-    public static List<Long> toList(long[] arr) {
-        List<Long> list = new ArrayList<>(arr.length);
-        for (long value : arr) {
-            list.add(value);
+    public static void insertIntoListBeginning(long[] arr, ArrayList<? super Long> list) {
+        list.ensureCapacity(list.size() + arr.length);
+        for (int i = arr.length - 1; i >= 0; i--) {
+            list.add(0, arr[i]);
         }
-        return list;
     }
 
     /**
-     * Copies the array into a modifiable list.
+     * Inserts the array at index 0 in the supplied list.
      */
-    public static List<Float> toList(float[] arr) {
-        List<Float> list = new ArrayList<>(arr.length);
-        for (float value : arr) {
-            list.add(value);
+    public static void insertIntoListBeginning(float[] arr, ArrayList<? super Float> list) {
+        list.ensureCapacity(list.size() + arr.length);
+        for (int i = arr.length - 1; i >= 0; i--) {
+            list.add(0, arr[i]);
         }
-        return list;
     }
 
     /**
-     * Copies the array into a modifiable list.
+     * Inserts the array at index 0 in the supplied list.
      */
-    public static List<Double> toList(double[] arr) {
-        List<Double> list = new ArrayList<>(arr.length);
-        for (double value : arr) {
-            list.add(value);
+    public static void insertIntoListBeginning(double[] arr, ArrayList<? super Double> list) {
+        list.ensureCapacity(list.size() + arr.length);
+        for (int i = arr.length - 1; i >= 0; i--) {
+            list.add(0, arr[i]);
         }
-        return list;
     }
 
     /**
-     * Copies the {@link Iterable} into a modifiable list.
+     * Inserts the array at index 0 in the supplied list.
      */
-    public static <T> List<T> toList(Iterable<T> iterable) {
-        List<T> list = new ArrayList<>();
+    public static void insertIntoListBeginning(Object[] arr, ArrayList<Object> list) {
+        list.ensureCapacity(list.size() + arr.length);
+        for (int i = arr.length - 1; i >= 0; i--) {
+            list.add(0, arr[i]);
+        }
+    }
+
+    /**
+     * Inserts the {@link Iterable} at index 0 in the supplied list.
+     */
+    public static <T> void insertIntoListBeginning(Iterable<T> iterable, ArrayList<? super T> list) {
+        if (iterable instanceof List) {
+            list.addAll(0, (List<T>) iterable);
+            return;
+        }
+
+        int i = 0;
         for (T t : iterable) {
-            list.add(t);
+            list.add(i++, t);
         }
-        return list;
     }
 }

@@ -3,7 +3,6 @@ package io.requery.sql;
 import io.requery.util.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,6 +54,10 @@ final class IterableInliner {
      * and reference types.
      */
     static IterableInlineResult inlineIterables(String sql, Object[] parameters) {
+        if (!containsIterableOrArray(parameters)) {
+            return new IterableInlineResult(parameters, sql);
+        }
+
         List<Integer> indicesOfArguments = new ArrayList<>(parameters.length);
         Matcher matcher = questionMarkPattern.matcher(sql);
         while (matcher.find()) {
@@ -62,7 +65,7 @@ final class IterableInliner {
         }
 
         StringBuilder inlineBuilder = new StringBuilder(sql);
-        List<Object> newParameters = new ArrayList<>(); // Modifiable copy
+        ArrayList<Object> newParameters = new ArrayList<>(); // Modifiable copy
 
         // Iterate backwords to avoid modifying the indices of
         // parameters in the front
@@ -71,37 +74,46 @@ final class IterableInliner {
             int argumentStringIndex = indicesOfArguments.get(i);
 
             if (parameter instanceof Iterable) {
+                int sizeBefore = newParameters.size();
                 //noinspection unchecked
-                List<Object> objects = CollectionUtils.toList((Iterable<Object>) parameter);
-                inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(objects.size()));
-                newParameters.addAll(0, objects);
+                CollectionUtils.insertIntoListBeginning((Iterable<Object>) parameter, newParameters);
+                inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(newParameters.size() - sizeBefore));
             } else if (parameter instanceof byte[]) {
                 inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((byte[]) parameter).length));
-                newParameters.addAll(0, CollectionUtils.toList(((byte[]) parameter)));
+                CollectionUtils.insertIntoListBeginning((byte[]) parameter, newParameters);
             } else if (parameter instanceof short[]) {
                 inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((short[]) parameter).length));
-                newParameters.addAll(0, CollectionUtils.toList(((short[]) parameter)));
+                CollectionUtils.insertIntoListBeginning((short[]) parameter, newParameters);
             } else if (parameter instanceof int[]) {
                 inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((int[]) parameter).length));
-                newParameters.addAll(0, CollectionUtils.toList(((int[]) parameter)));
+                CollectionUtils.insertIntoListBeginning((int[]) parameter, newParameters);
             } else if (parameter instanceof long[]) {
                 inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((long[]) parameter).length));
-                newParameters.addAll(0, CollectionUtils.toList(((long[]) parameter)));
+                CollectionUtils.insertIntoListBeginning((long[]) parameter, newParameters);
             } else if (parameter instanceof float[]) {
                 inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((float[]) parameter).length));
-                newParameters.addAll(0, CollectionUtils.toList(((float[]) parameter)));
+                CollectionUtils.insertIntoListBeginning((float[]) parameter, newParameters);
             } else if (parameter instanceof double[]) {
                 inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((double[]) parameter).length));
-                newParameters.addAll(0, CollectionUtils.toList(((double[]) parameter)));
+                CollectionUtils.insertIntoListBeginning((double[]) parameter, newParameters);
             } else if (parameter instanceof Object[]) {
                 inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((Object[]) parameter).length));
-                newParameters.addAll(0, Arrays.asList((Object[]) parameter));
+                CollectionUtils.insertIntoListBeginning((Object[]) parameter, newParameters);
             } else {
                 newParameters.add(0, parameter);
             }
         }
 
         return new IterableInlineResult(newParameters.toArray(), inlineBuilder.toString());
+    }
+
+    private static boolean containsIterableOrArray(Object[] parameters) {
+        for (Object parameter : parameters) {
+            if (parameter instanceof Iterable || parameter.getClass().isArray()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
