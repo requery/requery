@@ -96,6 +96,12 @@ final class IterableInliner {
             } else if (parameter instanceof double[]) {
                 inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((double[]) parameter).length));
                 CollectionUtils.insertIntoListBeginning((double[]) parameter, newParameters);
+            } else if (parameter instanceof boolean[]) {
+                inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((boolean[]) parameter).length));
+                CollectionUtils.insertIntoListBeginning((boolean[]) parameter, newParameters);
+            } else if (parameter instanceof char[]) {
+                inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((char[]) parameter).length));
+                CollectionUtils.insertIntoListBeginning((char[]) parameter, newParameters);
             } else if (parameter instanceof Object[]) {
                 inlineBuilder.replace(argumentStringIndex, argumentStringIndex + 1, argumentTuple(((Object[]) parameter).length));
                 CollectionUtils.insertIntoListBeginning((Object[]) parameter, newParameters);

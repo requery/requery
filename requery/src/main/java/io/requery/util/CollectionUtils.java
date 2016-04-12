@@ -83,6 +83,26 @@ public final class CollectionUtils {
     }
 
     /**
+     * Inserts the array at index 0 in the supplied list.
+     */
+    public static void insertIntoListBeginning(boolean[] arr, ArrayList<Object> list) {
+        list.ensureCapacity(list.size() + arr.length);
+        for (int i = arr.length - 1; i >= 0; i--) {
+            list.add(0, arr[i]);
+        }
+    }
+
+    /**
+     * Inserts the array at index 0 in the supplied list.
+     */
+    public static void insertIntoListBeginning(char[] arr, ArrayList<Object> list) {
+        list.ensureCapacity(list.size() + arr.length);
+        for (int i = arr.length - 1; i >= 0; i--) {
+            list.add(0, arr[i]);
+        }
+    }
+
+    /**
      * Inserts the {@link Iterable} at index 0 in the supplied list.
      */
     public static <T> void insertIntoListBeginning(Iterable<T> iterable, ArrayList<? super T> list) {
