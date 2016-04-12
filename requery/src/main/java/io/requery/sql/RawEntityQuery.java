@@ -54,7 +54,7 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
                    Class<E> cls, String sql, Object[] parameters) {
         super(context, null);
         IterableInliner.IterableInlineResult iterableInlineResult = IterableInliner.inlineIterables(sql, parameters);
-        EntityKeyMapper.mapEntitiesToKeys(configuration, parameters);
+        EntityKeyMapper.mapEntitiesToKeys(configuration, iterableInlineResult.getParameters());
         this.type = configuration.model().typeOf(cls);
         this.sql = iterableInlineResult.getSql();
         this.reader = context.read(cls);
