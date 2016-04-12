@@ -115,7 +115,7 @@ final class IterableInliner {
 
     private static boolean containsIterableOrArray(Object[] parameters) {
         for (Object parameter : parameters) {
-            if (parameter instanceof Iterable || parameter.getClass().isArray()) {
+            if (parameter instanceof Iterable || parameter != null && parameter.getClass().isArray()) {
                 return true;
             }
         }
