@@ -55,6 +55,11 @@ final class ImmutableEntityModel implements EntityModel {
     }
 
     @Override
+    public <T> boolean containsTypeOf(Class<? extends T> entityClass) {
+        return map.containsKey(entityClass);
+    }
+
+    @Override
     public Set<Type<?>> allTypes() {
         return new LinkedHashSet<>(map.values());
     }
