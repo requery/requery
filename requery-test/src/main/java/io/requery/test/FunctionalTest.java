@@ -1152,11 +1152,11 @@ public abstract class FunctionalTest extends RandomData {
         }
         try (Result<Tuple> result = data.raw("select * from Person WHERE id IN ?", resultIds)) {
             List<Tuple> list = result.toList();
-            List<Long> thisResultIds = new ArrayList<>(list.size());
+            List<Long> ids = new ArrayList<>(list.size());
             for (Tuple tuple : list) {
-                thisResultIds.add(tuple.<Number>get("id").longValue());
+                ids.add(tuple.<Number>get("id").longValue());
             }
-            assertEquals(resultIds, thisResultIds);
+            assertEquals(resultIds, ids);
         }
         try (Result<Tuple> result = data.raw("select count(*) from Person")) {
             Number number = result.first().get(0); // can be long or int depending on db

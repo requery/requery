@@ -50,15 +50,13 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
     private final BoundParameters boundParameters;
     private final String sql;
 
-    RawEntityQuery(EntityContext<S> context,
-                   Class<E> cls, String sql, Object[] parameters) {
+    RawEntityQuery(EntityContext<S> context, Class<E> cls, String sql, Object[] parameters) {
         super(context, null);
-        IterableInliner.IterableInlineResult iterableInlineResult = IterableInliner.inlineIterables(sql, parameters);
-        EntityKeyMapper.mapEntitiesToKeys(configuration, iterableInlineResult.getParameters());
+        ParameterInliner inlined = new ParameterInliner(sql, parameters).apply();
         this.type = configuration.model().typeOf(cls);
-        this.sql = iterableInlineResult.getSql();
+        this.sql = inlined.sql();
         this.reader = context.read(cls);
-        boundParameters = new BoundParameters(iterableInlineResult.getParameters());
+        boundParameters = new BoundParameters(inlined.parameters());
     }
 
     @Override
