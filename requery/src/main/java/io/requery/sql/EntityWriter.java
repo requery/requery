@@ -584,6 +584,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 addVersionCondition(query, version);
             }
             result = query.get().value();
+            proxy.link(context.read(entityClass));
             if (checkRowCount) {
                 checkRowsAffected(result, entity, proxy);
             }
