@@ -304,7 +304,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public boolean isFinal() {
-        return element().getKind().isClass() && element().getModifiers().contains(Modifier.FINAL);
+        return annotationOf(Entity.class).map(entity -> !entity.extendable()).orElse(
+            element().getKind().isClass() && element().getModifiers().contains(Modifier.FINAL) );
     }
 
     @Override
