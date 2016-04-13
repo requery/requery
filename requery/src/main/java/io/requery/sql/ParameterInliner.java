@@ -78,7 +78,7 @@ final class ParameterInliner implements Predicate<Object[]> {
         final Consumer<Object> collect = new Consumer<Object>() {
             @Override
             public void accept(Object o) {
-                newParameters.add(o);
+                newParameters.add(0, o);
             }
         };
         // Iterate backwards to avoid modifying the indices of parameters in the front
