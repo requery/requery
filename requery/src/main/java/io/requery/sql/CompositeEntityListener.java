@@ -30,7 +30,7 @@ class CompositeEntityListener<T> extends EntityStateEventListeners<T> {
 
     private boolean enableStateListeners;
 
-    public void enableStateListeners(boolean enabled) {
+    void enableStateListeners(boolean enabled) {
         this.enableStateListeners = enabled;
     }
 
