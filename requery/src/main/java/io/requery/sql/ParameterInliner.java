@@ -94,10 +94,6 @@ final class ParameterInliner implements Predicate<Object[]> {
                     newParameters.add(x++, t);
                 }
                 expand(sb, index, newParameters.size() - sizeBefore);
-            } else if (parameter instanceof byte[]) {
-                byte[] array = (byte[]) parameter;
-                ArrayFunctions.forEach(array, collect);
-                expand(sb, index, array.length);
             } else if (parameter instanceof short[]) {
                 short[] array = (short[]) parameter;
                 ArrayFunctions.forEach(array, collect);
@@ -120,10 +116,6 @@ final class ParameterInliner implements Predicate<Object[]> {
                 expand(sb, index, array.length);
             } else if (parameter instanceof boolean[]) {
                 boolean[] array = (boolean[]) parameter;
-                ArrayFunctions.forEach(array, collect);
-                expand(sb, index, array.length);
-            } else if (parameter instanceof char[]) {
-                char[] array = (char[]) parameter;
                 ArrayFunctions.forEach(array, collect);
                 expand(sb, index, array.length);
             } else if (parameter instanceof Object[]) {
