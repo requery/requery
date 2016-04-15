@@ -17,6 +17,8 @@
 package io.requery.sql;
 
 import io.requery.meta.Attribute;
+import io.requery.meta.EntityModel;
+import io.requery.meta.Type;
 import io.requery.query.Expression;
 
 import java.sql.Connection;
@@ -33,12 +35,14 @@ import java.sql.Statement;
 abstract class PreparedQueryOperation {
 
     final RuntimeConfiguration configuration;
-    final GeneratedResultReader generatedResultReader;
+    private final EntityModel model;
+    private final GeneratedResultReader generatedResultReader;
 
     PreparedQueryOperation(RuntimeConfiguration configuration,
                            GeneratedResultReader generatedResultReader) {
         this.configuration = configuration;
         this.generatedResultReader = generatedResultReader;
+        this.model = configuration.model();
     }
 
     PreparedStatement prepare(String sql, Connection connection) throws SQLException {
@@ -67,6 +71,18 @@ abstract class PreparedQueryOperation {
                 if (attribute.isAssociation()) {
                     // get the referenced value
                     value = Attributes.replaceForeignKeyReference(value, attribute);
+                }
+            }
+            Class<?> type = value == null ? null: value.getClass();
+            if (type != null) {
+                // allows entity arguments with single keys to be remapped to their keys
+                if (model.containsTypeOf(type)) {
+                    Type<Object> entityType = model.typeOf(type);
+                    Attribute<Object, ?> keyAttribute = entityType.singleKeyAttribute();
+                    if (keyAttribute != null) {
+                        value = keyAttribute.property().get(value);
+                        expression = (Expression) keyAttribute;
+                    }
                 }
             }
             configuration.mapping().write(expression, statement, i + 1, value);

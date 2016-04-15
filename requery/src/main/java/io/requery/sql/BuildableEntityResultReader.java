@@ -28,7 +28,7 @@ class BuildableEntityResultReader<E extends S, S> implements ResultReader<E> {
     private final EntityReader<E, S> reader;
     private Attribute<?, ?>[] attributes;
 
-    public BuildableEntityResultReader(EntityReader<E, S> reader, Attribute<?, ?>[] attributes) {
+    BuildableEntityResultReader(EntityReader<E, S> reader, Attribute<?, ?>[] attributes) {
         this.reader = reader;
         this.attributes = attributes;
     }

@@ -39,11 +39,14 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:23.1.1'
     compile 'com.android.databinding:library:1.0-rc5'
     compile 'net.zetetic:android-database-sqlcipher:3.3.1-2'
-    compile 'io.requery:sqlite-android:3.12.0'
+    compile 'io.requery:sqlite-android:3.12.1'
     androidTestCompile project(':requery-test')
     androidTestCompile 'com.android.support.test:runner:0.4'
     androidTestCompile 'com.android.support.test:rules:0.4'
 }
+
+publish.dependsOn assembleRelease
+bintrayUpload.dependsOn assembleRelease
 
 android.libraryVariants
 publishing {
@@ -53,11 +56,9 @@ publishing {
             groupId rootProject.group
             artifactId project.name
             version rootProject.version
-            artifact "build/outputs/aar/${project.name}-release.aar"
+            artifact getReleaseArtifact()
             artifact sourcesJar
-            artifact(javadocJar) {
-                classifier 'javadoc'
-            }
+            artifact javadocJar
             pom.withXml {
                 asNode().children().last() + project.pomXml
             }
@@ -73,6 +74,10 @@ publishing {
             url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
         }
     }
+}
+
+def getReleaseArtifact() {
+    return "build/outputs/aar/${project.name}-release.aar"
 }
 
 task sourcesJar(type: Jar) {

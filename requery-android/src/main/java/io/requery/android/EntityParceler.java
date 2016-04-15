@@ -60,7 +60,7 @@ public class EntityParceler<T> {
             }
             PropertyState state = PropertyState.LOADED;
             if (!type.isStateless()) {
-                state = PropertyState.valueOf(in.readValue(null).toString());
+                state = PropertyState.valueOf(in.readString());
             }
             proxy.setObject(attribute, value, state);
         }

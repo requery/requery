@@ -53,16 +53,24 @@ public @interface Entity {
     String model() default "";
 
     /**
+     * @return the builder class used to construct this entity if it is {@link #immutable()}.
+     * Note the builder class must have a zero-argument constructor that is either package visible
+     * or public.
+     */
+    Class<?> builder() default void.class;
+
+    /**
      * @return true if the given object should be cached by the entity store, false otherwise.
      */
     boolean cacheable() default true;
 
     /**
-     * @return true if the entity object should have state tracking disabled, which allows partial
-     * updates of changed values only and automatic retrieval of not loaded properties. Defaults to
-     * false, unless the entity is {@link #immutable()} in which case the value is true.
+     * @return false if they class being annotated as entity is not extendable and the annotation
+     * processor should not generate a type extending or implementing it but instead generate only
+     * the attribute meta information. Defaults to true unless this annotation is placed on a class
+     * that is final then defaults to false.
      */
-    boolean stateless() default false;
+    boolean extendable() default true;
 
     /**
      * @return true if the entity object is immutable. If true the entity cannot have changeable
@@ -73,11 +81,11 @@ public @interface Entity {
     boolean immutable() default false;
 
     /**
-     * @return the builder class used to construct this entity if it is {@link #immutable()}.
-     * Note the builder class must have a zero-argument constructor that is either package visible
-     * or public.
+     * @return true if the entity object should have state tracking disabled, which allows partial
+     * updates of changed values only and automatic retrieval of not loaded properties. Defaults to
+     * false, unless the entity is {@link #immutable()} in which case the value is true.
      */
-    Class<?> builder() default void.class;
+    boolean stateless() default false;
 
     /**
      * Defines the name style of properties in the target entity e.g. for a property 'name' and

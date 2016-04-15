@@ -33,7 +33,7 @@ public class NamedExpression<V> extends FieldExpression<V> {
         return new NamedExpression<>(name, String.class);
     }
 
-    NamedExpression(String name, Class<V> type) {
+    private NamedExpression(String name, Class<V> type) {
         this.name = name;
         this.type = type;
     }

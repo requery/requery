@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 1.0.0-beta14
+
+- Support for generating mappings for final/non-extendable classes
+- Support raw query parameter expansion
+- Fix cascade saving of entities in update
+- Fix upsert for CompletableEntityStore
+- Fix entity parceling on Android
+
 ## 1.0.0-beta13
 
 - Support non observable collections in relations

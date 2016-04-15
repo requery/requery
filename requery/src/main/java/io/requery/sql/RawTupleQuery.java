@@ -48,10 +48,10 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
 
     RawTupleQuery(RuntimeConfiguration configuration, String sql, Object[] parameters) {
         super(configuration, null);
-        EntityKeyMapper.mapEntitiesToKeys(configuration, parameters);
-        this.sql = sql;
+        ParameterInliner inlined = new ParameterInliner(sql, parameters).apply();
+        this.sql = inlined.sql();
         queryType = queryTypeOf(sql);
-        boundParameters = new BoundParameters(parameters);
+        boundParameters = new BoundParameters(inlined.parameters());
     }
 
     private static QueryType queryTypeOf(String sql) {
