@@ -27,9 +27,9 @@ import java.util.regex.Pattern;
 
 /**
  * Since SQL has no native support for Arrays and Iterables in "IN"-clauses,
- * this method inlines them. An example: <br/>
+ * this method inlines them. Example: <br/>
  * <br/>
- * <code>inlineIterables("select * from Person where id in ?",
+ * <code>raw("select * from Person where id in ?",
  * Arrays.asList(1, 2, 3));</code><br/>
  * <br/>
  * This is transformed into "select * from Person where id in (?, ?, ?) and the resulting new
@@ -78,7 +78,7 @@ final class ParameterInliner implements Predicate<Object[]> {
         final Consumer<Object> collect = new Consumer<Object>() {
             @Override
             public void accept(Object o) {
-                newParameters.add(0, o);
+                newParameters.add(o);
             }
         };
         // Iterate backwards to avoid modifying the indices of parameters in the front
@@ -143,7 +143,6 @@ final class ParameterInliner implements Predicate<Object[]> {
     }
 
     private void expand(StringBuilder sb, int index, int length) {
-        argumentTuple(length);
         sb.replace(index, index + 1, argumentTuple(length));
     }
 
