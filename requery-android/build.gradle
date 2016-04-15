@@ -45,6 +45,9 @@ dependencies {
     androidTestCompile 'com.android.support.test:rules:0.4'
 }
 
+publish.dependsOn assembleRelease
+bintrayUpload.dependsOn assembleRelease
+
 android.libraryVariants
 publishing {
     publications {
@@ -53,11 +56,9 @@ publishing {
             groupId rootProject.group
             artifactId project.name
             version rootProject.version
-            artifact "build/outputs/aar/${project.name}-release.aar"
+            artifact getReleaseArtifact()
             artifact sourcesJar
-            artifact(javadocJar) {
-                classifier 'javadoc'
-            }
+            artifact javadocJar
             pom.withXml {
                 asNode().children().last() + project.pomXml
             }
@@ -73,6 +74,10 @@ publishing {
             url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
         }
     }
+}
+
+def getReleaseArtifact() {
+    return "build/outputs/aar/${project.name}-release.aar"
 }
 
 task sourcesJar(type: Jar) {
