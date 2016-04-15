@@ -30,6 +30,6 @@ public enum Operator {
     LIKE,
     NOT_LIKE,
     BETWEEN,
-    NULL,
+    IS_NULL,
     NOT_NULL
 }

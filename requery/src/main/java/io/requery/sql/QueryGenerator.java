@@ -694,7 +694,7 @@ class QueryGenerator<E> {
             case BETWEEN:
                 qb.keyword(BETWEEN);
                 break;
-            case NULL:
+            case IS_NULL:
                 qb.keyword(IS, NULL);
                 break;
             case NOT_NULL:

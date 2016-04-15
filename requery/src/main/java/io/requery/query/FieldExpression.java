@@ -301,7 +301,7 @@ public abstract class FieldExpression<V> implements
 
     @Override
     public LogicalCondition<? extends Expression<V>, V> isNull() {
-        return new ExpressionCondition<>(this, Operator.NULL, null);
+        return new ExpressionCondition<>(this, Operator.IS_NULL, null);
     }
 
     @Override
