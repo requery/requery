@@ -16,19 +16,13 @@
 
 package io.requery.android.sqlite;
 
-import android.database.sqlite.SQLiteAccessPermException;
-import android.database.sqlite.SQLiteCantOpenDatabaseException;
-import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabaseCorruptException;
 
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.SQLNonTransientException;
 import java.sql.Statement;
 
 /**
@@ -36,32 +30,19 @@ import java.sql.Statement;
  *
  * @author Nikhil Purushe
  */
-public class SqliteConnection extends BaseConnection {
+class SqliteConnection extends BaseConnection {
 
     private final SQLiteDatabase db;
     private final SqliteMetaData metaData;
     private boolean enteredTransaction;
 
-    public SqliteConnection(SQLiteDatabase db) {
+    SqliteConnection(SQLiteDatabase db) {
         if(db == null) {
             throw new IllegalArgumentException("null db");
         }
         this.db = db;
         autoCommit = true;
         metaData = new SqliteMetaData(this);
-    }
-
-    static void throwSQLException(android.database.SQLException exception) throws SQLException {
-        if(exception instanceof SQLiteConstraintException) {
-            throw new SQLIntegrityConstraintViolationException(exception);
-
-        } else if(exception instanceof SQLiteCantOpenDatabaseException ||
-                exception instanceof SQLiteDatabaseCorruptException ||
-                exception instanceof SQLiteAccessPermException) {
-
-            throw new SQLNonTransientException(exception);
-        }
-        throw new SQLException(exception);
     }
 
     SQLiteDatabase getDatabase() {

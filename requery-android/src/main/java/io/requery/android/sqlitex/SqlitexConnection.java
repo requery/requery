@@ -16,7 +16,6 @@
 
 package io.requery.android.sqlitex;
 
-import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteException;
 import io.requery.android.database.sqlite.SQLiteDatabase;
 import io.requery.android.sqlite.BaseConnection;
@@ -26,7 +25,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 
 class SqlitexConnection extends BaseConnection {
@@ -36,19 +34,9 @@ class SqlitexConnection extends BaseConnection {
     private boolean enteredTransaction;
 
     SqlitexConnection(SQLiteDatabase db) {
-        if(db == null) {
-            throw new IllegalArgumentException("null db");
-        }
         this.db = db;
         autoCommit = true;
         metaData = new SqlitexMetaData(this);
-    }
-
-    static void throwSQLException(SQLiteException exception) throws SQLException {
-        if(exception instanceof SQLiteConstraintException) {
-            throw new SQLIntegrityConstraintViolationException(exception);
-        }
-        throw new SQLException(exception);
     }
 
     SQLiteDatabase getDatabase() {

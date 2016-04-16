@@ -16,6 +16,11 @@
 
 package io.requery.android.sqlite;
 
+import android.database.sqlite.SQLiteAccessPermException;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
+import android.database.sqlite.SQLiteConstraintException;
+import android.database.sqlite.SQLiteDatabaseCorruptException;
+
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -27,6 +32,8 @@ import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
@@ -54,6 +61,22 @@ public abstract class BaseConnection implements Connection {
         clientInfo = new Properties();
         transactionIsolation = TRANSACTION_SERIALIZABLE;
     }
+
+    public static void throwSQLException(android.database.SQLException exception)
+        throws SQLException {
+
+        if(exception instanceof SQLiteConstraintException) {
+            throw new SQLIntegrityConstraintViolationException(exception);
+
+        } else if(exception instanceof SQLiteCantOpenDatabaseException ||
+            exception instanceof SQLiteDatabaseCorruptException ||
+            exception instanceof SQLiteAccessPermException) {
+
+            throw new SQLNonTransientException(exception);
+        }
+        throw new SQLException(exception);
+    }
+
 
     protected abstract void ensureTransaction();
 

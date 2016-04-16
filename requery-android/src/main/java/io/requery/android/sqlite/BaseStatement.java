@@ -187,7 +187,6 @@ public abstract class BaseStatement implements Statement {
 
     @Override
     public int getUpdateCount() throws SQLException {
-        throwIfClosed();
         return updateCount;
     }
 

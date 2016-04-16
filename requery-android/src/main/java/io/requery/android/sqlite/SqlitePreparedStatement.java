@@ -159,17 +159,17 @@ class SqlitePreparedStatement extends BasePreparedStatement {
             try {
                 long rowId = statement.executeInsert();
                 insertResult = new SingleResultSet(this, rowId);
+                updateCount = 1;
             } catch (android.database.SQLException e) {
                 SqliteConnection.throwSQLException(e);
             }
-            return 1;
         } else {
             try {
-                return updateCount = statement.executeUpdateDelete();
+                updateCount = statement.executeUpdateDelete();
             } catch (android.database.SQLException e) {
                 SqliteConnection.throwSQLException(e);
             }
         }
-        return 0;
+        return updateCount;
     }
 }
