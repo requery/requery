@@ -118,6 +118,11 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     private boolean isMethodProcessable(ExecutableElement element) {
+        // if an immutable type with an implementation provided skip it
+        if (element().getKind().isClass() && isImmutable() &&
+            !element.getModifiers().contains(Modifier.ABSTRACT)) {
+            return false;
+        }
         TypeMirror type = element.getReturnType();
         // must be a getter style method with no args, can't return void or itself or its builder
         return type.getKind() != TypeKind.VOID &&
