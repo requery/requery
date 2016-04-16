@@ -35,10 +35,10 @@ public class HavingElement<E> extends BaseLogicalElement<HavingElement<E>, Havin
 
     private final QueryElement<E> query;
 
-    public HavingElement(QueryElement<E> query,
-                         Set<HavingElement<E>> elements,
-                         Condition<?,?> condition,
-                         LogicalOperator operator) {
+    HavingElement(QueryElement<E> query,
+                  Set<HavingElement<E>> elements,
+                  Condition<?, ?> condition,
+                  LogicalOperator operator) {
         super(elements, condition, operator);
         this.query = query;
     }
