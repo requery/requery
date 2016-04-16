@@ -118,7 +118,7 @@ final class ParameterInliner implements Predicate<Object[]> {
                 ArrayFunctions.forEach(array, collect(list));
                 expand(sb, index, array.length);
             } else {
-                list.add(parameter);
+                list.add(0, parameter);
             }
         }
         sql = sb.toString();
