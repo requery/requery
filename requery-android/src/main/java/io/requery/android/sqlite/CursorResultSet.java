@@ -178,7 +178,7 @@ public class CursorResultSet extends NonUpdateableResultSet implements ResultSet
 
     @Override
     public Blob getBlob(int columnIndex) throws SQLException {
-        return new ByteArrayBlob(getBytes(columnIndex));
+        throw new SQLFeatureNotSupportedException();
     }
 
     @Override
