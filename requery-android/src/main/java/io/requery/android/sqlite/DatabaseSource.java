@@ -61,6 +61,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
     private Configuration configuration;
     private boolean configured;
     private boolean loggingEnabled;
+    private boolean walModeEnabled;
     private TableCreationMode mode;
 
     /**
@@ -104,13 +105,11 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
         if (model == null) {
             throw new IllegalArgumentException("null model");
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            setWriteAheadLoggingEnabled(true);
-        }
         this.platform = new SQLite();
         this.mapping = onCreateMapping(platform);
         this.model = model;
         this.mode = TableCreationMode.CREATE_NOT_EXISTS;
+        this.walModeEnabled = true; // default to true, unless specifically disabled
     }
 
     @Override
@@ -173,6 +172,13 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
     }
 
     @Override
+    public void onOpen(SQLiteDatabase db) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && walModeEnabled) {
+            setWriteAheadLoggingEnabled(true);
+        }
+    }
+
+    @Override
     public void onCreate(SQLiteDatabase db) {
         this.db = db;
         new SchemaModifier(getConfiguration()).createTables(TableCreationMode.CREATE);
@@ -198,6 +204,12 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
             }
         }, mode);
         updater.update();
+    }
+
+    @Override
+    public void setWriteAheadLoggingEnabled(boolean enabled) {
+        super.setWriteAheadLoggingEnabled(enabled);
+        walModeEnabled = enabled;
     }
 
     @Override
