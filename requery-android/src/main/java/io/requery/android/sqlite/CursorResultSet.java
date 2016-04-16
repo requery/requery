@@ -702,7 +702,7 @@ public class CursorResultSet extends NonUpdateableResultSet implements ResultSet
         int type = cursor.getType(column - 1);
         switch (type) {
             case Cursor.FIELD_TYPE_BLOB:
-                return Types.BLOB;
+                return Types.VARBINARY;
             case Cursor.FIELD_TYPE_FLOAT:
                 return Types.FLOAT;
             case Cursor.FIELD_TYPE_INTEGER:
