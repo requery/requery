@@ -74,61 +74,66 @@ final class ParameterInliner implements Predicate<Object[]> {
         }
 
         StringBuilder sb = new StringBuilder(sql);
-        final ArrayList<Object> newParameters = new ArrayList<>();
-        final Consumer<Object> collect = new Consumer<Object>() {
-            @Override
-            public void accept(Object o) {
-                newParameters.add(o);
-            }
-        };
+        ArrayList<Object> list = new ArrayList<>();
+
         // Iterate backwards to avoid modifying the indices of parameters in the front
         for (int i = parameters.length - 1; i >= 0; i--) {
             Object parameter = parameters[i];
             int index = indicesOfArguments.get(i);
 
             if (parameter instanceof Iterable) {
-                int sizeBefore = newParameters.size();
+                int sizeBefore = list.size();
                 Iterable iterable = (Iterable) parameter;
-                int x = 0;
-                for (Object t : iterable) {
-                    newParameters.add(x++, t);
+                Consumer<Object> collector = collect(list);
+                for (Object e : iterable) {
+                    collector.accept(e);
                 }
-                expand(sb, index, newParameters.size() - sizeBefore);
+                expand(sb, index, list.size() - sizeBefore);
             } else if (parameter instanceof short[]) {
                 short[] array = (short[]) parameter;
-                ArrayFunctions.forEach(array, collect);
+                ArrayFunctions.forEach(array, collect(list));
                 expand(sb, index, array.length);
             } else if (parameter instanceof int[]) {
                 int[] array = (int[]) parameter;
-                ArrayFunctions.forEach(array, collect);
+                ArrayFunctions.forEach(array, collect(list));
                 expand(sb, index, array.length);
             } else if (parameter instanceof long[]) {
                 long[] array = (long[]) parameter;
-                ArrayFunctions.forEach(array, collect);
+                ArrayFunctions.forEach(array, collect(list));
                 expand(sb, index, array.length);
             } else if (parameter instanceof float[]) {
                 float[] array = (float[]) parameter;
-                ArrayFunctions.forEach(array, collect);
+                ArrayFunctions.forEach(array, collect(list));
                 expand(sb, index, array.length);
             } else if (parameter instanceof double[]) {
                 double[] array = (double[]) parameter;
-                ArrayFunctions.forEach(array, collect);
+                ArrayFunctions.forEach(array, collect(list));
                 expand(sb, index, array.length);
             } else if (parameter instanceof boolean[]) {
                 boolean[] array = (boolean[]) parameter;
-                ArrayFunctions.forEach(array, collect);
+                ArrayFunctions.forEach(array, collect(list));
                 expand(sb, index, array.length);
             } else if (parameter instanceof Object[]) {
                 Object[] array = (Object[]) parameter;
-                ArrayFunctions.forEach(array, collect);
+                ArrayFunctions.forEach(array, collect(list));
                 expand(sb, index, array.length);
             } else {
-                newParameters.add(0, parameter);
+                list.add(parameter);
             }
         }
         sql = sb.toString();
-        parameters = newParameters.toArray();
+        parameters = list.toArray();
         return this;
+    }
+
+    private static  <T> Consumer<T> collect(final ArrayList<T> list) {
+        return new Consumer<T>() {
+            int index = 0;
+            @Override
+            public void accept(T t) {
+                list.add(index++, t);
+            }
+        };
     }
 
     @Override
@@ -142,22 +147,18 @@ final class ParameterInliner implements Predicate<Object[]> {
         return false;
     }
 
-    private void expand(StringBuilder sb, int index, int length) {
-        sb.replace(index, index + 1, argumentTuple(length));
-    }
-
     /**
      * Build a String of the form "(?, ?, ..., ?)" where the number of question marks is length.
      */
-    private String argumentTuple(int length) {
-        StringBuilder sb = new StringBuilder("(");
+    private void expand(StringBuilder sb, int index, int length) {
+        StringBuilder replacement = new StringBuilder("(");
         for (int i = 0; i < length; i++) {
-            sb.append("?");
+            replacement.append("?");
             if (i + 1 < length) {
-                sb.append(", ");
+                replacement.append(", ");
             }
         }
-        sb.append(")");
-        return sb.toString();
+        replacement.append(")");
+        sb.replace(index, index + 1, replacement.toString());
     }
 }
