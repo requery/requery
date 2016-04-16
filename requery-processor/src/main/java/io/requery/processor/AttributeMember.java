@@ -73,6 +73,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -500,7 +501,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             String name = methodElement.getSimpleName().toString();
             name = Names.removeMethodPrefixes(name);
             if (Names.isAllUpper(name)) {
-                return name.toLowerCase();
+                return name.toLowerCase(Locale.US);
             } else {
                 return Names.lowerCaseFirst(name);
             }
@@ -532,7 +533,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                 if (parameters.size() == 1) {
                     String property =
                         Names.removeMethodPrefixes(element.getSimpleName().toString());
-                    if (property.toLowerCase().equalsIgnoreCase(name())) {
+                    if (property.toLowerCase(Locale.US).equalsIgnoreCase(name())) {
                         return element.getSimpleName().toString();
                     }
                 }

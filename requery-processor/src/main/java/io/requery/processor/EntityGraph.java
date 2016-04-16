@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -90,7 +91,7 @@ class EntityGraph {
             // match by type name
             Optional<TypeKind> primitiveType = Stream.of(TypeKind.values())
                 .filter(TypeKind::isPrimitive)
-                .filter(kind -> kind.toString().toLowerCase().equals(attribute.referencedType()))
+                .filter(kind -> kind.toString().toLowerCase(Locale.US).equals(attribute.referencedType()))
                 .findFirst();
             if (primitiveType.isPresent()) {
                 // attribute is basic foreign key and not referring to an entity
