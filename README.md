@@ -71,7 +71,7 @@ abstract class Person {
         return new AutoValue_Person.Builder();
     }
 
-    @Id @GeneratedValue
+    @Key
     abstract int getId();
 
     abstract String getName();
@@ -282,9 +282,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.0.0-beta14'
-    compile 'io.requery:requery-android:1.0.0-beta14' // for android
-    apt 'io.requery:requery-processor:1.0.0-beta14'   // use an APT plugin
+    compile 'io.requery:requery:1.0.0-beta15'
+    compile 'io.requery:requery-android:1.0.0-beta15' // for android
+    apt 'io.requery:requery-processor:1.0.0-beta15'   // use an APT plugin
 }
 ```
 

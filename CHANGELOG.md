@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 1.0.0-beta15
+
+- Fix generated SQL incorrect in some non-US locales
+- Fix several issues when using immutable types
+- Fix RxJava type changes not serialized
+- Fix Android library publish
+- Fix Android table not existing error on database first created w/ WAL mode
+
 ## 1.0.0-beta14
 
 - Support for generating mappings for final/non-extendable classes
