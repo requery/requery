@@ -22,6 +22,8 @@ import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
 import io.requery.util.function.Supplier;
 import rx.subjects.PublishSubject;
+import rx.subjects.SerializedSubject;
+import rx.subjects.Subject;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -34,12 +36,12 @@ import java.util.Set;
  */
 class TypeChangeListener implements Supplier<TransactionListener> {
 
-    private final PublishSubject<Type<?>> commitSubject;
-    private final PublishSubject<Type<?>> rollbackSubject;
+    private final SerializedSubject<Type<?>, Type<?>> commitSubject;
+    private final SerializedSubject<Type<?>, Type<?>> rollbackSubject;
 
     TypeChangeListener() {
-        commitSubject = PublishSubject.create();
-        rollbackSubject = PublishSubject.create();
+        commitSubject = new SerializedSubject<>(PublishSubject.<Type<?>>create());
+        rollbackSubject = new SerializedSubject<>(PublishSubject.<Type<?>>create());
     }
 
     @Override
@@ -75,11 +77,11 @@ class TypeChangeListener implements Supplier<TransactionListener> {
         };
     }
 
-    PublishSubject<Type<?>> commitSubject() {
+    Subject<Type<?>, Type<?>> commitSubject() {
         return commitSubject;
     }
 
-    private void emitTypes(PublishSubject<Type<?>> subject, Set<EntityProxy<?>> entities) {
+    private void emitTypes(Subject<Type<?>, Type<?>> subject, Set<EntityProxy<?>> entities) {
         Set<Type<?>> types = new LinkedHashSet<>();
         for (EntityProxy proxy : entities) {
             types.add(proxy.type());
