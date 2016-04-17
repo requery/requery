@@ -7,7 +7,6 @@ buildscript {
     }
 }
 apply plugin: 'com.android.application'
-apply plugin: 'com.android.databinding'
 apply plugin: 'com.neenbedankt.android-apt'
 
 android {
@@ -31,14 +30,16 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
+
+    dataBinding{
+        enabled = true
+    }
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.1.1'
-    compile 'com.android.support:recyclerview-v7:23.1.1'
-    compile 'com.android.databinding:library:1.0-rc5'
-    compile 'com.android.databinding:adapters:1.0-rc5'
-    compile 'io.reactivex:rxjava:1.1.2'
+    compile 'com.android.support:appcompat-v7:23.3.0'
+    compile 'com.android.support:recyclerview-v7:23.3.0'
+    compile 'io.reactivex:rxjava:1.1.3'
     compile 'io.reactivex:rxandroid:1.1.0'
     compile project(':requery-android')
     apt project(':requery-processor')
