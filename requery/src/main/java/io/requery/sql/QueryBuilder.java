@@ -20,6 +20,7 @@ import io.requery.meta.Attribute;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -85,7 +86,7 @@ public class QueryBuilder implements CharSequence {
 
     public QueryBuilder keyword(Keyword... keywords) {
         for (Keyword keyword : keywords) {
-            sb.append(options.lowercaseKeywords ? keyword.toString().toLowerCase() : keyword);
+            sb.append(options.lowercaseKeywords ? keyword.toString().toLowerCase(Locale.US) : keyword);
             sb.append(" ");
         }
         return this;
@@ -139,7 +140,7 @@ public class QueryBuilder implements CharSequence {
         } else {
             if (value instanceof Keyword) {
                 sb.append(options.lowercaseKeywords ?
-                        value.toString().toLowerCase() : value.toString());
+                        value.toString().toLowerCase(Locale.US) : value.toString());
             } else {
                 sb.append(value.toString());
             }

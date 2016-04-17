@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Locale;
 import java.util.Properties;
 
 /**
@@ -133,7 +134,7 @@ public enum DatabaseType {
                     .asSubclass(CommonDataSource.class);
             }
             CommonDataSource dataSource = dataSourceClass.newInstance();
-            String fileName = platformClass.getSimpleName().toLowerCase();
+            String fileName = platformClass.getSimpleName().toLowerCase(Locale.US);
             Properties properties = new Properties();
             String localPath = "src/test/resources/io/requery/test/local/";
             String ciPath = "src/test/resources/io/requery/test/ci/";
