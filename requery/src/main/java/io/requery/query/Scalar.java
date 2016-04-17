@@ -16,7 +16,6 @@
 
 package io.requery.query;
 
-import io.requery.rx.ToSingle;
 import io.requery.util.function.Consumer;
 import io.requery.util.function.Supplier;
 
@@ -28,7 +27,7 @@ import java.util.concurrent.Executor;
  *
  * @param <E> type of element.
  */
-public interface Scalar<E> extends ToSingle<E> {
+public interface Scalar<E> {
 
     /**
      * @return the scalar value, causing the query to be executed.
@@ -59,7 +58,6 @@ public interface Scalar<E> extends ToSingle<E> {
      *
      * @return {@link rx.Single} for the result of this query.
      */
-    @Override
     rx.Single<E> toSingle();
 
     /**

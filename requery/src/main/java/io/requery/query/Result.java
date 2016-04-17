@@ -16,7 +16,6 @@
 
 package io.requery.query;
 
-import io.requery.rx.ToObservable;
 import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
 import io.requery.util.function.Consumer;
@@ -37,7 +36,7 @@ import java.util.stream.Stream;
  *
  * @param <E> type of element.
  */
-public interface Result<E> extends CloseableIterable<E>, AutoCloseable, ToObservable<E> {
+public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
 
     /**
      * @return A {@link AutoCloseable} {@link java.util.Iterator} over the elements in this result.
@@ -62,7 +61,6 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable, ToObserv
      *
      * @return observable stream of the results of this query.
      */
-    @Override
     rx.Observable<E> toObservable();
 
     /**
