@@ -16,12 +16,12 @@
 
 package io.requery.sql;
 
+import io.requery.meta.Attribute;
+
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
-
-import io.requery.meta.Attribute;
 
 /**
  * String Builder for creating SQL statements.
