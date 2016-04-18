@@ -19,6 +19,8 @@ package io.requery;
 import io.requery.meta.Attribute;
 import io.requery.query.Result;
 
+import javax.annotation.CheckReturnValue;
+
 /**
  * The primary interface for interacting with {@link Entity} objects. This interface supports the
  * basic insert/update/delete operations.
@@ -175,11 +177,13 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
      * @param <K>  key type
      * @return an operation returning the entity if found.
      */
+    @CheckReturnValue
     <E extends T, K> R findByKey(Class<E> type, K key);
 
     /**
      * @return a {@link BlockingEntityStore} version of this entity store. If the implementation
      * is already blocking may return itself.
      */
+    @CheckReturnValue
     BlockingEntityStore<T> toBlocking();
 }

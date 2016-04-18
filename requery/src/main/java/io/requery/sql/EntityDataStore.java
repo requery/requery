@@ -47,6 +47,8 @@ import io.requery.util.ClassMap;
 import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -73,6 +75,7 @@ import static io.requery.query.element.QueryType.UPDATE;
  *
  * @author Nikhil Purushe
  */
+@ParametersAreNonnullByDefault
 public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
     private final EntityModel entityModel;
@@ -120,7 +123,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
      * @param model to use
      * @param mapping to use
      */
-    public EntityDataStore(DataSource dataSource, EntityModel model, Mapping mapping) {
+    public EntityDataStore(DataSource dataSource, EntityModel model, @Nullable Mapping mapping) {
         this(new ConfigurationBuilder(dataSource, model)
                 .setMapping(mapping)
                 .build());
@@ -187,7 +190,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
-    public <K, E extends T> K insert(E entity, Class<K> keyClass) {
+    public <K, E extends T> K insert(E entity, @Nullable Class<K> keyClass) {
         try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
@@ -209,7 +212,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
-    public <K, E extends T> Iterable<K> insert(Iterable<E> entities, Class<K> keyClass) {
+    public <K, E extends T> Iterable<K> insert(Iterable<E> entities, @Nullable Class<K> keyClass) {
         Iterator<E> iterator = entities.iterator();
         if (iterator.hasNext()) {
             try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
@@ -400,7 +403,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         EntityReader<E, T> reader = context.read(type);
         Set<Expression<?>> selection;
         ResultReader<E> resultReader;
-        if (attributes == null || attributes.length == 0) {
+        if (attributes.length == 0) {
             selection = reader.defaultSelection();
             resultReader = reader.newResultReader(reader.defaultSelectionAttributes());
         } else {
@@ -471,7 +474,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
-    public <V> V runInTransaction(Callable<V> callable, TransactionIsolation isolation) {
+    public <V> V runInTransaction(Callable<V> callable, @Nullable TransactionIsolation isolation) {
         Objects.requireNotNull(callable);
         checkClosed();
         Transaction transaction = transactionProvider.get();
@@ -527,9 +530,6 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
         @Override
         public <E> EntityProxy<E> proxyOf(E entity, boolean forUpdate) {
-            if (entity == null) {
-                return null;
-            }
             checkClosed();
             @SuppressWarnings("unchecked")
             Type<E> type = (Type<E>) entityModel.typeOf(entity.getClass());

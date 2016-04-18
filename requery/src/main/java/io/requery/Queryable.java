@@ -27,6 +27,8 @@ import io.requery.query.Selection;
 import io.requery.query.Tuple;
 import io.requery.query.Update;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Set;
 
 /**
@@ -36,6 +38,7 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
+@ParametersAreNonnullByDefault
 public interface Queryable<T> {
 
     /**
@@ -47,6 +50,7 @@ public interface Queryable<T> {
      * @param <E>        entity type
      * @return next query step
      */
+    @CheckReturnValue
     <E extends T> Selection<Result<E>> select(Class<E> type, QueryAttribute<?, ?>... attributes);
 
     /**
@@ -58,6 +62,7 @@ public interface Queryable<T> {
      * @param <E>        entity type
      * @return next query step
      */
+    @CheckReturnValue
     <E extends T> Selection<Result<E>> select(Class<E> type,
                                               Set<? extends QueryAttribute<E, ?>> attributes);
 
@@ -71,6 +76,7 @@ public interface Queryable<T> {
      * @param <E>  entity type
      * @return next query step
      */
+    @CheckReturnValue
     <E extends T> Insertion<Result<Tuple>> insert(Class<E> type);
 
     /**
@@ -83,6 +89,7 @@ public interface Queryable<T> {
      * @param <E>  entity type
      * @return next query step
      */
+    @CheckReturnValue
     <E extends T> Update<Scalar<Integer>> update(Class<E> type);
 
     /**
@@ -95,6 +102,7 @@ public interface Queryable<T> {
      * @param <E>  entity type
      * @return next query step
      */
+    @CheckReturnValue
     <E extends T> Deletion<Scalar<Integer>> delete(Class<E> type);
 
     /**
@@ -104,6 +112,7 @@ public interface Queryable<T> {
      * @param <E>  entity type
      * @return next query step
      */
+    @CheckReturnValue
     <E extends T> Selection<Scalar<Integer>> count(Class<E> type);
 
     /**
@@ -112,6 +121,7 @@ public interface Queryable<T> {
      * @param attributes to select
      * @return next query step
      */
+    @CheckReturnValue
     Selection<Scalar<Integer>> count(QueryAttribute<?, ?>... attributes);
 
     /**
@@ -120,6 +130,7 @@ public interface Queryable<T> {
      * @param expressions to select
      * @return next query step
      */
+    @CheckReturnValue
     Selection<Result<Tuple>> select(Expression<?>... expressions);
 
     /**
@@ -128,6 +139,7 @@ public interface Queryable<T> {
      * @param expressions to select, cannot be null or empty
      * @return next query step
      */
+    @CheckReturnValue
     Selection<Result<Tuple>> select(Set<? extends Expression<?>> expressions);
 
     /**
@@ -138,6 +150,7 @@ public interface Queryable<T> {
      *
      * @return next query step
      */
+    @CheckReturnValue
     Update<Scalar<Integer>> update();
 
     /**
@@ -148,6 +161,7 @@ public interface Queryable<T> {
      *
      * @return next query step
      */
+    @CheckReturnValue
     Deletion<Scalar<Integer>> delete();
 
     /**
@@ -159,6 +173,7 @@ public interface Queryable<T> {
      *                   thrown.
      * @return the result of the query as a {@link Tuple}.
      */
+    @CheckReturnValue
     Result<Tuple> raw(String query, Object... parameters);
 
     /**
@@ -172,5 +187,6 @@ public interface Queryable<T> {
      * @param <E>        entity type
      * @return the result of the query.
      */
+    @CheckReturnValue
     <E extends T> Result<E> raw(Class<E> type, String query, Object... parameters);
 }

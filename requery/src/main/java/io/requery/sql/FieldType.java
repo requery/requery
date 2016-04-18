@@ -16,6 +16,7 @@
 
 package io.requery.sql;
 
+import javax.annotation.Nullable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,7 +37,7 @@ public interface FieldType<T> {
      * @return the read value
      * @throws SQLException when failing to read a value from the results
      */
-    T read(ResultSet results, int column) throws SQLException;
+    @Nullable T read(ResultSet results, int column) throws SQLException;
 
     /**
      * Write the value into a JDBC {@link PreparedStatement}.
@@ -46,7 +47,7 @@ public interface FieldType<T> {
      * @param value     object value
      * @throws SQLException when failing to set the value in the statement
      */
-    void write(PreparedStatement statement, int index, T value) throws SQLException;
+    void write(PreparedStatement statement, int index, @Nullable T value) throws SQLException;
 
     /**
      * @return One of the {@link java.sql.Types} constants indicating the JDBC type
@@ -61,7 +62,7 @@ public interface FieldType<T> {
     /**
      * @return the default length for the type (optional), null if not present.
      */
-    Integer defaultLength();
+    @Nullable Integer defaultLength();
 
     /**
      * @return the identifier for the type can be {@link String} or {@link Keyword}
@@ -72,5 +73,5 @@ public interface FieldType<T> {
      * @return the identifier suffix appears after the identifier and any length size e.g.
      * id(255) suffix
      */
-    String identifierSuffix();
+    @Nullable String identifierSuffix();
 }

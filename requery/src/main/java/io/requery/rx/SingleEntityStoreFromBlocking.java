@@ -33,6 +33,8 @@ import rx.Scheduler;
 import rx.Single;
 import rx.schedulers.Schedulers;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,6 +49,7 @@ import java.util.concurrent.Executors;
  *
  * @author Nikhil Purushe
  */
+@ParametersAreNonnullByDefault
 class SingleEntityStoreFromBlocking<T> implements SingleEntityStore<T> {
 
     private final BlockingEntityStore<T> delegate;
@@ -58,7 +61,8 @@ class SingleEntityStoreFromBlocking<T> implements SingleEntityStore<T> {
         this(delegate, null);
     }
 
-    SingleEntityStoreFromBlocking(BlockingEntityStore<T> delegate, Scheduler subscribeOn) {
+    SingleEntityStoreFromBlocking(BlockingEntityStore<T> delegate,
+                                  @Nullable Scheduler subscribeOn) {
         this.delegate = Objects.requireNotNull(delegate);
         if (subscribeOn == null) {
             createdExecutor = true;

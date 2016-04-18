@@ -18,6 +18,7 @@ package io.requery;
 
 import io.requery.meta.Attribute;
 
+import javax.annotation.CheckReturnValue;
 import java.util.concurrent.Callable;
 
 /**
@@ -65,6 +66,7 @@ public interface BlockingEntityStore<T> extends EntityStore<T, Object>, Transact
     <E extends T> Void delete(Iterable<E> entities);
 
     @Override
+    @CheckReturnValue
     <E extends T, K> E findByKey(Class<E> type, K key);
 
     @Override

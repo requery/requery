@@ -30,6 +30,7 @@ import io.requery.query.Tuple;
 import io.requery.query.Update;
 import io.requery.util.Objects;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -46,6 +47,7 @@ import java.util.function.Supplier;
  *
  * @author Nikhil Purushe
  */
+@ParametersAreNonnullByDefault
 public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> {
 
     private final BlockingEntityStore<T> delegate;
