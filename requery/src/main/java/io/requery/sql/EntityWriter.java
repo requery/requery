@@ -79,7 +79,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     private final Attribute<E, ?> keyAttribute;
     private final Attribute<E, ?> versionAttribute;
     private final Attribute<E, ?>[] bindableAttributes;
-    private final Attribute<E, ?>[] updateAttributes;
+    private final Attribute<E, ?>[] whereAttributes;
     private final Attribute<E, ?>[] associativeAttributes;
     private final String[] generatedColumnNames;
     private final Class<E> entityClass;
@@ -145,13 +145,13 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         // for the update statement add key/version conditions
         int keyCount = keyAttribute != null ? 1 : type.keyAttributes().size();
         boolean hasVersion = versionAttribute != null;
-        updateAttributes = Attributes.newArray(keyCount + (hasVersion ? 1 : 0));
+        whereAttributes = Attributes.newArray(keyCount + (hasVersion ? 1 : 0));
         int index = 0;
         for (Attribute<E, ?> attribute : keys) {
-            updateAttributes[index++] = attribute;
+            whereAttributes[index++] = attribute;
         }
         if (hasVersion) {
-            updateAttributes[index] = versionAttribute;
+            whereAttributes[index] = versionAttribute;
         }
     }
 
@@ -169,10 +169,9 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     }
 
     private boolean canBatchInStatement() {
-        boolean supportsBatchStatement = context.supportsBatchUpdates();
-        boolean supportsBatchGeneratedKey = context.platform().supportsGeneratedKeysInBatchUpdate();
-        return hasGeneratedKey ?
-            supportsBatchStatement && supportsBatchGeneratedKey : supportsBatchStatement;
+        boolean canBatchStatement = context.supportsBatchUpdates();
+        boolean canBatchGeneratedKey = context.platform().supportsGeneratedKeysInBatchUpdate();
+        return hasGeneratedKey ? canBatchStatement && canBatchGeneratedKey : canBatchStatement;
     }
 
     private void cascadeBatch(Map<Class<? extends S>, List<S>> map) {
@@ -535,7 +534,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 // first write the changed properties
                 int index = EntityWriter.this.bindParameters(statement, element, filter);
                 // write the where arguments
-                for (Attribute<E, ?> attribute : updateAttributes) {
+                for (Attribute<E, ?> attribute : whereAttributes) {
                     if (attribute == versionAttribute) {
                         mapping.write((Expression) attribute, statement, index + 1, version);
                     } else {
@@ -562,22 +561,20 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             // persist the foreign key object if needed
             S referenced = foreignKeyReference(proxy, attribute);
-            if (referenced != null) {
+            if (referenced != null &&
+                (stateless || proxy.getState(attribute) == PropertyState.MODIFIED)) {
                 cascadeSave(referenced, null);
             }
-            Expression<Object> expression = Attributes.query(attribute);
-            query.set(expression, null);
+            query.set((Expression)attribute, null);
             count++;
         }
         int result = 0;
         if (count > 0) {
             if (keyAttribute != null) {
-                QueryAttribute<E, Object> id = Attributes.query(keyAttribute);
-                query.where(id.equal("?"));
+                query.where(Attributes.query(keyAttribute).equal("?"));
             } else {
                 for (Attribute<E, ?> attribute : type.keyAttributes()) {
-                    QueryAttribute<E, Object> id = Attributes.query(attribute);
-                    query.where(id.equal("?"));
+                    query.where(Attributes.query(attribute).equal("?"));
                 }
             }
             if (hasVersion) {
