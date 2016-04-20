@@ -11,7 +11,7 @@ apply plugin: 'com.neenbedankt.android-apt'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "io.requery.android.example.app"
@@ -31,7 +31,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
-    dataBinding{
+    dataBinding {
         enabled = true
     }
 }
