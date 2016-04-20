@@ -59,7 +59,7 @@ class EntityGraphValidator {
             entity.attributes().entrySet()) {
 
             AttributeDescriptor attribute = entry.getValue();
-            ElementValidator attributeValidator =
+            ElementValidator validator =
                 new ElementValidator(attribute.element(), processingEnvironment);
 
             // check mapped associations
@@ -71,17 +71,23 @@ class EntityGraphValidator {
                     Set<AttributeDescriptor> mappings =
                         graph.mappedAttributes(entity, attribute, referenced);
 
-                    if (mappings.size() == 1) {
+                    if (mappings.isEmpty()) {
+                        if (attribute.cardinality() == Cardinality.ONE_TO_ONE &&
+                            !attribute.isForeignKey()) {
+                            validator.error(
+                                "Single sided @OneToOne should specify @ForeignKey/@JoinColumn");
+                        }
+                    } else if (mappings.size() == 1) {
                         // validate the relationship
                         AttributeDescriptor mapped = mappings.iterator().next();
-                        validateRelationship(attributeValidator, attribute, mapped);
+                        validateRelationship(validator, attribute, mapped);
 
                     } else if (mappings.size() > 1) {
-                        attributeValidator.warning(mappings.size() + " mappings found for: " +
+                        validator.warning(mappings.size() + " mappings found for: " +
                             attribute + " -> " + referenced.typeName());
                     }
                 } else {
-                    attributeValidator.warning("Couldn't find referenced element for " + attribute);
+                    validator.warning("Couldn't find referenced element for " + attribute);
                 }
             }
             // checked foreign key reference
@@ -92,7 +98,7 @@ class EntityGraphValidator {
                         graph.referencingAttribute(attribute, referenced.get());
 
                     if (!referencedElement.isPresent()) {
-                        attributeValidator.warning("Couldn't find referenced element " +
+                        validator.warning("Couldn't find referenced element " +
                                 attribute.referencedColumn() + " for " + attribute);
                     } else {
                         // check all the foreign keys and see if they reference this entity
@@ -103,18 +109,18 @@ class EntityGraphValidator {
                             .map(Optional::get)
                             .filter(entity::equals)
                             .findAny()
-                            .ifPresent(other -> attributeValidator.error(
+                            .ifPresent(other -> validator.error(
                                 "Circular Foreign Key reference found between " +
                                     entity.typeName() +  " and " + other.typeName(),
                                 ForeignKey.class));
                     }
                 } else if(attribute.cardinality() != null) {
-                    attributeValidator.error("Couldn't find referenced attribute " +
+                    validator.error("Couldn't find referenced attribute " +
                             attribute.referencedColumn() + " for " + attribute);
                 }
             }
-            if (attributeValidator.hasErrors() || attributeValidator.hasWarnings()) {
-                results.add(attributeValidator);
+            if (validator.hasErrors() || validator.hasWarnings()) {
+                results.add(validator);
             }
         }
         return results;
@@ -150,11 +156,20 @@ class EntityGraphValidator {
             Optional<AssociativeEntityDescriptor> mappedAssociation = mapped.associativeEntity();
             if (!sourceAssociation.isPresent() && !mappedAssociation.isPresent()) {
                 validator.error("One side of the ManyToMany relationship must specify the " +
-                    "@JunctionTable annotation");
+                    "@JunctionTable/@JoinTable annotation");
             }
             if (sourceAssociation.isPresent() && mappedAssociation.isPresent()) {
                 validator.warning("@JunctionTable should be specified on only one side of a " +
                     "ManyToMany relationship");
+            }
+        } else if (sourceCardinality == Cardinality.ONE_TO_ONE) {
+            if (!source.isForeignKey() && !mapped.isForeignKey()) {
+                validator.error("One side of the OneToOne relationship must specify the " +
+                    "@ForeignKey/@JoinColumn annotation");
+            }
+            if (source.isForeignKey() && mapped.isForeignKey()) {
+                validator.error("Only one side of the OneToOne relationship can specify the " +
+                    "@ForeignKey/@JoinColumn annotation");
             }
         }
     }
