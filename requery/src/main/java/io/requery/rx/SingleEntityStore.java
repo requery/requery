@@ -54,11 +54,19 @@ public interface SingleEntityStore<T> extends EntityStore<T, Single<?>> {
 
     @Override
     @CheckReturnValue
+    <E extends T> Single<E> update(E entity);
+
+    @Override
+    @CheckReturnValue
+    <E extends T> Single<Iterable<E>> update(Iterable<E> entities);
+
+    @Override
+    @CheckReturnValue
     <E extends T> Single<E> upsert(E entity);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<E> update(E entity);
+    <E extends T> Single<Iterable<E>> upsert(Iterable<E> entities);
 
     @Override
     @CheckReturnValue

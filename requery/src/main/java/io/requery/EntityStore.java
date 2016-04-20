@@ -54,7 +54,8 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
     <E extends T> R insert(E entity);
 
     /**
-     * Insert a collection of entities.
+     * Insert a collection of entities. This method may perform additional optimizations not
+     * present in the single element insert method.
      *
      * @param entities to insert
      * @param <E>      entity type
@@ -98,6 +99,16 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
     <E extends T> R update(E entity);
 
     /**
+     * Updates a collection of entities. This method may perform additional optimizations not
+     * present in the single element update method.
+     *
+     * @param entities to update
+     * @param <E>      entity type
+     * @return the operation result.
+     */
+    <E extends T> R update(Iterable<E> entities);
+
+    /**
      * Upserts (insert or update) the given entity. Note that upserting may be an expensive
      * operation on some platforms and may not be supported in all cases or platforms.
      *
@@ -106,6 +117,16 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
      * @return the operation result.
      */
     <E extends T> R upsert(E entity);
+
+    /**
+     * Upserts (inserts or updates) a collection of entities. This method may perform additional
+     * optimizations not present in the single upsert method.
+     *
+     * @param entities to update
+     * @param <E>      entity type
+     * @return the operation result.
+     */
+    <E extends T> R upsert(Iterable<E> entities);
 
     /**
      * Refresh the given entity. This refreshes the already loaded properties in the entity. If no

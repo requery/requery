@@ -244,6 +244,17 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
+    public <E extends T> Iterable<E> update(Iterable<E> entities) {
+        try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
+            for (E entity : entities) {
+                update(entity);
+            }
+            transaction.commit();
+        }
+        return entities;
+    }
+
+    @Override
     public <E extends T> E upsert(E entity) {
         try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
@@ -254,6 +265,17 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                 return entity;
             }
         }
+    }
+
+    @Override
+    public <E extends T> Iterable<E> upsert(Iterable<E> entities) {
+        try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
+            for (E entity : entities) {
+                upsert(entity);
+            }
+            transaction.commit();
+        }
+        return entities;
     }
 
     @Override
