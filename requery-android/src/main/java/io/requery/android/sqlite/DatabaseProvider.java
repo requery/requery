@@ -46,13 +46,34 @@ public interface DatabaseProvider<T> extends ConnectionProvider {
      */
     Configuration getConfiguration();
 
+    /**
+     * Callback for when the database schema is to be created.
+     *
+     * @param db instance
+     */
     void onCreate(T db);
 
+    /**
+     * Callback for when the database should be configured.
+     *
+     * @param db instance
+     */
     void onConfigure(T db);
 
+    /**
+     * Callback for when the database should be upgraded from an previous version to a new version.
+     *
+     * @param db instance
+     */
     void onUpgrade(T db, int oldVersion, int newVersion);
 
+    /**
+     * @return read only database instance
+     */
     T getReadableDatabase();
 
+    /**
+     * @return readable and writable database instance
+     */
     T getWritableDatabase();
 }
