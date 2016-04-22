@@ -38,7 +38,7 @@ import rx.functions.Action1;
  */
 public class PersonEditActivity extends AppCompatActivity {
 
-    public static final String EXTRA_PERSON_ID = "personId";
+    static final String EXTRA_PERSON_ID = "personId";
 
     private SingleEntityStore<Persistable> data;
     private PersonEntity person;
@@ -58,7 +58,6 @@ public class PersonEditActivity extends AppCompatActivity {
             binding.setPerson(person);
         } else {
             data.findByKey(PersonEntity.class, personId)
-                .toObservable()
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<PersonEntity>() {
                 @Override
