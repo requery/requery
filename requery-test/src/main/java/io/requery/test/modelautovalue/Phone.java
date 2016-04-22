@@ -39,4 +39,9 @@ public abstract class Phone {
 
     @JoinColumn(foreignKey = @ForeignKey, table = "Person")
     public abstract int getOwnerId();
+
+    // this method should not be processed
+    public boolean isValid() {
+        return getPhoneNumber() != null && isNormalized();
+    }
 }
