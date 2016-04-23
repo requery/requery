@@ -22,6 +22,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import io.requery.android.DefaultMapping;
 import io.requery.android.LoggingListener;
@@ -61,7 +62,6 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
     private Configuration configuration;
     private boolean configured;
     private boolean loggingEnabled;
-    private boolean walModeEnabled;
     private TableCreationMode mode;
 
     /**
@@ -83,7 +83,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
      * @param name    database filename
      * @param version the schema version
      */
-    public DatabaseSource(Context context, EntityModel model, String name, int version) {
+    public DatabaseSource(Context context, EntityModel model, @Nullable String name, int version) {
         this(context, model, name, null, version);
     }
 
@@ -98,18 +98,26 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
      */
     public DatabaseSource(Context context,
                           EntityModel model,
-                          String name,
-                          SQLiteDatabase.CursorFactory factory,
+                          @Nullable String name,
+                          @Nullable SQLiteDatabase.CursorFactory factory,
                           int version) {
+        this(context, model, name, factory, version, new SQLite());
+    }
+
+    public DatabaseSource(Context context,
+                          EntityModel model,
+                          @Nullable String name,
+                          @Nullable SQLiteDatabase.CursorFactory factory,
+                          int version,
+                          SQLite platform) {
         super(context, name, factory, version);
         if (model == null) {
             throw new IllegalArgumentException("null model");
         }
-        this.platform = new SQLite();
+        this.platform = platform;
         this.mapping = onCreateMapping(platform);
         this.model = model;
         this.mode = TableCreationMode.CREATE_NOT_EXISTS;
-        this.walModeEnabled = true; // default to true, unless specifically disabled
     }
 
     @Override
@@ -172,13 +180,6 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
     }
 
     @Override
-    public void onOpen(SQLiteDatabase db) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && walModeEnabled) {
-            setWriteAheadLoggingEnabled(true);
-        }
-    }
-
-    @Override
     public void onCreate(SQLiteDatabase db) {
         this.db = db;
         new SchemaModifier(getConfiguration()).createTables(TableCreationMode.CREATE);
@@ -204,12 +205,6 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
             }
         }, mode);
         updater.update();
-    }
-
-    @Override
-    public void setWriteAheadLoggingEnabled(boolean enabled) {
-        super.setWriteAheadLoggingEnabled(enabled);
-        walModeEnabled = enabled;
     }
 
     @Override
