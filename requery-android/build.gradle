@@ -42,7 +42,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'com.android.support:recyclerview-v7:23.3.0'
     compile 'net.zetetic:android-database-sqlcipher:3.4.0'
-    compile 'io.requery:sqlite-android:3.12.2-1'
+    compile 'io.requery:sqlite-android:3.12.2-2'
     androidTestCompile project(':requery-test')
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test:rules:0.5'
