@@ -657,6 +657,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     break;
                 case MANY_TO_MANY:
                     Class referencedClass = attribute.referencedClass();
+                    if (referencedClass == null) {
+                        throw new IllegalStateException(
+                            "Invalid referenced class in " + attribute.toString());
+                    }
                     Type<?> referencedType = model.typeOf(referencedClass);
                     QueryAttribute<S, Object> tKey = null;
                     QueryAttribute<S, Object> uKey = null;
