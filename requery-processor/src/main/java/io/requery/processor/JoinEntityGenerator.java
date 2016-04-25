@@ -112,6 +112,7 @@ class JoinEntityGenerator implements SourceGenerator {
             }
         }
 
+        int index = 0;
         for (AssociativeReference reference : references) {
             ClassName action = ClassName.get(ReferentialAction.class);
             AnnotationSpec.Builder key = AnnotationSpec.builder(ForeignKey.class)
@@ -123,6 +124,8 @@ class JoinEntityGenerator implements SourceGenerator {
             if (referenceElement == null) {
                 if (entity != null) {
                     referenceElement = entity.element();
+                } else {
+                    referenceElement = entities[index++].element();
                 }
             }
             if (referenceElement != null) {
