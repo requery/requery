@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+## 1.0.0-beta16
+
+- Support generating entity types from Kotlin abstract and data classes
+- Support non integer key types in generated join tables
+- Support @CheckReturnValue to add IDE warnings for methods that require additional calls
+- Support iterable overloads for update/upsert
+- Support additional validations of @OneToOne relationships
+- Fix stackoverflow exception in cascade reference
+- Fix null mapping instance in reader/writer classes in certain cases
+
 ## 1.0.0-beta15
 
 - Fix generated SQL incorrect in some non-US locales
