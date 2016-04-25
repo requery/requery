@@ -21,6 +21,7 @@ import io.requery.PropertyNameStyle;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,9 +33,15 @@ import java.util.Optional;
 interface EntityDescriptor {
 
     /**
-     * @return {@link TypeElement} element being represented
+     * @return {@link TypeElement} element being represented as an entity for processing
      */
     TypeElement element();
+
+    /**
+     * @return defines the method the proxy should access the type's properties e.g. field or
+     * method (get/set) access
+     */
+    PropertyAccess accessType();
 
     /**
      * @return map of elements to attributes
@@ -138,4 +145,9 @@ interface EntityDescriptor {
      * </code></pre>
      */
     Optional<ExecutableElement> factoryMethod();
+
+    /**
+     * @return the list of argument names for the {@link #factoryMethod()}
+     */
+    List<String> factoryArguments();
 }

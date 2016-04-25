@@ -78,6 +78,7 @@ public final class EntityProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         // types to generate in this round
         Map<TypeElement, EntityType> entities = new HashMap<>();
+        SourceLanguage.map(processingEnv);
         Types types = processingEnv.getTypeUtils();
 
         for (TypeElement annotation : annotations) {

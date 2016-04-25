@@ -43,11 +43,14 @@ import javax.lang.model.util.Elements;
 import javax.persistence.Cacheable;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -60,25 +63,28 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     private final ProcessingEnvironment processingEnvironment;
     private final Map<Element, AttributeDescriptor> attributes;
     private final Map<Element, ListenerMethod> listeners;
+    private final SourceLanguage sourceLanguage;
 
     EntityType(ProcessingEnvironment processingEnvironment, TypeElement typeElement) {
         super(typeElement);
         this.processingEnvironment = processingEnvironment;
         attributes = new LinkedHashMap<>();
         listeners = new LinkedHashMap<>();
+        sourceLanguage = SourceLanguage.of(typeElement);
     }
 
     @Override
     public Set<ElementValidator> process(ProcessingEnvironment processingEnvironment) {
         // create attributes for fields that have no annotations
-        TypeElement typeElement = element();
-        if (typeElement.getKind().isInterface() || isImmutable()) {
-            ElementFilter.methodsIn(typeElement.getEnclosedElements()).stream()
+        if (element().getKind().isInterface() || isImmutable() ||
+            accessType() == PropertyAccess.METHOD) {
+
+            ElementFilter.methodsIn(element().getEnclosedElements()).stream()
                 .filter(this::isMethodProcessable)
                 .forEach(this::computeAttribute);
         } else {
             // private/static/final members fields are skipped
-            ElementFilter.fieldsIn(typeElement.getEnclosedElements()).stream()
+            ElementFilter.fieldsIn(element().getEnclosedElements()).stream()
                 .filter(element -> !element.getModifiers().contains(Modifier.PRIVATE) &&
                     !element.getModifiers().contains(Modifier.STATIC) &&
                     (!element.getModifiers().contains(Modifier.FINAL) || isImmutable()))
@@ -119,8 +125,16 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     private boolean isMethodProcessable(ExecutableElement element) {
         // if an immutable type with an implementation provided skip it
-        if (element().getKind().isClass() && isImmutable() &&
+        if (sourceLanguage == SourceLanguage.JAVA &&
+            element().getKind().isClass() && isImmutable() &&
             !element.getModifiers().contains(Modifier.ABSTRACT)) {
+            return false;
+        }
+        String name = element.getSimpleName().toString();
+        // skip kotlin data class methods with component1, component2.. names
+        if (sourceLanguage == SourceLanguage.KOTLIN &&
+            element.getModifiers().contains(Modifier.FINAL) &&
+            name.startsWith("component") && name.length() > "component".length()) {
             return false;
         }
         TypeMirror type = element.getReturnType();
@@ -130,7 +144,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                !type.equals(element().asType()) &&
                !type.equals(builderType().map(Element::asType).orElse(null)) &&
                !Mirrors.findAnnotationMirror(element, Transient.class).isPresent() &&
-               !element.getModifiers().contains(Modifier.STATIC);
+               !element.getModifiers().contains(Modifier.STATIC) &&
+               !name.equals("toString") && !name.equals("hashCode");
     }
 
     void addAnnotationElement(TypeElement annotationElement, Element annotatedElement) {
@@ -230,8 +245,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     public QualifiedName typeName() {
         String entityName = annotationOf(Entity.class).map(Entity::name)
             .orElse(annotationOf(javax.persistence.Entity.class)
-                .map(javax.persistence.Entity::name)
-                .orElse(null));
+                .map(javax.persistence.Entity::name).orElse(null));
 
         Elements elements = processingEnvironment.getElementUtils();
         PackageElement packageElement = elements.getPackageOf(element());
@@ -255,6 +269,12 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             }
         }
         return new QualifiedName(packageName, entityName);
+    }
+
+    @Override
+    public PropertyAccess accessType() {
+        return sourceLanguage == SourceLanguage.KOTLIN ?
+            PropertyAccess.METHOD : PropertyAccess.FIELD;
     }
 
     @Override
@@ -304,6 +324,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                          "org.immutables.value.Value.Immutable")
             .filter(type -> Mirrors.findAnnotationMirror(element(), type).isPresent())
             .findAny().isPresent() ||
+            (sourceLanguage == SourceLanguage.KOTLIN && isFinal()) ||
             annotationOf(Entity.class).map(Entity::immutable).orElse(false);
     }
 
@@ -345,12 +366,48 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public Optional<ExecutableElement> factoryMethod() {
-        // TODO also need to check factory arguments
-        return ElementFilter.methodsIn(element().getEnclosedElements()).stream()
+        Optional<ExecutableElement> staticFactory =
+            ElementFilter.methodsIn(element().getEnclosedElements()).stream()
             .filter(element -> element.getModifiers().contains(Modifier.STATIC))
             .filter(element -> element.getSimpleName().toString().equalsIgnoreCase("create"))
+            .filter(element -> element.getParameters().size() > 0)
             .filter(element -> element.getReturnType().equals(element().asType()))
             .findAny();
+        Optional<ExecutableElement> constructor =
+            ElementFilter.constructorsIn(element().getEnclosedElements()).stream()
+            .filter(element -> element.getParameters().size() > 0)
+            .findAny();
+        return staticFactory.isPresent() ? staticFactory : constructor;
+    }
+
+    @Override
+    public List<String> factoryArguments() {
+        List<String> names = new ArrayList<>();
+        ExecutableElement method = factoryMethod().orElseThrow(IllegalStateException::new);
+        // TODO need more validation here
+        // now match the builder fields to the parameters...
+        Map<Element, AttributeDescriptor> attributes = new LinkedHashMap<>(attributes());
+        for (VariableElement parameter : method.getParameters()) {
+            // straight forward case type and name are the same
+            Element matched = null;
+            for (Map.Entry<Element, AttributeDescriptor> entry : attributes.entrySet()) {
+                AttributeDescriptor attribute = entry.getValue();
+                String fieldName = attribute.fieldName();
+                if (fieldName.equalsIgnoreCase(parameter.getSimpleName().toString())) {
+                    names.add(fieldName);
+                    matched = entry.getKey();
+                }
+            }
+            if (matched != null) {
+                attributes.remove(matched);
+            }
+        }
+        if (names.isEmpty()) {
+            // didn't work likely because the parameter names are missing
+            names.addAll(attributes.entrySet().stream()
+                .map(entry -> entry.getValue().fieldName()).collect(Collectors.toList()));
+        }
+        return names;
     }
 
     @Override

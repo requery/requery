@@ -65,7 +65,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -471,43 +470,30 @@ class EntityGenerator implements SourceGenerator {
     }
 
     private void generateImmutableTypeBuildMethod(TypeSpec.Builder builder) {
-        if (entity.isImmutable() &&
-            !entity.builderType().isPresent() && entity.factoryMethod().isPresent()) {
+        if (entity.isImmutable() && !entity.builderType().isPresent() &&
+            entity.factoryMethod().isPresent()) {
 
-            ExecutableElement createMethod = entity.factoryMethod().get();
-            // now match the builder fields to the parameters...
-            Map<Element, AttributeDescriptor> attributes = new LinkedHashMap<>();
-            attributes.putAll(entity.attributes());
+            String methodName = entity.factoryMethod()
+                .map(element -> element.getSimpleName().toString()).orElse("");
+            List<String> argumentNames = entity.factoryArguments();
 
-            List<? extends VariableElement> parameters = createMethod.getParameters();
-            List<String> argumentNames = new ArrayList<>();
-
-            for (VariableElement parameter : parameters) {
-                Element matched = null;
-                // straight forward case type and name are the same
-                for (Map.Entry<Element, AttributeDescriptor> entry : attributes.entrySet()) {
-                    AttributeDescriptor attribute = entry.getValue();
-                    String fieldName = attribute.fieldName();
-                    if (fieldName.equalsIgnoreCase(parameter.getSimpleName().toString())) {
-                        argumentNames.add(fieldName);
-                        matched = entry.getKey();
-                    }
-                }
-                // remove this element since it was found
-                if (matched != null) {
-                    attributes.remove(matched);
-                }
-            }
-            // TODO need more validation here
             StringJoiner joiner = new StringJoiner(",");
             argumentNames.forEach(name -> joiner.add("$L"));
-            Object[] args = new Object[2 + argumentNames.size()];
-            args[0] = ClassName.get(entity.element());
-            args[1] = createMethod.getSimpleName();
-            System.arraycopy(argumentNames.toArray(), 0, args, 2, argumentNames.size());
-            builder.addMethod(MethodSpec.methodBuilder("build")
-                .returns(ClassName.get(entity.element()))
-                .addStatement("return $T.$L(" + joiner.toString() + ")", args).build());
+            MethodSpec.Builder build = MethodSpec.methodBuilder("build")
+                .returns(ClassName.get(entity.element()));
+            if (methodName.equals("<init>")) {
+                Object[] args = new Object[1 + argumentNames.size()];
+                args[0] = ClassName.get(entity.element());
+                System.arraycopy(argumentNames.toArray(), 0, args, 1, argumentNames.size());
+                build.addStatement("return new $T(" + joiner.toString() + ")", args).build();
+            } else {
+                Object[] args = new Object[2 + argumentNames.size()];
+                args[0] = ClassName.get(entity.element());
+                args[1] = methodName;
+                System.arraycopy(argumentNames.toArray(), 0, args, 2, argumentNames.size());
+                build.addStatement("return $T.$L(" + joiner.toString() + ")", args).build();
+            }
+            builder.addMethod(build.build());
         }
     }
 
@@ -663,7 +649,8 @@ class EntityGenerator implements SourceGenerator {
         if (attribute.isForeignKey()) {
             builder.add(".setForeignKey($L)\n", attribute.isForeignKey());
 
-            graph.referencingEntity(attribute).ifPresent(referenced -> {
+            Optional<EntityDescriptor> referencedType = graph.referencingEntity(attribute);
+            referencedType.ifPresent(referenced -> {
 
                 builder.add(".setReferencedClass($T.class)\n", referenced.isImmutable() ?
                         TypeName.get(referenced.element().asType()) :
@@ -765,14 +752,16 @@ class EntityGenerator implements SourceGenerator {
             .addSuperinterface(propertyType);
 
         boolean isNullable = typeMirror.getKind().isPrimitive() && attribute.isNullable();
-        boolean accessWithMethod = entity.isImmutable() || entity.isFinal();
-        String getName = accessWithMethod? attribute.getterName() : attribute.fieldName();
-        String setName = entity.isFinal() ? attribute.setterName() : getName;
+        boolean useMethods = entity.accessType() == PropertyAccess.METHOD;
+        boolean useGetter = useMethods || entity.isFinal() || entity.isImmutable();
+        boolean useSetter = useMethods || entity.isFinal();
+        String getName = useGetter? attribute.getterName() : attribute.fieldName();
+        String setName = useSetter? attribute.setterName() : attribute.fieldName();
         GeneratedProperty boxed =
             new GeneratedProperty.Builder(getName, setName, targetName, attributeName)
                 .setNullable(isNullable)
                 .setReadOnly(entity.isImmutable())
-                .setUseMethod(accessWithMethod)
+                .setUseMethod(useGetter)
                 .build();
         addPropertyMethods(propertyBuilder, boxed);
 
@@ -785,7 +774,7 @@ class EntityGenerator implements SourceGenerator {
                 getName, setName, targetName, primitiveType)
                 .setSuffix(name)
                 .setReadOnly(entity.isImmutable())
-                .setUseMethod(accessWithMethod)
+                .setUseMethod(useGetter)
                 .build());
         }
         builder.add(".setProperty($L)\n", propertyBuilder.build());
@@ -805,7 +794,7 @@ class EntityGenerator implements SourceGenerator {
         if (entity.isImmutable()) {
             String propertyName = attribute.fieldName();
             TypeName builderName = typeName;
-            boolean useSetter = false;
+            useSetter = false;
             Optional<TypeElement> builderType = entity.builderType();
             if (builderType.isPresent()) {
                 propertyName = attribute.setterName();
@@ -903,8 +892,7 @@ class EntityGenerator implements SourceGenerator {
 
     private TypeName boxedTypeName(TypeMirror typeMirror) {
         if (typeMirror.getKind().isPrimitive()) {
-            TypeElement boxed = types.boxedClass((PrimitiveType) typeMirror);
-            return TypeName.get(boxed.asType());
+            return TypeName.get(types.boxedClass((PrimitiveType) typeMirror).asType());
         }
         return TypeName.get(typeMirror);
     }
