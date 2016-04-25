@@ -548,6 +548,10 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         }
     }
 
+    protected EntityContext<T> context() {
+        return context;
+    }
+
     private class DataContext implements EntityContext<T>, ConnectionProvider {
 
         @Override
@@ -600,6 +604,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             @SuppressWarnings("unchecked")
             EntityReader<E, T> reader = (EntityReader<E, T>) readers.get(type);
             if (reader == null) {
+                checkConnectionMetadata();
                 reader = new EntityReader<>(entityModel.typeOf(type), this, EntityDataStore.this);
                 readers.put(type, reader);
             }
@@ -611,6 +616,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             @SuppressWarnings("unchecked")
             EntityWriter<E, T> writer = (EntityWriter<E, T>) writers.get(type);
             if (writer == null) {
+                checkConnectionMetadata();
                 writer = new EntityWriter<>(entityModel.typeOf(type), this, EntityDataStore.this);
                 writers.put(type, writer);
             }
