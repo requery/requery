@@ -70,6 +70,9 @@ public class EntityParceler<T> {
     public void writeToParcel(T entity, Parcel out) {
         EntityProxy<T> proxy = type.proxyProvider().apply(entity);
         for (Attribute<T, ?> attribute : type.attributes()) {
+            if (attribute.isAssociation()) {
+                continue;
+            }
             Object value = proxy.get(attribute, false);
             Class<?> typeClass = attribute.classType();
             if (typeClass.isEnum()) {
