@@ -132,8 +132,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         }
         String name = element.getSimpleName().toString();
         // skip kotlin data class methods with component1, component2.. names
-        if (sourceLanguage == SourceLanguage.KOTLIN &&
-            element.getModifiers().contains(Modifier.FINAL) &&
+        if (sourceLanguage == SourceLanguage.KOTLIN && isExtendable() &&
             name.startsWith("component") && name.length() > "component".length()) {
             return false;
         }
@@ -141,6 +140,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         // must be a getter style method with no args, can't return void or itself or its builder
         return type.getKind() != TypeKind.VOID &&
                element.getParameters().isEmpty() &&
+               (isImmutable() || !element.getModifiers().contains(Modifier.FINAL)) &&
                !type.equals(element().asType()) &&
                !type.equals(builderType().map(Element::asType).orElse(null)) &&
                !Mirrors.findAnnotationMirror(element, Transient.class).isPresent() &&
@@ -265,7 +265,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         } else {
             entityName = Names.removeClassPrefixes(typeName);
             if (entityName.equals(typeName)) {
-                entityName = typeName + (isImmutable() || isFinal() ? "Type" : "Entity");
+                entityName = typeName + (isImmutable() || isExtendable() ? "Type" : "Entity");
             }
         }
         return new QualifiedName(packageName, entityName);
@@ -312,7 +312,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public boolean isStateless() {
-        return isImmutable() || isFinal() ||
+        return isImmutable() || isExtendable() ||
             annotationOf(Entity.class).map(Entity::stateless).orElse(false);
     }
 
@@ -324,12 +324,12 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                          "org.immutables.value.Value.Immutable")
             .filter(type -> Mirrors.findAnnotationMirror(element(), type).isPresent())
             .findAny().isPresent() ||
-            (sourceLanguage == SourceLanguage.KOTLIN && isFinal()) ||
+            (sourceLanguage == SourceLanguage.KOTLIN && isExtendable()) ||
             annotationOf(Entity.class).map(Entity::immutable).orElse(false);
     }
 
     @Override
-    public boolean isFinal() {
+    public boolean isExtendable() {
         boolean extendable = annotationOf(Entity.class).map(Entity::extendable).orElse(true);
         return !extendable || (element().getKind().isClass() &&
             element().getModifiers().contains(Modifier.FINAL));

@@ -124,7 +124,7 @@ class EntityGenerator implements SourceGenerator {
         TypeSpec.Builder builder = TypeSpec.classBuilder(typeName)
             .addModifiers(Modifier.PUBLIC)
             .addOriginatingElement(typeElement);
-        boolean metadataOnly = entity.isImmutable() || entity.isFinal();
+        boolean metadataOnly = entity.isImmutable() || entity.isExtendable();
         if (typeElement.getKind().isInterface()) {
             builder.addSuperinterface(ClassName.get(typeElement));
             builder.addSuperinterface(ClassName.get(Persistable.class));
@@ -447,7 +447,7 @@ class EntityGenerator implements SourceGenerator {
         MethodSpec.Builder proxyFunction = CodeGeneration.overridePublicMethod("apply")
             .addParameter(targetName, "entity")
             .returns(proxyType);
-        if (entity.isImmutable() || entity.isFinal()) {
+        if (entity.isImmutable() || entity.isExtendable()) {
             proxyFunction.addStatement("return new $T(entity, $L)", proxyType, TYPE_NAME);
         } else {
             proxyFunction.addStatement("return entity.$L", PROXY_NAME);
@@ -753,8 +753,8 @@ class EntityGenerator implements SourceGenerator {
 
         boolean isNullable = typeMirror.getKind().isPrimitive() && attribute.isNullable();
         boolean useMethods = entity.accessType() == PropertyAccess.METHOD;
-        boolean useGetter = useMethods || entity.isFinal() || entity.isImmutable();
-        boolean useSetter = useMethods || entity.isFinal();
+        boolean useGetter = useMethods || entity.isExtendable() || entity.isImmutable();
+        boolean useSetter = useMethods || entity.isExtendable();
         String getName = useGetter? attribute.getterName() : attribute.fieldName();
         String setName = useSetter? attribute.setterName() : attribute.fieldName();
         GeneratedProperty boxed =
