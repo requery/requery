@@ -60,7 +60,7 @@ public final class EntityProcessor extends AbstractProcessor {
     static final String GENERATE_JPA = "generate.jpa";
 
     private Map<String, EntityGraph> graphs;
-    private Map<TypeElement, SuperType> superTypes;
+    private Map<TypeElement, EntityType> superTypes;
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -83,22 +83,18 @@ public final class EntityProcessor extends AbstractProcessor {
 
         for (TypeElement annotation : annotations) {
             for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
-
                 typeElementOf(element).ifPresent(typeElement -> {
-                    if (isEntityType(typeElement)) {
+                    if (isEntity(typeElement)) {
                         // create or get the entity for the annotation
-                        EntityType entity = entities.computeIfAbsent(typeElement,
-                            key -> new EntityType(processingEnv, key));
+                        EntityType entity = computeType(entities, typeElement);
                         entity.addAnnotationElement(annotation, element);
                         // create or get the graph for it
-                        String key = entity.modelName();
-                        graphs.computeIfAbsent(key, k -> new EntityGraph(types)).add(entity);
+                        String model = entity.modelName();
+                        graphs.computeIfAbsent(model, key -> new EntityGraph(types)).add(entity);
 
-                    } else if (isSuperclassType(typeElement)) {
-                        SuperType superType =
-                            superTypes.computeIfAbsent(typeElement, SuperType::new);
-                        superType.addAnnotationElement(annotation, element);
-                        superTypes.put(typeElement, superType);
+                    } else if (isSuperclass(typeElement)) {
+                        EntityType entity = computeType(superTypes, typeElement);
+                        entity.addAnnotationElement(annotation, element);
                     }
                 });
             }
@@ -112,18 +108,17 @@ public final class EntityProcessor extends AbstractProcessor {
             // add the annotated elements from the super type (if any)
             TypeMirror typeMirror = entity.element().getSuperclass();
             while (typeMirror.getKind() != TypeKind.NONE) {
-                TypeElement superTypeElement = elements.getTypeElement(typeMirror.toString());
-                if (superTypeElement != null) {
-                    SuperType superType = superTypes.get(superTypeElement);
-                    if (superType != null) {
-                        for (Map.Entry<TypeElement, Set<Element>> entry :
-                            superType.annotatedElements().entrySet()) {
-                            for (Element element : entry.getValue()) {
-                                entity.addAnnotationElement(entry.getKey(), element);
-                            }
-                        }
+                TypeElement superElement = elements.getTypeElement(typeMirror.toString());
+                if (superElement != null) {
+                    EntityType superType = superTypes.get(superElement);
+                    if (superType == null && isSuperclass(superElement)) {
+                        superType = computeType(superTypes, superElement);
                     }
-                    typeMirror = superTypeElement.getSuperclass();
+                    if (superType != null) {
+                        superType.process(processingEnv);
+                        entity.merge(superType);
+                    }
+                    typeMirror = superElement.getSuperclass();
                 } else {
                     break;
                 }
@@ -145,7 +140,7 @@ public final class EntityProcessor extends AbstractProcessor {
 
         // generate
         Set<SourceGenerator> generators = new LinkedHashSet<>();
-        if (!hasErrors || getBooleanOption(GENERATE_ALWAYS, true)) {
+        if (!hasErrors || getOption(GENERATE_ALWAYS, true)) {
             for (EntityDescriptor entity : entities.values()) {
                 EntityGraph graph = graphs.get(entity.modelName());
                 if (graph != null) {
@@ -154,7 +149,7 @@ public final class EntityProcessor extends AbstractProcessor {
             }
         }
 
-        if (getBooleanOption(GENERATE_MODEL, true)) {
+        if (getOption(GENERATE_MODEL, true)) {
             Map<String, Collection<EntityDescriptor>> packagesMap = new LinkedHashMap<>();
             Map<String, Boolean> canGenerate = new HashMap<>();
             for (EntityType entity : entities.values()) {
@@ -189,15 +184,19 @@ public final class EntityProcessor extends AbstractProcessor {
         return false;
     }
 
-    private boolean isEntityType(TypeElement element) {
+    private EntityType computeType(Map<TypeElement, EntityType> map, TypeElement element) {
+        return map.computeIfAbsent(element, key -> new EntityType(processingEnv, key));
+    }
+
+    private boolean isEntity(TypeElement element) {
         return Mirrors.findAnnotationMirror(element, Entity.class).isPresent() ||
-            (getBooleanOption(GENERATE_JPA, true) &&
+            (getOption(GENERATE_JPA, true) &&
              Mirrors.findAnnotationMirror(element, javax.persistence.Entity.class).isPresent());
     }
 
-    private boolean isSuperclassType(TypeElement element) {
+    private boolean isSuperclass(TypeElement element) {
         return Mirrors.findAnnotationMirror(element, Superclass.class).isPresent() ||
-            (getBooleanOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
+            (getOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
                 javax.persistence.MappedSuperclass.class).isPresent());
     }
 
@@ -219,7 +218,7 @@ public final class EntityProcessor extends AbstractProcessor {
         return Optional.ofNullable(typeElement);
     }
 
-    private boolean getBooleanOption(String key, boolean defaultValue) {
+    private boolean getOption(String key, boolean defaultValue) {
         String value = processingEnv.getOptions().get(key);
         return value == null ? defaultValue : Boolean.valueOf(value);
     }
