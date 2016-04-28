@@ -124,7 +124,7 @@ class EntityGenerator implements SourceGenerator {
         TypeSpec.Builder builder = TypeSpec.classBuilder(typeName)
             .addModifiers(Modifier.PUBLIC)
             .addOriginatingElement(typeElement);
-        boolean metadataOnly = entity.isImmutable() || entity.isExtendable();
+        boolean metadataOnly = entity.isImmutable() || entity.isUnimplementable();
         if (typeElement.getKind().isInterface()) {
             builder.addSuperinterface(ClassName.get(typeElement));
             builder.addSuperinterface(ClassName.get(Persistable.class));
@@ -289,16 +289,21 @@ class EntityGenerator implements SourceGenerator {
             String setterName = entry.getValue().setterName();
             // if read only don't generate a public setter
             boolean readOnly = entity.isReadOnly() || attribute.isReadOnly();
+            // edge case check if it's interface and we need to implement the setter
+            if (entity.element().getKind().isInterface() &&
+                ElementFilter.methodsIn(entity.element().getEnclosedElements()).stream()
+                .anyMatch(element -> element.getSimpleName().toString().equals(setterName))) {
+                readOnly = false;
+            }
             if (!readOnly) {
-                String argumentName =
-                    Names.lowerCaseFirst(Names.removeMemberPrefixes(attributeName));
+                String paramName = Names.lowerCaseFirst(Names.removeMemberPrefixes(attributeName));
                 MethodSpec.Builder setter = MethodSpec.methodBuilder(setterName)
                         .addModifiers(Modifier.PUBLIC)
-                        .addParameter(unboxedTypeName, argumentName);
+                        .addParameter(unboxedTypeName, paramName);
                 if (isTransient) {
-                    setter.addStatement("this.$L = $L", attributeName, argumentName);
+                    setter.addStatement("this.$L = $L", attributeName, paramName);
                 } else {
-                    setter.addStatement("$L.set($L, $L)", PROXY_NAME, fieldName, argumentName);
+                    setter.addStatement("$L.set($L, $L)", PROXY_NAME, fieldName, paramName);
                 }
                 for (PropertyGenerationExtension snippet : memberExtensions) {
                     snippet.addToSetter(attribute, setter);
@@ -447,7 +452,7 @@ class EntityGenerator implements SourceGenerator {
         MethodSpec.Builder proxyFunction = CodeGeneration.overridePublicMethod("apply")
             .addParameter(targetName, "entity")
             .returns(proxyType);
-        if (entity.isImmutable() || entity.isExtendable()) {
+        if (entity.isImmutable() || entity.isUnimplementable()) {
             proxyFunction.addStatement("return new $T(entity, $L)", proxyType, TYPE_NAME);
         } else {
             proxyFunction.addStatement("return entity.$L", PROXY_NAME);
@@ -752,9 +757,8 @@ class EntityGenerator implements SourceGenerator {
             .addSuperinterface(propertyType);
 
         boolean isNullable = typeMirror.getKind().isPrimitive() && attribute.isNullable();
-        boolean useMethods = entity.accessType() == PropertyAccess.METHOD;
-        boolean useGetter = useMethods || entity.isExtendable() || entity.isImmutable();
-        boolean useSetter = useMethods || entity.isExtendable();
+        boolean useGetter = entity.isUnimplementable() || entity.isImmutable();
+        boolean useSetter = entity.isUnimplementable();
         String getName = useGetter? attribute.getterName() : attribute.fieldName();
         String setName = useSetter? attribute.setterName() : attribute.fieldName();
         GeneratedProperty boxed =

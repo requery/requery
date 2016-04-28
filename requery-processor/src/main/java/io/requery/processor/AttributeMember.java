@@ -147,7 +147,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private void validateField(ElementValidator validator) {
         if (element().getKind().isField()) {
             Set<Modifier> modifiers = element().getModifiers();
-            if (!entity.isExtendable() && modifiers.contains(Modifier.PRIVATE)) {
+            if (!entity.isUnimplementable() && modifiers.contains(Modifier.PRIVATE)) {
                 validator.error("Entity field cannot be private");
             }
             if (modifiers.contains(Modifier.STATIC)) {

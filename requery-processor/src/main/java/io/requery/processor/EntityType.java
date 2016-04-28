@@ -49,7 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -80,7 +79,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     public Set<ElementValidator> process(ProcessingEnvironment processingEnvironment) {
         // create attributes for fields that have no annotations
         if (element().getKind().isInterface() || isImmutable() ||
-            accessType() == PropertyAccess.METHOD) {
+            sourceLanguage == SourceLanguage.KOTLIN) {
 
             ElementFilter.methodsIn(element().getEnclosedElements()).stream()
                 .filter(this::isMethodProcessable)
@@ -135,7 +134,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         }
         String name = element.getSimpleName().toString();
         // skip kotlin data class methods with component1, component2.. names
-        if (sourceLanguage == SourceLanguage.KOTLIN && isExtendable() &&
+        if (sourceLanguage == SourceLanguage.KOTLIN && isUnimplementable() &&
             name.startsWith("component") && name.length() > "component".length()) {
             return false;
         }
@@ -266,7 +265,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         } else {
             entityName = Names.removeClassPrefixes(typeName);
             if (entityName.equals(typeName)) {
-                entityName = typeName + (isImmutable() || isExtendable() ? "Type" : "Entity");
+                entityName = typeName + (isImmutable() || isUnimplementable() ? "Type" : "Entity");
             }
         }
         return new QualifiedName(packageName, entityName);
@@ -290,12 +289,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     @Override
     public QualifiedName typeName() {
         return qualifiedName;
-    }
-
-    @Override
-    public PropertyAccess accessType() {
-        return sourceLanguage == SourceLanguage.KOTLIN ?
-            PropertyAccess.METHOD : PropertyAccess.FIELD;
     }
 
     @Override
@@ -333,7 +326,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public boolean isStateless() {
-        return isImmutable() || isExtendable() ||
+        return isImmutable() || isUnimplementable() ||
             annotationOf(Entity.class).map(Entity::stateless).orElse(false);
     }
 
@@ -345,12 +338,12 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                          "org.immutables.value.Value.Immutable")
             .filter(type -> Mirrors.findAnnotationMirror(element(), type).isPresent())
             .findAny().isPresent() ||
-            (sourceLanguage == SourceLanguage.KOTLIN && isExtendable()) ||
+            (sourceLanguage == SourceLanguage.KOTLIN && isUnimplementable()) ||
             annotationOf(Entity.class).map(Entity::immutable).orElse(false);
     }
 
     @Override
-    public boolean isExtendable() {
+    public boolean isUnimplementable() {
         boolean extendable = annotationOf(Entity.class).map(Entity::extendable).orElse(true);
         return !extendable || (element().getKind().isClass() &&
             element().getModifiers().contains(Modifier.FINAL));
@@ -407,11 +400,11 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         ExecutableElement method = factoryMethod().orElseThrow(IllegalStateException::new);
         // TODO need more validation here
         // now match the builder fields to the parameters...
-        Map<Element, AttributeDescriptor> attributes = new LinkedHashMap<>(attributes());
+        Map<Element, AttributeDescriptor> map = new LinkedHashMap<>(attributes);
         for (VariableElement parameter : method.getParameters()) {
             // straight forward case type and name are the same
             Element matched = null;
-            for (Map.Entry<Element, AttributeDescriptor> entry : attributes.entrySet()) {
+            for (Map.Entry<Element, AttributeDescriptor> entry : map.entrySet()) {
                 AttributeDescriptor attribute = entry.getValue();
                 String fieldName = attribute.fieldName();
                 if (fieldName.equalsIgnoreCase(parameter.getSimpleName().toString())) {
@@ -420,13 +413,14 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                 }
             }
             if (matched != null) {
-                attributes.remove(matched);
+                map.remove(matched);
             }
         }
         if (names.isEmpty()) {
             // didn't work likely because the parameter names are missing
-            names.addAll(attributes.entrySet().stream()
-                .map(entry -> entry.getValue().fieldName()).collect(Collectors.toList()));
+            for (Map.Entry<Element, AttributeDescriptor> entry : map.entrySet()) {
+                names.add(0, entry.getValue().fieldName());
+            }
         }
         return names;
     }

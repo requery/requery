@@ -38,12 +38,6 @@ interface EntityDescriptor {
     TypeElement element();
 
     /**
-     * @return defines the method the proxy should access the type's properties e.g. field or
-     * method (get/set) access
-     */
-    PropertyAccess accessType();
-
-    /**
      * @return map of elements to attributes
      */
     Map<Element, ? extends AttributeDescriptor> attributes();
@@ -110,7 +104,7 @@ interface EntityDescriptor {
      * Either the source class that is final (cannot be extended) or another limitation prevents it
      * from being extended/implemented.
      */
-    boolean isExtendable();
+    boolean isUnimplementable();
 
     /**
      * @return {@link TypeElement} of the builder class that can build instances of the entity if
