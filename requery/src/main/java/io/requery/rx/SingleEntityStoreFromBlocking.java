@@ -29,13 +29,17 @@ import io.requery.query.Tuple;
 import io.requery.query.Update;
 import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
+import rx.Observable;
 import rx.Scheduler;
 import rx.Single;
+import rx.Subscriber;
 import rx.schedulers.Schedulers;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -50,7 +54,7 @@ import java.util.concurrent.Executors;
  * @author Nikhil Purushe
  */
 @ParametersAreNonnullByDefault
-class SingleEntityStoreFromBlocking<T> implements SingleEntityStore<T> {
+class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
 
     private final BlockingEntityStore<T> delegate;
     private final Scheduler subscribeOn;
@@ -308,5 +312,35 @@ class SingleEntityStoreFromBlocking<T> implements SingleEntityStore<T> {
     @Override
     public BlockingEntityStore<T> toBlocking() {
         return delegate;
+    }
+
+    @Override
+    public final <E> Observable<E> runInTransaction(final List<Single<? extends E>> elements) {
+        Objects.requireNotNull(elements);
+        return Observable.create(new Observable.OnSubscribe<E>() {
+            @Override
+            public void call(final Subscriber<? super E> subscriber) {
+                delegate.runInTransaction(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        try {
+                            subscriber.onStart();
+                            for (Single<?> single : elements) {
+                                Object value = single.toBlocking().value();
+                                if (value != null) {
+                                    @SuppressWarnings("unchecked")
+                                    E next = (E) value;
+                                    subscriber.onNext(next);
+                                }
+                            }
+                            subscriber.onCompleted();
+                        } catch (Throwable t) {
+                            subscriber.onError(t);
+                        }
+                        return null;
+                    }
+                });
+            }
+        });
     }
 }

@@ -20,15 +20,15 @@ import io.requery.Persistable;
 import io.requery.cache.EntityCacheBuilder;
 import io.requery.meta.EntityModel;
 import io.requery.query.Result;
-import io.requery.rx.SingleEntityStore;
 import io.requery.rx.RxSupport;
+import io.requery.rx.SingleEntityStore;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
 import io.requery.sql.EntityDataStore;
+import io.requery.sql.Platform;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.HSQL;
-import io.requery.sql.Platform;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
 import org.junit.After;
@@ -224,6 +224,30 @@ public class RxTest extends RandomData {
         }).toBlocking().value();
         int count = person.getPhoneNumbers().toObservable().count().toBlocking().first();
         assertEquals(1, count);
+    }
+
+    @Test
+    public void testRunInTransaction() {
+        final Person person = randomPerson();
+        data.runInTransaction(
+                data.insert(person),
+                data.update(person),
+                data.delete(person)).subscribe(new Action1<Object>() {
+            @Override
+            public void call(Object o) {
+
+            }
+        });
+        assertEquals(0, data.count(Person.class).get().value().intValue());
+
+        data.runInTransaction(
+            data.insert(person)).subscribe(new Action1<Person>() {
+            @Override
+            public void call(Person o) {
+
+            }
+        });
+        assertEquals(1, data.count(Person.class).get().value().intValue());
     }
 
     @Test

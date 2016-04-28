@@ -19,10 +19,13 @@ package io.requery.rx;
 import io.requery.EntityStore;
 import io.requery.meta.Attribute;
 import io.requery.query.Result;
+import rx.Observable;
 import rx.Single;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Extends {@link EntityStore} where all return values are single {@link rx.Single} instances
@@ -34,65 +37,75 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * @author Nikhil Purushe
  */
 @ParametersAreNonnullByDefault
-public interface SingleEntityStore<T> extends EntityStore<T, Single<?>> {
+public abstract class SingleEntityStore<T> implements EntityStore<T, Single<?>> {
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<E> insert(E entity);
+    public abstract <E extends T> Single<E> insert(E entity);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<Iterable<E>> insert(Iterable<E> entities);
+    public abstract <E extends T> Single<Iterable<E>> insert(Iterable<E> entities);
 
     @Override
     @CheckReturnValue
-    <K, E extends T> Single<K> insert(E entity, Class<K> keyClass);
+    public abstract <K, E extends T> Single<K> insert(E entity, Class<K> keyClass);
 
     @Override
     @CheckReturnValue
-    <K, E extends T> Single<Iterable<K>> insert(Iterable<E> entities, Class<K> keyClass);
+    public abstract <K, E extends T> Single<Iterable<K>> insert(Iterable<E> entities,
+                                                                Class<K> keyClass);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<E> update(E entity);
+    public abstract <E extends T> Single<E> update(E entity);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<Iterable<E>> update(Iterable<E> entities);
+    public abstract <E extends T> Single<Iterable<E>> update(Iterable<E> entities);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<E> upsert(E entity);
+    public abstract <E extends T> Single<E> upsert(E entity);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<Iterable<E>> upsert(Iterable<E> entities);
+    public abstract <E extends T> Single<Iterable<E>> upsert(Iterable<E> entities);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<E> refresh(E entity);
+    public abstract <E extends T> Single<E> refresh(E entity);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<E> refresh(E entity, Attribute<?, ?>... attributes);
+    public abstract <E extends T> Single<E> refresh(E entity, Attribute<?, ?>... attributes);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<Iterable<E>> refresh(Iterable<E> entities, Attribute<?, ?>... attributes);
+    public abstract <E extends T> Single<Iterable<E>> refresh(Iterable<E> entities,
+                                                              Attribute<?, ?>... attributes);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<E> refreshAll(E entity);
+    public abstract <E extends T> Single<E> refreshAll(E entity);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<Void> delete(E entity);
+    public abstract <E extends T> Single<Void> delete(E entity);
 
     @Override
     @CheckReturnValue
-    <E extends T> Single<Void> delete(Iterable<E> entities);
+    public abstract <E extends T> Single<Void> delete(Iterable<E> entities);
 
     @Override
     @CheckReturnValue
-    <E extends T, K> Single<E> findByKey(Class<E> type, K key);
+    public abstract <E extends T, K> Single<E> findByKey(Class<E> type, K key);
+
+    @CheckReturnValue
+    @SafeVarargs
+    public final <E> Observable<E> runInTransaction(Single<? extends E>... elements) {
+        return runInTransaction(Arrays.asList(elements));
+    }
+
+    abstract <E> Observable<E> runInTransaction(List<Single<? extends E>> elements);
 }
