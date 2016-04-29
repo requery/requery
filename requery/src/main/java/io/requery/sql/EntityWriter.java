@@ -496,7 +496,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         update(entity, proxy, true);
     }
 
-    public int update(E entity, final EntityProxy<E> proxy, boolean checkRowCount) {
+    private int update(E entity, final EntityProxy<E> proxy, boolean checkRowCount) {
         context.stateListener().preUpdate(entity, proxy);
         // updates the entity using a query (not the query values are not specified but instead
         // mapped directly to avoid boxing)
@@ -561,9 +561,11 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             // persist the foreign key object if needed
             S referenced = foreignKeyReference(proxy, attribute);
-            if (referenced != null &&
-                (stateless || proxy.getState(attribute) == PropertyState.MODIFIED)) {
+            if (referenced != null) {
+                proxy.setState(attribute, PropertyState.LOADED);
                 cascadeSave(referenced, null);
+                // reset the state temporarily for the updateable filter
+                proxy.setState(attribute, PropertyState.MODIFIED);
             }
             query.set((Expression)attribute, null);
             count++;
@@ -894,7 +896,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             EntityWriter<U, S> writer = context.write(proxy.type().classType());
             if (proxy.isLinked() || hasKey(proxy)) {
-                writer.update(entity, proxy);
+                writer.update(entity, proxy, true);
             } else {
                 writer.insert(entity, proxy, false);
             }
