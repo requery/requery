@@ -16,6 +16,8 @@
 
 package io.requery.android.sqlite;
 
+import android.annotation.TargetApi;
+import android.os.Build;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConnectionProvider;
 import io.requery.sql.TableCreationMode;
@@ -25,7 +27,8 @@ import io.requery.sql.TableCreationMode;
  *
  * @param <T> database type
  */
-public interface DatabaseProvider<T> extends ConnectionProvider {
+@TargetApi(Build.VERSION_CODES.KITKAT)
+public interface DatabaseProvider<T> extends ConnectionProvider, AutoCloseable {
 
     /**
      * Enables statement logging. Not use for debugging only as it impacts performance.
@@ -76,4 +79,9 @@ public interface DatabaseProvider<T> extends ConnectionProvider {
      * @return readable and writable database instance
      */
     T getWritableDatabase();
+
+    /**
+     * closes the database.
+     */
+    void close();
 }
