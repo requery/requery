@@ -61,6 +61,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -713,20 +714,8 @@ class EntityGenerator implements SourceGenerator {
                     graph.mappedAttributes(entity, attribute, referenced);
 
                 if (attribute.cardinality() == Cardinality.MANY_TO_MANY) {
-                    Optional<AssociativeEntityDescriptor> joinEntity = attribute.associativeEntity();
-                    if (joinEntity.isPresent()) {
-                        // generate a special type for the junction table (with attributes)
-                        generateJunctionType(attribute);
-                        builder.add(".setReferencedClass($T.class)\n",
-                            nameResolver.joinEntityName(joinEntity.get(), entity, referenced));
-                    } else if ( mappings.size() == 1) {
-                        AttributeDescriptor mapped = mappings.iterator().next();
-                        joinEntity = mapped.associativeEntity();
-                        if (joinEntity.isPresent()) {
-                            builder.add(".setReferencedClass($T.class)\n",
-                                nameResolver.joinEntityName(joinEntity.get(), referenced, entity));
-                        }
-                    }
+                    generateJunctionType(attribute, referenced, mappings)
+                        .ifPresent(name -> builder.add(".setReferencedClass($T.class)\n", name));
                 }
                 if (mappings.size() == 1) {
                     AttributeDescriptor mapped = mappings.iterator().next();
@@ -742,6 +731,36 @@ class EntityGenerator implements SourceGenerator {
         }
         builder.add(".build()");
         return fieldBuilder.initializer("$L", builder.build()).build();
+    }
+
+    private Optional<ClassName> generateJunctionType(AttributeDescriptor attribute,
+                                                     EntityDescriptor referenced,
+                                                     Set<AttributeDescriptor> mappings) {
+        ClassName joinName = null;
+        Optional<AssociativeEntityDescriptor> joinEntity = attribute.associativeEntity();
+        if (joinEntity.isPresent()) {
+            // generate a special type for the junction table (with attributes)
+            if (!joinEntity.get().type().isPresent()) {
+                graph.referencingEntity(attribute).ifPresent(referencing -> {
+                    JoinEntityGenerator generator = new JoinEntityGenerator(
+                        processingEnvironment, nameResolver, entity, referencing, attribute);
+                    try {
+                        generator.generate();
+                    } catch (IOException e) {
+                        processingEnvironment.getMessager()
+                            .printMessage(Diagnostic.Kind.ERROR, e.toString());
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            joinName = nameResolver.joinEntityName(joinEntity.get(), entity, referenced);
+        } else if ( mappings.size() == 1) {
+            AttributeDescriptor mapped = mappings.iterator().next();
+            joinName = mapped.associativeEntity()
+                .map(e -> nameResolver.joinEntityName(e, referenced, entity))
+                .orElse(null);
+        }
+        return Optional.ofNullable(joinName);
     }
 
     private void generateProperties(AttributeDescriptor attribute,
@@ -880,18 +899,6 @@ class EntityGenerator implements SourceGenerator {
 
     private String propertyStateFieldName(AttributeDescriptor attribute) {
         return "$" + attribute.fieldName() + "_state";
-    }
-
-    private void generateJunctionType(AttributeDescriptor attribute) {
-        graph.referencingEntity(attribute).ifPresent(referencing -> {
-            JoinEntityGenerator generator = new JoinEntityGenerator(
-                processingEnvironment, nameResolver, entity, referencing, attribute);
-            try {
-                generator.generate();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
     }
 
     private TypeName boxedTypeName(TypeMirror typeMirror) {

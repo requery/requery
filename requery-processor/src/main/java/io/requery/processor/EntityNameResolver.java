@@ -56,6 +56,11 @@ class EntityNameResolver {
     ClassName joinEntityName(AssociativeEntityDescriptor descriptor,
                              EntityDescriptor a,
                              EntityDescriptor b) {
+        if (descriptor.type().isPresent()) {
+            return (ClassName) descriptor.type()
+                .flatMap(this::generatedTypeNameOf)
+                .orElse(ClassName.bestGuess(descriptor.name()));
+        }
         String className;
         if (Names.isEmpty(descriptor.name())) {
             className = a.typeName().className() + "_" + b.typeName().className();

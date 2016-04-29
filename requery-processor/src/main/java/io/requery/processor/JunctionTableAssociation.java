@@ -24,6 +24,8 @@ import io.requery.ReferentialAction;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -34,6 +36,7 @@ class JunctionTableAssociation implements AssociativeEntityDescriptor {
 
     private final JunctionTable table;
     private final Set<AssociativeReference> columns;
+    private final TypeMirror typeMirror;
 
     JunctionTableAssociation(Elements elements, AttributeMember member, JunctionTable table) {
         this.table = table;
@@ -73,6 +76,15 @@ class JunctionTableAssociation implements AssociativeEntityDescriptor {
             columns.add(
                 new AssociativeReference(columnName, referenceType, deleteAction, updateAction));
         }
+        TypeMirror mirror = null;
+        try {
+            table.type();
+        } catch (MirroredTypeException e) {
+            if (!e.getTypeMirror().toString().equals("void")) {
+                mirror = e.getTypeMirror(); // easiest way to get the mirror
+            }
+        }
+        this.typeMirror = mirror;
     }
 
     @Override
@@ -83,5 +95,10 @@ class JunctionTableAssociation implements AssociativeEntityDescriptor {
     @Override
     public Set<AssociativeReference> columns() {
         return columns;
+    }
+
+    @Override
+    public Optional<TypeMirror> type() {
+        return Optional.ofNullable(typeMirror);
     }
 }

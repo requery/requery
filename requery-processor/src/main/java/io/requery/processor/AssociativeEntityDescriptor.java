@@ -16,6 +16,8 @@
 
 package io.requery.processor;
 
+import javax.lang.model.type.TypeMirror;
+import java.util.Optional;
 import java.util.Set;
 
 interface AssociativeEntityDescriptor {
@@ -23,4 +25,6 @@ interface AssociativeEntityDescriptor {
     String name();
 
     Set<AssociativeReference> columns();
+
+    Optional<TypeMirror> type();
 }
