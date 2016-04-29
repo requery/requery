@@ -503,42 +503,6 @@ class EntityGenerator implements SourceGenerator {
         }
     }
 
-    private void addPropertyMethods(TypeSpec.Builder builder, GeneratedProperty property) {
-        String suffix = property.methodSuffix();
-        TypeName targetName = property.targetName();
-        TypeName propertyTypeName = property.propertyTypeName();
-        // get
-        MethodSpec.Builder getMethod = CodeGeneration.overridePublicMethod("get" + suffix)
-            .addParameter(targetName, "entity")
-            .returns(propertyTypeName);
-        if (property.isWriteOnly()) {
-            getMethod.addStatement("throw new UnsupportedOperationException()");
-        } else {
-            getMethod.addStatement(property.useMethod() ?
-                "return entity.$L()" : "return entity.$L", property.readName());
-        }
-        // set
-        MethodSpec.Builder setMethod = CodeGeneration.overridePublicMethod("set" + suffix)
-            .addParameter(targetName, "entity")
-            .addParameter(propertyTypeName, "value");
-        if (property.isReadOnly()) {
-            setMethod.addStatement("throw new UnsupportedOperationException()");
-        } else {
-            CodeBlock.Builder setterBlock = CodeBlock.builder();
-            if (property.isNullable()) {
-                setterBlock.beginControlFlow("if(value != null)");
-            }
-            setterBlock.addStatement(property.useMethod() ?
-                "entity.$L(value)" : "entity.$L = value", property.writeName());
-            if (property.isNullable()) {
-                setterBlock.endControlFlow();
-            }
-            setMethod.addCode(setterBlock.build());
-        }
-        builder.addMethod(getMethod.build());
-        builder.addMethod(setMethod.build());
-    }
-
     private void generateStaticMetadata(TypeSpec.Builder typeBuilder, boolean metadataOnly) {
         TypeName targetName = metadataOnly? ClassName.get(entity.element()) : typeName;
         for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
@@ -780,25 +744,22 @@ class EntityGenerator implements SourceGenerator {
         boolean useSetter = entity.isUnimplementable();
         String getName = useGetter? attribute.getterName() : attribute.fieldName();
         String setName = useSetter? attribute.setterName() : attribute.fieldName();
-        GeneratedProperty boxed =
-            new GeneratedProperty.Builder(getName, setName, targetName, attributeName)
+        new GeneratedProperty(getName, setName, targetName, attributeName)
                 .setNullable(isNullable)
                 .setReadOnly(entity.isImmutable())
                 .setUseMethod(useGetter)
-                .build();
-        addPropertyMethods(propertyBuilder, boxed);
+                .build(propertyBuilder);
 
         // additional primitive get/set if the type is primitive
         if (propertyClass != Property.class) {
             TypeName primitiveType = TypeName.get(attribute.typeMirror());
             String name = Names.upperCaseFirst(attribute.typeMirror().toString());
 
-            addPropertyMethods(propertyBuilder, new GeneratedProperty.Builder(
-                getName, setName, targetName, primitiveType)
+            new GeneratedProperty(getName, setName, targetName, primitiveType)
                 .setSuffix(name)
                 .setReadOnly(entity.isImmutable())
                 .setUseMethod(useGetter)
-                .build());
+                .build(propertyBuilder);
         }
         builder.add(".setProperty($L)\n", propertyBuilder.build());
 
@@ -808,8 +769,7 @@ class EntityGenerator implements SourceGenerator {
             TypeSpec.Builder stateType = TypeSpec.anonymousClassBuilder("")
                 .addSuperinterface(parameterizedTypeName(Property.class, targetName, stateClass));
             String fieldName = propertyStateFieldName(attribute);
-            addPropertyMethods(stateType,
-                new GeneratedProperty.Builder(fieldName, targetName, stateClass).build());
+            new GeneratedProperty(fieldName, targetName, stateClass).build(stateType);
             builder.add(".setPropertyState($L)\n", stateType.build());
         }
 
@@ -841,20 +801,18 @@ class EntityGenerator implements SourceGenerator {
             TypeSpec.Builder builderProperty = TypeSpec.anonymousClassBuilder("")
                 .addSuperinterface(propertyType);
 
-            addPropertyMethods(builderProperty,
-                new GeneratedProperty.Builder(propertyName, builderName, attributeName)
+            new GeneratedProperty(propertyName, builderName, attributeName)
                     .setWriteOnly(true)
                     .setUseMethod(useSetter)
-                    .build());
+                    .build(builderProperty);
             if (propertyClass != Property.class) {
                 TypeName primitiveType = TypeName.get(attribute.typeMirror());
                 String name = Names.upperCaseFirst(attribute.typeMirror().toString());
-                addPropertyMethods(builderProperty, new GeneratedProperty.Builder(
-                    propertyName, builderName, primitiveType)
+                new GeneratedProperty(propertyName, builderName, primitiveType)
                     .setSuffix(name)
                     .setUseMethod(useSetter)
                     .setWriteOnly(true)
-                    .build());
+                    .build(builderProperty);
             }
             builder.add(".setBuilderProperty($L)\n", builderProperty.build());
         }
@@ -868,33 +826,25 @@ class EntityGenerator implements SourceGenerator {
     }
 
     private Class propertyClassFor(TypeMirror typeMirror) {
-        Class propertyClass = Property.class;
         if (typeMirror.getKind().isPrimitive()) {
             switch (typeMirror.getKind()) {
                 case BOOLEAN:
-                    propertyClass = BooleanProperty.class;
-                    break;
+                    return BooleanProperty.class;
                 case BYTE:
-                    propertyClass = ByteProperty.class;
-                    break;
+                    return ByteProperty.class;
                 case SHORT:
-                    propertyClass = ShortProperty.class;
-                    break;
+                    return ShortProperty.class;
                 case INT:
-                    propertyClass = IntProperty.class;
-                    break;
+                    return IntProperty.class;
                 case LONG:
-                    propertyClass = LongProperty.class;
-                    break;
+                    return LongProperty.class;
                 case FLOAT:
-                    propertyClass = FloatProperty.class;
-                    break;
+                    return FloatProperty.class;
                 case DOUBLE:
-                    propertyClass = DoubleProperty.class;
-                    break;
+                    return DoubleProperty.class;
             }
         }
-        return propertyClass;
+        return Property.class;
     }
 
     private String propertyStateFieldName(AttributeDescriptor attribute) {
