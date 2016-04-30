@@ -19,6 +19,7 @@ package io.requery.query;
 import io.requery.util.function.Consumer;
 import io.requery.util.function.Supplier;
 
+import javax.annotation.CheckReturnValue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -44,6 +45,7 @@ public interface Scalar<E> {
     /**
      * @return {@link CompletableFuture} computing the result.
      */
+    @CheckReturnValue
     CompletableFuture<E> toCompletableFuture();
 
     /**
@@ -51,6 +53,7 @@ public interface Scalar<E> {
      *
      * @return {@link CompletableFuture} computing the result.
      */
+    @CheckReturnValue
     CompletableFuture<E> toCompletableFuture(Executor executor);
 
     /**
@@ -58,10 +61,12 @@ public interface Scalar<E> {
      *
      * @return {@link rx.Single} for the result of this query.
      */
+    @CheckReturnValue
     rx.Single<E> toSingle();
 
     /**
      * @return {@link Supplier} for the result of this query.
      */
+    @CheckReturnValue
     Supplier<E> toSupplier();
 }

@@ -20,6 +20,7 @@ import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
 import io.requery.util.function.Consumer;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,7 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
     /**
      * @return {@link Stream} instance over the result set. Java 8 only.
      */
+    @CheckReturnValue
     Stream<E> stream();
 
     /**
@@ -61,6 +63,7 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      *
      * @return observable stream of the results of this query.
      */
+    @CheckReturnValue
     rx.Observable<E> toObservable();
 
     /**
@@ -71,6 +74,7 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      * @return observable instance of this result that is triggered whenever changes that may
      * affect the query are made.
      */
+    @CheckReturnValue
     rx.Observable<Result<E>> toSelfObservable();
 
     /**
@@ -88,6 +92,7 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      * @return first element of this result set.
      * @throws java.util.NoSuchElementException if there is no first element (empty result).
      */
+    @CheckReturnValue
     E first() throws NoSuchElementException;
 
     /**
@@ -96,6 +101,7 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      * @param defaultElement default value for when there is no first element.
      * @return First element or defaultElement if there is none.
      */
+    @CheckReturnValue
     E firstOr(E defaultElement);
 
     /**
@@ -103,6 +109,7 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      *
      * @return First element or null if there is none.
      */
+    @CheckReturnValue
     E firstOrNull();
 
     /**
@@ -118,6 +125,7 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      *
      * @return a new unmodifiable list with the contents of the result.
      */
+    @CheckReturnValue
     List<E> toList();
 
     /**
@@ -127,6 +135,7 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      * @param <K> type of key
      * @return map containing the results
      */
+    @CheckReturnValue
     <K> Map<K, E> toMap(Expression<K> key);
 
     /**
@@ -137,6 +146,6 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      * @param <K> type of key
      * @return map containing the results.
      */
+    @CheckReturnValue
     <K> Map<K, E> toMap(Expression<K> key, Map<K, E> map);
-
 }
