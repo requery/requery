@@ -60,21 +60,19 @@ public class SqliteFunctionalTest extends FunctionalTest {
             default:
             case ANDROID:
                 dataSource = new DatabaseSource(context, model, dbName, 1);
-                dataSource.setLoggingEnabled(true);
                 break;
             case SUPPORT:
                 dataSource = new SqlitexDatabaseSource(context, model, dbName, 1);
-                dataSource.setLoggingEnabled(true);
                 break;
             case SQLCIPHER:
                 dataSource = new SqlCipherDatabaseSource(context, model, dbName, "test123", 1);
-                dataSource.setLoggingEnabled(true);
                 break;
         }
     }
 
     @Override
     public void setup() throws SQLException {
+        dataSource.setLoggingEnabled(true);
         Context context = InstrumentationRegistry.getContext();
         context.deleteDatabase(dbName);
         data = new EntityDataStore<>(dataSource.getConfiguration());
