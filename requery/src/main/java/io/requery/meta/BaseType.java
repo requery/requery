@@ -36,6 +36,7 @@ abstract class BaseType<T> implements Type<T> {
     boolean readOnly;
     boolean immutable;
     Set<Attribute<T, ?>> attributes;
+    Set<QueryExpression<?>> expressions;
     Supplier<T> factory;
     Function<T, EntityProxy<T>> proxyProvider;
     Set<Class<?>> referencedTypes;

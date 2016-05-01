@@ -748,6 +748,13 @@ public abstract class FunctionalTest extends RandomData {
             assertEquals(2, person.getPhoneNumbersList().size());
             assertEquals(2, result.toList().size());
         }
+        // by id
+        try (Result<Phone> result =
+                 data.select(Phone.class).where(Phone.OWNER_ID.eq(person.getId())).get()) {
+            assertTrue(person.getPhoneNumbersList().containsAll(result.toList()));
+            assertEquals(2, person.getPhoneNumbersList().size());
+            assertEquals(2, result.toList().size());
+        }
     }
 
     @Test

@@ -39,15 +39,13 @@ final class ImmutableType<T> extends BaseType<T> {
 
         LinkedHashSet<Attribute<T, ?>> attributes = new LinkedHashSet<>();
         for (Attribute<T, ?> attribute : builder.attributes()) {
-            if (attribute instanceof BaseAttribute) {
-                BaseAttribute baseAttribute = (BaseAttribute) attribute;
-                // cheating here a bit but needed to avoid circular references, will be
-                // effectively immutable after the type is constructed
-                baseAttribute.declaringType = this;
-            }
+            setDeclaringType(attribute);
             attributes.add(attribute);
         }
         this.attributes = Collections.unmodifiableSet(attributes);
+        for (QueryExpression<?> expression : builder.expressions) {
+            setDeclaringType(expression);
+        }
         if (factory == null) {
             // factory will be set by the processor this is a fallback
             factory = new Supplier<T>() {
@@ -60,6 +58,15 @@ final class ImmutableType<T> extends BaseType<T> {
                     }
                 }
             };
+        }
+    }
+
+    private void setDeclaringType(Object expression) {
+        if (expression instanceof BaseAttribute) {
+            // cheating here a bit but needed to avoid circular references, will be
+            // effectively immutable after the type is constructed
+            BaseAttribute attribute = (BaseAttribute) expression;
+            attribute.declaringType = this;
         }
     }
 }

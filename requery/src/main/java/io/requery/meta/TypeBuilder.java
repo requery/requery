@@ -45,6 +45,7 @@ public class TypeBuilder<T> extends BaseType<T> {
         });
         this.name = name;
         this.referencedTypes = new LinkedHashSet<>();
+        this.expressions = new LinkedHashSet<>();
     }
 
     public TypeBuilder<T> setBaseType(Class<? super T> type) {
@@ -99,6 +100,11 @@ public class TypeBuilder<T> extends BaseType<T> {
 
     public TypeBuilder<T> addAttribute(Attribute<T, ?> attribute) {
         this.attributes.add(attribute);
+        return this;
+    }
+
+    public TypeBuilder<T> addExpression(QueryExpression<?> expression) {
+        this.expressions.add(expression);
         return this;
     }
 

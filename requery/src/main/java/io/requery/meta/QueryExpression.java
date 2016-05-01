@@ -16,13 +16,15 @@
 
 package io.requery.meta;
 
-/**
- * Attribute that can be used in a query on a specific {@link Type}.
- *
- * @param <T> entity type
- * @param <V> value type
- *
- * @author Nikhil Purushe
- */
-public interface QueryAttribute<T, V> extends Attribute<T, V>, QueryExpression<V> {
+import io.requery.query.Aliasable;
+import io.requery.query.Conditional;
+import io.requery.query.Expression;
+import io.requery.query.Functional;
+import io.requery.query.LogicalCondition;
+
+public interface QueryExpression<V> extends
+    Expression<V>,
+    Functional<V>,
+    Aliasable<Expression<V>>,
+    Conditional<LogicalCondition<? extends Expression<V>, ?>, V> {
 }

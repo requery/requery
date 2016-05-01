@@ -32,6 +32,7 @@ import io.requery.ReferentialAction;
 import io.requery.meta.Attribute;
 import io.requery.meta.Cardinality;
 import io.requery.meta.QueryAttribute;
+import io.requery.meta.QueryExpression;
 import io.requery.meta.Type;
 import io.requery.meta.TypeBuilder;
 import io.requery.proxy.BooleanProperty;
@@ -89,7 +90,8 @@ class EntityGenerator implements SourceGenerator {
     private final Elements elements;
     private final Types types;
     private final EntityDescriptor entity;
-    private final HashSet<String> fieldNames;
+    private final HashSet<String> attributeNames;
+    private final HashSet<String> expressionNames;
     private final TypeElement typeElement;
     private final ClassName typeName;
     private final EntityGraph graph;
@@ -106,7 +108,8 @@ class EntityGenerator implements SourceGenerator {
         this.types = processingEnvironment.getTypeUtils();
         this.graph = graph;
         nameResolver = new EntityNameResolver(graph);
-        fieldNames = new HashSet<>();
+        attributeNames = new HashSet<>();
+        expressionNames = new HashSet<>();
         typeElement = entity.element();
         typeName = (ClassName) nameResolver.typeNameOf(entity);
         typeExtensions = new HashSet<>();
@@ -469,7 +472,8 @@ class EntityGenerator implements SourceGenerator {
             }
             typeBuilder.add(".setTableCreateAttributes($L)\n", joiner.toString());
         }
-        fieldNames.forEach(name -> typeBuilder.add(".addAttribute($L)\n", name));
+        attributeNames.forEach(name -> typeBuilder.add(".addAttribute($L)\n", name));
+        expressionNames.forEach(name -> typeBuilder.add(".addExpression($L)\n", name));
         typeBuilder.add(".build()");
         schemaFieldBuilder.initializer("$L", typeBuilder.build());
         typeSpecBuilder.addField(schemaFieldBuilder.build());
@@ -512,31 +516,59 @@ class EntityGenerator implements SourceGenerator {
             if (attribute.isTransient()) {
                 continue;
             }
-            FieldSpec field = generateAttribute(attribute, targetName);
+            String fieldName = Names.upperCaseUnderscore(
+                Names.removeMemberPrefixes(attribute.fieldName()));
+
+            if (attribute.isForeignKey() && attribute.cardinality() != null) {
+                // generate a foreign key attribute for use in queries but not stored in the type
+                graph.referencingEntity(attribute)
+                    .flatMap(entity -> graph.referencingAttribute(attribute, entity))
+                    .ifPresent(foreignKey -> {
+                        String name = fieldName + "_ID";
+                        TypeMirror mirror = foreignKey.typeMirror();
+                        FieldSpec field =
+                            generateAttribute(attribute, targetName, name, mirror, true);
+                        typeBuilder.addField(field);
+                        expressionNames.add(name);
+                    });
+            }
+            TypeMirror mirror = attribute.typeMirror();
+            FieldSpec field = generateAttribute(attribute, targetName, fieldName, mirror, false);
             typeBuilder.addField(field);
+            attributeNames.add(fieldName);
         }
         generateType(typeBuilder, targetName);
     }
 
-    private FieldSpec generateAttribute(AttributeDescriptor attribute, TypeName targetName) {
-        TypeMirror typeMirror = attribute.typeMirror();
-        TypeName attributeTypeName;
+    private FieldSpec generateAttribute(AttributeDescriptor attribute,
+                                        TypeName targetName,
+                                        String fieldName,
+                                        TypeMirror mirror,
+                                        boolean expression) {
+        TypeMirror typeMirror = mirror;
+        TypeName typeName;
         if (attribute.isIterable()) {
-            typeMirror = tryFirstTypeArgument(attribute.typeMirror());
-            attributeTypeName = parameterizedCollectionName(attribute.typeMirror());
+            typeMirror = tryFirstTypeArgument(typeMirror);
+            typeName = parameterizedCollectionName(attribute.typeMirror());
         } else if (attribute.isOptional()) {
-            typeMirror = tryFirstTypeArgument(attribute.typeMirror());
-            attributeTypeName = TypeName.get(typeMirror);
+            typeMirror = tryFirstTypeArgument(typeMirror);
+            typeName = TypeName.get(typeMirror);
         } else {
-            attributeTypeName = nameResolver.generatedTypeNameOf(typeMirror).orElse(null);
+            typeName = nameResolver.generatedTypeNameOf(typeMirror).orElse(null);
         }
-        if (attributeTypeName == null) {
-            attributeTypeName = boxedTypeName(typeMirror);
+        if (typeName == null) {
+            typeName = boxedTypeName(typeMirror);
+        }
+        ParameterizedTypeName type;
+        if (expression) {
+            type = parameterizedTypeName(QueryExpression.class, typeName);
+        } else {
+            // if it's an association don't make it available as a query attribute
+            boolean isQueryable = attribute.cardinality() == null || attribute.isForeignKey();
+            Class<?> attributeType = isQueryable ? QueryAttribute.class : Attribute.class;
+            type = parameterizedTypeName(attributeType, targetName, typeName);
         }
 
-        // if it's an association don't make it available as a query attribute
-        boolean isQueryable = attribute.cardinality() == null || attribute.isForeignKey();
-        Class<?> attributeType = isQueryable ? QueryAttribute.class : Attribute.class;
         CodeBlock.Builder builder = CodeBlock.builder();
 
         if (attribute.isIterable()) {
@@ -545,7 +577,7 @@ class EntityGenerator implements SourceGenerator {
             TypeElement collectionElement = (TypeElement) types.asElement(attribute.typeMirror());
 
             ParameterizedTypeName builderName = parameterizedTypeName(
-                attribute.builderClass(), targetName, attributeTypeName, name);
+                attribute.builderClass(), targetName, typeName, name);
 
             builder.add("\nnew $T($S, $T.class, $T.class)\n",
                 builderName, attribute.name(), ClassName.get(collectionElement), name);
@@ -560,14 +592,14 @@ class EntityGenerator implements SourceGenerator {
 
             TypeElement valueElement = (TypeElement) types.asElement(attribute.typeMirror());
             ParameterizedTypeName builderName = parameterizedTypeName(
-                attribute.builderClass(), targetName, attributeTypeName, keyName, valueName);
+                attribute.builderClass(), targetName, typeName, keyName, valueName);
 
             builder.add("\nnew $T($S, $T.class, $T.class, $T.class)\n", builderName,
                 attribute.name(), ClassName.get(valueElement), keyName, valueName);
         } else {
             ParameterizedTypeName builderName = parameterizedTypeName(
-                attribute.builderClass(), targetName, attributeTypeName);
-            TypeName classType = attributeTypeName;
+                attribute.builderClass(), targetName, typeName);
+            TypeName classType = typeName;
             if (typeMirror.getKind().isPrimitive()) {
                 // if primitive just use the primitive class not the boxed version
                 classType = TypeName.get(typeMirror);
@@ -582,17 +614,9 @@ class EntityGenerator implements SourceGenerator {
             }
             builder.add(statement, builderName, attribute.name(), classType);
         }
-
-        ParameterizedTypeName type =
-            parameterizedTypeName(attributeType, targetName, attributeTypeName);
-        String attributeName = Names.upperCaseUnderscore(
-            Names.removeMemberPrefixes(attribute.fieldName()));
-        fieldNames.add(attributeName);
-
-        FieldSpec.Builder fieldBuilder = FieldSpec.builder(type, attributeName,
-            Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
-
-        generateProperties(attribute, typeMirror, targetName, attributeTypeName, builder);
+        if (!expression) {
+            generateProperties(attribute, typeMirror, targetName, typeName, builder);
+        }
         // attribute builder properties
         if (attribute.isKey()) {
             builder.add(".setKey(true)\n");
@@ -694,7 +718,8 @@ class EntityGenerator implements SourceGenerator {
             }
         }
         builder.add(".build()");
-        return fieldBuilder.initializer("$L", builder.build()).build();
+        return FieldSpec.builder(type, fieldName, Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+            .initializer("$L", builder.build()).build();
     }
 
     private Optional<ClassName> generateJunctionType(AttributeDescriptor attribute,
