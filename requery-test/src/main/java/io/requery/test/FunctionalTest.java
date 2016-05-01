@@ -443,7 +443,6 @@ public abstract class FunctionalTest extends RandomData {
 
     @Test
     public void testFillResult() {
-        data.delete(Person.class).get();
         Person person = randomPerson();
         data.insert(person);
         assertEquals(1, data.select(Person.class)
@@ -452,7 +451,6 @@ public abstract class FunctionalTest extends RandomData {
 
     @Test
     public void testListResult() {
-        data.delete(Person.class).get();
         Person person = randomPerson();
         data.insert(person);
         assertEquals(1, data.select(Person.class).get().toList().size());
@@ -657,7 +655,6 @@ public abstract class FunctionalTest extends RandomData {
     @Test
     public void testSingleQueryWhere() {
         final String name = "duplicateFirstName";
-        data.delete(Person.class).where(Person.NAME.equal(name)).get();
         for (int i = 0; i < 10; i++) {
             Person person = randomPerson();
             person.setName(name);
@@ -682,7 +679,6 @@ public abstract class FunctionalTest extends RandomData {
     @Test
     public void testSingleQueryLimitSkip() {
         final String name = "duplicateFirstName";
-        data.delete(Person.class).where(Person.NAME.equal(name)).get();
         for (int i = 0; i < 10; i++) {
             Person person = randomPerson();
             person.setName(name);
@@ -703,7 +699,6 @@ public abstract class FunctionalTest extends RandomData {
 
     @Test
     public void testSingleQueryWhereNull() {
-        data.delete(Person.class).where(Person.NAME.isNull()).get();
         Person person = randomPerson();
         person.setName(null);
         data.insert(person);
@@ -1188,15 +1183,17 @@ public abstract class FunctionalTest extends RandomData {
                 resultIds.add(person.getId());
             }
         }
-        try (Result<Person> result = data.raw(Person.class, "select * from Person WHERE id IN ?", resultIds)) {
+        try (Result<Person> result =
+                 data.raw(Person.class, "select * from Person WHERE id IN ?", resultIds)) {
             List<Person> list = result.toList();
-            List<Integer> thisResultIds = new ArrayList<>(list.size());
+            List<Integer> ids = new ArrayList<>(list.size());
             for (Person tuple : list) {
-                thisResultIds.add(tuple.getId());
+                ids.add(tuple.getId());
             }
-            assertEquals(resultIds, thisResultIds);
+            assertEquals(resultIds, ids);
         }
-        try (Result<Person> result = data.raw(Person.class, "select * from Person WHERE id = ?", people.get(0))) {
+        try (Result<Person> result =
+                 data.raw(Person.class, "select * from Person WHERE id = ?", people.get(0))) {
             assertEquals(result.first().getId(), people.get(0).getId());
         }
     }
