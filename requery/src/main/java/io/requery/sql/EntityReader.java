@@ -33,8 +33,10 @@ import io.requery.proxy.Settable;
 import io.requery.query.AliasedExpression;
 import io.requery.query.Condition;
 import io.requery.query.Expression;
+import io.requery.query.Functional;
 import io.requery.query.Result;
 import io.requery.query.Tuple;
+import io.requery.query.WhereAndOr;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryType;
 import io.requery.util.FilteringIterator;
@@ -300,7 +302,8 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                         keyAttribute.referencedAttribute());
                     key = proxy.get(referenced);
                 }
-                return queryable.select(uType).where(keyAttribute.equal(key));
+                return order(queryable.select(uType).where(keyAttribute.equal(key)),
+                    attribute.orderByAttribute());
             }
             case MANY_TO_MANY: {
                 @SuppressWarnings("unchecked")
@@ -324,14 +327,34 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     throw new IllegalStateException();
                 }
                 // create the many to many join query
-                return queryable.select(uType)
+                return order(queryable.select(uType)
                     .join(junctionType.classType()).on(uId.equal(uKey))
                     .join(type.classType()).on(tKey.equal(tId))
-                    .where(tId.equal(id));
+                    .where(tId.equal(id)), attribute.orderByAttribute());
             }
             default:
                 throw new IllegalStateException();
         }
+    }
+
+    private <Q extends S> Supplier<Result<Q>> order(WhereAndOr<Result<Q>> query,
+                                                    Supplier<Attribute> supplier) {
+        if (supplier != null) {
+            Attribute attribute = supplier.get();
+            if (attribute.orderByDirection() != null && attribute instanceof Functional) {
+                switch (attribute.orderByDirection()) {
+                    case ASC:
+                        query.orderBy(((Functional)attribute).asc());
+                        break;
+                    case DESC:
+                        query.orderBy(((Functional)attribute).desc());
+                        break;
+                }
+            } else {
+                query.orderBy((Expression)attribute);
+            }
+        }
+        return query;
     }
 
     @SafeVarargs

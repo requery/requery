@@ -20,6 +20,7 @@ import io.requery.CascadeAction;
 import io.requery.ReferentialAction;
 import io.requery.meta.AttributeBuilder;
 import io.requery.meta.Cardinality;
+import io.requery.query.Order;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -191,6 +192,16 @@ interface AttributeDescriptor {
      * for associative attributes
      */
     String mappedBy();
+
+    /**
+     * @return optional in a relational attribute the column use to order the generated query by.
+     */
+    String orderBy();
+
+    /**
+     * @return optional if the order by attribute is provided the sort order for the query.
+     */
+    Order orderByDirection();
 
     /**
      * @return for associative attributes the column being referenced.

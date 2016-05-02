@@ -24,6 +24,7 @@ import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
 import io.requery.query.ExpressionType;
 import io.requery.query.FieldExpression;
+import io.requery.query.Order;
 import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
 
@@ -62,6 +63,8 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements QueryAt
     Class<?> referencedClass;
     Supplier<Attribute> mappedAttribute;
     Supplier<Attribute> referencedAttribute;
+    Supplier<Attribute> orderByAttribute;
+    Order orderByDirection;
 
     @Override
     public Initializer<T, V> initializer() {
@@ -221,6 +224,16 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements QueryAt
     @Override
     public Supplier<Attribute> referencedAttribute() {
         return referencedAttribute;
+    }
+
+    @Override
+    public Supplier<Attribute> orderByAttribute() {
+        return orderByAttribute;
+    }
+
+    @Override
+    public Order orderByDirection() {
+        return orderByDirection;
     }
 
     @Override

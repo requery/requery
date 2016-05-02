@@ -6,6 +6,7 @@ import io.requery.Generated;
 import io.requery.JunctionTable;
 import io.requery.Key;
 import io.requery.ManyToMany;
+import io.requery.OrderBy;
 import io.requery.PostInsert;
 import io.requery.PostLoad;
 import io.requery.PreUpdate;
@@ -35,6 +36,7 @@ public class AbstractGroup {
     protected MutableResult<Person> members;
 
     @JunctionTable(name = "Group_Owners")
+    @OrderBy("name")
     @ManyToMany
     protected MutableResult<Person> owners;
 

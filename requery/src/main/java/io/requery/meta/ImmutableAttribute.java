@@ -49,5 +49,7 @@ final class ImmutableAttribute<T, V> extends BaseAttribute<T, V> {
         isForeignKey = builder.isForeignKey();
         converter = builder.converter();
         mappedAttribute = builder.mappedAttribute();
+        orderByAttribute = builder.orderByAttribute();
+        orderByDirection = builder.orderByDirection();
     }
 }

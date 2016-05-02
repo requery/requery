@@ -653,6 +653,25 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testManyOrderBy() {
+        Group group = new Group();
+        group.setName("Group");
+        data.insert(group);
+        for (int i = 3; i >= 0; i--) {
+            Person person = randomPerson();
+            person.setName(new String(Character.toChars(65 + i)));
+            data.insert(person);
+            group.getOwners().add(person);
+        }
+        data.update(group);
+        data.refresh(group, Group.OWNERS);
+        List<Person> list = group.getOwners().toList();
+        assertEquals("A", list.get(0).getName());
+        assertEquals("B", list.get(1).getName());
+        assertEquals("C", list.get(2).getName());
+    }
+
+    @Test
     public void testSingleQueryWhere() {
         final String name = "duplicateFirstName";
         for (int i = 0; i < 10; i++) {

@@ -46,6 +46,7 @@ import io.requery.proxy.PreInsertListener;
 import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
 import io.requery.proxy.ShortProperty;
+import io.requery.query.Order;
 import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
 
@@ -694,10 +695,7 @@ class EntityGenerator implements SourceGenerator {
             builder.add(".setCardinality($T.$L)\n",
                 ClassName.get(Cardinality.class), attribute.cardinality());
 
-            Optional<EntityDescriptor> referencingEntity = graph.referencingEntity(attribute);
-
-            if (referencingEntity.isPresent()) {
-                EntityDescriptor referenced = referencingEntity.get();
+            graph.referencingEntity(attribute).ifPresent(referenced -> {
                 Set<AttributeDescriptor> mappings =
                     graph.mappedAttributes(entity, attribute, referenced);
 
@@ -715,7 +713,23 @@ class EntityGenerator implements SourceGenerator {
                             nameResolver.typeNameOf(referenced), staticMemberName).build());
                     builder.add(".setMappedAttribute($L)\n", provider);
                 }
-            }
+
+                if (attribute.orderBy() != null) {
+                    referenced.attributes().values().stream()
+                        .filter(entry -> entry.name().equals(attribute.orderBy()))
+                        .findFirst().ifPresent(orderBy -> {
+
+                        String staticMemberName = Names.upperCaseUnderscore(orderBy.fieldName());
+                        TypeSpec provider = CodeGeneration.createAnonymousSupplier(
+                            ClassName.get(Attribute.class),
+                            CodeBlock.builder().addStatement("return $T.$L",
+                                nameResolver.typeNameOf(referenced), staticMemberName).build());
+                        builder.add(".setOrderByAttribute($L)\n", provider);
+                        builder.add(".setOrderByDirection($T.$L)\n",
+                            ClassName.get(Order.class), attribute.orderByDirection());
+                    });
+                }
+            });
         }
         builder.add(".build()");
         return FieldSpec.builder(type, fieldName, Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)

@@ -31,6 +31,7 @@ import io.requery.Naming;
 import io.requery.Nullable;
 import io.requery.OneToMany;
 import io.requery.OneToOne;
+import io.requery.OrderBy;
 import io.requery.PropertyNameStyle;
 import io.requery.ReadOnly;
 import io.requery.ReferentialAction;
@@ -43,6 +44,7 @@ import io.requery.meta.ListAttributeBuilder;
 import io.requery.meta.MapAttributeBuilder;
 import io.requery.meta.ResultAttributeBuilder;
 import io.requery.meta.SetAttributeBuilder;
+import io.requery.query.Order;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -116,6 +118,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private String mappedBy;
     private String defaultValue;
     private String collate;
+    private String orderByColumn;
+    private Order orderByDirection;
     private AssociativeEntityDescriptor associativeDescriptor;
 
     AttributeMember(Element element, EntityDescriptor entity) {
@@ -380,6 +384,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             mappedBy = reflect.mappedBy();
             cascadeActions = reflect.cascade();
             checkIterable(validator);
+            processOrderBy();
         }
         if (manyToOne.isPresent()) {
             cardinality = Cardinality.MANY_TO_ONE;
@@ -413,6 +418,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             }
             isReadOnly = true;
             checkIterable(validator);
+            processOrderBy();
         }
         if (isForeignKey()) {
             if (deleteAction == ReferentialAction.SET_NULL && !isNullable()) {
@@ -459,6 +465,28 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         if (converterType != null && cardinality != null) {
             validator.warning("Cannot specify converter on association field", Convert.class);
         }
+    }
+
+    private void processOrderBy() {
+        annotationOf(OrderBy.class).ifPresent(orderBy -> {
+            orderByColumn = orderBy.value();
+            orderByDirection = orderBy.order();
+        });
+        annotationOf(javax.persistence.OrderBy.class).ifPresent(orderBy -> {
+            String value = orderBy.value();
+            String[] parts = value.split(" ");
+            if (parts.length > 0) {
+                orderByColumn = parts[0].trim();
+                if (parts.length > 1) {
+                    String direction = parts[1].toUpperCase().trim();
+                    try {
+                        orderByDirection = Order.valueOf(direction);
+                    } catch (IllegalArgumentException e) {
+                        orderByDirection = Order.ASC;
+                    }
+                }
+            }
+        });
     }
 
     private void cannotCombine(ElementValidator validator,
@@ -714,6 +742,16 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     @Override
     public String mappedBy() {
         return mappedBy;
+    }
+
+    @Override
+    public String orderBy() {
+        return orderByColumn;
+    }
+
+    @Override
+    public Order orderByDirection() {
+        return orderByDirection;
     }
 
     @Override

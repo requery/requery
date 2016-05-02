@@ -22,6 +22,7 @@ import io.requery.ReferentialAction;
 import io.requery.proxy.Initializer;
 import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
+import io.requery.query.Order;
 import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
 
@@ -165,6 +166,16 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
 
     public AttributeBuilder<T, V> setReferencedAttribute(Supplier<Attribute> attribute) {
         this.referencedAttribute = attribute;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setOrderByAttribute(Supplier<Attribute> attribute) {
+        this.orderByAttribute = attribute;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setOrderByDirection(Order order) {
+        this.orderByDirection = order;
         return this;
     }
 

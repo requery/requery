@@ -22,6 +22,7 @@ import io.requery.ReferentialAction;
 import io.requery.proxy.Initializer;
 import io.requery.proxy.Property;
 import io.requery.proxy.PropertyState;
+import io.requery.query.Order;
 import io.requery.util.function.Supplier;
 
 import java.util.Set;
@@ -199,4 +200,16 @@ public interface Attribute<T, V> {
      * provider since attributes may have cyclic dependencies.
      */
     Supplier<Attribute> referencedAttribute();
+
+    /**
+     * @return For a relationship with a multiple result query the attribute used to order the
+     * query.
+     */
+    Supplier<Attribute> orderByAttribute();
+
+    /**
+     * @return If {@link #orderByAttribute()} is specified the order direction to use in the
+     * generated query.
+     */
+    Order orderByDirection();
 }
