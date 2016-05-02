@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 1.0.0-beta17
+
+- Support @OrderBy annotation for ordering relations in entities
+- Support separate query expression for foreign keys using the key raw type
+- Support @JunctionTable#type value that allows the junction table to be manually specified
+- Fix @Superclass non-annotated fields/methods ignored
+- Fix issues when generating from an Kotlin interface/data class
+
 ## 1.0.0-beta16
 
 - Support generating entity types from Kotlin abstract and data classes
