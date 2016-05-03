@@ -624,14 +624,15 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             switch (cardinality) {
                 case ONE_TO_ONE:
                     S value = (S) proxy.get(attribute, false);
-                    if (value == null) {
+                    if (value != null) {
+                        Attribute<S, Object> mapped = Attributes.get(attribute.mappedAttribute());
+                        EntityProxy<S> referred = context.proxyOf(value, true);
+                        referred.set(mapped, entity, PropertyState.MODIFIED);
+                        context.write(mapped.declaringType().classType()).update(value, referred);
+                    } else if (!stateless) {
                         throw new PersistenceException(
-                                "1-1 relationship can only be removed from the owning side");
+                            "1-1 relationship can only be removed from the owning side");
                     }
-                    Attribute<S, Object> mapped = Attributes.get(attribute.mappedAttribute());
-                    EntityProxy<S> referredProxy = context.proxyOf(value, true);
-                    referredProxy.set(mapped, entity, PropertyState.MODIFIED);
-                    context.write(mapped.declaringType().classType()).update(value, referredProxy);
                     break;
                 case ONE_TO_MANY:
                     Object relation = proxy.get(attribute, false);
