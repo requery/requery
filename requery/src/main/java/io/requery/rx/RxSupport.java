@@ -17,6 +17,7 @@
 package io.requery.rx;
 
 import io.requery.BlockingEntityStore;
+import io.requery.meta.Attribute;
 import io.requery.meta.Type;
 import io.requery.query.BaseResult;
 import io.requery.query.Result;
@@ -28,6 +29,9 @@ import rx.Scheduler;
 import rx.Single;
 import rx.functions.Action0;
 import rx.functions.Func1;
+
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Support utility class for use with RxJava
@@ -50,20 +54,45 @@ public final class RxSupport {
             throw new UnsupportedOperationException();
         }
         ObservableResult observableResult = (ObservableResult) result;
-        final QueryElement element = observableResult.unwrapQuery();
+        final QueryElement<?> element = observableResult.unwrapQuery();
         // ensure the transaction listener is added in the target data store
         observableResult.addTransactionListener(typeChanges);
-        return typeChanges.commitSubject().filter(new Func1<Type<?>, Boolean>() {
+        return typeChanges.commitSubject().filter(new Func1<Set<Type<?>>, Boolean>() {
             @Override
-            public Boolean call(Type<?> type) {
-                return element.entityTypes().contains(type);
+            public Boolean call(Set<Type<?>> types) {
+                return !Collections.disjoint(element.entityTypes(), types) ||
+                       referencesType(element.entityTypes(), types);
             }
-        }).map(new Func1<Type<?>, Result<T>>() {
+        }).map(new Func1<Set<Type<?>>, Result<T>>() {
             @Override
-            public Result<T> call(Type<?> type) {
+            public Result<T> call(Set<Type<?>> types) {
                 return result;
             }
         }).startWith(result);
+    }
+
+    private static boolean referencesType(Set<Type<?>> source, Set<Type<?>> changed) {
+        for (Type<?> type : source) {
+            for (Attribute<?, ?> attribute : type.attributes()) {
+                // find if any referencing types that maybe affected by changes to the type
+                if (attribute.isAssociation()) {
+                    Attribute referenced = null;
+                    if (attribute.referencedAttribute() != null) {
+                        referenced = attribute.referencedAttribute().get();
+                    }
+                    if (attribute.mappedAttribute() != null) {
+                        referenced = attribute.mappedAttribute().get();
+                    }
+                    if (referenced != null) {
+                        Type<?> declared = referenced.declaringType();
+                        if (changed.contains(declared)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public static <E> Observable<E> toObservable(final BaseResult<E> result, Integer limit) {

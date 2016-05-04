@@ -207,6 +207,25 @@ public class RxTest extends RandomData {
     }
 
     @Test
+    public void testQuerySelfObservableRelational() throws Exception {
+        final AtomicInteger count = new AtomicInteger();
+        data.select(Person.class).get().toSelfObservable().subscribe(
+            new Action1<Result<Person>>() {
+                @Override
+                public void call(Result<Person> persons) {
+                    count.incrementAndGet();
+                }
+            });
+        Person person = randomPerson();
+        data.insert(person).toBlocking().value();
+        Phone phone = randomPhone();
+        person.getPhoneNumbers().add(phone);
+        data.update(person).toBlocking().value();
+        data.delete(phone).toBlocking().value();
+        assertEquals(4, count.get());
+    }
+
+    @Test
     public void testQueryObservableFromEntity() throws Exception {
         final Person person = randomPerson();
         data.insert(person).map(new Func1<Person, Phone>() {

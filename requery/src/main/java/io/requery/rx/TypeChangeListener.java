@@ -34,14 +34,14 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-class TypeChangeListener implements Supplier<TransactionListener> {
+final class TypeChangeListener implements Supplier<TransactionListener> {
 
-    private final SerializedSubject<Type<?>, Type<?>> commitSubject;
-    private final SerializedSubject<Type<?>, Type<?>> rollbackSubject;
+    private final SerializedSubject<Set<Type<?>>, Set<Type<?>>> commitSubject;
+    private final SerializedSubject<Set<Type<?>>, Set<Type<?>>> rollbackSubject;
 
     TypeChangeListener() {
-        commitSubject = new SerializedSubject<>(PublishSubject.<Type<?>>create());
-        rollbackSubject = new SerializedSubject<>(PublishSubject.<Type<?>>create());
+        commitSubject = new SerializedSubject<>(PublishSubject.<Set<Type<?>>>create());
+        rollbackSubject = new SerializedSubject<>(PublishSubject.<Set<Type<?>>>create());
     }
 
     @Override
@@ -77,17 +77,16 @@ class TypeChangeListener implements Supplier<TransactionListener> {
         };
     }
 
-    Subject<Type<?>, Type<?>> commitSubject() {
+    Subject<Set<Type<?>>, Set<Type<?>>> commitSubject() {
         return commitSubject;
     }
 
-    private void emitTypes(Subject<Type<?>, Type<?>> subject, Set<EntityProxy<?>> entities) {
+    private void emitTypes(Subject<Set<Type<?>>, Set<Type<?>>> subject,
+                           Set<EntityProxy<?>> entities) {
         Set<Type<?>> types = new LinkedHashSet<>();
         for (EntityProxy proxy : entities) {
             types.add(proxy.type());
         }
-        for (Type type : types) {
-            subject.onNext(type);
-        }
+        subject.onNext(types);
     }
 }
