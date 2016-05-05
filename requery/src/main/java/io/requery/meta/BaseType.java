@@ -22,7 +22,6 @@ import io.requery.util.Objects;
 import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -43,9 +42,8 @@ abstract class BaseType<T> implements Type<T> {
     String[] tableCreateAttributes;
     Supplier<?> builderFactory;
     Function<?, T> buildFunction;
-
-    private Set<Attribute<T, ?>> keyAttributes;
-    private Attribute<T, ?> keyAttribute;
+    Set<Attribute<T, ?>> keyAttributes;
+    Attribute<T, ?> keyAttribute;
 
     BaseType() {
         cacheable = true;
@@ -104,18 +102,6 @@ abstract class BaseType<T> implements Type<T> {
 
     @Override
     public Set<Attribute<T, ?>> keyAttributes() {
-        if (keyAttributes == null) {
-            keyAttributes = new LinkedHashSet<>();
-            for (Attribute<T, ?> attribute : attributes) {
-                if (attribute.isKey()) {
-                    keyAttributes.add(attribute);
-                }
-            }
-            keyAttributes = Collections.unmodifiableSet(keyAttributes);
-            if (keyAttributes.size() == 1) {
-                keyAttribute = keyAttributes.iterator().next();
-            }
-        }
         return keyAttributes;
     }
 

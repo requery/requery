@@ -38,11 +38,19 @@ final class ImmutableType<T> extends BaseType<T> {
         this.buildFunction = builder.buildFunction();
 
         LinkedHashSet<Attribute<T, ?>> attributes = new LinkedHashSet<>();
+        LinkedHashSet<Attribute<T, ?>> keyAttributes = new LinkedHashSet<>();
         for (Attribute<T, ?> attribute : builder.attributes()) {
             setDeclaringType(attribute);
             attributes.add(attribute);
+            if (attribute.isKey()) {
+                keyAttributes.add(attribute);
+            }
         }
         this.attributes = Collections.unmodifiableSet(attributes);
+        this.keyAttributes = Collections.unmodifiableSet(keyAttributes);
+        if (keyAttributes.size() == 1) {
+            keyAttribute = keyAttributes.iterator().next();
+        }
         for (QueryExpression<?> expression : builder.expressions) {
             setDeclaringType(expression);
         }
