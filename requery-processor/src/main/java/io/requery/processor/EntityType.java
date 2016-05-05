@@ -216,6 +216,16 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                 attributes.put(entry.getKey(), newAttribute);
             }
         }
+        from.listeners().entrySet().stream()
+            .filter(entry -> entry.getValue() instanceof ListenerMethod)
+            .forEach(entry -> {
+                ListenerMethod method = (ListenerMethod) entry.getValue();
+                if (!listeners.values().stream().anyMatch(
+                    listener -> listener.element().getSimpleName()
+                        .equals(method.element().getSimpleName()))) {
+                    listeners.put(entry.getKey(), method);
+                }
+        });
     }
 
     boolean generatesAdditionalTypes() {
