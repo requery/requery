@@ -86,7 +86,8 @@ public class QueryBuilder implements CharSequence {
 
     public QueryBuilder keyword(Keyword... keywords) {
         for (Keyword keyword : keywords) {
-            sb.append(options.lowercaseKeywords ? keyword.toString().toLowerCase(Locale.US) : keyword);
+            sb.append(options.lowercaseKeywords ?
+                keyword.toString().toLowerCase(Locale.ROOT) : keyword);
             sb.append(" ");
         }
         return this;
@@ -140,7 +141,7 @@ public class QueryBuilder implements CharSequence {
         } else {
             if (value instanceof Keyword) {
                 sb.append(options.lowercaseKeywords ?
-                        value.toString().toLowerCase(Locale.US) : value.toString());
+                        value.toString().toLowerCase(Locale.ROOT) : value.toString());
             } else {
                 sb.append(value.toString());
             }

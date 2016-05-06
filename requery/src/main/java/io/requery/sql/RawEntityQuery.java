@@ -91,12 +91,12 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
                 // map of entity column names to attributes
                 Map<String, Attribute<E, ?>> map = new HashMap<>();
                 for (Attribute<E, ?> attribute : type.attributes()) {
-                    map.put(attribute.name().toLowerCase(Locale.US), attribute);
+                    map.put(attribute.name().toLowerCase(Locale.ROOT), attribute);
                 }
                 Set<Attribute<E, ?>> attributes = new LinkedHashSet<>();
                 for (int i = 0; i < metadata.getColumnCount(); i++) {
                     String name = metadata.getColumnName(i + 1);
-                    Attribute<E, ?> attribute = map.get(name.toLowerCase(Locale.US));
+                    Attribute<E, ?> attribute = map.get(name.toLowerCase(Locale.ROOT));
                     if (attribute != null) {
                         attributes.add(attribute);
                     }

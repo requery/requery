@@ -59,7 +59,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
         if (end < 0) {
             throw new IllegalArgumentException("Invalid query " + sql);
         }
-        String keyword = sql.substring(0, end).trim().toUpperCase(Locale.US);
+        String keyword = sql.substring(0, end).trim().toUpperCase(Locale.ROOT);
         try {
             return QueryType.valueOf(keyword);
         } catch (IllegalArgumentException e) {

@@ -96,7 +96,7 @@ class ResultTuple implements Tuple {
     @SuppressWarnings("unchecked")
     @Override
     public <V> V get(String key) {
-        return (V) keyMap.get(key.toLowerCase(Locale.US));
+        return (V) keyMap.get(key.toLowerCase(Locale.ROOT));
     }
 
     @Override
