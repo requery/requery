@@ -20,7 +20,6 @@ import io.requery.Converter;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 
@@ -58,7 +57,6 @@ public class LocalTimeConverter implements Converter<LocalTime, java.sql.Time> {
         if (value == null) {
             return null;
         }
-        Instant instant = Instant.ofEpochMilli(value.getTime());
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault()).toLocalTime();
+        return value.toLocalTime();
     }
 }

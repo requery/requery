@@ -48,7 +48,7 @@ public class OffsetDateTimeConverter implements Converter<OffsetDateTime, java.s
             return null;
         }
         Instant instant = value.toInstant();
-        return new java.sql.Timestamp(instant.toEpochMilli());
+        return java.sql.Timestamp.from(instant);
     }
 
     @Override
@@ -57,7 +57,6 @@ public class OffsetDateTimeConverter implements Converter<OffsetDateTime, java.s
         if (value == null) {
             return null;
         }
-        Instant instant = Instant.ofEpochMilli(value.getTime());
-        return OffsetDateTime.ofInstant(instant, ZoneId.systemDefault());
+        return OffsetDateTime.ofInstant(value.toInstant(), ZoneId.systemDefault());
     }
 }

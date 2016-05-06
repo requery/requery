@@ -49,7 +49,7 @@ public class ZonedDateTimeConverter implements Converter<ZonedDateTime, java.sql
             return null;
         }
         Instant instant = value.toInstant();
-        return new java.sql.Timestamp(instant.toEpochMilli());
+        return java.sql.Timestamp.from(instant);
     }
 
     @Override

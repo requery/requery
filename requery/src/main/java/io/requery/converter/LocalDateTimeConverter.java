@@ -48,7 +48,7 @@ public class LocalDateTimeConverter implements Converter<LocalDateTime, java.sql
             return null;
         }
         Instant instant = value.atZone(ZoneId.systemDefault()).toInstant();
-        return new java.sql.Timestamp(instant.toEpochMilli());
+        return java.sql.Timestamp.from(instant);
     }
 
     @Override
@@ -57,7 +57,6 @@ public class LocalDateTimeConverter implements Converter<LocalDateTime, java.sql
         if (value == null) {
             return null;
         }
-        Instant instant = Instant.ofEpochMilli(value.getTime());
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        return value.toLocalDateTime();
     }
 }
