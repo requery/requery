@@ -45,6 +45,7 @@ import io.requery.meta.MapAttributeBuilder;
 import io.requery.meta.ResultAttributeBuilder;
 import io.requery.meta.SetAttributeBuilder;
 import io.requery.query.Order;
+import io.requery.sql.Keyword;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -145,6 +146,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         if (cardinality() != null && entity.isImmutable()) {
             validator.error("Immutable value type cannot contain relational references");
         }
+        checkReserved(name, validator);
+        indexNames.forEach(name -> checkReserved(name, validator));
         return validators;
     }
 
@@ -231,6 +234,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             annotationOf(GeneratedValue.class).isPresent()) {
             isGenerated = true;
             isReadOnly = true;
+
             // check generation strategy
             annotationOf(GeneratedValue.class).ifPresent(generatedValue -> {
                 if (generatedValue.strategy() != GenerationType.IDENTITY  &&
@@ -437,6 +441,13 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         }
     }
 
+    private void checkReserved(String name, ElementValidator validator) {
+        if (Stream.of(Keyword.values())
+            .anyMatch(keyword -> keyword.toString().equalsIgnoreCase(name))) {
+            validator.warning("Column or index name " + name + " may need to be escaped");
+        }
+    }
+
     private void checkIterable(ElementValidator validator) {
         if (!isIterable()) {
             validator.error("Many relation must be stored in an iterable type");
@@ -529,7 +540,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             String name = methodElement.getSimpleName().toString();
             name = Names.removeMethodPrefixes(name);
             if (Names.isAllUpper(name)) {
-                return name.toLowerCase(Locale.US);
+                return name.toLowerCase(Locale.ROOT);
             } else {
                 return Names.lowerCaseFirst(name);
             }
@@ -561,7 +572,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                 if (parameters.size() == 1) {
                     String property =
                         Names.removeMethodPrefixes(element.getSimpleName().toString());
-                    if (property.toLowerCase(Locale.US).equalsIgnoreCase(name())) {
+                    if (property.toLowerCase(Locale.ROOT).equalsIgnoreCase(name())) {
                         return element.getSimpleName().toString();
                     }
                 }
