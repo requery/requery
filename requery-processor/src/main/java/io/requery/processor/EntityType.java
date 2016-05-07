@@ -31,7 +31,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.MirroredTypeException;
@@ -242,8 +241,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                 .map(value -> value.getValue().toString())
                 .filter(name -> !Names.isEmpty(name))
                 .orElse("default");
-        }
-        if (Mirrors.findAnnotationMirror(element(), javax.persistence.Entity.class).isPresent()) {
+        } else if (Mirrors.findAnnotationMirror(element(),
+            javax.persistence.Entity.class).isPresent()) {
             Elements elements = processingEnvironment.getElementUtils();
             Name packageName = elements.getPackageOf(element()).getQualifiedName();
             String[] parts = packageName.toString().split("\\.");
@@ -253,13 +252,21 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     private QualifiedName createQualifiedName() {
-        String entityName = annotationOf(Entity.class).map(Entity::name)
-            .orElse(annotationOf(javax.persistence.Entity.class)
-                .map(javax.persistence.Entity::name).orElse(null));
+
+        String entityName = Stream.of(
+            Mirrors.findAnnotationMirror(element(), Entity.class),
+            Mirrors.findAnnotationMirror(element(), javax.persistence.Entity.class))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(mirror -> Mirrors.findAnnotationValue(mirror, "name"))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(value -> value.getValue().toString())
+            .filter(name -> !Names.isEmpty(name))
+            .findAny().orElse("");
 
         Elements elements = processingEnvironment.getElementUtils();
-        PackageElement packageElement = elements.getPackageOf(element());
-        String packageName = packageElement.getQualifiedName().toString();
+        String packageName = elements.getPackageOf(element()).getQualifiedName().toString();
         // if set in the annotation just use that
         if (!Names.isEmpty(entityName)) {
             return new QualifiedName(packageName, entityName);
