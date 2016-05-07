@@ -11,7 +11,7 @@ targetCompatibility = 1.8
 dependencies {
     compile 'org.eclipse.persistence:javax.persistence:2.1.1'
     compile project(':requery')
-    compile 'com.squareup:javapoet:1.6.1'
+    compile 'com.squareup:javapoet:1.7.0'
 }
 
 shadowJar {
