@@ -39,5 +39,5 @@ public @interface Convert {
     /**
      * @return The class implementing the {@link Converter} interface.
      */
-    Class value();
+    Class<? extends Converter> value();
 }
