@@ -25,8 +25,9 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to specific a {@link Converter} for this field. The converter will be create per field and
- * implementations much have a zero-arg constructor.
+ * Used to specify a {@link Converter} for a field or method that is mapped to an {@link Entity}
+ * attribute. The converter will be created per field and implementations much have a zero-arg
+ * constructor.
  *
  * @see Converter
  */
@@ -36,7 +37,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Convert {
 
     /**
-     * @return {@link Converter} class.
+     * @return The class implementing the {@link Converter} interface.
      */
     Class value();
 }

@@ -52,7 +52,8 @@ public interface Transaction extends AutoCloseable {
     void rollback();
 
     /**
-     * @return true if the transaction is currently active false otherwise.
+     * @return true if the transaction is currently active, ({@link #begin()}) was called and
+     * {@link #commit()} has not been called, false otherwise.
      */
     boolean active();
 
