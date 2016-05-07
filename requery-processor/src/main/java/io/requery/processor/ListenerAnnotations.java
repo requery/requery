@@ -35,7 +35,7 @@ class ListenerAnnotations {
         return Stream.concat(annotationClasses(), jpaAnnotationClasses());
     }
 
-    static Stream<Class<? extends Annotation>> jpaAnnotationClasses() {
+    private static Stream<Class<? extends Annotation>> jpaAnnotationClasses() {
         return Stream.of(
             javax.persistence.PostLoad.class,
             javax.persistence.PostPersist.class,
@@ -46,7 +46,7 @@ class ListenerAnnotations {
             javax.persistence.PreUpdate.class);
     }
 
-    static Stream<Class<? extends Annotation>> annotationClasses() {
+    private static Stream<Class<? extends Annotation>> annotationClasses() {
         return Stream.of(
             PostLoad.class,
             PostInsert.class,
