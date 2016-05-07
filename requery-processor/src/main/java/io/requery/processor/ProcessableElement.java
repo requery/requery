@@ -37,7 +37,8 @@ interface ProcessableElement<E extends Element> {
     Set<ElementValidator> process(ProcessingEnvironment processingEnvironment);
 
     default <A extends Annotation> Optional<A> annotationOf(Class<? extends A> type) {
-        return Optional.ofNullable(type.cast(annotations().get(type)));
+        A value = type.cast(annotations().get(type));
+        return Optional.ofNullable(value == null ? element().getAnnotation(type) : value);
     }
 
     Map<Class<? extends Annotation>, Annotation> annotations();
