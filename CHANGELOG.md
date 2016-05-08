@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+## 1.0.0-beta18
+
+- Support relational type changes in rx toSelfObservable
+- Fix @Entity.name not taking effect for the generated class name
+- Fix cascading upsert for relational entities
+- Fix entity state listeners not add from @Superclass types
+- Fix annotations only looked up when added directly from the annotation processor
+- Fix Type.singleKeyAttribute not available until keyAttributes was called
+
 ## 1.0.0-beta17
 
 - Support @OrderBy annotation for ordering relations in entities
