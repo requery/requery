@@ -17,10 +17,10 @@
 package io.requery.android.sqlitex;
 
 import android.database.Cursor;
-import android.database.sqlite.SQLiteException;
 import io.requery.android.database.sqlite.SQLiteDatabase;
 import io.requery.android.sqlite.BaseConnection;
 import io.requery.android.sqlite.SqliteMetaData;
+import io.requery.util.function.Function;
 
 import java.sql.SQLException;
 
@@ -31,18 +31,12 @@ class SqlitexMetaData extends SqliteMetaData {
     }
 
     @Override
-    public String getDatabaseProductVersion() throws SQLException {
+    protected <R> R queryMemory(Function<Cursor, R> function, String query) throws SQLException {
         try {
             SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(":memory:", null);
-            Cursor cursor = database.rawQuery("select sqlite_version() AS sqlite_version", null);
-            String version = "";
-            if (cursor.moveToNext()) {
-                version = cursor.getString(0);
-            }
-            cursor.close();
-            database.close();
-            return version;
-        } catch (SQLiteException e) {
+            Cursor cursor = database.rawQuery(query, null);
+            return function.apply(closeWithCursor(database, cursor));
+        } catch (android.database.SQLException e) {
             throw new SQLException(e);
         }
     }
