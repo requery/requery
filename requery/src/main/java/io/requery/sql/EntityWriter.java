@@ -405,6 +405,11 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     }
 
     public GeneratedKeys<E> insert(E entity, final EntityProxy<E> proxy, boolean returnKeys) {
+        return insert(entity, proxy, returnKeys, CascadeMode.AUTO);
+    }
+
+    public GeneratedKeys<E> insert(E entity, final EntityProxy<E> proxy,
+                                   boolean returnKeys, CascadeMode mode) {
         GeneratedResultReader keyReader = null;
         // if the type is immutable return the key(s) to the caller instead of modifying the object
         final GeneratedKeys<E> keys =
@@ -444,7 +449,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
         checkRowsAffected(query.get().value(), entity, null);
         proxy.link(context.read(entityClass));
-        updateAssociations(CascadeMode.AUTO, entity, proxy);
+        updateAssociations(mode, entity, proxy);
 
         context.stateListener().postInsert(entity, proxy);
 
@@ -480,17 +485,18 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
         } else {
             // not a real upsert, but can be ok for embedded databases
-            if (update(entity, proxy, false) == 0) {
-                insert(entity, proxy, false);
+            if (update(entity, proxy, false, CascadeMode.UPSERT) == 0) {
+                insert(entity, proxy, false, CascadeMode.UPSERT);
             }
         }
     }
 
     public void update(E entity, final EntityProxy<E> proxy) {
-        update(entity, proxy, true);
+        update(entity, proxy, true, CascadeMode.AUTO);
     }
 
-    private int update(E entity, final EntityProxy<E> proxy, boolean checkRowCount) {
+    private int update(E entity, final EntityProxy<E> proxy,
+                       boolean checkRowCount, CascadeMode mode) {
         context.stateListener().preUpdate(entity, proxy);
         // updates the entity using a query (not the query values are not specified but instead
         // mapped directly to avoid boxing)
@@ -557,7 +563,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             S referenced = foreignKeyReference(proxy, attribute);
             if (referenced != null) {
                 proxy.setState(attribute, PropertyState.LOADED);
-                cascadeWrite(CascadeMode.AUTO, referenced, null);
+                cascadeWrite(mode, referenced, null);
                 // reset the state temporarily for the updateable filter
                 proxy.setState(attribute, PropertyState.MODIFIED);
             }
@@ -582,10 +588,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 checkRowsAffected(result, entity, proxy);
             }
             if (result > 0) {
-                updateAssociations(CascadeMode.AUTO, entity, proxy);
+                updateAssociations(mode, entity, proxy);
             }
         } else {
-            updateAssociations(CascadeMode.AUTO, entity, proxy);
+            updateAssociations(mode, entity, proxy);
         }
         context.stateListener().postUpdate(entity, proxy);
         return result;
@@ -890,10 +896,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             switch (mode) {
                 case INSERT:
-                    writer.insert(entity, proxy, false);
+                    writer.insert(entity, proxy, false, mode);
                     break;
                 case UPDATE:
-                    writer.update(entity, proxy, true);
+                    writer.update(entity, proxy, true, mode);
                     break;
                 case UPSERT:
                     writer.upsert(entity, proxy);
