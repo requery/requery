@@ -16,6 +16,7 @@
 
 package io.requery.util;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -36,7 +37,6 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-@SuppressWarnings("NullableProblems")
 public class ClassMap<V> implements Map<Class<?>, V> {
 
     private final IdentityHashMap<Class<?>, V> map = new IdentityHashMap<>();
@@ -101,11 +101,9 @@ public class ClassMap<V> implements Map<Class<?>, V> {
     }
 
     @Override
-    public void putAll(Map<? extends Class<?>, ? extends V> m) {
-        if (m != null) {
-            for (Map.Entry<? extends Class<?>, ? extends V> entry : m.entrySet()) {
-                put(entry.getKey(), entry.getValue());
-            }
+    public void putAll(@Nonnull Map<? extends Class<?>, ? extends V> m) {
+        for (Map.Entry<? extends Class<?>, ? extends V> entry : m.entrySet()) {
+            put(entry.getKey(), entry.getValue());
         }
     }
 
@@ -114,17 +112,17 @@ public class ClassMap<V> implements Map<Class<?>, V> {
         map.clear();
     }
 
-    @Override
+    @Override @Nonnull
     public Set<Class<?>> keySet() {
         return map.keySet();
     }
 
-    @Override
+    @Override @Nonnull
     public Collection<V> values() {
         return map.values();
     }
 
-    @Override
+    @Override @Nonnull
     public Set<Entry<Class<?>, V>> entrySet() {
         return map.entrySet();
     }
