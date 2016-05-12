@@ -23,6 +23,7 @@ import io.requery.rx.RxSupport;
 import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
 import io.requery.util.function.Consumer;
+import io.requery.util.function.Supplier;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -98,8 +99,18 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
     }
 
     @Override
+    public E firstOr(Supplier<E> supplier) {
+        try (CloseableIterator<E> iterator = iterator()) {
+            if (iterator.hasNext()) {
+                return iterator.next();
+            }
+        }
+        return supplier.get();
+    }
+
+    @Override
     public E firstOrNull() {
-        return firstOr(null);
+        return firstOr((E)null);
     }
 
     @Override

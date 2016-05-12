@@ -24,6 +24,7 @@ import io.requery.util.function.Consumer;
 import io.requery.util.FilteringIterator;
 import io.requery.util.ObservableCollection;
 import io.requery.util.function.Predicate;
+import io.requery.util.function.Supplier;
 import rx.Observable;
 
 import java.util.Collection;
@@ -136,7 +137,15 @@ public class ModifiableResult<E> implements MutableResult<E>, ObservableCollecti
 
     @Override
     public E firstOrNull() {
-        return firstOr(null);
+        return firstOr((E)null);
+    }
+
+    @Override
+    public E firstOr(Supplier<E> supplier) {
+        if (result != null) {
+            return result.firstOr(supplier);
+        }
+        return supplier.get();
     }
 
     @Override

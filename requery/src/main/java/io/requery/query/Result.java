@@ -19,6 +19,7 @@ package io.requery.query;
 import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
 import io.requery.util.function.Consumer;
+import io.requery.util.function.Supplier;
 
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
@@ -103,6 +104,15 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      */
     @CheckReturnValue
     E firstOr(E defaultElement);
+
+    /**
+     * Gets the first element or a default value from a {@link Supplier}.
+     *
+     * @param supplier value supplier for when there is no first element.
+     * @return First element or the supplier value if there is none.
+     */
+    @CheckReturnValue
+    E firstOr(Supplier<E> supplier);
 
     /**
      * Gets the first element or a default null value.
