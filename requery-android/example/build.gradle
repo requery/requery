@@ -39,7 +39,7 @@ android {
 dependencies {
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'com.android.support:recyclerview-v7:23.3.0'
-    compile 'io.reactivex:rxjava:1.1.3'
+    compile 'io.reactivex:rxjava:1.1.5'
     compile 'io.reactivex:rxandroid:1.1.0'
     compile project(':requery-android')
     apt project(':requery-processor')
