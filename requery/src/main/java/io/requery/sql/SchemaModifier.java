@@ -304,14 +304,14 @@ public class SchemaModifier {
                         attribute.referencedClass();
                 if (referenced != null) {
                     for (Type<?> t : model.allTypes()) {
-                        if (referenced.isAssignableFrom(t.classType())) {
+                        if (type != t && referenced.isAssignableFrom(t.classType())) {
                             referencedTypes.add(t);
                         }
                     }
                 }
             }
         }
-        return referencedTypes;
+        return Collections.unmodifiableSet(referencedTypes);
     }
 
     public <T> String tableCreateStatement(Type<T> type, TableCreationMode mode) {

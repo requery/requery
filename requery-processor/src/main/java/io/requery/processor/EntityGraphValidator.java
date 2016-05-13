@@ -109,7 +109,7 @@ class EntityGraphValidator {
                             .map(Optional::get)
                             .filter(entity::equals)
                             .findAny()
-                            .ifPresent(other -> validator.error(
+                            .ifPresent(other -> validator.warning(
                                 "Circular Foreign Key reference found between " +
                                     entity.typeName() +  " and " + other.typeName(),
                                 ForeignKey.class));
@@ -126,7 +126,8 @@ class EntityGraphValidator {
         return results;
     }
 
-    private void validateRelationship(ElementValidator validator, AttributeDescriptor source,
+    private void validateRelationship(ElementValidator validator,
+                                      AttributeDescriptor source,
                                       AttributeDescriptor mapped) {
 
         Cardinality sourceCardinality = source.cardinality();
@@ -167,7 +168,7 @@ class EntityGraphValidator {
                 validator.error("One side of the OneToOne relationship must specify the " +
                     "@ForeignKey/@JoinColumn annotation");
             }
-            if (source.isForeignKey() && mapped.isForeignKey()) {
+            if (source.isForeignKey() && mapped.isForeignKey() && source != mapped) {
                 validator.error("Only one side of the OneToOne relationship can specify the " +
                     "@ForeignKey/@JoinColumn annotation");
             }
