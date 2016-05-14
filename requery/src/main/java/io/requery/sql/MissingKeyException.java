@@ -27,6 +27,7 @@ public class MissingKeyException extends PersistenceException {
     }
 
     MissingKeyException(EntityProxy proxy) {
+        super("No key in provided entity");
         this.proxy = proxy;
     }
 

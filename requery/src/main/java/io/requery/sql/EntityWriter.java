@@ -497,6 +497,9 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
     private int update(E entity, final EntityProxy<E> proxy,
                        boolean checkRowCount, CascadeMode mode) {
+        if (whereAttributes.length == 0) {
+            throw new MissingKeyException(proxy);
+        }
         context.stateListener().preUpdate(entity, proxy);
         // updates the entity using a query (not the query values are not specified but instead
         // mapped directly to avoid boxing)
