@@ -26,7 +26,8 @@ public enum LanguageVersion {
     JAVA_1_5,
     JAVA_1_6,
     JAVA_1_7,
-    JAVA_1_8;
+    JAVA_1_8,
+    JAVA_1_9;
 
     private static LanguageVersion version;
 
@@ -51,12 +52,15 @@ public enum LanguageVersion {
                 case "1.8":
                     version = JAVA_1_8;
                     break;
+                case "1.9":
+                    version = JAVA_1_9;
+                    break;
                 default:
                     // assume latest (anything below 1.5 is not supported anyway)
                     version = JAVA_1_8;
             }
         } catch (SecurityException se) {
-            version = JAVA_1_7;
+            version = JAVA_1_7; // lowest supported
         }
     }
 
