@@ -91,6 +91,16 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                     (!element.getModifiers().contains(Modifier.FINAL) || isImmutable()))
                 .forEach(this::computeAttribute);
         }
+        // find listener annotated methods
+        ElementFilter.methodsIn(element().getEnclosedElements()).stream().forEach(element -> {
+            ListenerAnnotations.all().forEach(annotation -> {
+                if (element.getAnnotation(annotation) != null) {
+                    ListenerMethod listener = listeners.computeIfAbsent(element,
+                        key -> new ListenerMethod(element));
+                    listener.annotations().put(annotation, element.getAnnotation(annotation));
+                }
+            });
+        });
 
         Set<ProcessableElement<?>> elements = new LinkedHashSet<>();
         attributes().values().forEach(
@@ -183,11 +193,9 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                     ListenerMethod listener = listeners.computeIfAbsent(element,
                         key -> new ListenerMethod(element));
                     listener.annotations().put(type, annotation);
-                } else {
-                    if (isMethodProcessable(element)) {
-                        Optional<AttributeMember> attribute = computeAttribute(element);
-                        attribute.ifPresent(a -> a.annotations().put(type, annotation));
-                    }
+                } else if (isMethodProcessable(element)) {
+                    Optional<AttributeMember> attribute = computeAttribute(element);
+                    attribute.ifPresent(a -> a.annotations().put(type, annotation));
                 }
                 break;
         }
