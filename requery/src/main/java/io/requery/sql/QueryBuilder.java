@@ -157,6 +157,7 @@ public class QueryBuilder implements CharSequence {
         for (Attribute attribute : attributes) {
             if (index > 0) {
                 sb.append(Keyword.AND);
+                space();
             }
             attribute(attribute);
             space();
