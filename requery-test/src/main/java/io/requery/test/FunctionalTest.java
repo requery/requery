@@ -527,7 +527,7 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
-    public void testInsertOneToManyInverse() {
+    public void testInsertOneToManyInverseUpdate() {
         Person person = randomPerson();
         data.insert(person);
         Phone phone1 = randomPhone();
@@ -538,6 +538,24 @@ public abstract class FunctionalTest extends RandomData {
         HashSet<Phone> set = new HashSet<>(person.getPhoneNumbers().toList());
         assertEquals(2, set.size());
         assertTrue(set.containsAll(Arrays.asList(phone1, phone2)));
+        assertEquals(person, phone1.getOwner());
+        assertEquals(person, phone2.getOwner());
+    }
+
+    @Test
+    public void testInsertOneToManyInverse() {
+        Person person = randomPerson();
+        Phone phone1 = randomPhone();
+        Phone phone2 = randomPhone();
+        phone1.setOwner(person);
+        person.getPhoneNumbers().add(phone1);
+        person.getPhoneNumbers().add(phone2);
+        data.insert(person);
+        HashSet<Phone> set = new HashSet<>(person.getPhoneNumbers().toList());
+        assertEquals(2, set.size());
+        assertTrue(set.containsAll(Arrays.asList(phone1, phone2)));
+        assertEquals(person, phone1.getOwner());
+        assertEquals(person, phone2.getOwner());
     }
 
     @Test
