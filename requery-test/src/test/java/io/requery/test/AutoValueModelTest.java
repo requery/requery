@@ -44,13 +44,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -162,13 +162,13 @@ public class AutoValueModelTest {
         assertTrue(person.getName().equals("Bobby"));
     }
 
-    @Test(expected = NoSuchElementException.class)
     public void testDelete() throws MalformedURLException {
         Integer key = randomPerson();
         Person p = data.findByKey(Person.class, key);
         assertNotNull(p);
         data.delete(p);
         p = data.findByKey(Person.class, key);
+        assertNull(p);
     }
 
     @Test
