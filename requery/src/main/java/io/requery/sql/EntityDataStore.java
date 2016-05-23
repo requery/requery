@@ -375,7 +375,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                 throw new IllegalArgumentException("CompositeKey required");
             }
         }
-        return selection.get().first();
+        return selection.get().firstOrNull();
     }
 
     @Override
