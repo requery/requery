@@ -57,18 +57,19 @@ public final class RxSupport {
         final QueryElement<?> element = observableResult.unwrapQuery();
         // ensure the transaction listener is added in the target data store
         observableResult.addTransactionListener(typeChanges);
-        return typeChanges.commitSubject().filter(new Func1<Set<Type<?>>, Boolean>() {
-            @Override
-            public Boolean call(Set<Type<?>> types) {
-                return !Collections.disjoint(element.entityTypes(), types) ||
-                       referencesType(element.entityTypes(), types);
-            }
-        }).map(new Func1<Set<Type<?>>, Result<T>>() {
-            @Override
-            public Result<T> call(Set<Type<?>> types) {
-                return result;
-            }
-        }).startWith(result);
+        return typeChanges.commitSubject()
+            .filter(new Func1<Set<Type<?>>, Boolean>() {
+                @Override
+                public Boolean call(Set<Type<?>> types) {
+                    return !Collections.disjoint(element.entityTypes(), types) ||
+                        referencesType(element.entityTypes(), types);
+                }
+            }).map(new Func1<Set<Type<?>>, Result<T>>() {
+                @Override
+                public Result<T> call(Set<Type<?>> types) {
+                    return result;
+                }
+            }).startWith(result);
     }
 
     private static boolean referencesType(Set<Type<?>> source, Set<Type<?>> changed) {
