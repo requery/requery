@@ -31,6 +31,7 @@ import io.requery.test.modeljpa.GroupType;
 import io.requery.test.modeljpa.Models;
 import io.requery.test.modeljpa.Person;
 import io.requery.test.modeljpa.PersonEntity;
+import io.requery.test.modeljpa.PhoneEntity;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -147,6 +148,16 @@ public class JPAModelTest {
             person.getGroups().remove(g);
         }
         data.update(person);
+    }
+
+    @Test
+    public void testInsertOneToMany() {
+        PersonEntity person = randomPerson();
+        PhoneEntity phone = new PhoneEntity();
+        phone.setPhoneNumber("+1800123456");
+        phone.setOwner(person);
+        person.getPhoneNumbers().add(phone);
+        data.insert(person);
     }
 
     @Test
