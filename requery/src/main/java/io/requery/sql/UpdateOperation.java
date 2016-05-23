@@ -20,6 +20,7 @@ import io.requery.query.Scalar;
 import io.requery.query.SuppliedScalar;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryOperation;
+import io.requery.sql.gen.DefaultOutput;
 import io.requery.util.function.Supplier;
 
 import java.sql.Connection;
@@ -47,9 +48,8 @@ class UpdateOperation extends PreparedQueryOperation implements QueryOperation<S
         return new SuppliedScalar<>(new Supplier<Integer>() {
             @Override
             public Integer get() {
-                QueryGenerator generator = new QueryGenerator<>(query);
-                QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
-                String sql = generator.toSql(qb, configuration.platform());
+                DefaultOutput generator = new DefaultOutput(configuration, query);
+                String sql = generator.toSql();
                 BoundParameters parameters = generator.parameters();
                 int result;
                 try (Connection connection = configuration.connectionProvider().getConnection()) {

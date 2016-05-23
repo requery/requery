@@ -23,6 +23,7 @@ import io.requery.query.BaseResult;
 import io.requery.query.Expression;
 import io.requery.query.element.QueryElement;
 import io.requery.rx.ObservableResult;
+import io.requery.sql.gen.DefaultOutput;
 import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
 import io.requery.util.function.Supplier;
@@ -49,7 +50,6 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
     private final int resultSetType;
     private final int resultSetConcurrency;
     private final boolean keepStatement;
-    private QueryGenerator generator;
     private String sql;
     private Statement statement;
     private Connection connection;
@@ -88,22 +88,21 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
         return statement;
     }
 
-    private void createQuery(int skip, int take) {
+    private BoundParameters createQuery(int skip, int take) {
         // query can't already have been limited and skip/take must be non-defaults
         if (limit == null && take > 0 && take != Integer.MAX_VALUE) {
             query.limit(take).offset(skip);
         }
-        generator = new QueryGenerator<>(query);
-        QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
-        sql = generator.toSql(qb, configuration.platform());
+        DefaultOutput generator = new DefaultOutput(configuration, query);
+        sql = generator.toSql();
+        return generator.parameters();
     }
 
     @Override
     public CloseableIterator<E> iterator(int skip, int take) {
         try {
-            createQuery(skip, take);
             // connection held by the iterator if statement not reused
-            BoundParameters parameters = generator.parameters();
+            BoundParameters parameters = createQuery(skip, take);
             Statement statement = createStatement(!parameters.isEmpty());
             statement.setFetchSize(limit == null ? 0 : limit);
 

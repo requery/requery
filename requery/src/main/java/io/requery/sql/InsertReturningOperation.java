@@ -23,6 +23,7 @@ import io.requery.query.Result;
 import io.requery.query.Tuple;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryOperation;
+import io.requery.sql.gen.DefaultOutput;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -65,9 +66,8 @@ class InsertReturningOperation extends PreparedQueryOperation implements
 
     @Override
     public Result<Tuple> execute(final QueryElement<Result<Tuple>> query) {
-        QueryGenerator generator = new QueryGenerator<>(query);
-        QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
-        String sql = generator.toSql(qb, configuration.platform());
+        DefaultOutput generator = new DefaultOutput(configuration, query);
+        String sql = generator.toSql();
         BoundParameters parameters = generator.parameters();
         int count;
         try {

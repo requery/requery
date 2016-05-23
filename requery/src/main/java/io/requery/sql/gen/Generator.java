@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package io.requery.query.element;
+package io.requery.sql.gen;
 
-import java.util.Set;
-
-public interface WhereElement {
-    Set<WhereConditionElement<?>> whereElements();
-    ExistsElement<?> whereExistsElement();
+/**
+ * Generates a SQL fragment into the given {@link Output} for a given input element.
+ *
+ * @param <E> input
+ */
+public interface Generator<E> {
+    void write(Output output, E element);
 }

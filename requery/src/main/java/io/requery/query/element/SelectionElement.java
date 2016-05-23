@@ -16,9 +16,11 @@
 
 package io.requery.query.element;
 
+import io.requery.query.Expression;
+
 import java.util.Set;
 
-public interface WhereElement {
-    Set<WhereConditionElement<?>> whereElements();
-    ExistsElement<?> whereExistsElement();
+public interface SelectionElement {
+    Set<? extends Expression<?>> selection();
+    boolean isDistinct();
 }

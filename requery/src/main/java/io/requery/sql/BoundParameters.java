@@ -32,12 +32,12 @@ public class BoundParameters {
     private final ArrayList<Expression<?>> expressions;
     private final ArrayList<Object> values;
 
-    BoundParameters() {
+    public BoundParameters() {
         expressions = new ArrayList<>();
         values = new ArrayList<>();
     }
 
-    BoundParameters(Object... parameters) {
+    public BoundParameters(Object... parameters) {
         this();
         int index = 0;
         for (Object parameter : parameters) {
@@ -94,7 +94,7 @@ public class BoundParameters {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < values.size(); i++) {
             Object value = valueAt(i);
             if (i > 0) {
@@ -102,6 +102,7 @@ public class BoundParameters {
             }
             sb.append(String.valueOf(value));
         }
+        sb.append("]");
         return sb.toString();
     }
 }

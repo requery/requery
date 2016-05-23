@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package io.requery.sql;
+package io.requery.sql.gen;
 
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
+import io.requery.query.Expression;
+import io.requery.query.ExpressionType;
+import io.requery.sql.QueryBuilder;
 
 import java.util.LinkedHashSet;
+import java.util.Map;
 
 import static io.requery.sql.Keyword.*;
 
@@ -29,22 +33,33 @@ import static io.requery.sql.Keyword.*;
  *
  * @author Nikhil Purushe
  */
-public class UpsertMergeDefinition implements UpsertDefinition {
+public class UpsertMergeGenerator implements Generator<Map<Expression<?>, Object>> {
 
     protected final String alias = "val";
 
     @Override
-    public <E> void appendUpsert(QueryBuilder qb,
-                                 Iterable<Attribute<E, ?>> attributes,
-                                 final Parameterizer<E> parameterizer) {
-        Type<E> type = attributes.iterator().next().declaringType();
+    public void write(Output output, Map<Expression<?>, Object> values) {
+        QueryBuilder qb = output.builder();
+        // TODO only supporting 1 type for now
+        Type<?> type = null;
+        for (Expression<?> expression : values.keySet()) {
+            if (expression.type() == ExpressionType.ATTRIBUTE) {
+                Attribute attribute = (Attribute) expression;
+                type = attribute.declaringType();
+                break;
+            }
+        }
+        if (type == null) {
+            throw new IllegalStateException();
+        }
         qb.keyword(MERGE).keyword(INTO)
-            .tableName(type.name()).keyword(USING);
-            appendUsing(qb, attributes, parameterizer);
+            .tableName(type.name())
+            .keyword(USING);
+            appendUsing(output, values);
             qb.keyword(ON)
             .openParenthesis();
         int count = 0;
-        for (Attribute<E, ?> attribute : type.keyAttributes()) {
+        for (Attribute<?, ?> attribute : type.keyAttributes()) {
             if (count > 0) {
                 qb.append("&&");
             }
@@ -55,16 +70,19 @@ public class UpsertMergeDefinition implements UpsertDefinition {
         }
         qb.closeParenthesis().space();
         // update fragment
-        LinkedHashSet<Attribute<E, ?>> updates = new LinkedHashSet<>();
-        for (Attribute<E, ?> attribute : attributes) {
-            if (!attribute.isKey()) {
-                updates.add(attribute);
+        LinkedHashSet<Attribute<?, ?>> updates = new LinkedHashSet<>();
+        for (Expression<?> expression : values.keySet()) {
+            if (expression.type() == ExpressionType.ATTRIBUTE) {
+                Attribute attribute = (Attribute) expression;
+                if (!attribute.isKey()) {
+                    updates.add(attribute);
+                }
             }
         }
         qb.keyword(WHEN, MATCHED, THEN, UPDATE, SET)
-            .commaSeparated(updates, new QueryBuilder.Appender<Attribute<E, ?>>() {
+            .commaSeparated(updates, new QueryBuilder.Appender<Attribute<?, ?>>() {
                 @Override
-                public void append(QueryBuilder qb, Attribute<E, ?> value) {
+                public void append(QueryBuilder qb, Attribute<?, ?> value) {
                     qb.attribute(value);
                     qb.append(" = " + alias + "." + value.name());
                 }
@@ -72,36 +90,35 @@ public class UpsertMergeDefinition implements UpsertDefinition {
         // insert fragment
         qb.keyword(WHEN, NOT, MATCHED, THEN, INSERT)
             .openParenthesis()
-            .commaSeparatedAttributes(attributes)
+            .commaSeparatedExpressions(values.keySet())
             .closeParenthesis().space()
             .keyword(VALUES)
             .openParenthesis()
-            .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+            .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                 @Override
-                public void append(QueryBuilder qb, Attribute<E, ?> value) {
-                    qb.aliasAttribute(alias, value);
+                public void append(QueryBuilder qb, Expression<?> value) {
+                    qb.aliasAttribute(alias, (Attribute) value);
                 }
             })
             .closeParenthesis();
     }
 
-    protected <E> void appendUsing(QueryBuilder qb,
-                                   Iterable<Attribute<E, ?>> attributes,
-                                   final Parameterizer<E> parameterizer) {
+    protected void appendUsing(final Output writer, final Map<Expression<?>, Object> values) {
+        QueryBuilder qb = writer.builder();
         qb.openParenthesis()
             .keyword(VALUES).openParenthesis()
-            .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+            .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression>() {
                 @Override
-                public void append(QueryBuilder qb, Attribute<E, ?> value) {
+                public void append(QueryBuilder qb, Expression expression) {
                     qb.append("?");
-                    parameterizer.addParameter(value);
+                    writer.parameters().add(expression, values.get(expression));
                 }
             }).closeParenthesis()
             .closeParenthesis().space()
             .keyword(AS)
             .append(alias)
             .openParenthesis()
-            .commaSeparatedAttributes(attributes)
+            .commaSeparatedExpressions(values.keySet())
             .closeParenthesis().space();
     }
 }

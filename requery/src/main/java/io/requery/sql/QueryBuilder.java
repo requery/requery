@@ -17,9 +17,14 @@
 package io.requery.sql;
 
 import io.requery.meta.Attribute;
+import io.requery.meta.Type;
+import io.requery.query.Expression;
+import io.requery.query.ExpressionType;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 
@@ -63,8 +68,8 @@ public class QueryBuilder implements CharSequence {
         this.sb = new StringBuilder(32);
     }
 
-    @SuppressWarnings("NullableProblems")
     @Override
+    @Nonnull
     public String toString() {
         return sb.toString();
     }
@@ -110,6 +115,22 @@ public class QueryBuilder implements CharSequence {
         return space();
     }
 
+    public QueryBuilder tableNames(Iterable<Expression<?>> values) {
+        Set<Type<?>> types = new LinkedHashSet<>();
+        for (Expression<?> expression : values) {
+            if (expression.type() == ExpressionType.ATTRIBUTE) {
+                Attribute attribute = (Attribute) expression;
+                types.add(attribute.declaringType());
+            }
+        }
+        return commaSeparated(types, new Appender<Type<?>>() {
+            @Override
+            public void append(QueryBuilder qb, Type<?> value) {
+                tableName(value.name());
+            }
+        });
+    }
+
     public QueryBuilder attribute(Attribute value) {
         if(options.quoteColumnNames) {
             appendIdentifier(value.name(), options.quotedIdentifier);
@@ -135,7 +156,7 @@ public class QueryBuilder implements CharSequence {
 
     public QueryBuilder append(Object value, boolean space) {
         if (value == null) {
-            sb.append(Keyword.NULL);
+            keyword(Keyword.NULL);
         } else if (value instanceof String[]) {
             commaSeparated(Arrays.asList((String[]) value));
         } else {
@@ -156,7 +177,7 @@ public class QueryBuilder implements CharSequence {
         int index = 0;
         for (Attribute attribute : attributes) {
             if (index > 0) {
-                sb.append(Keyword.AND);
+                keyword(Keyword.AND);
                 space();
             }
             attribute(attribute);
@@ -166,6 +187,22 @@ public class QueryBuilder implements CharSequence {
             index++;
         }
         return this;
+    }
+
+    public QueryBuilder commaSeparatedExpressions(Iterable<Expression<?>> values) {
+        return commaSeparated(values, new QueryBuilder.Appender<Expression<?>>() {
+            @Override
+            public void append(QueryBuilder qb, Expression<?> value) {
+                switch (value.type()) {
+                    case ATTRIBUTE:
+                        qb.attribute((Attribute) value);
+                        break;
+                    default:
+                        qb.append(value.name()).space();
+                        break;
+                }
+            }
+        });
     }
 
     public <E> QueryBuilder commaSeparatedAttributes(Iterable<Attribute<E, ?>> values) {

@@ -18,35 +18,48 @@ package io.requery.query.element;
 
 import io.requery.query.Condition;
 import io.requery.query.Expression;
-import io.requery.query.HavingAndOr;
 import io.requery.query.Limit;
 import io.requery.query.Offset;
 import io.requery.query.Return;
+import io.requery.query.Selectable;
+import io.requery.query.SetHavingOrderByLimit;
+import io.requery.query.WhereAndOr;
 
 import java.util.Set;
 
 /**
- * Having clause element.
+ * Represents the where clause in a sql statement.
  *
  * @param <E> result type
+ * @author Nikhil Purushe
  */
-public class HavingElement<E> extends BaseLogicalElement<HavingElement<E>, HavingAndOr<E>>
-    implements HavingAndOr<E>, QueryWrapper<E>, LogicalElement {
+public class WhereConditionElement<E> extends BaseLogicalElement<WhereConditionElement<E>, WhereAndOr<E>>
+    implements WhereAndOr<E>, QueryWrapper<E>, LogicalElement {
 
     private final QueryElement<E> query;
 
-    HavingElement(QueryElement<E> query,
-                  Set<HavingElement<E>> elements,
-                  Condition<?, ?> condition,
-                  LogicalOperator operator) {
-        super(elements, condition, operator);
+    WhereConditionElement(QueryElement<E> query,
+                          Set<WhereConditionElement<E>> where,
+                          Condition<?,?> condition,
+                          LogicalOperator operator) {
+        super(where, condition, operator);
         this.query = query;
     }
 
     @Override
-    HavingElement<E> newElement(Set<HavingElement<E>> elements, Condition<?,?> condition,
-                                LogicalOperator operator) {
-        return new HavingElement<>(query, elements, condition, operator);
+    WhereConditionElement<E> newElement(Set<WhereConditionElement<E>> elements, Condition<?,?> condition,
+                                        LogicalOperator operator) {
+        return new WhereConditionElement<>(query, elements, condition, operator);
+    }
+
+    @Override
+    public SetHavingOrderByLimit<E> groupBy(Expression<?>... expressions) {
+        return query.groupBy(expressions);
+    }
+
+    @Override
+    public <V> SetHavingOrderByLimit<E> groupBy(Expression<V> expression) {
+        return query.groupBy(expression);
     }
 
     @Override
@@ -72,6 +85,26 @@ public class HavingElement<E> extends BaseLogicalElement<HavingElement<E>, Havin
     @Override
     public QueryElement<E> unwrapQuery() {
         return query;
+    }
+
+    @Override
+    public Selectable<E> union() {
+        return query.union();
+    }
+
+    @Override
+    public Selectable<E> unionAll() {
+        return query.unionAll();
+    }
+
+    @Override
+    public Selectable<E> intersect() {
+        return query.intersect();
+    }
+
+    @Override
+    public Selectable<E> except() {
+        return query.except();
     }
 
     @Override

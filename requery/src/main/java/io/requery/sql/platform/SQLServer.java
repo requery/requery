@@ -17,21 +17,29 @@
 package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
+import io.requery.meta.Type;
+import io.requery.query.Expression;
+import io.requery.query.element.LimitedElement;
+import io.requery.query.element.OrderByElement;
+import io.requery.query.element.QueryElement;
 import io.requery.sql.BaseType;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.Keyword;
-import io.requery.sql.LimitDefinition;
 import io.requery.sql.Mapping;
-import io.requery.sql.OffsetFetchLimitDefinition;
 import io.requery.sql.QueryBuilder;
-import io.requery.sql.UpsertDefinition;
-import io.requery.sql.UpsertMergeDefinition;
+import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.OffsetFetchGenerator;
+import io.requery.sql.gen.OrderByGenerator;
+import io.requery.sql.gen.UpsertMergeGenerator;
+import io.requery.sql.gen.Output;
 import io.requery.sql.type.PrimitiveBooleanType;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Microsoft SQL Server 2012 or later
@@ -39,13 +47,9 @@ import java.sql.Types;
 public class SQLServer extends Generic {
 
     private final GeneratedColumnDefinition generatedColumnDefinition;
-    private final LimitDefinition limitDefinition;
-    private final UpsertMergeDefinition upsertMergeDefinition;
 
     public SQLServer() {
         generatedColumnDefinition = new IdentityColumnDefinition();
-        limitDefinition = new OrderByOffsetFetchLimit();
-        upsertMergeDefinition = new MergeDefinition();
     }
 
     @Override
@@ -59,13 +63,18 @@ public class SQLServer extends Generic {
     }
 
     @Override
-    public LimitDefinition limitDefinition() {
-        return limitDefinition;
+    public Generator<LimitedElement> limitGenerator() {
+        return new OrderByOffsetFetchLimit();
     }
 
     @Override
-    public UpsertDefinition upsertDefinition() {
-        return upsertMergeDefinition;
+    public Generator<Map<Expression<?>, Object>> upsertGenerator() {
+        return new MergeGenerator();
+    }
+
+    @Override
+    public Generator<OrderByElement> orderByGenerator() {
+        return new OrderByWithLimitGenerator();
     }
 
     @Override
@@ -74,13 +83,40 @@ public class SQLServer extends Generic {
         mapping.replaceType(Types.BOOLEAN, new BitBooleanType());
     }
 
-    private static class MergeDefinition extends UpsertMergeDefinition {
+    private static class MergeGenerator extends UpsertMergeGenerator {
         @Override
-        public <E> void appendUpsert(QueryBuilder qb, Iterable<Attribute<E, ?>> attributes,
-                                     Parameterizer<E> parameterizer) {
-            super.appendUpsert(qb, attributes, parameterizer);
-            qb.append(";");
+        public void write(Output output, Map<Expression<?>, Object> values) {
+            super.write(output, values);
             // for some reason insists on having a semicolon on a merge statement only
+            output.builder().append(";");
+        }
+    }
+
+    private class OrderByWithLimitGenerator extends OrderByGenerator {
+
+        private void forceOrderBy(QueryElement<?> query) {
+            if (query.getLimit() != null &&
+                (query.orderByExpressions() == null || query.orderByExpressions().isEmpty())) {
+                Set<Type<?>> types = query.entityTypes();
+                if (types != null && !types.isEmpty()) {
+                    Type<?> type = types.iterator().next();
+                    for (Attribute attribute : type.attributes()) {
+                        if (attribute.isKey()) {
+                            query.orderBy((Expression) attribute);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void write(Output output, OrderByElement query) {
+            // hack needed to force order by expression if limit present
+            if (query instanceof QueryElement) {
+                forceOrderBy((QueryElement<?>) query);
+            }
+            super.write(output, query);
         }
     }
 
@@ -107,17 +143,11 @@ public class SQLServer extends Generic {
         }
     }
 
-    private static class OrderByOffsetFetchLimit extends OffsetFetchLimitDefinition {
-
+    private static class OrderByOffsetFetchLimit extends OffsetFetchGenerator {
         @Override
-        public boolean requireOrderBy() {
-            return true;
-        }
-
-        @Override
-        public void appendLimit(QueryBuilder qb, Integer limit, Integer offset) {
+        public void write(QueryBuilder qb, Integer limit, Integer offset) {
             // always include the offset
-            super.appendLimit(qb, limit, offset == null ? 0 : offset);
+            super.write(qb, limit, offset == null ? 0 : offset);
         }
     }
 

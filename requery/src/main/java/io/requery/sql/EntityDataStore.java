@@ -42,6 +42,7 @@ import io.requery.query.Tuple;
 import io.requery.query.Update;
 import io.requery.query.element.QueryElement;
 import io.requery.query.function.Count;
+import io.requery.sql.gen.StatementGenerator;
 import io.requery.sql.platform.PlatformDelegate;
 import io.requery.util.ClassMap;
 import io.requery.util.Objects;
@@ -100,6 +101,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     private QueryBuilder.Options queryOptions;
     private Mapping mapping;
     private Platform platform;
+    private StatementGenerator statementGenerator;
     private boolean metadataChecked;
     private boolean supportsBatchUpdates;
     private DataContext context;
@@ -667,7 +669,16 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
         @Override
         public Platform platform() {
+            checkConnectionMetadata();
             return platform;
+        }
+
+        @Override
+        public StatementGenerator statementGenerator() {
+            if (statementGenerator == null) {
+                statementGenerator = StatementGenerator.create(platform());
+            }
+            return statementGenerator;
         }
 
         @Override

@@ -14,26 +14,12 @@
  * limitations under the License.
  */
 
-package io.requery.sql;
+package io.requery.query.element;
 
-import static io.requery.sql.Keyword.LIMIT;
-import static io.requery.sql.Keyword.OFFSET;
+import io.requery.query.Expression;
 
-/**
- * Paging support in the style of 'limit N offset M'
- */
-public class LimitOffsetDefinition implements LimitDefinition {
+import java.util.Set;
 
-    @Override
-    public boolean requireOrderBy() {
-        return false;
-    }
-
-    @Override
-    public void appendLimit(QueryBuilder qb, Integer limit, Integer offset) {
-        qb.keyword(LIMIT).value(limit);
-        if (offset != null) {
-            qb.keyword(OFFSET).value(offset);
-        }
-    }
+public interface OrderByElement {
+    Set<Expression<?>> orderByExpressions();
 }

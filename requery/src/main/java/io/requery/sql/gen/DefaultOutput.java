@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package io.requery.sql;
+package io.requery.sql.gen;
 
 import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
-import io.requery.meta.Type;
 import io.requery.query.Aliasable;
 import io.requery.query.AliasedExpression;
 import io.requery.query.Condition;
@@ -26,20 +25,17 @@ import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
 import io.requery.query.NamedExpression;
 import io.requery.query.Operator;
-import io.requery.query.Order;
-import io.requery.query.OrderingExpression;
-import io.requery.query.element.ExistsElement;
-import io.requery.query.element.HavingElement;
-import io.requery.query.element.JoinElement;
+import io.requery.query.element.JoinConditionElement;
 import io.requery.query.element.JoinOnElement;
 import io.requery.query.element.LogicalElement;
 import io.requery.query.element.LogicalOperator;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryWrapper;
-import io.requery.query.element.WhereElement;
 import io.requery.query.function.Case;
 import io.requery.query.function.Function;
-import io.requery.util.function.Supplier;
+import io.requery.sql.BoundParameters;
+import io.requery.sql.QueryBuilder;
+import io.requery.sql.RuntimeConfiguration;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,292 +47,57 @@ import static io.requery.sql.Keyword.*;
 /**
  * Generates a parameterizable SQL statement from a given query.
  *
- * @param <E> result type
- *
  * @author Nikhil Purushe
  */
-class QueryGenerator<E> {
+public class DefaultOutput implements Output {
 
-    private final QueryElement<E> query;
+    private final QueryElement<?> query;
     private final Aliases inheritedAliases;
     private final boolean parameterize;
-    private QueryBuilder qb;
+    private final BoundParameters parameters;
+    private final StatementGenerator statementGenerator;
+    private final QueryBuilder qb;
     private Aliases aliases;
     private boolean autoAlias;
-    private BoundParameters parameters;
-    private Platform platform;
 
-    QueryGenerator(QueryElement<E> query) {
-        this(query, null);
+    public DefaultOutput(RuntimeConfiguration configuration, QueryElement<?> query) {
+        this(configuration.statementGenerator(), query,
+            new QueryBuilder(configuration.queryBuilderOptions()), null, true);
     }
 
-    QueryGenerator(QueryElement<E> query, Aliases inherited) {
-        this(query, inherited, true);
-    }
-
-    QueryGenerator(QueryElement<E> query, Aliases inherited, boolean parameterize) {
+    public DefaultOutput(StatementGenerator statementGenerator, QueryElement<?> query,
+                         QueryBuilder qb, Aliases inherited, boolean parameterize) {
         this.query = query;
+        this.qb = qb;
         this.inheritedAliases = inherited;
         this.parameterize = parameterize;
+        this.statementGenerator = statementGenerator;
+        this.parameters = parameterize? new BoundParameters() : null;
     }
 
+    @Override
+    public QueryBuilder builder() {
+        return qb;
+    }
+
+    @Override
     public BoundParameters parameters() {
         return parameters;
     }
 
-    public String toSql(QueryBuilder qb, Platform platform) {
-        this.qb = qb;
-        this.platform = platform;
+    public String toSql() {
         aliases = inheritedAliases == null ? new Aliases() : inheritedAliases;
-        if (parameterize) {
-            parameters = new BoundParameters();
-        }
         Set<Expression<?>> from = query.fromExpressions();
-        Set<JoinOnElement<E>> joins = query.joinElements();
+        Set<?> joins = query.joinElements();
         autoAlias = from.size() > 1 || (joins != null && joins.size() > 0);
-        switch (query.queryType()) {
-            case SELECT:
-                appendSelect();
-                break;
-            case INSERT:
-                appendInsert();
-                break;
-            case UPDATE:
-            case UPSERT:
-                appendUpdate();
-                break;
-            case DELETE:
-                appendDelete();
-                break;
-            case TRUNCATE:
-                appendTruncate();
-                break;
-        }
-        appendWhere();
-        appendGroupBy();
-        appendOrderBy();
-        appendLimit(platform.limitDefinition());
-        appendSetQuery();
+        statementGenerator.write(this, query);
         return qb.toString();
     }
 
-    private void forceOrderBy(LimitDefinition limitSupport) {
-        if (limitSupport.requireOrderBy() && query.getLimit() != null &&
-            (query.orderByExpressions() == null || query.orderByExpressions().isEmpty())) {
-
-            Set<Type<?>> types = query.entityTypes();
-            if (types != null && !types.isEmpty()) {
-                Type<?> type = types.iterator().next();
-                for (Attribute attribute : type.attributes()) {
-                    if (attribute.isKey()) {
-                        query.orderBy((Expression) attribute);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    private void appendSelect() {
-        qb.keyword(SELECT);
-        if (query.isDistinct()) {
-            qb.keyword(DISTINCT);
-        }
-        Set<? extends Expression<?>> selection = query.selection();
-        if (selection == null || selection.isEmpty()) {
-            qb.append("*");
-        } else {
-            qb.commaSeparated(selection,
-                new QueryBuilder.Appender<Expression<?>>() {
-                    @Override
-                    public void append(QueryBuilder qb, Expression<?> value) {
-                        appendColumnForSelect(value);
-                    }
-                });
-        }
-        appendTables(FROM);
-    }
-
-    private void checkEmptyValues(Map<Expression<?>, Object> values) {
-        if (values == null || values.isEmpty()) {
-            throw new IllegalStateException(
-                "Cannot generate insert/update statement with an empty set of values");
-        }
-    }
-
-    private void appendInsert() {
-        Map<Expression<?>, Object> updates = query.updateValues();
-        checkEmptyValues(updates);
-        qb.keyword(INSERT);
-        appendTables(INTO);
-        qb.openParenthesis()
-        .commaSeparated(updates.entrySet(),
-            new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
-                @Override
-                public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
-                    Expression<?> key = value.getKey();
-                    switch (key.type()) {
-                        case ATTRIBUTE:
-                            Attribute attribute = (Attribute) key;
-                            if (attribute.isGenerated()) {
-                                throw new IllegalStateException();
-                            }
-                            qb.attribute(attribute);
-                            break;
-                        default:
-                            qb.append(key.name()).space();
-                            break;
-                    }
-                }
-            })
-        .closeParenthesis()
-        .space()
-        .keyword(VALUES)
-        .openParenthesis()
-        .commaSeparated(updates.entrySet(),
-            new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
-                @Override
-                public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
-                    appendConditionValue(value.getKey(), value.getValue());
-                }
-            })
-        .closeParenthesis();
-    }
-
-    private void appendUpdate() {
-        Map<Expression<?>, Object> updates = query.updateValues();
-        checkEmptyValues(updates);
-        qb.keyword(UPDATE);
-        appendTables(null);
-        qb.keyword(SET);
-        int index = 0;
-        for (Map.Entry<Expression<?>, Object> entry : updates.entrySet()) {
-            if (index > 0) {
-                qb.append(",");
-            }
-            appendColumn(entry.getKey());
-            appendOperator(Operator.EQUAL);
-            appendConditionValue(entry.getKey(), entry.getValue());
-            index++;
-        }
-    }
-
-    private void appendDelete() {
-        qb.keyword(DELETE);
-        appendTables(FROM);
-    }
-
-    private void appendTruncate() {
-        qb.keyword(TRUNCATE);
-        appendTables(null);
-    }
-
-    private void appendSetQuery() {
-        if(query.innerSetQuery() != null) {
-            switch (query.setOperator()) {
-                case UNION:
-                    qb.keyword(UNION);
-                    break;
-                case UNION_ALL:
-                    qb.keyword(UNION, ALL);
-                    break;
-                case INTERSECT:
-                    qb.keyword(INTERSECT);
-                    break;
-                case EXCEPT:
-                    qb.keyword(EXCEPT);
-                    break;
-            }
-            mergeQuery(query.innerSetQuery());
-        }
-    }
-
-    private void appendWhere() {
-        ExistsElement<?> whereExists = query.whereExistsElement();
-        if (whereExists != null) {
-            qb.keyword(WHERE);
-            appendWhereSubQuery(whereExists);
-        } else if (query.whereElements() != null && query.whereElements().size() > 0) {
-            qb.keyword(WHERE);
-            for (WhereElement<E> w : query.whereElements()) {
-                appendConditional(w);
-            }
-        }
-    }
-
-    private void appendGroupBy() {
-        Set<Expression<?>> groupBy = query.groupByExpressions();
-        if (groupBy != null && groupBy.size() > 0) {
-            qb.keyword(GROUP, BY);
-            qb.commaSeparated(groupBy, new QueryBuilder.Appender<Expression<?>>() {
-                @Override
-                public void append(QueryBuilder qb, Expression<?> value) {
-                    appendColumn(value);
-                }
-            });
-            Set<HavingElement<E>> having = query.havingElements();
-            if (having != null) {
-                qb.keyword(HAVING);
-                for (HavingElement<E> clause : having) {
-                    appendConditional(clause);
-                }
-            }
-        }
-    }
-
-    private void appendOrderBy() {
-        forceOrderBy(platform.limitDefinition());
-        Set<Expression<?>> orderBy = query.orderByExpressions();
-        if (orderBy != null && orderBy.size() > 0) {
-            qb.keyword(ORDER, BY);
-            int i = 0;
-            int size = orderBy.size();
-            for (Expression<?> order : orderBy) {
-                appendColumn(order);
-                if (order.type() == ExpressionType.ORDERING) {
-                    OrderingExpression orderingExpression = (OrderingExpression) order;
-                    qb.keyword(orderingExpression.getOrder() == Order.ASC ? ASC : DESC);
-                    if(orderingExpression.getNullOrder() != null) {
-                        qb.keyword(NULLS);
-                        switch (orderingExpression.getNullOrder()) {
-                            case FIRST:
-                                qb.keyword(FIRST);
-                                break;
-                            case LAST:
-                                qb.keyword(LAST);
-                                break;
-                        }
-                    }
-                }
-                if (i < size - 1) {
-                    qb.append(",");
-                }
-                i++;
-            }
-        }
-    }
-
-    private void appendLimit(LimitDefinition limitSupport) {
-        Integer limit = query.getLimit();
-        if (limit != null && limit > 0) {
-            Integer offset = query.getOffset();
-            if(limitSupport == null) {
-                qb.keyword(LIMIT).value(limit);
-                if (offset != null) {
-                    qb.keyword(OFFSET).value(offset);
-                }
-            } else {
-                limitSupport.appendLimit(qb, limit, offset);
-            }
-        }
-    }
-
-    private void appendTables(Keyword prefix) {
+    @Override
+    public void appendTables() {
         Set<Expression<?>> from = query.fromExpressions();
         if (from.size() == 1) {
-            if (prefix != null) {
-                qb.value(prefix);
-            }
             Expression first = from.iterator().next();
             if (first instanceof QueryWrapper) {
                 appendFromExpression(first);
@@ -348,9 +109,6 @@ class QueryGenerator<E> {
                 }
             }
         } else if (from.size() > 1) {
-            if (prefix != null) {
-                qb.value(prefix);
-            }
             qb.openParenthesis();
             int index = 0;
             for (Expression expression : from) {
@@ -362,9 +120,12 @@ class QueryGenerator<E> {
             }
             qb.closeParenthesis();
         }
-        Set<JoinOnElement<E>> joins = query.joinElements();
-        if (joins != null && !joins.isEmpty()) {
-            for (JoinOnElement<E> join : joins) {
+        appendJoins();
+    }
+
+    private void appendJoins() {
+        if (query.joinElements() != null && !query.joinElements().isEmpty()) {
+            for (JoinOnElement<?> join : query.joinElements()) {
                 appendJoin(join);
             }
         }
@@ -379,7 +140,7 @@ class QueryGenerator<E> {
                     "query in 'from' expression must have an alias");
             }
             qb.openParenthesis();
-            mergeQuery(wrapper);
+            appendQuery(wrapper);
             qb.closeParenthesis().space();
             qb.append(alias).space();
         } else {
@@ -389,8 +150,8 @@ class QueryGenerator<E> {
 
     private static Expression<?> unwrapExpression(Expression<?> expression) {
         if (expression.type() == ExpressionType.ALIAS) {
-            AliasedExpression aliasable = (AliasedExpression) expression;
-            return aliasable.innerExpression();
+            AliasedExpression aliased = (AliasedExpression) expression;
+            return aliased.innerExpression();
         }
         return expression;
     }
@@ -404,7 +165,8 @@ class QueryGenerator<E> {
         return alias;
     }
 
-    private void appendColumn(Expression<?> expression) {
+    @Override
+    public void appendColumn(Expression<?> expression) {
         String alias = findAlias(expression);
         if (expression instanceof Function) {
             appendFunction((Function) expression);
@@ -419,7 +181,8 @@ class QueryGenerator<E> {
         }
     }
 
-    private void appendColumnForSelect(Expression<?> expression) {
+    @Override
+    public void appendColumnForSelect(Expression<?> expression) {
         String alias = findAlias(expression);
         if (expression instanceof Function) {
             appendFunction((Function) expression);
@@ -508,7 +271,7 @@ class QueryGenerator<E> {
         qb.keyword(END);
     }
 
-    private void appendJoin(JoinOnElement<E> join) {
+    private void appendJoin(JoinOnElement<?> join) {
         switch (join.joinType()) {
             case INNER:
                 qb.keyword(INNER, JOIN);
@@ -528,14 +291,14 @@ class QueryGenerator<E> {
             }
         } else if (join.subQuery() != null) {
             qb.openParenthesis();
-            mergeQuery((QueryWrapper<?>) join.subQuery());
+            appendQuery((QueryWrapper<?>) join.subQuery());
             qb.closeParenthesis().space();
             if (join.subQuery().aliasName() != null) {
                 qb.append(join.subQuery().aliasName()).space();
             }
         }
         qb.keyword(ON);
-        for (JoinElement<E> where : join.conditions()) {
+        for (JoinConditionElement<?> where : join.conditions()) {
             appendConditional(where);
         }
     }
@@ -574,7 +337,7 @@ class QueryGenerator<E> {
             } else if (value instanceof QueryWrapper) {
                 QueryWrapper wrapper = (QueryWrapper) value;
                 qb.openParenthesis();
-                mergeQuery(wrapper);
+                appendQuery(wrapper);
                 qb.closeParenthesis().space();
             } else if (value instanceof Condition) {
                 appendOperation((Condition) value);
@@ -595,7 +358,8 @@ class QueryGenerator<E> {
         }
     }
 
-    private void appendConditionValue(Expression expression, Object value) {
+    @Override
+    public void appendConditionValue(Expression expression, Object value) {
         appendConditionValue(expression, value, true);
     }
 
@@ -622,7 +386,8 @@ class QueryGenerator<E> {
         }
     }
 
-    private void appendConditional(LogicalElement element) {
+    @Override
+    public void appendConditional(LogicalElement element) {
         LogicalOperator op = element.operator();
         if (op != null) {
             switch (op) {
@@ -648,18 +413,8 @@ class QueryGenerator<E> {
         }
     }
 
-    private void appendWhereSubQuery(ExistsElement<?> subQuery) {
-        if (subQuery.isNotExists()) {
-            qb.keyword(NOT);
-        }
-        qb.keyword(EXISTS);
-        qb.openParenthesis();
-        Supplier<?> query = subQuery.getQuery();
-        mergeQuery((QueryWrapper) query);
-        qb.closeParenthesis().space();
-    }
-
-    private void appendOperator(Operator operator) {
+    @Override
+    public void appendOperator(Operator operator) {
         switch (operator) {
             case EQUAL:
                 qb.value("=");
@@ -709,10 +464,12 @@ class QueryGenerator<E> {
         }
     }
 
-    private void mergeQuery(QueryWrapper<?> wrapper) {
+    @Override
+    public void appendQuery(QueryWrapper<?> wrapper) {
         QueryElement<?> query = wrapper.unwrapQuery();
-        QueryGenerator generator = new QueryGenerator<>(query, aliases);
-        generator.toSql(qb, platform);
+        DefaultOutput generator =
+            new DefaultOutput(statementGenerator, query, qb, aliases, parameterize);
+        generator.toSql();
         if (parameters != null) {
             parameters.addAll(generator.parameters());
         }

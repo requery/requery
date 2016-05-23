@@ -31,23 +31,23 @@ import io.requery.query.WhereAndOr;
 
 import java.util.Set;
 
-public class JoinElement<E> extends BaseLogicalElement<JoinElement<E>, JoinAndOr<E>>
+public class JoinConditionElement<E> extends BaseLogicalElement<JoinConditionElement<E>, JoinAndOr<E>>
     implements JoinAndOr<E>, QueryWrapper<E>, LogicalElement {
 
     private final QueryElement<E> query;
 
-    JoinElement(QueryElement<E> query,
-                Set<JoinElement<E>> elements,
-                Condition<?,?> condition,
-                LogicalOperator operator) {
+    JoinConditionElement(QueryElement<E> query,
+                         Set<JoinConditionElement<E>> elements,
+                         Condition<?,?> condition,
+                         LogicalOperator operator) {
         super(elements, condition, operator);
         this.query = query;
     }
 
     @Override
-    JoinElement<E> newElement(Set<JoinElement<E>> elements, Condition<?,?> condition,
-                              LogicalOperator operator) {
-        return new JoinElement<>(query, elements, condition, operator);
+    JoinConditionElement<E> newElement(Set<JoinConditionElement<E>> elements, Condition<?,?> condition,
+                                       LogicalOperator operator) {
+        return new JoinConditionElement<>(query, elements, condition, operator);
     }
 
     @Override

@@ -14,27 +14,26 @@
  * limitations under the License.
  */
 
-package io.requery.sql.platform;
+package io.requery.sql.gen;
 
 import io.requery.query.element.LimitedElement;
-import io.requery.sql.gen.LimitGenerator;
-import io.requery.sql.gen.Generator;
+import io.requery.sql.QueryBuilder;
 
-/**
- * platform configuration for HSQLDB.
- */
-public class HSQL extends Generic {
+import static io.requery.sql.Keyword.LIMIT;
+import static io.requery.sql.Keyword.OFFSET;
 
-    public HSQL() {
-    }
+public class LimitGenerator implements Generator<LimitedElement> {
 
     @Override
-    public Generator<LimitedElement> limitGenerator() {
-        return new LimitGenerator();
-    }
-
-    @Override
-    public boolean supportsGeneratedColumnsInPrepareStatement() {
-        return false;
+    public void write(Output output, LimitedElement query) {
+        QueryBuilder qb = output.builder();
+        Integer limit = query.getLimit();
+        if (limit != null && limit > 0) {
+            Integer offset = query.getOffset();
+            qb.keyword(LIMIT).value(limit);
+            if (offset != null) {
+                qb.keyword(OFFSET).value(offset);
+            }
+        }
     }
 }

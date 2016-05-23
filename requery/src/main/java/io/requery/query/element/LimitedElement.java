@@ -14,21 +14,11 @@
  * limitations under the License.
  */
 
-package io.requery.sql;
+package io.requery.query.element;
 
-import io.requery.meta.Attribute;
+public interface LimitedElement {
 
-/**
- * Builds an UPSERT query fragment.
- *
- * @author Nikhil Purushe
- */
-public interface UpsertDefinition {
+    Integer getLimit();
 
-    interface Parameterizer<E> {
-        void addParameter(Attribute<E, ?> attribute);
-    }
-
-    <E> void appendUpsert(QueryBuilder qb, Iterable<Attribute<E, ?>> attributes,
-                          Parameterizer<E> parameterizer);
+    Integer getOffset();
 }

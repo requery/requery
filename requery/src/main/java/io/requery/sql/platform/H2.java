@@ -18,14 +18,21 @@ package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
+import io.requery.query.Expression;
 import io.requery.sql.AutoIncrementColumnDefinition;
 import io.requery.sql.GeneratedColumnDefinition;
-import io.requery.sql.LimitDefinition;
-import io.requery.sql.LimitOffsetDefinition;
 import io.requery.sql.QueryBuilder;
-import io.requery.sql.UpsertDefinition;
+import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.LimitGenerator;
+import io.requery.sql.gen.Output;
 
-import static io.requery.sql.Keyword.*;
+import java.util.Map;
+
+import static io.requery.sql.Keyword.FROM;
+import static io.requery.sql.Keyword.INTO;
+import static io.requery.sql.Keyword.KEY;
+import static io.requery.sql.Keyword.MERGE;
+import static io.requery.sql.Keyword.SELECT;
 
 /**
  * H2 Database.
@@ -33,13 +40,9 @@ import static io.requery.sql.Keyword.*;
 public class H2 extends Generic {
 
     private final AutoIncrementColumnDefinition autoIncrementColumn;
-    private final LimitDefinition limitDefinition;
-    private final UpsertDefinition upsertDefinition;
 
     public H2() {
         autoIncrementColumn = new AutoIncrementColumnDefinition();
-        limitDefinition = new LimitOffsetDefinition();
-        upsertDefinition = new UpsertMergeDualDefinition();
     }
 
     @Override
@@ -48,37 +51,36 @@ public class H2 extends Generic {
     }
 
     @Override
-    public LimitDefinition limitDefinition() {
-        return limitDefinition;
+    public LimitGenerator limitGenerator() {
+        return new LimitGenerator();
     }
 
     @Override
-    public UpsertDefinition upsertDefinition() {
-        return upsertDefinition;
+    public Generator<Map<Expression<?>, Object>> upsertGenerator() {
+        return new UpsertMergeDual();
     }
 
-    private static class UpsertMergeDualDefinition implements UpsertDefinition {
+    private static class UpsertMergeDual implements Generator<Map<Expression<?>, Object>> {
 
         @Override
-        public <E> void appendUpsert(QueryBuilder qb,
-                                     Iterable<Attribute<E, ?>> attributes,
-                                     final Parameterizer<E> parameterizer) {
-            Type<E> type = attributes.iterator().next().declaringType();
+        public void write(final Output output, final Map<Expression<?>, Object> values) {
+            QueryBuilder qb = output.builder();
+            Type<?> type = ((Attribute) values.keySet().iterator().next()).declaringType();
             qb.keyword(MERGE).keyword(INTO)
-                .tableName(type.name())
+                .tableNames(values.keySet())
                 .openParenthesis()
-                .commaSeparatedAttributes(attributes)
+                .commaSeparatedExpressions(values.keySet())
                 .closeParenthesis().space()
                 .keyword(KEY)
                 .openParenthesis()
                 .commaSeparatedAttributes(type.keyAttributes())
                 .closeParenthesis().space()
                 .keyword(SELECT)
-                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
-                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
+                    public void append(QueryBuilder qb, Expression expression) {
                         qb.append("?");
-                        parameterizer.addParameter(value);
+                        output.parameters().add(expression, values.get(expression));
                     }
                 }).space().keyword(FROM).append("DUAL");
         }

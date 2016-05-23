@@ -17,13 +17,15 @@
 package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
-import io.requery.meta.Type;
+import io.requery.query.Expression;
 import io.requery.sql.AutoIncrementColumnDefinition;
 import io.requery.sql.GeneratedColumnDefinition;
-import io.requery.sql.LimitDefinition;
-import io.requery.sql.LimitOffsetDefinition;
 import io.requery.sql.QueryBuilder;
-import io.requery.sql.UpsertDefinition;
+import io.requery.sql.gen.LimitGenerator;
+import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.Output;
+
+import java.util.Map;
 
 import static io.requery.sql.Keyword.DUPLICATE;
 import static io.requery.sql.Keyword.INSERT;
@@ -39,13 +41,9 @@ import static io.requery.sql.Keyword.VALUES;
 public class MySQL extends Generic {
 
     private final AutoIncrementColumnDefinition autoIncrementColumn;
-    private final LimitDefinition limitDefinition;
-    private final UpsertDefinition upsertDefinition;
 
     public MySQL() {
         autoIncrementColumn = new AutoIncrementColumnDefinition();
-        limitDefinition = new LimitOffsetDefinition();
-        upsertDefinition = new UpsertOnDuplicateKeyUpdate();
     }
 
     @Override
@@ -59,52 +57,51 @@ public class MySQL extends Generic {
     }
 
     @Override
-    public LimitDefinition limitDefinition() {
-        return limitDefinition;
+    public LimitGenerator limitGenerator() {
+        return new LimitGenerator();
     }
 
     @Override
-    public UpsertDefinition upsertDefinition() {
-        return upsertDefinition;
+    public Generator<Map<Expression<?>, Object>> upsertGenerator() {
+        return new UpsertOnDuplicateKeyUpdate();
     }
 
     /**
      * Performs an upsert (insert/update) using insert on duplicate key update syntax.
      */
-    private static class UpsertOnDuplicateKeyUpdate implements UpsertDefinition {
+    private static class UpsertOnDuplicateKeyUpdate implements
+        Generator<Map<Expression<?>, Object>> {
 
         @Override
-        public <E> void appendUpsert(QueryBuilder qb,
-                                     Iterable<Attribute<E, ?>> attributes,
-                                     final Parameterizer<E> parameterizer) {
-            Type<E> type = attributes.iterator().next().declaringType();
+        public void write(final Output output, final Map<Expression<?>, Object> values) {
+            QueryBuilder qb = output.builder();
             // insert into <table> (<columns>) values (<values)
             // on duplicate key update (<column>=VALUES(<value>...
             // insert fragment
             qb.keyword(INSERT, INTO)
-                .tableName(type.name())
+                .tableNames(values.keySet())
                 .openParenthesis()
-                .commaSeparatedAttributes(attributes)
+                .commaSeparatedExpressions(values.keySet())
                 .closeParenthesis().space()
                 .keyword(VALUES)
                 .openParenthesis()
-                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
-                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
+                    public void append(QueryBuilder qb, Expression expression) {
                         qb.append("?");
-                        parameterizer.addParameter(value);
+                        output.parameters().add(expression, values.get(expression));
                     }
                 })
                 .closeParenthesis().space()
                 .keyword(ON, DUPLICATE, KEY, UPDATE)
-                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
-                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
-                        qb.attribute(value)
+                    public void append(QueryBuilder qb, Expression<?> value) {
+                        qb.attribute((Attribute) value)
                             .append("=")
                             .append("values")
                             .openParenthesis()
-                            .attribute(value)
+                            .attribute((Attribute) value)
                             .closeParenthesis().space();
                     }
                 });

@@ -16,9 +16,7 @@
 
 package io.requery.query.element;
 
-import java.util.Set;
-
-public interface WhereElement {
-    Set<WhereConditionElement<?>> whereElements();
-    ExistsElement<?> whereExistsElement();
+public interface SetOperationElement {
+    QueryElement<?> innerSetQuery();
+    SetOperator setOperator();
 }

@@ -14,25 +14,13 @@
  * limitations under the License.
  */
 
-package io.requery.sql;
+package io.requery.query.element;
 
-/**
- * The type of limit/offset the platform supports.
- */
-public interface LimitDefinition {
+import io.requery.query.Expression;
 
-    /**
-     * @return true if the limit support of this platform requires the order by clause to be
-     * present in the query.
-     */
-    boolean requireOrderBy();
+import java.util.Set;
 
-    /**
-     * Appends the limit statement options to the query builder
-     *
-     * @param qb     query builder
-     * @param limit  limit number
-     * @param offset offset (optional)
-     */
-    void appendLimit(QueryBuilder qb, Integer limit, Integer offset);
+public interface GroupByElement {
+    Set<Expression<?>> groupByExpressions();
+    Set<HavingConditionElement<?>> havingElements();
 }

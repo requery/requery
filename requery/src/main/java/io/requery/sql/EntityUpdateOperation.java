@@ -20,6 +20,7 @@ import io.requery.meta.Attribute;
 import io.requery.query.Scalar;
 import io.requery.query.SuppliedScalar;
 import io.requery.query.element.QueryElement;
+import io.requery.sql.gen.DefaultOutput;
 import io.requery.util.function.Predicate;
 import io.requery.util.function.Supplier;
 
@@ -56,9 +57,10 @@ class EntityUpdateOperation<E> extends UpdateOperation {
             @Override
             public Integer get() {
                 // doesn't use the query params, just maps to the parameterBinder callback
-                QueryGenerator generator = new QueryGenerator<>(query, null, false);
                 QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
-                String sql = generator.toSql(qb, configuration.platform());
+                DefaultOutput generator =
+                    new DefaultOutput(configuration.statementGenerator(), query, qb, null, false);
+                String sql = generator.toSql();
                 int result;
                 try (Connection connection = configuration.connectionProvider().getConnection()) {
                     StatementListener listener = configuration.statementListener();

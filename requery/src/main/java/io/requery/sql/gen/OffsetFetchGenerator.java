@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-package io.requery.sql;
+package io.requery.sql.gen;
+
+import io.requery.query.element.LimitedElement;
+import io.requery.sql.Keyword;
+import io.requery.sql.QueryBuilder;
 
 import static io.requery.sql.Keyword.FETCH;
 import static io.requery.sql.Keyword.NEXT;
@@ -23,28 +27,30 @@ import static io.requery.sql.Keyword.ONLY;
 import static io.requery.sql.Keyword.ROW;
 import static io.requery.sql.Keyword.ROWS;
 
-public class OffsetFetchLimitDefinition implements LimitDefinition {
+public class OffsetFetchGenerator extends LimitGenerator {
 
     @Override
-    public boolean requireOrderBy() {
-        return false;
+    public void write(Output output, LimitedElement query) {
+        QueryBuilder qb = output.builder();
+        Integer limit = query.getLimit();
+        Integer offset = query.getOffset();
+        write(qb, limit, offset);
     }
 
-    @Override
-    public void appendLimit(QueryBuilder qb, Integer limit, Integer offset) {
+    protected void write(QueryBuilder qb, Integer limit, Integer offset) {
         if (offset != null) {
             qb.keyword(OFFSET)
-                    .value(offset)
-                    .keyword(offset > 1 ? ROWS : ROW)
-                    .keyword(FETCH, NEXT)
-                    .value(limit)
-                    .keyword(limit > 1 ? ROWS : ROW)
-                    .keyword(ONLY);
-        } else {
+                .value(offset)
+                .keyword(offset > 1 ? ROWS : ROW)
+                .keyword(FETCH, NEXT)
+                .value(limit)
+                .keyword(limit > 1 ? ROWS : ROW)
+                .keyword(ONLY);
+        } else if (limit != null) {
             qb.keyword(FETCH, Keyword.FIRST)
-                    .value(limit)
-                    .keyword(limit > 1 ? ROWS : ROW)
-                    .keyword(ONLY);
+                .value(limit)
+                .keyword(limit > 1 ? ROWS : ROW)
+                .keyword(ONLY);
         }
     }
 }

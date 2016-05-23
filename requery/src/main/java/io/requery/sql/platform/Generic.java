@@ -16,16 +16,22 @@
 
 package io.requery.sql.platform;
 
+import io.requery.query.Expression;
+import io.requery.query.element.LimitedElement;
+import io.requery.query.element.OrderByElement;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.IdentityColumnDefinition;
-import io.requery.sql.LimitDefinition;
 import io.requery.sql.Mapping;
-import io.requery.sql.OffsetFetchLimitDefinition;
 import io.requery.sql.Platform;
-import io.requery.sql.UpsertDefinition;
-import io.requery.sql.UpsertMergeDefinition;
 import io.requery.sql.UserVersionColumnDefinition;
 import io.requery.sql.VersionColumnDefinition;
+import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.LimitGenerator;
+import io.requery.sql.gen.OffsetFetchGenerator;
+import io.requery.sql.gen.OrderByGenerator;
+import io.requery.sql.gen.UpsertMergeGenerator;
+
+import java.util.Map;
 
 /**
  * Base platform implementation assuming standard ANSI SQL support.
@@ -33,15 +39,17 @@ import io.requery.sql.VersionColumnDefinition;
 public class Generic implements Platform {
 
     private final GeneratedColumnDefinition generatedColumnDefinition;
-    private final LimitDefinition limitDefinition;
+    private final LimitGenerator limitDefinition;
     private final VersionColumnDefinition versionColumnDefinition;
-    private final UpsertDefinition upsertDefinition;
+    private final Generator<Map<Expression<?>, Object>> upsertDefinition;
+    private final Generator<OrderByElement> orderByDefinition;
 
     public Generic() {
         generatedColumnDefinition = new IdentityColumnDefinition();
-        limitDefinition = new OffsetFetchLimitDefinition();
+        limitDefinition = new OffsetFetchGenerator();
         versionColumnDefinition = new UserVersionColumnDefinition();
-        upsertDefinition = new UpsertMergeDefinition();
+        upsertDefinition = new UpsertMergeGenerator();
+        orderByDefinition = new OrderByGenerator();
     }
 
     @Override
@@ -85,7 +93,7 @@ public class Generic implements Platform {
     }
 
     @Override
-    public LimitDefinition limitDefinition() {
+    public Generator<LimitedElement> limitGenerator() {
         return limitDefinition;
     }
 
@@ -95,8 +103,13 @@ public class Generic implements Platform {
     }
 
     @Override
-    public UpsertDefinition upsertDefinition() {
+    public Generator<Map<Expression<?>, Object>> upsertGenerator() {
         return upsertDefinition;
+    }
+
+    @Override
+    public Generator<OrderByElement> orderByGenerator() {
+        return orderByDefinition;
     }
 
     @Override

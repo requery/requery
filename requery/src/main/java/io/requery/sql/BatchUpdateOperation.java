@@ -19,6 +19,7 @@ package io.requery.sql;
 import io.requery.PersistenceException;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryOperation;
+import io.requery.sql.gen.DefaultOutput;
 
 import java.sql.BatchUpdateException;
 import java.sql.Connection;
@@ -56,9 +57,8 @@ class BatchUpdateOperation<E> extends PreparedQueryOperation implements QueryOpe
         int[] result = batchInStatement ? null : new int[length];
 
         try (Connection connection = configuration.connectionProvider().getConnection()) {
-            QueryGenerator generator = new QueryGenerator<>(query);
-            QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
-            String sql = generator.toSql(qb, configuration.platform());
+            DefaultOutput generator = new DefaultOutput(configuration, query);
+            String sql = generator.toSql();
             StatementListener listener = configuration.statementListener();
 
             try (PreparedStatement statement = prepare(sql, connection)) {

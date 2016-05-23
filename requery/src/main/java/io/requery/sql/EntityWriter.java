@@ -472,9 +472,13 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 incrementVersion(proxy);
             }
             List<Attribute<E, ?>> attributes = Arrays.asList(bindableAttributes);
-            EntityUpsertOperation<E> upsert =
-                new EntityUpsertOperation<>(context, proxy, attributes);
-            int rows = upsert.execute(null).value();
+            UpdateOperation upsert = new UpdateOperation(context);
+            QueryElement<Scalar<Integer>> element =
+                new QueryElement<>(QueryType.UPSERT, model, upsert);
+            for (Attribute<E, ?> attribute : attributes) {
+                element.value((Expression) attribute, proxy.get(attribute));
+            }
+            int rows = upsert.execute(element).value();
             if (rows <= 0) {
                 throw new RowCountException(1, rows);
             }

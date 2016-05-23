@@ -20,12 +20,13 @@ import io.requery.EntityCache;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
+import io.requery.sql.gen.StatementGenerator;
 import io.requery.util.function.Supplier;
 
 import java.util.Set;
 import java.util.concurrent.Executor;
 
-interface RuntimeConfiguration {
+public interface RuntimeConfiguration {
 
     Mapping mapping();
 
@@ -34,6 +35,8 @@ interface RuntimeConfiguration {
     EntityCache cache();
 
     Platform platform();
+
+    StatementGenerator statementGenerator();
 
     ConnectionProvider connectionProvider();
 

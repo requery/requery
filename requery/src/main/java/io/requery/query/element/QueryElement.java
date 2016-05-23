@@ -70,17 +70,23 @@ public class QueryElement<E> implements Selectable<E>,
     Offset<E>,
     Aliasable<Return<E>>,
     Expression<QueryElement>,
-    QueryWrapper<E> {
+    QueryWrapper<E>,
+    SelectionElement,
+    LimitedElement,
+    OrderByElement,
+    GroupByElement,
+    SetOperationElement,
+    WhereElement {
 
     private final EntityModel model;
     private final QueryOperation<E> operator;
     private final QueryType queryType;
     private String aliasName;
     private boolean selectDistinct;
-    private Set<WhereElement<E>> where;
+    private Set<WhereConditionElement<E>> where;
     private Set<JoinOnElement<E>> joins;
     private Set<Expression<?>> groupBy;
-    private Set<HavingElement<E>> having;
+    private Set<HavingConditionElement<E>> having;
     private Set<Expression<?>> orderBy;
     private Map<Expression<?>, Object> updates;
     private Set<Expression<?>> from;
@@ -109,10 +115,12 @@ public class QueryElement<E> implements Selectable<E>,
         return queryType;
     }
 
+    @Override
     public Set<? extends Expression<?>> selection() {
         return selection;
     }
 
+    @Override
     public boolean isDistinct() {
         return selectDistinct;
     }
@@ -121,10 +129,12 @@ public class QueryElement<E> implements Selectable<E>,
         return updates == null ? Collections.<Expression<?>, Object>emptyMap() : updates;
     }
 
-    public Set<WhereElement<E>> whereElements() {
-        return where;
+    @Override
+    public Set<WhereConditionElement<?>> whereElements() {
+        return (Set)where;
     }
 
+    @Override
     public ExistsElement<?> whereExistsElement() {
         return whereSubQuery;
     }
@@ -133,30 +143,37 @@ public class QueryElement<E> implements Selectable<E>,
         return joins;
     }
 
+    @Override
     public SetOperator setOperator() {
         return setOperator;
     }
 
+    @Override
     public Set<Expression<?>> orderByExpressions() {
         return orderBy;
     }
 
+    @Override
     public Set<Expression<?>> groupByExpressions() {
         return groupBy;
     }
 
-    public Set<HavingElement<E>> havingElements() {
-        return having;
+    @Override
+    public Set<HavingConditionElement<?>> havingElements() {
+        return (Set)having;
     }
 
+    @Override
     public QueryElement<E> innerSetQuery() {
         return setQuery;
     }
 
+    @Override
     public Integer getLimit() {
         return limit;
     }
 
+    @Override
     public Integer getOffset() {
         return offset;
     }
@@ -168,7 +185,20 @@ public class QueryElement<E> implements Selectable<E>,
     public Set<Expression<?>> fromExpressions() {
         if (from == null) {
             types = new LinkedHashSet<>();
-            for (Expression<?> expression : selection()) {
+            Set<? extends Expression<?>> expressions;
+            switch (queryType) {
+                case SELECT:
+                    expressions = selection();
+                    break;
+                case INSERT:
+                case UPDATE:
+                case UPSERT:
+                    expressions = updates.keySet();
+                    break;
+                default:
+                    expressions = Collections.emptySet();
+            }
+            for (Expression<?> expression : expressions) {
                 if (expression instanceof AliasedExpression) {
                     expression = ((AliasedExpression) expression).innerExpression();
                 }
@@ -385,7 +415,7 @@ public class QueryElement<E> implements Selectable<E>,
             where = new LinkedHashSet<>();
         }
         LogicalOperator operator = where.size() > 0 ? LogicalOperator.AND : null;
-        WhereElement<E> element = new WhereElement<>(this, where, condition, operator);
+        WhereConditionElement<E> element = new WhereConditionElement<>(this, where, condition, operator);
         where.add(element);
         return element;
     }
@@ -395,7 +425,7 @@ public class QueryElement<E> implements Selectable<E>,
         if (having == null) {
             having = new LinkedHashSet<>();
         }
-        HavingElement<E> element = new HavingElement<>(this, having, condition, null);
+        HavingConditionElement<E> element = new HavingConditionElement<>(this, having, condition, null);
         having.add(element);
         return element;
     }

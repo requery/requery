@@ -28,6 +28,9 @@ import java.util.LinkedHashSet;
 final class Attributes {
 
     static <E, V> QueryAttribute<E, V> query(Attribute attribute) {
+        if (attribute instanceof Supplier) {
+            return get((Supplier) attribute);
+        }
         return (QueryAttribute<E, V>) attribute;
     }
 
