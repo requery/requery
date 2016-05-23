@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 1.0.0-beta19
+
+- Support self referential entity types
+- Fix cascading upsert for relational entities
+- Fix foreign key column not included in default selection in some cases
+- Fix findByKey defaults to returning null if entity not present
+- Fix Android default proguard rules
+
 ## 1.0.0-beta18
 
 - Support relational type changes in rx toSelfObservable
