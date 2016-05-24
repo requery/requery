@@ -388,6 +388,13 @@ public class SchemaModifier {
         Type<?> referenced = model.typeOf(attribute.referencedClass() != null ?
             attribute.referencedClass() : attribute.classType());
 
+        final Attribute referencedAttribute;
+        if (attribute.referencedAttribute() != null) {
+            referencedAttribute = attribute.referencedAttribute().get();
+        } else {
+            referencedAttribute = referenced.keyAttributes().iterator().next();
+        }
+
         if (!platform.supportsInlineForeignKeyReference() && forCreateStatement) {
             qb.keyword(FOREIGN, KEY)
                 .openParenthesis()
@@ -396,29 +403,29 @@ public class SchemaModifier {
                 .space();
         } else {
             qb.attribute(attribute);
-            FieldType fieldType = new IntegerType(int.class);
+            FieldType fieldType = null;
+            if (referencedAttribute != null) {
+                fieldType = mapping.mapAttribute(referencedAttribute);
+            }
+            if (fieldType == null) {
+                fieldType = new IntegerType(int.class);
+            }
             qb.value(fieldType.identifier());
         }
         qb.keyword(REFERENCES);
         qb.tableName(referenced.name());
-        Attribute referencedAttribute;
-        if (attribute.referencedAttribute() != null) {
-            referencedAttribute = attribute.referencedAttribute().get();
+        if (referencedAttribute != null) {
             qb.openParenthesis()
                 .attribute(referencedAttribute)
                 .closeParenthesis()
                 .space();
-        } else {
-            referencedAttribute = referenced.keyAttributes().iterator().next();
-            qb.openParenthesis()
-                .attribute(referencedAttribute)
-                .closeParenthesis();
         }
         if (attribute.deleteAction() != null) {
             qb.keyword(ON, DELETE);
             appendReferentialAction(qb, attribute.deleteAction());
         }
-        if (!referencedAttribute.isGenerated() && attribute.updateAction() != null) {
+        if (referencedAttribute != null &&
+            !referencedAttribute.isGenerated() && attribute.updateAction() != null) {
             qb.keyword(ON, UPDATE);
             appendReferentialAction(qb, attribute.updateAction());
         }
