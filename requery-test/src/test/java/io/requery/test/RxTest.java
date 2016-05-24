@@ -37,6 +37,7 @@ import org.junit.Test;
 import rx.Observable;
 import rx.Single;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -191,9 +192,31 @@ public class RxTest extends RandomData {
     }
 
     @Test
+    public void testQuerySelfObservableMap() throws Exception {
+        final AtomicInteger count = new AtomicInteger();
+        Subscription subscription = data.select(Person.class).limit(2).get().toSelfObservable()
+            .flatMap(new Func1<Result<Person>, Observable<Person>>() {
+                @Override
+                public Observable<Person> call(Result<Person> persons) {
+                    return persons.toObservable();
+                }
+            }).subscribe(
+            new Action1<Person>() {
+                @Override
+                public void call(Person persons) {
+                    count.incrementAndGet();
+                }
+            });
+        data.insert(randomPerson()).toBlocking().value();
+        data.insert(randomPerson()).toBlocking().value();
+        assertEquals(3, count.get());
+        subscription.unsubscribe();
+    }
+
+    @Test
     public void testQuerySelfObservableDelete() throws Exception {
         final AtomicInteger count = new AtomicInteger();
-        data.select(Person.class).get().toSelfObservable().subscribe(
+        Subscription subscription = data.select(Person.class).get().toSelfObservable().subscribe(
             new Action1<Result<Person>>() {
                 @Override
                 public void call(Result<Person> persons) {
@@ -204,12 +227,13 @@ public class RxTest extends RandomData {
         data.insert(person).toBlocking().value();
         data.delete(person).toBlocking().value();
         assertEquals(3, count.get());
+        subscription.unsubscribe();
     }
 
     @Test
     public void testQuerySelfObservableRelational() throws Exception {
         final AtomicInteger count = new AtomicInteger();
-        data.select(Person.class).get().toSelfObservable().subscribe(
+        Subscription subscription = data.select(Person.class).get().toSelfObservable().subscribe(
             new Action1<Result<Person>>() {
                 @Override
                 public void call(Result<Person> persons) {
@@ -223,6 +247,7 @@ public class RxTest extends RandomData {
         data.update(person).toBlocking().value();
         data.delete(phone).toBlocking().value();
         assertEquals(4, count.get());
+        subscription.unsubscribe();
     }
 
     @Test

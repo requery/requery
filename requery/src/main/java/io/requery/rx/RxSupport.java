@@ -27,7 +27,6 @@ import io.requery.util.function.Supplier;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Single;
-import rx.functions.Action0;
 import rx.functions.Func1;
 
 import java.util.Collections;
@@ -97,18 +96,7 @@ public final class RxSupport {
     }
 
     public static <E> Observable<E> toObservable(final BaseResult<E> result, Integer limit) {
-        // if a limit on the query is set then just create a plain observable via iterator.
-        // Otherwise create a Observable with a custom subscriber that can modify the limit
-        if (limit == null) {
-            return Observable.create(new OnSubscribeFromQuery<>(result));
-        } else {
-            return Observable.from(result).doOnTerminate(new Action0() {
-                @Override
-                public void call() {
-                    result.close();
-                }
-            });
-        }
+        return Observable.create(new OnSubscribeFromQuery<>(result, limit));
     }
 
     public static <E> Single<E> toSingle(final Scalar<E> scalar) {
