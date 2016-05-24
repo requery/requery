@@ -464,23 +464,30 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     private Object readCacheKey(ResultSet results) throws SQLException {
         Object key = null;
         if (keyAttribute != null) { // common case 1 primary key
-            String name = keyAttribute.name();
-            int index = results.findColumn(name);
-            key = mapping.read((Expression) keyAttribute, results, index);
+            key = readKey(keyAttribute, results, results.findColumn(keyAttribute.name()));
         } else {
             int count = type.keyAttributes().size();
             if (count > 1) {
                 LinkedHashMap<Attribute<E, ?>, Object> keys = new LinkedHashMap<>(count);
                 for (Attribute<E, ?> attribute : type.keyAttributes()) {
                     String name = attribute.name();
-                    int column = results.findColumn(name);
-                    Object value = mapping.read((Expression) attribute, results, column);
+                    Object value = readKey(attribute, results, results.findColumn(name));
                     keys.put(attribute, value);
                 }
                 key = new CompositeKey<>(keys);
             }
         }
         return key;
+    }
+
+    private Object readKey(Attribute<E, ?> attribute, ResultSet results, int index)
+        throws SQLException {
+        Attribute referenced = attribute;
+        if (attribute.isAssociation()) {
+            // in the case of a foreign key referenced read the type of the key in the other type
+            referenced = Attributes.get(attribute.referencedAttribute());
+        }
+        return mapping.read((Expression) referenced, results, index);
     }
 
     final E fromResult(E entity, ResultSet results, Attribute[] selection) throws SQLException {
