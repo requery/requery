@@ -344,20 +344,20 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             if (attribute.isAssociation()) {
                 // get the referenced value
-                Object value = proxy.get(attribute);
+                Object value = proxy.get(attribute, false);
                 if (value != null) {
                     Attribute<Object, Object> referenced =
                         Attributes.get(attribute.referencedAttribute());
                     Function<Object, EntityProxy<Object>> proxyProvider =
                         referenced.declaringType().proxyProvider();
-                    value = proxyProvider.apply(value).get(referenced);
+                    value = proxyProvider.apply(value).get(referenced, false);
                 }
                 mapping.write((Expression) attribute, statement, i + 1, value);
             } else {
                 if (attribute.primitiveKind() != null) {
                     mapPrimitiveType(proxy, attribute, statement, i + 1);
                 } else {
-                    Object value = proxy.get(attribute);
+                    Object value = proxy.get(attribute, false);
                     mapping.write((Expression) attribute, statement, i + 1, value);
                 }
             }
@@ -476,7 +476,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             QueryElement<Scalar<Integer>> element =
                 new QueryElement<>(QueryType.UPSERT, model, upsert);
             for (Attribute<E, ?> attribute : attributes) {
-                element.value((Expression) attribute, proxy.get(attribute));
+                element.value((Expression) attribute, proxy.get(attribute, false));
             }
             int rows = upsert.execute(element).value();
             if (rows <= 0) {
@@ -548,7 +548,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         if (attribute.primitiveKind() != null) {
                             mapPrimitiveType(proxy, attribute, statement, index + 1);
                         } else {
-                            Object value = proxy.get(attribute);
+                            Object value = proxy.get(attribute, false);
                             mapping.write((Expression) attribute, statement, index + 1, value);
                         }
                     }
@@ -648,13 +648,15 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         CollectionChanges<?, S> changes =
                             (CollectionChanges<?, S>) collection.observer();
                         if (changes != null) {
-                            for (S added : changes.addedElements()) {
-                                updateInverseAssociation(mode, added, attribute, entity);
-                            }
-                            for (S removed : changes.removedElements()) {
-                                updateInverseAssociation(mode, removed, attribute, null);
-                            }
+                            List<S> added = new ArrayList<>(changes.addedElements());
+                            List<S> removed = new ArrayList<>(changes.removedElements());
                             changes.clear();
+                            for (S element : added) {
+                                updateInverseAssociation(mode, element, attribute, entity);
+                            }
+                            for (S element : removed) {
+                                updateInverseAssociation(mode, element, attribute, null);
+                            }
                         }
                     } else if (relation instanceof Iterable) {
                         Iterable<S> iterable = (Iterable<S>) relation;
@@ -704,8 +706,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         if (attribute.cascadeActions().contains(CascadeAction.SAVE)) {
                             cascadeWrite(mode, added, uProxy);
                         }
-                        Object tValue = proxy.get(tRef);
-                        Object uValue = uProxy.get(uRef);
+                        Object tValue = proxy.get(tRef, false);
+                        Object uValue = uProxy.get(uRef, false);
 
                         junctionProxy.set(tKey, tValue, PropertyState.MODIFIED);
                         junctionProxy.set(uKey, uValue, PropertyState.MODIFIED);
@@ -713,7 +715,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         cascadeWrite(CascadeMode.INSERT, junction, null);
                     }
                     if (changes != null) {
-                        Object keyValue = proxy.get(tRef);
+                        Object keyValue = proxy.get(tRef, false);
                         for (S removed : changes.removedElements()) {
                             Object otherValue = context.proxyOf(removed, false).get(uRef);
                             Class<? extends S> removeType = (Class<? extends S>)
