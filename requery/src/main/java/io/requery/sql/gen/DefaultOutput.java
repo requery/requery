@@ -388,7 +388,7 @@ public class DefaultOutput implements Output {
 
     @Override
     public void appendConditional(LogicalElement element) {
-        LogicalOperator op = element.operator();
+        LogicalOperator op = element.getOperator();
         if (op != null) {
             switch (op) {
                 case AND:
@@ -399,7 +399,7 @@ public class DefaultOutput implements Output {
                     break;
             }
         }
-        Condition condition = element.condition();
+        Condition condition = element.getCondition();
         boolean nested = false;
         if (condition.rightOperand() instanceof Condition) {
             nested = true;

@@ -116,7 +116,7 @@ public class QueryElement<E> implements Selectable<E>,
     }
 
     @Override
-    public Set<? extends Expression<?>> selection() {
+    public Set<? extends Expression<?>> getSelection() {
         return selection;
     }
 
@@ -130,12 +130,12 @@ public class QueryElement<E> implements Selectable<E>,
     }
 
     @Override
-    public Set<WhereConditionElement<?>> whereElements() {
+    public Set<WhereConditionElement<?>> getWhereElements() {
         return (Set)where;
     }
 
     @Override
-    public ExistsElement<?> whereExistsElement() {
+    public ExistsElement<?> getWhereExistsElement() {
         return whereSubQuery;
     }
 
@@ -144,27 +144,27 @@ public class QueryElement<E> implements Selectable<E>,
     }
 
     @Override
-    public SetOperator setOperator() {
+    public SetOperator getOperator() {
         return setOperator;
     }
 
     @Override
-    public Set<Expression<?>> orderByExpressions() {
+    public Set<Expression<?>> getOrderByExpressions() {
         return orderBy;
     }
 
     @Override
-    public Set<Expression<?>> groupByExpressions() {
+    public Set<Expression<?>> getGroupByExpressions() {
         return groupBy;
     }
 
     @Override
-    public Set<HavingConditionElement<?>> havingElements() {
+    public Set<HavingConditionElement<?>> getHavingElements() {
         return (Set)having;
     }
 
     @Override
-    public QueryElement<E> innerSetQuery() {
+    public QueryElement<E> getInnerSetQuery() {
         return setQuery;
     }
 
@@ -188,7 +188,7 @@ public class QueryElement<E> implements Selectable<E>,
             Set<? extends Expression<?>> expressions;
             switch (queryType) {
                 case SELECT:
-                    expressions = selection();
+                    expressions = getSelection();
                     break;
                 case INSERT:
                 case UPDATE:

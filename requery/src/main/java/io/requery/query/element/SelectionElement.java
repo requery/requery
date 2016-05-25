@@ -21,6 +21,6 @@ import io.requery.query.Expression;
 import java.util.Set;
 
 public interface SelectionElement {
-    Set<? extends Expression<?>> selection();
+    Set<? extends Expression<?>> getSelection();
     boolean isDistinct();
 }

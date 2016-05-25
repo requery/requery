@@ -96,7 +96,7 @@ public class SQLServer extends Generic {
 
         private void forceOrderBy(QueryElement<?> query) {
             if (query.getLimit() != null &&
-                (query.orderByExpressions() == null || query.orderByExpressions().isEmpty())) {
+                (query.getOrderByExpressions() == null || query.getOrderByExpressions().isEmpty())) {
                 Set<Type<?>> types = query.entityTypes();
                 if (types != null && !types.isEmpty()) {
                     Type<?> type = types.iterator().next();

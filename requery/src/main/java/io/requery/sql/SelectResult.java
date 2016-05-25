@@ -61,7 +61,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
         this.query = query;
         this.configuration = configuration;
         this.reader = reader;
-        selection = query.selection();
+        selection = query.getSelection();
         limit = query.getLimit();
         closeConnection = true;
         keepStatement = false;

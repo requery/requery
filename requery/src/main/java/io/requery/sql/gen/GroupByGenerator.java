@@ -32,7 +32,7 @@ class GroupByGenerator implements Generator<GroupByElement> {
     @Override
     public void write(final Output output, GroupByElement query) {
         QueryBuilder qb = output.builder();
-        Set<Expression<?>> groupBy = query.groupByExpressions();
+        Set<Expression<?>> groupBy = query.getGroupByExpressions();
         if (groupBy != null && groupBy.size() > 0) {
             qb.keyword(GROUP, BY);
             qb.commaSeparated(groupBy, new QueryBuilder.Appender<Expression<?>>() {
@@ -41,9 +41,9 @@ class GroupByGenerator implements Generator<GroupByElement> {
                     output.appendColumn(value);
                 }
             });
-            if (query.havingElements() != null) {
+            if (query.getHavingElements() != null) {
                 qb.keyword(HAVING);
-                for (HavingConditionElement<?> clause : query.havingElements()) {
+                for (HavingConditionElement<?> clause : query.getHavingElements()) {
                     output.appendConditional(clause);
                 }
             }

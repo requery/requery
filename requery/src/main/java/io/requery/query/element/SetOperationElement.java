@@ -17,6 +17,6 @@
 package io.requery.query.element;
 
 public interface SetOperationElement {
-    QueryElement<?> innerSetQuery();
-    SetOperator setOperator();
+    QueryElement<?> getInnerSetQuery();
+    SetOperator getOperator();
 }

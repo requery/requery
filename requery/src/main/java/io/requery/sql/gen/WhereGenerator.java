@@ -32,7 +32,7 @@ class WhereGenerator implements Generator<WhereElement> {
     @Override
     public void write(Output output, WhereElement query) {
         QueryBuilder qb = output.builder();
-        ExistsElement<?> whereExists = query.whereExistsElement();
+        ExistsElement<?> whereExists = query.getWhereExistsElement();
         if (whereExists != null) {
             qb.keyword(WHERE);
             if (whereExists.isNotExists()) {
@@ -43,9 +43,9 @@ class WhereGenerator implements Generator<WhereElement> {
             Supplier<?> wrapper = whereExists.getQuery();
             output.appendQuery((QueryWrapper) wrapper);
             qb.closeParenthesis().space();
-        } else if (query.whereElements() != null && query.whereElements().size() > 0) {
+        } else if (query.getWhereElements() != null && query.getWhereElements().size() > 0) {
             qb.keyword(WHERE);
-            for (WhereConditionElement<?> w : query.whereElements()) {
+            for (WhereConditionElement<?> w : query.getWhereElements()) {
                 output.appendConditional(w);
             }
         }

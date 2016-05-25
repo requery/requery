@@ -28,9 +28,9 @@ class SetOperatorGenerator implements Generator<SetOperationElement> {
 
     @Override
     public void write(Output output, SetOperationElement query) {
-        if(query.innerSetQuery() != null) {
+        if(query.getInnerSetQuery() != null) {
             QueryBuilder qb = output.builder();
-            switch (query.setOperator()) {
+            switch (query.getOperator()) {
                 case UNION:
                     qb.keyword(UNION);
                     break;
@@ -44,7 +44,7 @@ class SetOperatorGenerator implements Generator<SetOperationElement> {
                     qb.keyword(EXCEPT);
                     break;
             }
-            output.appendQuery(query.innerSetQuery());
+            output.appendQuery(query.getInnerSetQuery());
         }
     }
 }

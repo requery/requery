@@ -37,7 +37,7 @@ public class OrderByGenerator implements Generator<OrderByElement> {
 
     @Override
     public void write(Output output, OrderByElement query) {
-        Set<Expression<?>> orderBy = query.orderByExpressions();
+        Set<Expression<?>> orderBy = query.getOrderByExpressions();
         if (orderBy != null && orderBy.size() > 0) {
             QueryBuilder qb = output.builder();
             qb.keyword(ORDER, BY);

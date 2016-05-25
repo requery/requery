@@ -35,7 +35,7 @@ class SelectGenerator implements Generator<SelectionElement> {
         if (query.isDistinct()) {
             qb.keyword(DISTINCT);
         }
-        Set<? extends Expression<?>> selection = query.selection();
+        Set<? extends Expression<?>> selection = query.getSelection();
         if (selection == null || selection.isEmpty()) {
             qb.append("*");
         } else {

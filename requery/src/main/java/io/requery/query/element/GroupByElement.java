@@ -21,6 +21,6 @@ import io.requery.query.Expression;
 import java.util.Set;
 
 public interface GroupByElement {
-    Set<Expression<?>> groupByExpressions();
-    Set<HavingConditionElement<?>> havingElements();
+    Set<Expression<?>> getGroupByExpressions();
+    Set<HavingConditionElement<?>> getHavingElements();
 }

@@ -21,5 +21,5 @@ import io.requery.query.Expression;
 import java.util.Set;
 
 public interface OrderByElement {
-    Set<Expression<?>> orderByExpressions();
+    Set<Expression<?>> getOrderByExpressions();
 }
