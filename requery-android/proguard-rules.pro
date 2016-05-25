@@ -8,6 +8,8 @@
 -dontwarn java.sql.**
 -dontwarn io.requery.cache.**
 -dontwarn io.requery.rx.**
+-dontwarn io.requery.android.sqlcipher.**
+-dontwarn io.requery.android.sqlitex.**
 -keepclassmembers enum io.requery.** {
     public static **[] values();
     public static ** valueOf(java.lang.String);
