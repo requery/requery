@@ -30,7 +30,7 @@ public class RowCountException extends PersistenceException {
     RowCountException(long expected, long actual) {
         super("Expected " + expected + " row affected actual " + actual);
         this.expected = expected;
-        this.actual = expected;
+        this.actual = actual;
     }
 
     /**
