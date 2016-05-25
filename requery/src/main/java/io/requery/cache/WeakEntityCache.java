@@ -40,6 +40,8 @@ public class WeakEntityCache implements EntityCache {
 
         KeyReference(Object key, S value, ReferenceQueue<S> referenceQueue) {
             super(value, referenceQueue);
+            Objects.requireNotNull(key);
+            Objects.requireNotNull(value);
             this.key = key;
         }
 
@@ -59,8 +61,6 @@ public class WeakEntityCache implements EntityCache {
         }
 
         public void putValue(Object key, T value) {
-            Objects.requireNotNull(key);
-            Objects.requireNotNull(value);
             removeStaleEntries();
             put(key, new KeyReference<>(key, value, referenceQueue));
         }
@@ -70,8 +70,7 @@ public class WeakEntityCache implements EntityCache {
             while ((reference = referenceQueue.poll()) != null) {
                 T value = reference.get();
                 if (value == null) {
-                    KeyReference keyReference = KeyReference.class.cast(reference);
-                    Object key = keyReference.getKey();
+                    Object key = ((KeyReference)reference).getKey();
                     remove(key);
                 }
             }
