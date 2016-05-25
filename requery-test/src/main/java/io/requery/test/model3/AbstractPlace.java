@@ -19,16 +19,18 @@ package io.requery.test.model3;
 
 import io.requery.Entity;
 import io.requery.Key;
-import io.requery.ManyToOne;
+import io.requery.OneToMany;
+
+import java.util.Set;
 
 @Entity(model = "model3")
-public class AbstractEvent {
+public class AbstractPlace {
 
     @Key
     protected String id;
 
     protected String name;
 
-    @ManyToOne
-    protected Place place;
+    @OneToMany
+    protected Set<Event> events;
 }

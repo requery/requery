@@ -31,6 +31,7 @@ import io.requery.sql.platform.MySQL;
 import io.requery.sql.platform.SQLite;
 import io.requery.test.model3.Event;
 import io.requery.test.model3.Models;
+import io.requery.test.model3.Place;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -95,6 +96,24 @@ public class UpsertTest {
         data.upsert(event);
         event = data.findByKey(Event.class, id.toString());
         assertNotNull(event);
+    }
+
+    @Test
+    public void testUpsertInsertOneToMany() {
+        Event event = new Event();
+        UUID id = UUID.randomUUID();
+        event.setId(id.toString());
+
+        data.upsert(event);
+        assertNotNull(event);
+
+        Event event1 = new Event();
+        event1.setId(id.toString());
+        Place place = new Place();
+        place.setId(UUID.randomUUID().toString());
+        place.setName("place");
+        place.getEvents().add(event1);
+        data.insert(place);
     }
 
     @Test
