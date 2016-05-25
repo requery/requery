@@ -18,9 +18,32 @@ package io.requery.sql;
 
 import io.requery.PersistenceException;
 
-class RowCountException extends PersistenceException {
+/**
+ * Exception thrown when the affected row count of a executed statement doesn't match the value
+ * expected.
+ */
+public class RowCountException extends PersistenceException {
+
+    private final long expected;
+    private final long actual;
 
     RowCountException(long expected, long actual) {
         super("Expected " + expected + " row affected actual " + actual);
+        this.expected = expected;
+        this.actual = expected;
+    }
+
+    /**
+     * @return the expected affected value count
+     */
+    public long getExpected() {
+        return expected;
+    }
+
+    /**
+     * @return the actual affected value count
+     */
+    public long getActual() {
+        return actual;
     }
 }
