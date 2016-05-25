@@ -56,7 +56,7 @@ class ResultTuple implements Tuple {
         values = new Object[size];
     }
 
-    private String keyFor(Expression<?> expression) {
+    private String keyOf(Expression<?> expression) {
         String key = expression.name();
         if (expression instanceof Aliasable) {
             String aliasName = ((Aliasable) expression).aliasName();
@@ -64,17 +64,17 @@ class ResultTuple implements Tuple {
                 key = aliasName;
             }
         }
-        return key == null ? null : key.toLowerCase(Locale.US);
+        return key == null ? null : key.toLowerCase(Locale.ROOT);
     }
 
     void set(int index, Expression<?> expression, Object value) {
-        keyMap.put(keyFor(expression), value);
+        keyMap.put(keyOf(expression), value);
         values[index] = value;
     }
 
     @Override
     public <V> V get(Expression<V> key) {
-        Object value = keyMap.get(keyFor(key));
+        Object value = keyMap.get(keyOf(key));
         if (value == null) {
             throw new NoSuchElementException();
         }
