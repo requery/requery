@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+## 1.0.0-beta20
+
+- Fix possible StackOverflow in One-to-Many insert
+- Fix possible closed Result in toObservable()
+- Fix ClassCastException for key attributes that are also entity references
+- Fix Android default proguard rules for SQLCipher/SQLite support
+
 ## 1.0.0-beta19
 
 - Support self referential entity types
