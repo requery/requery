@@ -526,8 +526,9 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             for (Attribute expression : selection) {
                 @SuppressWarnings("unchecked")
                 Attribute<E, ?> attribute = (Attribute<E, ?>) expression;
+                boolean isAssociation = attribute.isAssociation();
 
-                if (attribute.isForeignKey() && attribute.isAssociation()) {
+                if ((attribute.isForeignKey() || attribute.isKey()) && isAssociation) {
                     // handle loading the foreign key into referenced object
                     Attribute referenced = Attributes.get(attribute.referencedAttribute());
 
@@ -552,7 +553,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                         }
                         proxy.setObject(attribute, value, state);
                     }
-                } else if (attribute.isAssociation()) {
+                } else if (isAssociation) {
                     continue;
                 } else if (overwrite || proxy.getState(attribute) != PropertyState.MODIFIED) {
                     if (attribute.primitiveKind() != null) {
