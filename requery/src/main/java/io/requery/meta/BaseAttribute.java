@@ -31,7 +31,8 @@ import io.requery.util.function.Supplier;
 import java.util.Collections;
 import java.util.Set;
 
-abstract class BaseAttribute<T, V> extends FieldExpression<V> implements QueryAttribute<T, V> {
+abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
+    QueryAttribute<T, V>, TypeDeclarable<T> {
 
     String name;
     Initializer<T, V> initializer;
@@ -256,5 +257,10 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements QueryAt
     public String toString() {
         return declaringType() == null ?
                 name() : declaringType().name() + "." + name();
+    }
+
+    @Override
+    public void setDeclaringType(Type<T> type) {
+        declaringType = type;
     }
 }

@@ -70,11 +70,12 @@ final class ImmutableType<T> extends BaseType<T> {
     }
 
     private void setDeclaringType(Object expression) {
-        if (expression instanceof BaseAttribute) {
+        if (expression instanceof TypeDeclarable) {
             // cheating here a bit but needed to avoid circular references, will be
             // effectively immutable after the type is constructed
-            BaseAttribute attribute = (BaseAttribute) expression;
-            attribute.declaringType = this;
+            @SuppressWarnings("unchecked")
+            TypeDeclarable<T> consumer = (TypeDeclarable<T>) expression;
+            consumer.setDeclaringType(this);
         }
     }
 }
