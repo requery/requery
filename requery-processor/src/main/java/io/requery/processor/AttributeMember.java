@@ -92,6 +92,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
 
     private final EntityDescriptor entity;
     private String name;
+    private boolean isBoolean;
     private boolean isKey;
     private boolean isUnique;
     private boolean isNullable;
@@ -170,6 +171,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                                  Set<ElementValidator> validators) {
         builderClass = AttributeBuilder.class;
         Types types = processingEnvironment.getTypeUtils();
+        isBoolean = type.getKind() == TypeKind.BOOLEAN;
         if (type.getKind() == TypeKind.DECLARED) {
             TypeElement element = (TypeElement) types.asElement(type);
             if (element != null) {
@@ -182,6 +184,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                     builderClass = MapAttributeBuilder.class;
                 }
                 isOptional = Mirrors.isInstance(types, element, Optional.class);
+                isBoolean = Mirrors.isInstance(types, element, Boolean.class);
             }
         }
         if (isIterable) {
@@ -553,7 +556,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     public String getterName() {
         if (element().getKind().isField()) {
             String name = annotationOf(Naming.class).map(Naming::getter).orElse("");
-            return getMethodName(name, useBeanStyleProperties() ? "get" : "");
+            String prefix = "";
+            if (useBeanStyleProperties()) {
+                prefix = isBoolean ? "is" : "get";
+            }
+            return getMethodName(name, prefix);
         } else {
             return element().getSimpleName().toString();
         }
@@ -595,7 +602,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
 
     private boolean useBeanStyleProperties() {
         return entity.propertyNameStyle() == PropertyNameStyle.BEAN ||
-            entity.propertyNameStyle() == PropertyNameStyle.FLUENT_BEAN;
+               entity.propertyNameStyle() == PropertyNameStyle.FLUENT_BEAN;
     }
 
     @Override
