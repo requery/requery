@@ -91,24 +91,25 @@ public class UpsertTest {
     public void testUpsertInsert() {
         Event event = new Event();
         UUID id = UUID.randomUUID();
-        event.setId(id.toString());
+        event.setId(id);
+        event.setName("test");
 
         data.upsert(event);
-        event = data.findByKey(Event.class, id.toString());
-        assertNotNull(event);
+        Event found = data.findByKey(Event.class, id);
+        assertEquals(event.getId(), found.getId());
     }
 
     @Test
     public void testUpsertInsertOneToMany() {
         Event event = new Event();
         UUID id = UUID.randomUUID();
-        event.setId(id.toString());
+        event.setId(id);
 
         data.upsert(event);
         assertNotNull(event);
 
         Event event1 = new Event();
-        event1.setId(id.toString());
+        event1.setId(id);
         Place place = new Place();
         place.setId(UUID.randomUUID().toString());
         place.setName("place");
@@ -117,16 +118,28 @@ public class UpsertTest {
     }
 
     @Test
+    public void testUpsertInsertOneToManyEmptyCollection() {
+        Event event1 = new Event();
+        event1.setId(UUID.randomUUID());
+        Place place = new Place();
+        place.setId(UUID.randomUUID().toString());
+        place.setName("place");
+        place.getEvents().add(event1);
+        place.getEvents().clear();
+        data.insert(place);
+    }
+
+    @Test
     public void testUpsertUpdate() {
         Event event = new Event();
         UUID id = UUID.randomUUID();
-        event.setId(id.toString());
+        event.setId(id);
         event.setName("event1");
 
         data.insert(event);
 
         Event event2 = new Event();
-        event2.setId(id.toString());
+        event2.setId(id);
         event2.setName("event2");
         data.upsert(event2);
 

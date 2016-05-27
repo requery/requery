@@ -908,7 +908,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     writer.insert(entity, proxy, false, mode);
                     break;
                 case UPDATE:
-                    writer.update(entity, proxy, true, mode);
+                    writer.update(entity, proxy, false, mode);
                     break;
                 case UPSERT:
                     writer.upsert(entity, proxy);

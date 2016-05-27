@@ -21,11 +21,13 @@ import io.requery.Entity;
 import io.requery.Key;
 import io.requery.ManyToOne;
 
+import java.util.UUID;
+
 @Entity(model = "model3")
 public class AbstractEvent {
 
     @Key
-    protected String id;
+    protected UUID id;
 
     protected String name;
 
