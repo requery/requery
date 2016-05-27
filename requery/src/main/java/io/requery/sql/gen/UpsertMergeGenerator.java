@@ -20,6 +20,7 @@ import io.requery.meta.Attribute;
 import io.requery.meta.Type;
 import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
+import io.requery.sql.Keyword;
 import io.requery.sql.QueryBuilder;
 
 import java.util.LinkedHashSet;
@@ -61,7 +62,7 @@ public class UpsertMergeGenerator implements Generator<Map<Expression<?>, Object
         int count = 0;
         for (Attribute<?, ?> attribute : type.keyAttributes()) {
             if (count > 0) {
-                qb.append("&&");
+                qb.keyword(Keyword.AND);
             }
             qb.aliasAttribute(type.name(), attribute);
             qb.append(" = ");
