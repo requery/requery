@@ -76,6 +76,9 @@ class EntityGraphValidator {
                             !attribute.isForeignKey()) {
                             validator.error(
                                 "Single sided @OneToOne should specify @ForeignKey/@JoinColumn");
+                        } else if (attribute.cardinality() == Cardinality.ONE_TO_MANY) {
+                            validator.error(
+                                "Corresponding @OneToMany relation not present in mapped entity");
                         }
                     } else if (mappings.size() == 1) {
                         // validate the relationship
@@ -149,7 +152,7 @@ class EntityGraphValidator {
             default:
                 throw new IllegalStateException();
         }
-        if (mappedCardinality != expectedCardinality) {
+        if (mappedCardinality != expectedCardinality && mapped.cardinality() != null) {
             String message = mappingErrorMessage(source, mapped, expectedCardinality);
             validator.error(message);
         } else if (sourceCardinality == Cardinality.MANY_TO_MANY) {
