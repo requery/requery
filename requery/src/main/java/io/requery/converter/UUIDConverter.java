@@ -58,6 +58,7 @@ public class UUIDConverter implements Converter<UUID, byte[]> {
         if (value == null) {
             return null;
         }
-        return UUID.nameUUIDFromBytes(value);
+        ByteBuffer buffer = ByteBuffer.wrap(value);
+        return new UUID(buffer.getLong(), buffer.getLong());
     }
 }
