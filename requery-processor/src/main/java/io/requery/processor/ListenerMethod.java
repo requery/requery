@@ -80,7 +80,7 @@ class ListenerMethod extends BaseProcessableElement<ExecutableElement> implement
                 }
             }
             annotations.stream().filter(
-                    annotation -> element().getSimpleName().toString().equals(
+                    annotation -> element().getSimpleName().contentEquals(
                             Names.lowerCaseFirst(annotation.getClass().getSimpleName())))
                     .forEach(annotation -> validator.error(
                             "Callback method cannot have the same name as the listener method"));

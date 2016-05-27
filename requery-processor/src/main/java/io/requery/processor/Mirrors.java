@@ -63,7 +63,7 @@ final class Mirrors {
 
         return mirror.getElementValues() == null ? Optional.empty() :
                mirror.getElementValues().entrySet().stream()
-                .filter(entry -> entry.getKey().getSimpleName().toString().equals(name))
+                .filter(entry -> entry.getKey().getSimpleName().contentEquals(name))
                 .map(entry -> (AnnotationValue)entry.getValue()).findFirst();
     }
 
@@ -139,7 +139,7 @@ final class Mirrors {
     static boolean overridesMethod(Types types, TypeElement element, String methodName) {
         while (element != null) {
             if (ElementFilter.methodsIn(element.getEnclosedElements()).stream()
-                .anyMatch(method -> method.getSimpleName().toString().equals(methodName))) {
+                .anyMatch(method -> method.getSimpleName().contentEquals(methodName))) {
                 return true;
             }
             TypeMirror superType = element.getSuperclass();
@@ -156,6 +156,6 @@ final class Mirrors {
     }
 
     private static boolean namesEqual(TypeElement element, String qualifiedName) {
-        return element.getQualifiedName().toString().equals(qualifiedName);
+        return element.getQualifiedName().contentEquals(qualifiedName);
     }
 }
