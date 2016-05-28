@@ -25,6 +25,8 @@ import io.requery.sql.EntityDataStore;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.H2;
+import io.requery.test.modeljpa.AddressEntity;
+import io.requery.test.modeljpa.AddressType;
 import io.requery.test.modeljpa.Group;
 import io.requery.test.modeljpa.GroupEntity;
 import io.requery.test.modeljpa.GroupType;
@@ -179,5 +181,19 @@ public class JPAModelTest {
         group.setDescription("text");
         data.insert(group);
         assertEquals("text", group.getDescription().get());
+    }
+
+    @Test
+    public void testInsertEmbedded() {
+        PersonEntity person = randomPerson();
+        AddressEntity address = new AddressEntity();
+        address.setLine1("Market St");
+        address.setCity("San Francisco");
+        address.setState("California");
+        address.getCoordinate().setLatitude(37.7749f);
+        address.getCoordinate().setLongitude(122.4194f);
+        address.setType(AddressType.HOME);
+        person.setAddress(address);
+        data.insert(person);
     }
 }

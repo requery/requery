@@ -116,6 +116,11 @@ interface AttributeDescriptor {
     boolean isLazy();
 
     /**
+     * @return true if this attribute is representing an embedded type
+     */
+    boolean isEmbedded();
+
+    /**
      * @return true if this column is indexed
      */
     boolean isIndexed();

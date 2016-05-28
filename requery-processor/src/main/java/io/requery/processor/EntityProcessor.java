@@ -16,6 +16,7 @@
 
 package io.requery.processor;
 
+import io.requery.Embedded;
 import io.requery.Entity;
 import io.requery.Superclass;
 
@@ -61,6 +62,7 @@ public final class EntityProcessor extends AbstractProcessor {
 
     private Map<String, EntityGraph> graphs;
     private Map<TypeElement, EntityType> superTypes;
+    private Map<TypeElement, EntityType> embeddedTypes;
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -72,6 +74,7 @@ public final class EntityProcessor extends AbstractProcessor {
         super.init(processingEnv);
         graphs = new LinkedHashMap<>();
         superTypes = new LinkedHashMap<>();
+        embeddedTypes = new LinkedHashMap<>();
     }
 
     @Override
@@ -84,16 +87,19 @@ public final class EntityProcessor extends AbstractProcessor {
         for (TypeElement annotation : annotations) {
             for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
                 typeElementOf(element).ifPresent(typeElement -> {
+                    EntityType entity = null;
                     if (isEntity(typeElement)) {
                         // create or get the entity for the annotation
-                        EntityType entity = computeType(entities, typeElement);
-                        entity.addAnnotationElement(annotation, element);
+                        entity = computeType(entities, typeElement);
                         // create or get the graph for it
                         String model = entity.modelName();
-                        graphs.computeIfAbsent(model, key -> new EntityGraph(types)).add(entity);
-
+                        graphs.computeIfAbsent(model, key -> new EntityGraph(types, embeddedTypes)).add(entity);
                     } else if (isSuperclass(typeElement)) {
-                        EntityType entity = computeType(superTypes, typeElement);
+                        entity = computeType(superTypes, typeElement);
+                    } else if (isEmbeddable(typeElement)) {
+                        entity = computeType(embeddedTypes, typeElement);
+                    }
+                    if (entity != null) {
                         entity.addAnnotationElement(annotation, element);
                     }
                 });
@@ -127,6 +133,10 @@ public final class EntityProcessor extends AbstractProcessor {
             Set<ElementValidator> results = entity.process(processingEnv);
             validators.addAll(results);
         }
+        for (EntityType entity : embeddedTypes.values()) {
+            Set<ElementValidator> results = entity.process(processingEnv);
+            validators.addAll(results);
+        }
         for (EntityGraph graph : graphs.values()) {
             EntityGraphValidator validator = new EntityGraphValidator(processingEnv, graph);
             Set<ElementValidator> results = validator.validate();
@@ -144,7 +154,7 @@ public final class EntityProcessor extends AbstractProcessor {
             for (EntityDescriptor entity : entities.values()) {
                 EntityGraph graph = graphs.get(entity.modelName());
                 if (graph != null) {
-                    generators.add(new EntityGenerator(processingEnv, graph, entity));
+                    generators.add(new EntityGenerator(processingEnv, graph, entity, null));
                 }
             }
         }
@@ -198,6 +208,12 @@ public final class EntityProcessor extends AbstractProcessor {
         return Mirrors.findAnnotationMirror(element, Superclass.class).isPresent() ||
             (getOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
                 javax.persistence.MappedSuperclass.class).isPresent());
+    }
+
+    private boolean isEmbeddable(TypeElement element) {
+        return Mirrors.findAnnotationMirror(element, Embedded.class).isPresent() ||
+            (getOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
+                javax.persistence.Embeddable.class).isPresent());
     }
 
     private Optional<TypeElement> typeElementOf(Element element) {

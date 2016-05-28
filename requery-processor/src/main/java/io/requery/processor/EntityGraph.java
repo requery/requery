@@ -16,6 +16,7 @@
 
 package io.requery.processor;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -38,10 +39,12 @@ import java.util.stream.Stream;
 class EntityGraph {
 
     private final Map<TypeElement, EntityDescriptor> entities;
+    private final Map<TypeElement, ? extends EntityDescriptor> embeddedTypes;
     private final Types types;
 
-    EntityGraph(Types types) {
+    EntityGraph(Types types, Map<TypeElement, ? extends EntityDescriptor> embeddedTypes) {
         this.types = types;
+        this.embeddedTypes = embeddedTypes;
         this.entities = new HashMap<>();
     }
 
@@ -59,6 +62,15 @@ class EntityGraph {
      */
     public void add(EntityDescriptor entity) {
         entities.putIfAbsent(entity.element(), entity);
+    }
+
+    Optional<EntityDescriptor> embeddedDescriptorOf(AttributeDescriptor attribute) {
+        TypeMirror mirror = attribute.typeMirror();
+        Element element = types.asElement(mirror);
+        if (element instanceof TypeElement) {
+            return Optional.ofNullable(embeddedTypes.get(element));
+        }
+        return Optional.empty();
     }
 
     private Optional<EntityDescriptor> entityByName(QualifiedName name) {
@@ -114,7 +126,7 @@ class EntityGraph {
 
     private static boolean match(EntityDescriptor entity, String referenceName) {
         return (entity.typeName().className().equals(referenceName) ||
-            entity.element().getSimpleName().toString().equals(referenceName));
+            entity.element().getSimpleName().contentEquals(referenceName));
     }
 
     /**

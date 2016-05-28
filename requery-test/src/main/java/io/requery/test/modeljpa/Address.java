@@ -18,6 +18,7 @@ package io.requery.test.modeljpa;
 
 
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -34,6 +35,9 @@ public interface Address extends Serializable {
     String getLine1();
     String getLine2();
     String getState();
+
+    @Embedded
+    Coordinate getCoordinate();
 
     @Column(length = 5)
     String getZip();

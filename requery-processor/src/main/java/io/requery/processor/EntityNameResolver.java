@@ -31,22 +31,28 @@ class EntityNameResolver {
         this.graph = graph;
     }
 
-    TypeName typeNameOf(EntityDescriptor type) {
+    ClassName typeNameOf(EntityDescriptor type) {
         return ClassName.bestGuess(type.typeName().toString());
     }
 
-    TypeName tryGeneratedTypeName(TypeMirror typeMirror) {
-        return generatedTypeNameOf(typeMirror).orElseGet(() -> TypeName.get(typeMirror));
+    ClassName embeddedTypeNameOf(EntityDescriptor embedded, EntityDescriptor parent) {
+        String className = parent.typeName().className() + "_" + embedded.typeName().className();
+        return ClassName.get(parent.typeName().packageName(), className);
     }
 
-    Optional<TypeName> generatedTypeNameOf(TypeMirror typeMirror) {
+    TypeName tryGeneratedTypeName(TypeMirror typeMirror) {
+        Optional<ClassName> name = generatedTypeNameOf(typeMirror);
+        return name.isPresent() ? name.get() : TypeName.get(typeMirror);
+    }
+
+    Optional<ClassName> generatedTypeNameOf(TypeMirror typeMirror) {
         // if it's a generated type, used the generated type name (not the abstract one)
         return graph.entities().stream()
             .filter(entity -> entity.typeName().className().equals(typeMirror.toString()))
             .map(this::typeNameOf).findFirst();
     }
 
-    Optional<TypeName> generatedTypeNameOf(TypeElement typeElement) {
+    Optional<ClassName> generatedTypeNameOf(TypeElement typeElement) {
         return graph.entities().stream()
             .filter(entity -> entity.element().getQualifiedName()
                 .equals(typeElement.getQualifiedName()))
@@ -57,7 +63,7 @@ class EntityNameResolver {
                              EntityDescriptor a,
                              EntityDescriptor b) {
         if (descriptor.type().isPresent()) {
-            return (ClassName) descriptor.type()
+            return descriptor.type()
                 .flatMap(this::generatedTypeNameOf)
                 .orElse(ClassName.bestGuess(descriptor.name()));
         }

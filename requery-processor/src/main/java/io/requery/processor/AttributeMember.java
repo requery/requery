@@ -19,6 +19,7 @@ package io.requery.processor;
 import io.requery.CascadeAction;
 import io.requery.Column;
 import io.requery.Convert;
+import io.requery.Embedded;
 import io.requery.ForeignKey;
 import io.requery.Generated;
 import io.requery.Index;
@@ -93,19 +94,20 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private final EntityDescriptor entity;
     private String name;
     private boolean isBoolean;
-    private boolean isKey;
-    private boolean isUnique;
-    private boolean isNullable;
-    private boolean isVersion;
-    private boolean isGenerated;
-    private boolean isLazy;
+    private boolean isEmbedded;
     private boolean isForeignKey;
+    private boolean isGenerated;
+    private boolean isIndexed;
+    private boolean isIterable;
+    private boolean isKey;
+    private boolean isLazy;
+    private boolean isMap;
+    private boolean isNullable;
+    private boolean isOptional;
     private boolean isReadOnly;
     private boolean isTransient;
-    private boolean isIterable;
-    private boolean isOptional;
-    private boolean isMap;
-    private boolean isIndexed;
+    private boolean isUnique;
+    private boolean isVersion;
     private Class<? extends AttributeBuilder> builderClass;
     private Integer length;
     private Set<String> indexNames;
@@ -148,6 +150,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             validator.error("Immutable value type cannot contain relational references");
         }
         checkReserved(name, validator);
+        isEmbedded = annotationOf(Embedded.class).isPresent() ||
+            annotationOf(javax.persistence.Embedded.class).isPresent();
         indexNames.forEach(name -> checkReserved(name, validator));
         return validators;
     }
@@ -651,6 +655,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     @Override
     public String defaultValue() {
         return defaultValue;
+    }
+
+    @Override
+    public boolean isEmbedded() {
+        return isEmbedded;
     }
 
     @Override

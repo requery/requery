@@ -84,6 +84,16 @@ interface EntityDescriptor {
     boolean isCacheable();
 
     /**
+     * @return true if this an embedded entity type.
+     */
+    boolean isEmbedded();
+
+    /**
+     * @return true if the underlying type being represented is immutable, false otherwise
+     */
+    boolean isImmutable();
+
+    /**
      * @return true if the entity is read only, differs from immutable in that the properties can
      * still be set in the generated entity by the framework but no setters are generated
      */
@@ -93,11 +103,6 @@ interface EntityDescriptor {
      * @return true if the entity has no modification state in the generated entity
      */
     boolean isStateless();
-
-    /**
-     * @return true if the underlying type being represented is immutable, false otherwise
-     */
-    boolean isImmutable();
 
     /**
      * @return true if the annotated type should not be extended/implemented by the generation step.

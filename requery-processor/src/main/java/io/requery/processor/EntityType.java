@@ -16,6 +16,7 @@
 
 package io.requery.processor;
 
+import io.requery.Embedded;
 import io.requery.Entity;
 import io.requery.Factory;
 import io.requery.PropertyNameStyle;
@@ -39,6 +40,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.persistence.Cacheable;
+import javax.persistence.Embeddable;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -372,6 +374,12 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         boolean extendable = annotationOf(Entity.class).map(Entity::extendable).orElse(true);
         return !extendable || (element().getKind().isClass() &&
             element().getModifiers().contains(Modifier.FINAL));
+    }
+
+    @Override
+    public boolean isEmbedded() {
+        return annotationOf(Embedded.class).isPresent() ||
+            annotationOf(Embeddable.class).isPresent();
     }
 
     @Override
