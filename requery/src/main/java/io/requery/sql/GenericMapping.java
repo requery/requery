@@ -217,10 +217,8 @@ public class GenericMapping implements Mapping {
             return fieldType;
         }
         Class<?> type = attribute.classType();
-        if (attribute.isForeignKey()) {
-            type = attribute.isAssociation() ?
-                attribute.referencedAttribute().get().classType() :
-                attribute.classType();
+        if (attribute.isAssociation() && attribute.referencedAttribute() != null) {
+            type = attribute.referencedAttribute().get().classType();
         }
         if (attribute.converter() != null) {
             Converter<?, ?> converter = attribute.converter();

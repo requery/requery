@@ -54,7 +54,7 @@ final class Attributes {
         return filtered.toArray(array);
     }
 
-    static Object replaceForeignKeyReference(Object value, Attribute attribute) {
+    static Object replaceKeyReference(Object value, Attribute attribute) {
         if (value != null) {
             Attribute<Object, Object> referenced = get(attribute.referencedAttribute());
             value = referenced.declaringType().proxyProvider().apply(value).get(referenced, false);

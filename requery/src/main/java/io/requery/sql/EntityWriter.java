@@ -131,7 +131,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             public boolean test(Attribute<E, ?> value) {
                 boolean isGeneratedKey = value.isGenerated() && value.isKey();
                 boolean isSystemVersion = value.isVersion() && hasSystemVersionColumn();
-                boolean isAssociation = value.isAssociation() && !value.isForeignKey();
+                boolean isAssociation = value.isAssociation() &&
+                    !(value.isForeignKey() || value.isKey());
                 return !(isGeneratedKey || isSystemVersion) && !isAssociation;
             }
         };
@@ -512,7 +513,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             public boolean test(Attribute<E, ?> value) {
                 return stateless ||
                     ((proxy.getState(value) == PropertyState.MODIFIED) &&
-                    (!value.isAssociation() || value.isForeignKey()));
+                    (!value.isAssociation() || value.isForeignKey() || value.isKey()));
             }
         };
         boolean hasVersion = versionAttribute != null;

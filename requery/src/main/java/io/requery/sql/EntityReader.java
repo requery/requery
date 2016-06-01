@@ -96,7 +96,9 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         LinkedHashSet<Expression<?>> selection = new LinkedHashSet<>();
         LinkedHashSet<Attribute<E, ?>> selectAttributes = new LinkedHashSet<>();
         for (Attribute<E, ?> attribute : type.attributes()) {
-            if (!attribute.isLazy() && (!attribute.isAssociation() || attribute.isForeignKey())) {
+            // include foreign or primary key
+            boolean isKey = (attribute.isForeignKey() || attribute.isKey());
+            if (!attribute.isLazy() && (isKey || !attribute.isAssociation())) {
                 if (attribute.isVersion()) {
                     Expression<?> expression = aliasVersion(attribute);
                     selection.add(expression);

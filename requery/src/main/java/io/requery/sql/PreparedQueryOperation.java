@@ -70,7 +70,7 @@ abstract class PreparedQueryOperation {
                 Attribute attribute = (Attribute) expression;
                 if (attribute.isAssociation()) {
                     // get the referenced value
-                    value = Attributes.replaceForeignKeyReference(value, attribute);
+                    value = Attributes.replaceKeyReference(value, attribute);
                 }
             }
             Class<?> type = value == null ? null: value.getClass();
