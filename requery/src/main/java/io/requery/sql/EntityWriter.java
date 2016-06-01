@@ -581,7 +581,6 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         int result = -1;
         if (count > 0) {
             if (keyAttribute != null) {
-                System.out.println(keyAttribute + " where: " + proxy.get(keyAttribute, false));
                 query.where(Attributes.query(keyAttribute).equal("?"));
             } else {
                 for (Attribute<E, ?> attribute : type.keyAttributes()) {
@@ -602,7 +601,6 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         } else {
             updateAssociations(mode, entity, proxy);
         }
-        System.out.println("result + " + result);
         context.stateListener().postUpdate(entity, proxy);
         return result;
     }
