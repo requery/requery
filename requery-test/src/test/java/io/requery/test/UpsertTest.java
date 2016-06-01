@@ -99,6 +99,17 @@ public class UpsertTest {
     }
 
     @Test
+    public void testUpsertOneToMany() {
+        Event event = new Event();
+        event.setId(UUID.randomUUID());
+        Place place = new Place();
+        place.setId(UUID.randomUUID().toString());
+        place.setName("place");
+        place.getEvents().add(event);
+        data.upsert(place);
+    }
+
+    @Test
     public void testUpsertInsertOneToMany() {
         Event event = new Event();
         UUID id = UUID.randomUUID();
@@ -117,7 +128,7 @@ public class UpsertTest {
     }
 
     @Test
-    public void testUpsertInsertOneToManyEmptyCollection() {
+    public void testUpsertOneToManyEmptyCollection() {
         Event event1 = new Event();
         event1.setId(UUID.randomUUID());
         Place place = new Place();
@@ -125,7 +136,7 @@ public class UpsertTest {
         place.setName("place");
         place.getEvents().add(event1);
         place.getEvents().clear();
-        data.insert(place);
+        data.upsert(place);
     }
 
     @Test

@@ -577,9 +577,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             query.set((Expression)attribute, null);
             count++;
         }
-        int result = 0;
+        int result = -1;
         if (count > 0) {
             if (keyAttribute != null) {
+                System.out.println(keyAttribute + " where: " + proxy.get(keyAttribute, false));
                 query.where(Attributes.query(keyAttribute).equal("?"));
             } else {
                 for (Attribute<E, ?> attribute : type.keyAttributes()) {
@@ -600,6 +601,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         } else {
             updateAssociations(mode, entity, proxy);
         }
+        System.out.println("result + " + result);
         context.stateListener().postUpdate(entity, proxy);
         return result;
     }
@@ -647,16 +649,14 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         ObservableCollection<S> collection = (ObservableCollection<S>) relation;
                         CollectionChanges<?, S> changes =
                             (CollectionChanges<?, S>) collection.observer();
-                        if (changes != null) {
-                            List<S> added = new ArrayList<>(changes.addedElements());
-                            List<S> removed = new ArrayList<>(changes.removedElements());
-                            changes.clear();
-                            for (S element : added) {
-                                updateInverseAssociation(mode, element, attribute, entity);
-                            }
-                            for (S element : removed) {
-                                updateInverseAssociation(mode, element, attribute, null);
-                            }
+                        List<S> added = new ArrayList<>(changes.addedElements());
+                        List<S> removed = new ArrayList<>(changes.removedElements());
+                        changes.clear();
+                        for (S element : added) {
+                            updateInverseAssociation(mode, element, attribute, entity);
+                        }
+                        for (S element : removed) {
+                            updateInverseAssociation(CascadeMode.UPDATE, element, attribute, null);
                         }
                     } else if (relation instanceof Iterable) {
                         Iterable<S> iterable = (Iterable<S>) relation;
@@ -734,7 +734,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     break;
                 case MANY_TO_ONE:
                 default:
-                    throw new IllegalStateException();
+                    break;
             }
             context.read(type.classType()).refresh(entity, proxy, attribute);
         }
@@ -765,8 +765,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         proxy.setObject(versionAttribute, version, PropertyState.MODIFIED);
     }
 
-    private <U extends S> void updateInverseAssociation(CascadeMode mode, U entity,
-                                                        Attribute attribute, Object value) {
+    private <U extends S> void updateInverseAssociation(CascadeMode mode,
+                                                        U entity,
+                                                        Attribute attribute,
+                                                        Object value) {
         EntityProxy<U> proxy = context.proxyOf(entity, false);
         Attribute<U, Object> inverse = Attributes.get(attribute.mappedAttribute());
         proxy.set(inverse, value, PropertyState.MODIFIED);
