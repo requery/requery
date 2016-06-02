@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+## 1.0.0-beta21
+
+- Support for @Embedded types
+- Support 'is' prefix for boolean getters
+- Support compile time validation of many-to-one & one-to-many mapping
+- Fix possible Constraint violation in One-to-Many insert
+- Fix invalid UUID conversion
+- Fix query/update of a relational field that is also used as a key
+
 ## 1.0.0-beta20
 
 - Fix possible StackOverflow in One-to-Many insert
