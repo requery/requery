@@ -40,7 +40,7 @@ class SqlCipherConnection extends BaseConnection {
     private final SqlCipherMetaData metaData;
     private boolean enteredTransaction;
 
-    public SqlCipherConnection(SQLiteDatabase db) {
+    SqlCipherConnection(SQLiteDatabase db) {
         if(db == null) {
             throw new IllegalArgumentException("null db");
         }
