@@ -71,6 +71,11 @@ public interface Attribute<T, V> {
     Property<T, V> property();
 
     /**
+     * @return Name of the source field or method that this attribute is mapped to.
+     */
+    String propertyName();
+
+    /**
      * @return {@link Property} representing access to the state of the held property.
      */
     Property<T, PropertyState> propertyState();

@@ -74,8 +74,8 @@ final class ImmutableType<T> extends BaseType<T> {
             // cheating here a bit but needed to avoid circular references, will be
             // effectively immutable after the type is constructed
             @SuppressWarnings("unchecked")
-            TypeDeclarable<T> consumer = (TypeDeclarable<T>) expression;
-            consumer.setDeclaringType(this);
+            TypeDeclarable<T> declarable = (TypeDeclarable<T>) expression;
+            declarable.setDeclaringType(this);
         }
     }
 }

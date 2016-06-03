@@ -855,6 +855,7 @@ class EntityGenerator implements SourceGenerator {
                 .build(propertyBuilder);
         }
         builder.add(".setProperty($L)\n", propertyBuilder.build());
+        builder.add(".setPropertyName($S)\n", attribute.element().getSimpleName());
 
         // property state get/set
         if (!entity.isStateless()) {

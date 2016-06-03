@@ -23,6 +23,7 @@ final class ImmutableAttribute<T, V> extends BaseAttribute<T, V> {
         classType = builder.classType();
         primitiveKind = builder.primitiveKind();
         property = builder.property();
+        propertyName = builder.propertyName();
         propertyState = builder.propertyState();
         initializer = builder.initializer();
         builderProperty = builder.builderProperty();

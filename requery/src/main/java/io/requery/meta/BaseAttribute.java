@@ -35,6 +35,7 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     QueryAttribute<T, V>, TypeDeclarable<T> {
 
     String name;
+    String propertyName;
     Initializer<T, V> initializer;
     Class<V> classType;
     PrimitiveKind primitiveKind;
@@ -75,6 +76,11 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     @Override
     public Property<T, V> property() {
         return property;
+    }
+
+    @Override
+    public String propertyName() {
+        return propertyName;
     }
 
     @Override

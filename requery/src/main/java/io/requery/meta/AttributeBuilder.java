@@ -52,6 +52,11 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
         return this;
     }
 
+    public AttributeBuilder<T, V> setPropertyName(String name) {
+        this.propertyName = name;
+        return this;
+    }
+
     public AttributeBuilder<T, V> setPropertyState(Property<T, PropertyState> property) {
         this.propertyState = property;
         return this;
@@ -144,8 +149,7 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
     }
 
     public AttributeBuilder<T, V> setCascadeAction(CascadeAction ...actions) {
-        this.cascadeActions = EnumSet.noneOf(CascadeAction.class);
-        cascadeActions.addAll(Arrays.asList(actions));
+        this.cascadeActions = EnumSet.copyOf(Arrays.asList(actions));
         return this;
     }
 
