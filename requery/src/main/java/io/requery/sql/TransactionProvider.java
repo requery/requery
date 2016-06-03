@@ -18,7 +18,7 @@ package io.requery.sql;
 
 import io.requery.util.function.Supplier;
 
-class TransactionProvider implements Supplier<EntityProxyTransaction> {
+class TransactionProvider implements Supplier<EntityTransaction> {
 
     private final ThreadLocalTransaction threadLocalTransaction;
 
@@ -27,7 +27,7 @@ class TransactionProvider implements Supplier<EntityProxyTransaction> {
     }
 
     @Override
-    public EntityProxyTransaction get() {
+    public EntityTransaction get() {
         return threadLocalTransaction;
     }
 }

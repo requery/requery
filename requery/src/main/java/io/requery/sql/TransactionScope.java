@@ -16,22 +16,31 @@
 
 package io.requery.sql;
 
-import io.requery.Transaction;
+import io.requery.meta.Type;
 import io.requery.util.function.Supplier;
+
+import java.util.Set;
 
 /**
  * If there is no current transaction, starts one otherwise does nothing.
  */
 class TransactionScope implements AutoCloseable {
 
-    private final Transaction transaction;
+    private final EntityTransaction transaction;
     private final boolean enteredTransaction;
 
-    TransactionScope(Supplier<? extends Transaction> transactionSupplier) {
-        this.transaction = transactionSupplier.get();
+    TransactionScope(Supplier<? extends EntityTransaction> supplier) {
+        this(supplier, null);
+    }
+
+    TransactionScope(Supplier<? extends EntityTransaction> supplier, Set<Type<?>> types) {
+        this.transaction = supplier.get();
         if (!transaction.active()) {
             transaction.begin();
             enteredTransaction = true;
+            if (types != null) {
+                transaction.addToTransaction(types);
+            }
         } else {
             enteredTransaction = false;
         }

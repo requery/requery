@@ -19,13 +19,11 @@ package io.requery.rx;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
 import io.requery.meta.Type;
-import io.requery.proxy.EntityProxy;
 import io.requery.util.function.Supplier;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
 import rx.subjects.Subject;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -56,37 +54,28 @@ final class TypeChangeListener implements Supplier<TransactionListener> {
             }
 
             @Override
-            public void beforeCommit(Set<EntityProxy<?>> entities) {
+            public void beforeCommit(Set<Type<?>> types) {
 
             }
 
             @Override
-            public void afterCommit(Set<EntityProxy<?>> entities) {
-                emitTypes(commitSubject, entities);
+            public void afterCommit(Set<Type<?>> types) {
+                commitSubject.onNext(types);
             }
 
             @Override
-            public void beforeRollback(Set<EntityProxy<?>> entities) {
+            public void beforeRollback(Set<Type<?>> types) {
 
             }
 
             @Override
-            public void afterRollback(Set<EntityProxy<?>> entities) {
-                emitTypes(rollbackSubject, entities);
+            public void afterRollback(Set<Type<?>> types) {
+                rollbackSubject.onNext(types);
             }
         };
     }
 
     Subject<Set<Type<?>>, Set<Type<?>>> commitSubject() {
         return commitSubject;
-    }
-
-    private void emitTypes(Subject<Set<Type<?>>, Set<Type<?>>> subject,
-                           Set<EntityProxy<?>> entities) {
-        Set<Type<?>> types = new LinkedHashSet<>();
-        for (EntityProxy proxy : entities) {
-            types.add(proxy.type());
-        }
-        subject.onNext(types);
     }
 }

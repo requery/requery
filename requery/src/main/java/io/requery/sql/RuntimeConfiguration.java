@@ -52,6 +52,8 @@ public interface RuntimeConfiguration {
 
     TransactionIsolation transactionIsolation();
 
+    TransactionProvider transactionProvider();
+
     Executor writeExecutor();
 
     QueryBuilder.Options queryBuilderOptions();

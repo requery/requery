@@ -36,7 +36,7 @@ class SelectOperation<E> implements QueryOperation<Result<E>> {
     }
 
     @Override
-    public Result<E> execute(QueryElement<Result<E>> query) {
+    public Result<E> evaluate(QueryElement<Result<E>> query) {
         return new SelectResult<>(configuration, query, reader);
     }
 }

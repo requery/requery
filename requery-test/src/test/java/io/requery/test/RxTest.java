@@ -214,7 +214,7 @@ public class RxTest extends RandomData {
     }
 
     @Test
-    public void testQuerySelfObservableDelete() throws Exception {
+    public void testSelfObservableDelete() throws Exception {
         final AtomicInteger count = new AtomicInteger();
         Subscription subscription = data.select(Person.class).get().toSelfObservable().subscribe(
             new Action1<Result<Person>>() {
@@ -228,6 +228,25 @@ public class RxTest extends RandomData {
         data.delete(person).toBlocking().value();
         assertEquals(3, count.get());
         subscription.unsubscribe();
+    }
+
+    @Test
+    public void testSelfObservableDeleteQuery() throws Exception {
+        final AtomicInteger count = new AtomicInteger();
+        Subscription subscription = data.select(Person.class).get().toSelfObservable().subscribe(
+            new Action1<Result<Person>>() {
+                @Override
+                public void call(Result<Person> persons) {
+                    count.incrementAndGet();
+                }
+            });
+        Person person = randomPerson();
+        data.insert(person).toBlocking().value();
+        assertEquals(2, count.get());
+        int rows = data.delete(Person.class).get().value();
+        assertEquals(3, count.get());
+        subscription.unsubscribe();
+        assertEquals(rows, 1);
     }
 
     @Test

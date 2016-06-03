@@ -21,6 +21,7 @@ import io.requery.Transaction;
 import io.requery.TransactionException;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
+import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
 import io.requery.util.Objects;
 
@@ -37,20 +38,18 @@ import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.UserTransaction;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * Transaction for use when running in a container or managed environment.
  *
  * @author Nikhil Purushe
  */
-class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, Synchronization {
+class ManagedTransaction implements EntityTransaction, ConnectionProvider, Synchronization {
 
     private final ConnectionProvider connectionProvider;
     private final TransactionListener transactionListener;
     private final TransactionEntitiesSet entities;
-    private final Set<EntityProxy<?>> entitiesReadOnly;
     private Connection connection;
     private Connection uncloseableConnection;
     private TransactionSynchronizationRegistry registry;
@@ -66,7 +65,6 @@ class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, 
         this.transactionListener = Objects.requireNotNull(transactionListener);
         this.connectionProvider = Objects.requireNotNull(connectionProvider);
         this.entities = new TransactionEntitiesSet(cache);
-        this.entitiesReadOnly = Collections.unmodifiableSet(entities);
     }
 
     private TransactionSynchronizationRegistry getSynchronizationRegistry() {
@@ -153,9 +151,9 @@ class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, 
     public void commit() {
         if (initiatedTransaction) {
             try {
-                transactionListener.beforeCommit(entitiesReadOnly);
+                transactionListener.beforeCommit(entities.types());
                 getUserTransaction().commit();
-                transactionListener.afterCommit(entitiesReadOnly);
+                transactionListener.afterCommit(entities.types());
             } catch (RollbackException | SystemException | HeuristicMixedException |
                 HeuristicRollbackException e) {
                 throw new TransactionException(e);
@@ -173,7 +171,7 @@ class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, 
         if (!rolledBack) {
             try {
                 if (!completed) {
-                    transactionListener.beforeRollback(entitiesReadOnly);
+                    transactionListener.beforeRollback(entities.types());
                     if (initiatedTransaction) {
                         try {
                             getUserTransaction().rollback();
@@ -183,7 +181,7 @@ class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, 
                     } else if (active()) {
                         getSynchronizationRegistry().setRollbackOnly();
                     }
-                    transactionListener.afterRollback(entitiesReadOnly);
+                    transactionListener.afterRollback(entities.types());
                 }
             } finally {
                 rolledBack = true;
@@ -196,11 +194,6 @@ class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, 
     public boolean active() {
         TransactionSynchronizationRegistry registry = getSynchronizationRegistry();
         return registry != null && registry.getTransactionStatus() == Status.STATUS_ACTIVE;
-    }
-
-    @Override
-    public void addToTransaction(EntityProxy<?> proxy) {
-        entities.add(proxy);
     }
 
     @Override
@@ -218,5 +211,16 @@ class ManagedTransaction implements EntityProxyTransaction, ConnectionProvider, 
                 break;
         }
         completed = true;
+    }
+
+
+    @Override
+    public void addToTransaction(EntityProxy<?> proxy) {
+        entities.add(proxy);
+    }
+
+    @Override
+    public void addToTransaction(Collection<Type<?>> types) {
+        entities.types().addAll(types);
     }
 }

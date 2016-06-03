@@ -22,7 +22,7 @@ import io.requery.TransactionListener;
 import io.requery.async.CompletableEntityStore;
 import io.requery.async.CompletionStageEntityStore;
 import io.requery.meta.EntityModel;
-import io.requery.proxy.EntityProxy;
+import io.requery.meta.Type;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
 import io.requery.sql.EntityDataStore;
@@ -82,22 +82,22 @@ public class CompletableEntityStoreTest extends RandomData {
             }
 
             @Override
-            public void beforeCommit(Set<EntityProxy<?>> entities) {
+            public void beforeCommit(Set<Type<?>> types) {
 
             }
 
             @Override
-            public void afterCommit(Set<EntityProxy<?>> entities) {
+            public void afterCommit(Set<Type<?>> types) {
                 transactionState = TransactionState.COMMIT;
             }
 
             @Override
-            public void beforeRollback(Set<EntityProxy<?>> entities) {
+            public void beforeRollback(Set<Type<?>> types) {
 
             }
 
             @Override
-            public void afterRollback(Set<EntityProxy<?>> entities) {
+            public void afterRollback(Set<Type<?>> types) {
                 transactionState = TransactionState.ROLLBACK;
             }
         };

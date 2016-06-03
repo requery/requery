@@ -65,7 +65,7 @@ class InsertReturningOperation extends PreparedQueryOperation implements
     }
 
     @Override
-    public Result<Tuple> execute(final QueryElement<Result<Tuple>> query) {
+    public Result<Tuple> evaluate(final QueryElement<Result<Tuple>> query) {
         DefaultOutput generator = new DefaultOutput(configuration, query);
         String sql = generator.toSql();
         BoundParameters parameters = generator.parameters();

@@ -18,11 +18,10 @@ package io.requery.sql;
 
 import io.requery.meta.Attribute;
 import io.requery.query.Scalar;
-import io.requery.query.SuppliedScalar;
+import io.requery.query.BaseScalar;
 import io.requery.query.element.QueryElement;
 import io.requery.sql.gen.DefaultOutput;
 import io.requery.util.function.Predicate;
-import io.requery.util.function.Supplier;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -52,15 +51,15 @@ class EntityUpdateOperation<E> extends UpdateOperation {
     }
 
     @Override
-    public Scalar<Integer> execute(final QueryElement<Scalar<Integer>> query) {
-        return new SuppliedScalar<>(new Supplier<Integer>() {
+    public Scalar<Integer> evaluate(final QueryElement<Scalar<Integer>> query) {
+        return new BaseScalar<Integer>(configuration.writeExecutor()) {
             @Override
-            public Integer get() {
+            public Integer evaluate() {
                 // doesn't use the query params, just maps to the parameterBinder callback
                 QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
-                DefaultOutput generator =
+                DefaultOutput output =
                     new DefaultOutput(configuration.statementGenerator(), query, qb, null, false);
-                String sql = generator.toSql();
+                String sql = output.toSql();
                 int result;
                 try (Connection connection = configuration.connectionProvider().getConnection()) {
                     StatementListener listener = configuration.statementListener();
@@ -76,6 +75,6 @@ class EntityUpdateOperation<E> extends UpdateOperation {
                 }
                 return result;
             }
-        }, configuration.writeExecutor());
+        };
     }
 }

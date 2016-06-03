@@ -479,7 +479,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             for (Attribute<E, ?> attribute : attributes) {
                 element.value((Expression) attribute, proxy.get(attribute, false));
             }
-            int rows = upsert.execute(element).value();
+            int rows = upsert.evaluate(element).value();
             if (rows <= 0) {
                 throw new RowCountException(1, rows);
             }

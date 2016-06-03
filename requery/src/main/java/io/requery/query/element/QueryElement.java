@@ -312,7 +312,7 @@ public class QueryElement<E> implements Selectable<E>,
 
     @Override
     public E get() {
-        return operator.execute(parent == null ? this : parent);
+        return operator.evaluate(parent == null ? this : parent);
     }
 
     @Override

@@ -53,7 +53,7 @@ class BatchUpdateOperation<E> extends PreparedQueryOperation implements QueryOpe
     }
 
     @Override
-    public int[] execute(QueryElement<int[]> query) {
+    public int[] evaluate(QueryElement<int[]> query) {
         int[] result = batchInStatement ? null : new int[length];
 
         try (Connection connection = configuration.connectionProvider().getConnection()) {

@@ -89,7 +89,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     private final UpdateOperation updateOperation;
     private final SelectCountOperation countOperation;
     private final Executor writeExecutor;
-    private final Supplier<EntityProxyTransaction> transactionProvider;
+    private final TransactionProvider transactionProvider;
     private final TransactionIsolation defaultIsolation;
     private final Set<Supplier<TransactionListener>> transactionListenerFactories;
     private final int batchUpdateSize;
@@ -566,7 +566,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                 throw new ReadOnlyException();
             }
             if (forUpdate) {
-                EntityProxyTransaction transaction = transactionProvider.get();
+                EntityTransaction transaction = transactionProvider.get();
                 if (transaction != null && transaction.active()) {
                     transaction.addToTransaction(proxy);
                 }
@@ -689,6 +689,11 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         @Override
         public Set<Supplier<TransactionListener>> transactionListenerFactories() {
             return transactionListenerFactories;
+        }
+
+        @Override
+        public TransactionProvider transactionProvider() {
+            return transactionProvider;
         }
 
         @Override

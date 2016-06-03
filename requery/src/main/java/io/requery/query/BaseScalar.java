@@ -17,7 +17,6 @@
 package io.requery.query;
 
 import io.requery.rx.RxSupport;
-import io.requery.util.Objects;
 import io.requery.util.function.Consumer;
 import io.requery.util.function.Supplier;
 
@@ -31,25 +30,23 @@ import java.util.concurrent.Executor;
  *
  * @param <E> type of scalar value
  */
-public class SuppliedScalar<E> implements Scalar<E> {
+public abstract class BaseScalar<E> implements Scalar<E> {
 
-    private final Supplier<E> supplier;
     private final Executor executor;
     private boolean computed;
     private E value;
 
-    public SuppliedScalar(Supplier<E> supplier, Executor executor) {
-        this.supplier = Objects.requireNotNull(supplier);
+    public BaseScalar(Executor executor) {
         this.executor = executor; // can be null
     }
 
+    protected abstract E evaluate();
+
     @Override
-    public E value() {
-        synchronized (supplier) {
-            if (!computed) {
-                computed = true;
-                value = supplier.get();
-            }
+    public synchronized E value() {
+        if (!computed) {
+            computed = true;
+            value = evaluate();
         }
         return value;
     }
@@ -70,7 +67,7 @@ public class SuppliedScalar<E> implements Scalar<E> {
             new java.util.function.Supplier<E>() {
                 @Override
                 public E get() {
-                    return SuppliedScalar.this.value();
+                    return BaseScalar.this.value();
                 }
             };
         return executor == null ?

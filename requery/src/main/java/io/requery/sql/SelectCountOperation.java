@@ -16,13 +16,12 @@
 
 package io.requery.sql;
 
-import io.requery.query.Tuple;
 import io.requery.query.Result;
 import io.requery.query.Scalar;
-import io.requery.query.SuppliedScalar;
+import io.requery.query.BaseScalar;
+import io.requery.query.Tuple;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryOperation;
-import io.requery.util.function.Supplier;
 
 class SelectCountOperation implements QueryOperation<Scalar<Integer>> {
 
@@ -35,14 +34,14 @@ class SelectCountOperation implements QueryOperation<Scalar<Integer>> {
     }
 
     @Override
-    public Scalar<Integer> execute(final QueryElement<Scalar<Integer>> query) {
-        return new SuppliedScalar<>(new Supplier<Integer>() {
+    public Scalar<Integer> evaluate(final QueryElement<Scalar<Integer>> query) {
+        return new BaseScalar<Integer>(configuration.writeExecutor()) {
             @Override
-            public Integer get() {
+            public Integer evaluate() {
                 try (Result<Tuple> result = new SelectResult<>(configuration, query, reader)) {
                     return result.first().get(0);
                 }
             }
-        }, configuration.writeExecutor());
+        };
     }
 }

@@ -16,7 +16,7 @@
 
 package io.requery;
 
-import io.requery.proxy.EntityProxy;
+import io.requery.meta.Type;
 
 import java.util.Set;
 
@@ -42,28 +42,28 @@ public interface TransactionListener {
     /**
      * Invoked before the transaction is committed.
      *
-     * @param entities collection of entities involved in the transaction
+     * @param entities collection of entity types involved in the transaction
      */
-    void beforeCommit(Set<EntityProxy<?>> entities);
+    void beforeCommit(Set<Type<?>> entities);
 
     /**
      * Invoked after the transaction is committed successfully.
      *
-     * @param entities collection of entities involved in the transaction
+     * @param types collection of entity types involved in the transaction
      */
-    void afterCommit(Set<EntityProxy<?>> entities);
+    void afterCommit(Set<Type<?>> types);
 
     /**
      * Invoked before the transaction is rolled back.
      *
-     * @param entities collection of entities involved in the transaction
+     * @param types collection of entity types involved in the transaction
      */
-    void beforeRollback(Set<EntityProxy<?>> entities);
+    void beforeRollback(Set<Type<?>> types);
 
     /**
      * Invoked after the transaction is rolled back successfully.
      *
-     * @param entities collection of entities involved in the transaction
+     * @param types collection of entity types involved in the transaction
      */
-    void afterRollback(Set<EntityProxy<?>> entities);
+    void afterRollback(Set<Type<?>> types);
 }

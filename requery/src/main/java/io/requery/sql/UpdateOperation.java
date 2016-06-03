@@ -16,17 +16,17 @@
 
 package io.requery.sql;
 
+import io.requery.meta.Type;
+import io.requery.query.BaseScalar;
 import io.requery.query.Scalar;
-import io.requery.query.SuppliedScalar;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryOperation;
 import io.requery.sql.gen.DefaultOutput;
-import io.requery.util.function.Supplier;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.Set;
 
 /**
  * Executes a single update operation.
@@ -44,37 +44,32 @@ class UpdateOperation extends PreparedQueryOperation implements QueryOperation<S
     }
 
     @Override
-    public Scalar<Integer> execute(final QueryElement<Scalar<Integer>> query) {
-        return new SuppliedScalar<>(new Supplier<Integer>() {
+    public Scalar<Integer> evaluate(final QueryElement<Scalar<Integer>> query) {
+        return new BaseScalar<Integer>(configuration.writeExecutor()) {
             @Override
-            public Integer get() {
-                DefaultOutput generator = new DefaultOutput(configuration, query);
-                String sql = generator.toSql();
-                BoundParameters parameters = generator.parameters();
+            public Integer evaluate() {
+                DefaultOutput output = new DefaultOutput(configuration, query);
+                String sql = output.toSql();
                 int result;
-                try (Connection connection = configuration.connectionProvider().getConnection()) {
+                TransactionProvider transactionProvider = configuration.transactionProvider();
+                Set<Type<?>> types = query.entityTypes();
+                try (TransactionScope scope = new TransactionScope(transactionProvider, types);
+                     Connection connection = configuration.connectionProvider().getConnection()) {
                     StatementListener listener = configuration.statementListener();
-                    if (parameters.isEmpty()) {
-                        try (Statement statement = connection.createStatement()) {
-                            listener.beforeExecuteUpdate(statement, sql, null);
-                            result = statement.executeUpdate(sql);
-                            listener.afterExecuteUpdate(statement);
-                            readGeneratedKeys(0, statement);
-                        }
-                    } else {
-                        try (PreparedStatement statement = prepare(sql, connection)) {
-                            mapParameters(statement, parameters);
-                            listener.beforeExecuteUpdate(statement, sql, parameters);
-                            result = statement.executeUpdate();
-                            listener.afterExecuteUpdate(statement);
-                            readGeneratedKeys(0, statement);
-                        }
+                    try (PreparedStatement statement = prepare(sql, connection)) {
+                        BoundParameters parameters = output.parameters();
+                        mapParameters(statement, parameters);
+                        listener.beforeExecuteUpdate(statement, sql, parameters);
+                        result = statement.executeUpdate();
+                        listener.afterExecuteUpdate(statement);
+                        readGeneratedKeys(0, statement);
                     }
+                    scope.commit();
                 } catch (SQLException e) {
                     throw new StatementExecutionException(e, sql);
                 }
                 return result;
             }
-        }, configuration.writeExecutor());
+        };
     }
 }

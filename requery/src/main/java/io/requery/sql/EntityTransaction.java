@@ -17,15 +17,14 @@
 package io.requery.sql;
 
 import io.requery.Transaction;
+import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
 
-interface EntityProxyTransaction extends Transaction {
+import java.util.Collection;
 
-    /**
-     * Adds the given proxy instance as being part of the transaction.
-     *
-     * @param proxy involved in the transaction
-     */
+interface EntityTransaction extends Transaction {
+
+    void addToTransaction(Collection<Type<?>> types);
+
     void addToTransaction(EntityProxy<?> proxy);
-
 }
