@@ -21,6 +21,7 @@ import io.requery.query.BaseResult;
 import io.requery.query.Expression;
 import io.requery.query.NamedExpression;
 import io.requery.query.Result;
+import io.requery.query.MutableTuple;
 import io.requery.query.Tuple;
 import io.requery.query.element.QueryType;
 import io.requery.util.CloseableIterator;
@@ -88,7 +89,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                     listener.beforeExecuteUpdate(statement, sql, boundParameters);
                     int count = statement.executeUpdate();
                     listener.afterExecuteUpdate(statement);
-                    ResultTuple tuple = new ResultTuple(1);
+                    MutableTuple tuple = new MutableTuple(1);
                     tuple.set(0, NamedExpression.ofInteger("count"), count);
                     try {
                         statement.close();
@@ -118,7 +119,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
         public Tuple read(ResultSet results, Set<? extends Expression<?>> selection)
             throws SQLException {
             Mapping mapping = configuration.mapping();
-            ResultTuple tuple = new ResultTuple(expressions.length);
+            MutableTuple tuple = new MutableTuple(expressions.length);
             for (int i = 0; i < tuple.count(); i++) {
                 Object value = mapping.read(expressions[i], results, i + 1);
                 tuple.set(i, expressions[i], value);

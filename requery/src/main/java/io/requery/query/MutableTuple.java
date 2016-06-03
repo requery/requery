@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package io.requery.sql;
+package io.requery.query;
 
-import io.requery.query.Aliasable;
-import io.requery.query.Expression;
-import io.requery.query.Tuple;
-
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * Implementation of a tuple created from a query.
  *
  * @author Nikhil Purushe
  */
-class ResultTuple implements Tuple {
+public class MutableTuple implements Tuple, Serializable {
 
     private static final Map<Class<?>, Class<?>> boxedTypes = new HashMap<>();
     static {
@@ -45,14 +41,14 @@ class ResultTuple implements Tuple {
         boxedTypes.put(byte.class, Byte.class);
     }
 
-    private final Map<String, Object> keyMap;
+    private final Map<String, Object> map;
     private final Object[] values;
 
-    ResultTuple(int size) {
+    public MutableTuple(int size) {
         if (size <= 0) {
             throw new IllegalStateException();
         }
-        keyMap = new HashMap<>(size);
+        map = new HashMap<>(size);
         values = new Object[size];
     }
 
@@ -67,16 +63,16 @@ class ResultTuple implements Tuple {
         return key == null ? null : key.toLowerCase(Locale.ROOT);
     }
 
-    void set(int index, Expression<?> expression, Object value) {
-        keyMap.put(keyOf(expression), value);
+    public void set(int index, Expression<?> expression, Object value) {
+        map.put(keyOf(expression), value);
         values[index] = value;
     }
 
     @Override
     public <V> V get(Expression<V> key) {
-        Object value = keyMap.get(keyOf(key));
+        Object value = map.get(keyOf(key));
         if (value == null) {
-            throw new NoSuchElementException();
+            return null;
         }
         Class<V> type = key.classType();
         if (type.isPrimitive()) {
@@ -96,7 +92,7 @@ class ResultTuple implements Tuple {
     @SuppressWarnings("unchecked")
     @Override
     public <V> V get(String key) {
-        return (V) keyMap.get(key.toLowerCase(Locale.ROOT));
+        return (V) map.get(key.toLowerCase(Locale.ROOT));
     }
 
     @Override
@@ -111,8 +107,8 @@ class ResultTuple implements Tuple {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof ResultTuple) {
-            ResultTuple other = (ResultTuple) obj;
+        if (obj instanceof MutableTuple) {
+            MutableTuple other = (MutableTuple) obj;
             return Arrays.equals(values, other.values);
         }
         return false;
@@ -123,7 +119,7 @@ class ResultTuple implements Tuple {
         StringBuilder sb = new StringBuilder();
         int index = 0;
         sb.append(" [ ");
-        for (Map.Entry<String, Object> entry : keyMap.entrySet()) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
             if (index > 0) {
                 sb.append(", ");
             }

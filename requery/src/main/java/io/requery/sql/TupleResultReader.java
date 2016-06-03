@@ -16,6 +16,7 @@
 
 package io.requery.sql;
 
+import io.requery.query.MutableTuple;
 import io.requery.query.Tuple;
 import io.requery.query.Expression;
 import io.requery.util.Objects;
@@ -35,7 +36,7 @@ class TupleResultReader implements ResultReader<Tuple> {
     @Override
     public Tuple read(ResultSet results, Set<? extends Expression<?>> selection)
         throws SQLException {
-        ResultTuple tuple = new ResultTuple(selection.size());
+        MutableTuple tuple = new MutableTuple(selection.size());
         int index = 1;
         Mapping mapping = configuration.mapping();
         for (Expression<?> expression : selection) {

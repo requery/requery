@@ -20,6 +20,7 @@ import io.requery.PersistenceException;
 import io.requery.query.Expression;
 import io.requery.query.NamedExpression;
 import io.requery.query.Result;
+import io.requery.query.MutableTuple;
 import io.requery.query.Tuple;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryOperation;
@@ -80,7 +81,7 @@ class InsertReturningOperation extends PreparedQueryOperation implements
             listener.afterExecuteUpdate(statement);
             if (selection == null || selection.isEmpty()) {
                 connection.close();
-                ResultTuple tuple = new ResultTuple(1);
+                MutableTuple tuple = new MutableTuple(1);
                 tuple.set(0, NamedExpression.ofInteger("count"), count);
                 return new SingleResult<Tuple>(tuple);
             } else {
