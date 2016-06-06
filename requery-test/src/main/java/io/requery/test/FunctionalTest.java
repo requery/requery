@@ -259,6 +259,18 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testFindByKeyDelete() {
+        Person person = randomPerson();
+        data.insert(person);
+        assertTrue(person.getId() > 0);
+        Person other = data.findByKey(Person.class, person.getId());
+        assertSame(person, other);
+        data.delete(other);
+        other = data.findByKey(Person.class, person.getId());
+        assertNull(other);
+    }
+
+    @Test
     public void testTransactionRollback() {
         ArrayList<Integer> ids = new ArrayList<>();
         try (Transaction transaction = data.transaction().begin()) {
