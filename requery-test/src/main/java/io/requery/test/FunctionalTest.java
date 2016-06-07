@@ -261,13 +261,32 @@ public abstract class FunctionalTest extends RandomData {
     @Test
     public void testFindByKeyDelete() {
         Person person = randomPerson();
+        Address address = randomAddress();
+        person.setAddress(address);
         data.insert(person);
-        assertTrue(person.getId() > 0);
+        assertTrue(address.getId() > 0);
+
         Person other = data.findByKey(Person.class, person.getId());
         assertSame(person, other);
         data.delete(other);
+
         other = data.findByKey(Person.class, person.getId());
         assertNull(other);
+        Address cached = data.findByKey(Address.class, address.getId());
+        assertNull(cached);
+    }
+
+    @Test
+    public void testFindByKeyDeleteInverse() {
+        Person person = randomPerson();
+        Address address = randomAddress();
+        person.setAddress(address);
+        data.insert(person);
+        data.delete(address);
+        person = data.findByKey(Person.class, person.getId());
+        assertNull(person);
+        Address cached = data.findByKey(Address.class, address.getId());
+        assertNull(cached);
     }
 
     @Test

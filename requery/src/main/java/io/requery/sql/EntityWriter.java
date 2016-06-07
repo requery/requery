@@ -20,6 +20,7 @@ import io.requery.CascadeAction;
 import io.requery.EntityCache;
 import io.requery.PersistenceException;
 import io.requery.Queryable;
+import io.requery.ReferentialAction;
 import io.requery.meta.Attribute;
 import io.requery.meta.Cardinality;
 import io.requery.meta.EntityModel;
@@ -776,11 +777,17 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
     public void delete(E entity, EntityProxy<E> proxy) {
         context.stateListener().preDelete(entity, proxy);
+        proxy.unlink();
         if (cacheable) {
             cache.invalidate(entityClass, proxy.key());
         }
-        clearAssociations(entity, proxy);
-
+        // if cascade delete and the property is not loaded (load it)
+        for (Attribute<E, ?> attribute : associativeAttributes) {
+            boolean delete = attribute.cascadeActions().contains(CascadeAction.DELETE);
+            if (delete && (stateless || proxy.getState(attribute) == PropertyState.FETCH)) {
+                context.read(type.classType()).refresh(entity, proxy, attribute);
+            }
+        }
         Deletion<Scalar<Integer>> deletion = queryable.delete(entityClass);
         for (Attribute<E, ?> attribute : type.keyAttributes()) {
             QueryAttribute<E, Object> id = Attributes.query(attribute);
@@ -793,24 +800,25 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             addVersionCondition(deletion, version);
         }
-        checkRowsAffected(deletion.get().value(), entity, proxy);
-        proxy.unlink();
+        int rows = deletion.get().value();
+        boolean cascaded = clearAssociations(entity, proxy);
+        if (!cascaded) {
+            checkRowsAffected(rows, entity, proxy);
+        }
         context.stateListener().postDelete(entity, proxy);
     }
 
-    private void clearAssociations(E entity, EntityProxy<E> proxy) {
-        for (Attribute<E, ?> attribute : type.attributes()) {
-            if (!attribute.isAssociation()) {
-                continue;
-            }
-            Object value = proxy.get(attribute, false);
+    private boolean clearAssociations(E entity, EntityProxy<E> proxy) {
+        // if deleting any foreign key reference would cascade to this entity then marked true
+        boolean cascade = false;
+        for (Attribute<E, ?> attribute : associativeAttributes) {
             boolean delete = attribute.cascadeActions().contains(CascadeAction.DELETE);
-
-            // if cascade delete and the property is not loaded (load it)
-            if (delete && (stateless || proxy.getState(attribute) == PropertyState.FETCH)) {
-                context.read(type.classType()).refresh(entity, proxy, attribute);
-            }
+            Object value = proxy.get(attribute, false);
+            proxy.set(attribute, null, PropertyState.LOADED);
             if (value != null) {
+                if (attribute.isForeignKey() && attribute.deleteAction() == ReferentialAction.CASCADE) {
+                    cascade = true;
+                }
                 switch (attribute.cardinality()) {
                     case ONE_TO_ONE:
                     case MANY_TO_ONE:
@@ -836,8 +844,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         break;
                 }
             }
-            proxy.set(attribute, null, PropertyState.LOADED);
         }
+        return cascade;
     }
 
     void batchDelete(Iterable<E> entities) {
@@ -856,15 +864,16 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     delete(entity, proxy);
                 } else {
                     context.stateListener().preDelete(entity, proxy);
-                    clearAssociations(entity, proxy);
+                    boolean cascaded = clearAssociations(entity, proxy);
 
                     Object key = proxy.key();
                     if (cacheable) {
                         cache.invalidate(entityClass, key);
                     }
-                    ids.add(key);
+                    if (!cascaded) {
+                        ids.add(key);
+                    }
                     proxy.unlink();
-
                     context.stateListener().postDelete(entity, proxy);
                 }
             }
@@ -875,9 +884,9 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     QueryAttribute<E, Object> id = Attributes.query(attribute);
                     deletion.where(id.in(ids));
                 }
-                int rowsAffected = deletion.get().value();
-                if (rowsAffected != ids.size()) {
-                    throw new RowCountException(ids.size(), rowsAffected);
+                int rows = deletion.get().value();
+                if (rows != ids.size()) {
+                    throw new RowCountException(ids.size(), rows);
                 }
             }
         }
@@ -922,7 +931,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         EntityProxy<U> proxy = context.proxyOf(element, false);
         if (proxy != null) {
             EntityWriter<U, S> writer = context.write(proxy.type().classType());
-            if (delete) {
+            if (delete && proxy.isLinked()) {
                 writer.delete(element, proxy);
             } else {
                 writer.removeEntity(proxy, entity);
@@ -944,7 +953,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         return false;
     }
 
-    private void removeEntity(EntityProxy<E> proxy, Object entity) {
+    private void removeEntity(EntityProxy<E> proxy, S entity) {
         for (Attribute<E, ?> attribute : associativeAttributes) {
             Object value = proxy.get(attribute, false);
             switch (attribute.cardinality()) {

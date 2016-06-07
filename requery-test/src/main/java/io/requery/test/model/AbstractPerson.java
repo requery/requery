@@ -46,7 +46,7 @@ public class AbstractPerson implements Serializable {
     protected int age;
 
     @ForeignKey
-    @OneToOne
+    @OneToOne(cascade = {CascadeAction.DELETE, CascadeAction.SAVE})
     protected Address address;
 
     @OneToMany(mappedBy = "owner", cascade =
