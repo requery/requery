@@ -73,15 +73,15 @@ public class SerializableEntityCache implements EntityCache {
         }
         if (ids.size() == 1) {
             keyClass = ids.iterator().next().classType();
+            if (keyClass.isPrimitive()) {
+                if (keyClass == int.class) {
+                    keyClass = Integer.class;
+                } else if (keyClass == long.class) {
+                    keyClass = Long.class;
+                }
+            }
         } else {
             keyClass = CompositeKey.class;
-        }
-        if (keyClass.isPrimitive()) {
-            if (keyClass == int.class) {
-                keyClass = Integer.class;
-            } else if (keyClass == long.class) {
-                keyClass = Long.class;
-            }
         }
         return keyClass;
     }
