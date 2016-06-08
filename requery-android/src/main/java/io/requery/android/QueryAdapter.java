@@ -71,7 +71,7 @@ public abstract class QueryAdapter<E> extends BaseAdapter implements Closeable {
      * @param type entity class type
      */
     protected QueryAdapter(Type<E> type) {
-        proxyProvider = type.proxyProvider();
+        proxyProvider = type.getProxyProvider();
         handler = new Handler();
     }
 

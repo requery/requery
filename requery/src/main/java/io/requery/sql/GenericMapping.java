@@ -216,12 +216,12 @@ public class GenericMapping implements Mapping {
         if (fieldType != null) {
             return fieldType;
         }
-        Class<?> type = attribute.classType();
-        if (attribute.isAssociation() && attribute.referencedAttribute() != null) {
-            type = attribute.referencedAttribute().get().classType();
+        Class<?> type = attribute.getClassType();
+        if (attribute.isAssociation() && attribute.getReferencedAttribute() != null) {
+            type = attribute.getReferencedAttribute().get().getClassType();
         }
-        if (attribute.converter() != null) {
-            Converter<?, ?> converter = attribute.converter();
+        if (attribute.getConverter() != null) {
+            Converter<?, ?> converter = attribute.getConverter();
             type = converter.persistedType();
         }
         fieldType = getSubstitutedType(type);
@@ -260,14 +260,14 @@ public class GenericMapping implements Mapping {
         Class<A> type;
         Converter<?, ?> converter = null;
         FieldType fieldType;
-        if (expression.type() == ExpressionType.ATTRIBUTE) {
+        if (expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
             @SuppressWarnings("unchecked")
             Attribute<?, A> attribute = (Attribute) expression;
-            converter = attribute.converter();
-            type = attribute.classType();
+            converter = attribute.getConverter();
+            type = attribute.getClassType();
             fieldType = mapAttribute(attribute);
         } else {
-            type = expression.classType();
+            type = expression.getClassType();
             fieldType = getSubstitutedType(type);
         }
         boolean isPrimitive = type.isPrimitive();
@@ -330,15 +330,15 @@ public class GenericMapping implements Mapping {
         Class<?> type;
         Converter converter = null;
         FieldType fieldType;
-        if (expression.type() == ExpressionType.ATTRIBUTE) {
+        if (expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
             Attribute<?, A> attribute = (Attribute) expression;
-            converter = attribute.converter();
+            converter = attribute.getConverter();
             fieldType = mapAttribute(attribute);
             type = attribute.isAssociation() ?
-                    attribute.referencedAttribute().get().classType() :
-                    attribute.classType();
+                    attribute.getReferencedAttribute().get().getClassType() :
+                    attribute.getClassType();
         } else {
-            type = expression.classType();
+            type = expression.getClassType();
             fieldType = getSubstitutedType(type);
         }
         if (converter == null && !type.isPrimitive()) {

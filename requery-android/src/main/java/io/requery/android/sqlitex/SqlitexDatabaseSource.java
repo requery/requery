@@ -82,8 +82,8 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
     }
 
     private static String getDefaultDatabaseName(Context context, EntityModel model) {
-        return TextUtils.isEmpty(model.name()) ?
-            context.getPackageName() : model.name();
+        return TextUtils.isEmpty(model.getName()) ?
+            context.getPackageName() : model.getName();
     }
 
     @Override

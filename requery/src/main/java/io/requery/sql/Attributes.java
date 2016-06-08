@@ -35,7 +35,7 @@ final class Attributes {
     }
 
     static <E, V> QueryAttribute<E, V> get(Supplier supplier) {
-        return (QueryAttribute<E, V>) supplier.get();
+        return query((Attribute) supplier.get());
     }
 
     static <E> Attribute<E, ?>[] newArray(int size) {
@@ -56,8 +56,9 @@ final class Attributes {
 
     static Object replaceKeyReference(Object value, Attribute attribute) {
         if (value != null) {
-            Attribute<Object, Object> referenced = get(attribute.referencedAttribute());
-            value = referenced.declaringType().proxyProvider().apply(value).get(referenced, false);
+            Attribute<Object, Object> referenced = get(attribute.getReferencedAttribute());
+            value = referenced.getDeclaringType()
+                    .getProxyProvider().apply(value).get(referenced, false);
         }
         return value;
     }

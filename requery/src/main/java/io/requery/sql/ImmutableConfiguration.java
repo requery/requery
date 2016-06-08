@@ -78,77 +78,77 @@ final class ImmutableConfiguration implements Configuration {
     }
 
     @Override
-    public ConnectionProvider connectionProvider() {
+    public ConnectionProvider getConnectionProvider() {
         return connectionProvider;
     }
 
     @Override
-    public Platform platform() {
+    public Platform getPlatform() {
         return platform;
     }
 
     @Override
-    public EntityModel entityModel() {
+    public EntityModel getModel() {
         return model;
     }
 
     @Override
-    public EntityCache entityCache() {
+    public EntityCache getCache() {
         return cache;
     }
 
     @Override
-    public Mapping mapping() {
+    public Mapping getMapping() {
         return mapping;
     }
 
     @Override
-    public boolean useDefaultLogging() {
+    public boolean getUseDefaultLogging() {
         return useDefaultLogging;
     }
 
     @Override
-    public int statementCacheSize() {
+    public int getStatementCacheSize() {
         return statementCacheSize;
     }
 
     @Override
-    public int batchUpdateSize() {
+    public int getBatchUpdateSize() {
         return batchUpdateSize;
     }
 
     @Override
-    public boolean quoteTableNames() {
+    public boolean getQuoteTableNames() {
         return quoteTableNames;
     }
 
     @Override
-    public boolean quoteColumnNames() {
+    public boolean getQuoteColumnNames() {
         return quoteColumnNames;
     }
 
     @Override
-    public Set<StatementListener> statementListeners() {
+    public Set<StatementListener> getStatementListeners() {
         return statementListeners;
     }
 
     @Override
-    public TransactionIsolation transactionIsolation() {
+    public TransactionIsolation getTransactionIsolation() {
         return transactionIsolation;
     }
 
     @Override
-    public Set<Supplier<TransactionListener>> transactionListenerFactories() {
+    public Set<Supplier<TransactionListener>> getTransactionListenerFactories() {
         return transactionListenerFactories;
     }
 
     @Override
-    public TransactionMode transactionMode() {
+    public TransactionMode getTransactionMode() {
         return transactionMode;
     }
 
     @Override
-    public Executor writeExecutor() {
+    public Executor getWriteExecutor() {
         return writeExecutor;
     }
 

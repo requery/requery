@@ -80,7 +80,7 @@ public class HavingConditionElement<E> extends BaseLogicalElement<HavingConditio
     }
 
     @Override
-    public String aliasName() {
-        return query.aliasName();
+    public String getAlias() {
+        return query.getAlias();
     }
 }

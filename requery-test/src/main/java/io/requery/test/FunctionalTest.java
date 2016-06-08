@@ -322,16 +322,16 @@ public abstract class FunctionalTest extends RandomData {
         Calendar calendar = Calendar.getInstance();
         calendar.set(1983, Calendar.NOVEMBER, 11);
         person.setBirthday(calendar.getTime());
-        EntityProxy<Person> proxy = Person.$TYPE.proxyProvider().apply(person);
+        EntityProxy<Person> proxy = Person.$TYPE.getProxyProvider().apply(person);
         int count = 0;
-        for (Attribute<Person, ?>  ignored : Person.$TYPE.attributes()) {
+        for (Attribute<Person, ?>  ignored : Person.$TYPE.getAttributes()) {
             if (proxy.getState(ignored) == PropertyState.MODIFIED) {
                 count++;
             }
         }
         assertEquals(2, count);
         data.update(person);
-        for (Attribute<Person, ?> ignored : Person.$TYPE.attributes()) {
+        for (Attribute<Person, ?> ignored : Person.$TYPE.getAttributes()) {
             if (proxy.getState(ignored) == PropertyState.MODIFIED) {
                 fail();
             }

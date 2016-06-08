@@ -103,9 +103,9 @@ public class DefaultOutput implements Output {
                 appendFromExpression(first);
             } else {
                 if (autoAlias) {
-                    aliases.append(qb, first.name());
+                    aliases.append(qb, first.getName());
                 } else {
-                    qb.tableName(first.name());
+                    qb.tableName(first.getName());
                 }
             }
         } else if (from.size() > 1) {
@@ -132,9 +132,9 @@ public class DefaultOutput implements Output {
     }
 
     private void appendFromExpression(Expression expression) {
-        if (expression.type() == ExpressionType.QUERY) {
+        if (expression.getExpressionType() == ExpressionType.QUERY) {
             QueryWrapper wrapper = (QueryWrapper) expression;
-            String alias = wrapper.unwrapQuery().aliasName();
+            String alias = wrapper.unwrapQuery().getAlias();
             if (alias == null) {
                 throw new IllegalStateException(
                     "query in 'from' expression must have an alias");
@@ -144,12 +144,12 @@ public class DefaultOutput implements Output {
             qb.closeParenthesis().space();
             qb.append(alias).space();
         } else {
-            qb.append(expression.name());
+            qb.append(expression.getName());
         }
     }
 
     private static Expression<?> unwrapExpression(Expression<?> expression) {
-        if (expression.type() == ExpressionType.ALIAS) {
+        if (expression.getExpressionType() == ExpressionType.ALIAS) {
             AliasedExpression aliased = (AliasedExpression) expression;
             return aliased.innerExpression();
         }
@@ -160,7 +160,7 @@ public class DefaultOutput implements Output {
         String alias = null;
         if (expression instanceof Aliasable) {
             Aliasable aliasable = (Aliasable) expression;
-            alias = aliasable.aliasName();
+            alias = aliasable.getAlias();
         }
         return alias;
     }
@@ -202,13 +202,13 @@ public class DefaultOutput implements Output {
     }
 
     private void appendColumnExpression(Expression expression) {
-        switch (expression.type()) {
+        switch (expression.getExpressionType()) {
             case ATTRIBUTE:
                 Attribute attribute = (Attribute) expression;
                 qb.attribute(attribute);
                 break;
             default:
-                qb.append(expression.name()).space();
+                qb.append(expression.getName()).space();
                 break;
         }
     }
@@ -217,7 +217,7 @@ public class DefaultOutput implements Output {
         if (function instanceof Case) {
             appendCaseFunction((Case) function);
         } else {
-            String name = function.name();
+            String name = function.getName();
             qb.append(name);
             qb.openParenthesis();
             int index = 0;
@@ -227,7 +227,7 @@ public class DefaultOutput implements Output {
                 }
                 if (arg instanceof Expression) {
                     Expression expression = (Expression) arg;
-                    switch (expression.type()) {
+                    switch (expression.getExpressionType()) {
                         case ATTRIBUTE:
                             appendColumnForSelect(expression);
                             break;
@@ -236,7 +236,7 @@ public class DefaultOutput implements Output {
                             appendFunction(inner);
                             break;
                         default:
-                            qb.append(expression.name());
+                            qb.append(expression.getName());
                             break;
                     }
                 } else if (arg instanceof Class) {
@@ -293,8 +293,8 @@ public class DefaultOutput implements Output {
             qb.openParenthesis();
             appendQuery((QueryWrapper<?>) join.subQuery());
             qb.closeParenthesis().space();
-            if (join.subQuery().aliasName() != null) {
-                qb.append(join.subQuery().aliasName()).space();
+            if (join.subQuery().getAlias() != null) {
+                qb.append(join.subQuery().getAlias()).space();
             }
         }
         qb.keyword(ON);
@@ -304,12 +304,12 @@ public class DefaultOutput implements Output {
     }
 
     private void appendOperation(Condition condition) {
-        Object leftOperand = condition.leftOperand();
+        Object leftOperand = condition.getLeftOperand();
         if (leftOperand instanceof Expression) {
-            final Expression<?> expression = (Expression<?>) condition.leftOperand();
+            final Expression<?> expression = (Expression<?>) condition.getLeftOperand();
             appendColumn(expression);
-            Object value = condition.rightOperand();
-            appendOperator(condition.operator());
+            Object value = condition.getRightOperand();
+            appendOperator(condition.getOperator());
 
             if (value instanceof Collection) {
                 Collection collection = (Collection) value;
@@ -323,7 +323,7 @@ public class DefaultOutput implements Output {
                 qb.closeParenthesis();
             } else if (value instanceof Object[]) {
                 Object[] values = (Object[]) value;
-                if (condition.operator() == Operator.BETWEEN) {
+                if (condition.getOperator() == Operator.BETWEEN) {
                     Object begin = values[0];
                     Object end = values[1];
                     appendConditionValue(expression, begin);
@@ -346,8 +346,8 @@ public class DefaultOutput implements Output {
             }
         } else if(leftOperand instanceof Condition) {
             appendOperation((Condition) leftOperand);
-            appendOperator(condition.operator());
-            Object value = condition.rightOperand();
+            appendOperator(condition.getOperator());
+            Object value = condition.getRightOperand();
             if (value instanceof Condition) {
                 appendOperation((Condition) value);
             } else {
@@ -369,7 +369,7 @@ public class DefaultOutput implements Output {
             appendColumn(a);
         } else if (value instanceof NamedExpression) {
             NamedExpression namedExpression = (NamedExpression) value;
-            qb.append(namedExpression.name());
+            qb.append(namedExpression.getName());
         } else {
             if (parameterize) {
                 if (parameters != null) {
@@ -401,7 +401,7 @@ public class DefaultOutput implements Output {
         }
         Condition condition = element.getCondition();
         boolean nested = false;
-        if (condition.rightOperand() instanceof Condition) {
+        if (condition.getRightOperand() instanceof Condition) {
             nested = true;
         }
         if (nested) {
@@ -499,20 +499,20 @@ public class DefaultOutput implements Output {
         }
 
         void prefix(QueryBuilder qb, Attribute attribute) {
-            String key = attribute.declaringType().name();
+            String key = attribute.getDeclaringType().getName();
             String alias = alias(key);
             qb.append(alias + ".").attribute(attribute);
         }
 
         void prefix(QueryBuilder qb, Expression expression) {
             Expression inner = unwrapExpression(expression);
-            String key = inner.name();
-            if(inner.type() == ExpressionType.ATTRIBUTE) {
+            String key = inner.getName();
+            if(inner.getExpressionType() == ExpressionType.ATTRIBUTE) {
                 Attribute attribute = (Attribute) inner;
-                key = attribute.declaringType().name();
+                key = attribute.getDeclaringType().getName();
             }
             String alias = alias(key);
-            qb.append(alias + "." + expression.name()).space();
+            qb.append(alias + "." + expression.getName()).space();
         }
     }
 }

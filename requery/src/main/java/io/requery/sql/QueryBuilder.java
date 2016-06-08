@@ -118,24 +118,24 @@ public class QueryBuilder implements CharSequence {
     public QueryBuilder tableNames(Iterable<Expression<?>> values) {
         Set<Type<?>> types = new LinkedHashSet<>();
         for (Expression<?> expression : values) {
-            if (expression.type() == ExpressionType.ATTRIBUTE) {
+            if (expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
                 Attribute attribute = (Attribute) expression;
-                types.add(attribute.declaringType());
+                types.add(attribute.getDeclaringType());
             }
         }
         return commaSeparated(types, new Appender<Type<?>>() {
             @Override
             public void append(QueryBuilder qb, Type<?> value) {
-                tableName(value.name());
+                tableName(value.getName());
             }
         });
     }
 
     public QueryBuilder attribute(Attribute value) {
         if(options.quoteColumnNames) {
-            appendIdentifier(value.name(), options.quotedIdentifier);
+            appendIdentifier(value.getName(), options.quotedIdentifier);
         } else {
-            append(value.name());
+            append(value.getName());
         }
         return space();
     }
@@ -193,12 +193,12 @@ public class QueryBuilder implements CharSequence {
         return commaSeparated(values, new QueryBuilder.Appender<Expression<?>>() {
             @Override
             public void append(QueryBuilder qb, Expression<?> value) {
-                switch (value.type()) {
+                switch (value.getExpressionType()) {
                     case ATTRIBUTE:
                         qb.attribute((Attribute) value);
                         break;
                     default:
-                        qb.append(value.name()).space();
+                        qb.append(value.getName()).space();
                         break;
                 }
             }

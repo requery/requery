@@ -140,23 +140,23 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         closed = new AtomicBoolean();
         readers = new ClassMap<>();
         writers = new ClassMap<>();
-        entityModel = Objects.requireNotNull(configuration.entityModel());
-        connectionProvider = Objects.requireNotNull(configuration.connectionProvider());
-        mapping = configuration.mapping();
-        platform = configuration.platform();
-        transactionMode = configuration.transactionMode();
-        writeExecutor = configuration.writeExecutor();
-        quoteColumnNames = configuration.quoteColumnNames();
-        quoteTableNames = configuration.quoteTableNames();
-        batchUpdateSize = configuration.batchUpdateSize();
-        defaultIsolation = configuration.transactionIsolation();
-        transactionListenerFactories = configuration.transactionListenerFactories();
-        statementListeners = new CompositeStatementListener(configuration.statementListeners());
+        entityModel = Objects.requireNotNull(configuration.getModel());
+        connectionProvider = Objects.requireNotNull(configuration.getConnectionProvider());
+        mapping = configuration.getMapping();
+        platform = configuration.getPlatform();
+        transactionMode = configuration.getTransactionMode();
+        writeExecutor = configuration.getWriteExecutor();
+        quoteColumnNames = configuration.getQuoteColumnNames();
+        quoteTableNames = configuration.getQuoteTableNames();
+        batchUpdateSize = configuration.getBatchUpdateSize();
+        defaultIsolation = configuration.getTransactionIsolation();
+        transactionListenerFactories = configuration.getTransactionListenerFactories();
+        statementListeners = new CompositeStatementListener(configuration.getStatementListeners());
         stateListeners = new CompositeEntityListener<>();
 
-        entityCache = configuration.entityCache() == null ?
-                new EmptyEntityCache() : configuration.entityCache();
-        int statementCacheSize = configuration.statementCacheSize();
+        entityCache = configuration.getCache() == null ?
+                new EmptyEntityCache() : configuration.getCache();
+        int statementCacheSize = configuration.getStatementCacheSize();
         if (statementCacheSize > 0) {
             statementCache = new PreparedStatementCache(statementCacheSize);
         }
@@ -168,7 +168,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         transactionProvider = new TransactionProvider(context);
         updateOperation = new UpdateOperation(context);
         countOperation = new SelectCountOperation(context);
-        if (configuration.useDefaultLogging()) {
+        if (configuration.getUseDefaultLogging()) {
             LoggingListener<T> logListener = new LoggingListener<>();
             stateListeners.addPostLoadListener(logListener);
             stateListeners.addPostInsertListener(logListener);
@@ -196,7 +196,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
-                EntityWriter<E, T> writer = context.write(proxy.type().classType());
+                EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
                 GeneratedKeys<E> key = writer.insert(entity, proxy, keyClass != null);
                 transaction.commit();
                 if (key != null && key.size() > 0 && keyClass != null) {
@@ -220,7 +220,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
                 E entity = iterator.next();
                 EntityProxy<E> proxy = context.proxyOf(entity, true);
-                EntityWriter<E, T> writer = context.write(proxy.type().classType());
+                EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
                 GeneratedKeys<E> keys = writer.batchInsert(entities, keyClass != null);
                 if (keys != null) {
                     @SuppressWarnings("unchecked")
@@ -238,7 +238,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
-                context.write(proxy.type().classType()).update(entity, proxy);
+                context.write(proxy.type().getClassType()).update(entity, proxy);
                 transaction.commit();
                 return entity;
             }
@@ -261,7 +261,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
-                EntityWriter<E, T> writer = context.write(proxy.type().classType());
+                EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
                 writer.upsert(entity, proxy);
                 transaction.commit();
                 return entity;
@@ -284,7 +284,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     public <E extends T> E refresh(E entity) {
         EntityProxy<E> proxy = context.proxyOf(entity, false);
         synchronized (proxy.syncObject()) {
-            return context.read(proxy.type().classType()).refresh(entity, proxy);
+            return context.read(proxy.type().getClassType()).refresh(entity, proxy);
         }
     }
 
@@ -293,7 +293,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     public <E extends T> E refresh(E entity, Attribute<?, ?>... attributes) {
         EntityProxy<E> proxy = context.proxyOf(entity, false);
         synchronized (proxy.syncObject()) {
-            return context.read(proxy.type().classType())
+            return context.read(proxy.type().getClassType())
                     .refresh(entity, proxy, (Attribute<E, ?>[]) attributes);
         }
     }
@@ -305,7 +305,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         if (iterator.hasNext()) {
             E entity = iterator.next();
             EntityProxy<E> proxy = context.proxyOf(entity, false);
-            EntityReader<E, T> reader = context.read(proxy.type().classType());
+            EntityReader<E, T> reader = context.read(proxy.type().getClassType());
             return reader.batchRefresh(entities, (Attribute<E, ?>[])attributes);
         }
         return entities;
@@ -315,7 +315,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     public <E extends T> E refreshAll(E entity) {
         EntityProxy<E> proxy = context.proxyOf(entity, false);
         synchronized (proxy.syncObject()) {
-            return context.read(proxy.type().classType()).refreshAll(entity, proxy);
+            return context.read(proxy.type().getClassType()).refreshAll(entity, proxy);
         }
     }
 
@@ -324,7 +324,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
-                context.write(proxy.type().classType()).delete(entity, proxy);
+                context.write(proxy.type().getClassType()).delete(entity, proxy);
                 transaction.commit();
             }
         }
@@ -338,7 +338,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
                 E entity = iterator.next();
                 EntityProxy<E> proxy = context.proxyOf(entity, false);
-                EntityWriter<E, T> writer = context.write(proxy.type().classType());
+                EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
                 writer.batchDelete(entities);
                 transaction.commit();
             }
@@ -355,7 +355,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                 return entity;
             }
         }
-        Set<Attribute<E, ?>> keys = entityType.keyAttributes();
+        Set<Attribute<E, ?>> keys = entityType.getKeyAttributes();
         if (keys.isEmpty()) {
             throw new MissingKeyException();
         }
@@ -451,7 +451,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         checkClosed();
         Type<E> entityType = context.model().typeOf(type);
         Set<Expression<?>> keySelection = new LinkedHashSet<>();
-        for (Attribute<E, ?> attribute : entityType.keyAttributes()) {
+        for (Attribute<E, ?> attribute : entityType.getKeyAttributes()) {
             keySelection.add((Expression<?>) attribute);
         }
         InsertReturningOperation operation = new InsertReturningOperation(context, keySelection);
@@ -561,7 +561,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             checkClosed();
             @SuppressWarnings("unchecked")
             Type<E> type = (Type<E>) entityModel.typeOf(entity.getClass());
-            EntityProxy<E> proxy = type.proxyProvider().apply(entity);
+            EntityProxy<E> proxy = type.getProxyProvider().apply(entity);
             if (forUpdate && type.isReadOnly()) {
                 throw new ReadOnlyException();
             }

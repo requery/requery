@@ -125,7 +125,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
                             (attribute.isForeignKey() || attribute.isKey())) {
                             // get the referenced value
                             if (value != null &&
-                                ((Expression<?>)expression).classType()
+                                ((Expression<?>)expression).getClassType()
                                     .isAssignableFrom(value.getClass())) {
                                 value = Attributes.replaceKeyReference(value, attribute);
                             }

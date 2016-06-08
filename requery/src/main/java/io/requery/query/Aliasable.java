@@ -35,5 +35,5 @@ public interface Aliasable<T> {
     /**
      * @return the current alias name.
      */
-    String aliasName();
+    String getAlias();
 }

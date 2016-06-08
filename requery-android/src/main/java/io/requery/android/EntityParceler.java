@@ -38,13 +38,13 @@ public class EntityParceler<T> {
     }
 
     public T readFromParcel(Parcel in) {
-        T entity = type.factory().get();
-        EntityProxy<T> proxy = type.proxyProvider().apply(entity);
-        for (Attribute<T, ?> attribute : type.attributes()) {
+        T entity = type.getFactory().get();
+        EntityProxy<T> proxy = type.getProxyProvider().apply(entity);
+        for (Attribute<T, ?> attribute : type.getAttributes()) {
             if (attribute.isAssociation()) {
                 continue;
             }
-            Class<?> typeClass = attribute.classType();
+            Class<?> typeClass = attribute.getClassType();
             Object value;
             if (typeClass.isEnum()) {
                 String name = (String) in.readValue(null);
@@ -68,13 +68,13 @@ public class EntityParceler<T> {
     }
 
     public void writeToParcel(T entity, Parcel out) {
-        EntityProxy<T> proxy = type.proxyProvider().apply(entity);
-        for (Attribute<T, ?> attribute : type.attributes()) {
+        EntityProxy<T> proxy = type.getProxyProvider().apply(entity);
+        for (Attribute<T, ?> attribute : type.getAttributes()) {
             if (attribute.isAssociation()) {
                 continue;
             }
             Object value = proxy.get(attribute, false);
-            Class<?> typeClass = attribute.classType();
+            Class<?> typeClass = attribute.getClassType();
             if (typeClass.isEnum()) {
                 if (value != null) {
                     value = value.toString();

@@ -84,7 +84,7 @@ public class Oracle extends Generic {
                     public void append(QueryBuilder qb, Expression expression) {
                         qb.append("? ");
                         context.parameters().add(expression, values.get(expression));
-                        qb.append(expression.name());
+                        qb.append(expression.getName());
                     }
                 }).space()
                 .keyword(FROM)

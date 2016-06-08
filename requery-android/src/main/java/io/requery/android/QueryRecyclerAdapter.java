@@ -72,7 +72,7 @@ public abstract class QueryRecyclerAdapter<E, VH extends RecyclerView.ViewHolder
      */
     protected QueryRecyclerAdapter(Type<E> type) {
         setHasStableIds(true);
-        proxyProvider = type.proxyProvider();
+        proxyProvider = type.getProxyProvider();
         handler = new Handler();
     }
 

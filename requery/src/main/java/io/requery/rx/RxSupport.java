@@ -73,18 +73,18 @@ public final class RxSupport {
 
     private static boolean referencesType(Set<Type<?>> source, Set<Type<?>> changed) {
         for (Type<?> type : source) {
-            for (Attribute<?, ?> attribute : type.attributes()) {
+            for (Attribute<?, ?> attribute : type.getAttributes()) {
                 // find if any referencing types that maybe affected by changes to the type
                 if (attribute.isAssociation()) {
                     Attribute referenced = null;
-                    if (attribute.referencedAttribute() != null) {
-                        referenced = attribute.referencedAttribute().get();
+                    if (attribute.getReferencedAttribute() != null) {
+                        referenced = attribute.getReferencedAttribute().get();
                     }
-                    if (attribute.mappedAttribute() != null) {
-                        referenced = attribute.mappedAttribute().get();
+                    if (attribute.getMappedAttribute() != null) {
+                        referenced = attribute.getMappedAttribute().get();
                     }
                     if (referenced != null) {
-                        Type<?> declared = referenced.declaringType();
+                        Type<?> declared = referenced.getDeclaringType();
                         if (changed.contains(declared)) {
                             return true;
                         }

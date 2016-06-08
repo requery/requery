@@ -90,8 +90,8 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
                 ResultSetMetaData metadata = results.getMetaData();
                 // map of entity column names to attributes
                 Map<String, Attribute<E, ?>> map = new HashMap<>();
-                for (Attribute<E, ?> attribute : type.attributes()) {
-                    map.put(attribute.name().toLowerCase(Locale.ROOT), attribute);
+                for (Attribute<E, ?> attribute : type.getAttributes()) {
+                    map.put(attribute.getName().toLowerCase(Locale.ROOT), attribute);
                 }
                 Set<Attribute<E, ?>> attributes = new LinkedHashSet<>();
                 for (int i = 0; i < metadata.getColumnCount(); i++) {

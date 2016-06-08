@@ -44,9 +44,9 @@ public class UpsertMergeGenerator implements Generator<Map<Expression<?>, Object
         // TODO only supporting 1 type for now
         Type<?> type = null;
         for (Expression<?> expression : values.keySet()) {
-            if (expression.type() == ExpressionType.ATTRIBUTE) {
+            if (expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
                 Attribute attribute = (Attribute) expression;
-                type = attribute.declaringType();
+                type = attribute.getDeclaringType();
                 break;
             }
         }
@@ -54,17 +54,17 @@ public class UpsertMergeGenerator implements Generator<Map<Expression<?>, Object
             throw new IllegalStateException();
         }
         qb.keyword(MERGE).keyword(INTO)
-            .tableName(type.name())
+            .tableName(type.getName())
             .keyword(USING);
             appendUsing(output, values);
             qb.keyword(ON)
             .openParenthesis();
         int count = 0;
-        for (Attribute<?, ?> attribute : type.keyAttributes()) {
+        for (Attribute<?, ?> attribute : type.getKeyAttributes()) {
             if (count > 0) {
                 qb.keyword(Keyword.AND);
             }
-            qb.aliasAttribute(type.name(), attribute);
+            qb.aliasAttribute(type.getName(), attribute);
             qb.append(" = ");
             qb.aliasAttribute(alias, attribute);
             count++;
@@ -73,7 +73,7 @@ public class UpsertMergeGenerator implements Generator<Map<Expression<?>, Object
         // update fragment
         LinkedHashSet<Attribute<?, ?>> updates = new LinkedHashSet<>();
         for (Expression<?> expression : values.keySet()) {
-            if (expression.type() == ExpressionType.ATTRIBUTE) {
+            if (expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
                 Attribute attribute = (Attribute) expression;
                 if (!attribute.isKey()) {
                     updates.add(attribute);
@@ -85,7 +85,7 @@ public class UpsertMergeGenerator implements Generator<Map<Expression<?>, Object
                 @Override
                 public void append(QueryBuilder qb, Attribute<?, ?> value) {
                     qb.attribute(value);
-                    qb.append(" = " + alias + "." + value.name());
+                    qb.append(" = " + alias + "." + value.getName());
                 }
             }).space();
         // insert fragment

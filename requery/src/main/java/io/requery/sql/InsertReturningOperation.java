@@ -56,7 +56,7 @@ class InsertReturningOperation extends PreparedQueryOperation implements
                 String[] keys = new String[selection.size()];
                 int index = 0;
                 for (Expression<?> expression : selection) {
-                    keys[index] = expression.name();
+                    keys[index] = expression.getName();
                     index++;
                 }
                 return keys;

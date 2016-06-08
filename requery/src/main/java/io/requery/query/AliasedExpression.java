@@ -25,7 +25,7 @@ public class AliasedExpression<V> extends FieldExpression<V> {
     public AliasedExpression(Expression<V> expression, String alias) {
         this.expression = expression;
         this.alias = alias;
-        this.name = expression.name();
+        this.name = expression.getName();
     }
 
     public AliasedExpression(Expression<V> expression, String name, String alias) {
@@ -35,22 +35,22 @@ public class AliasedExpression<V> extends FieldExpression<V> {
     }
 
     @Override
-    public String name() {
+    public String getName() {
         return name;
     }
 
     @Override
-    public Class<V> classType() {
-        return expression.classType();
+    public Class<V> getClassType() {
+        return expression.getClassType();
     }
 
     @Override
-    public ExpressionType type() {
+    public ExpressionType getExpressionType() {
         return ExpressionType.ALIAS;
     }
 
     @Override
-    public String aliasName() {
+    public String getAlias() {
         return alias;
     }
 

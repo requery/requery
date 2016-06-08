@@ -23,7 +23,7 @@ public class Sum<V> extends Function<V> {
     private final Expression<V> expression;
 
     private Sum(Expression<V> expression) {
-        super("sum", expression.classType());
+        super("sum", expression.getClassType());
         this.expression = expression;
     }
 

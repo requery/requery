@@ -151,7 +151,7 @@ public class JoinConditionElement<E> extends BaseLogicalElement<JoinConditionEle
     }
 
     @Override
-    public String aliasName() {
-        return query.aliasName();
+    public String getAlias() {
+        return query.getAlias();
     }
 }

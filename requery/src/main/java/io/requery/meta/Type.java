@@ -37,18 +37,18 @@ public interface Type<T> extends Expression<T> {
      * @return the type name, note this can be different from the class name.
      */
     @Override
-    String name();
+    String getName();
 
     /**
      * @return the Java {@link Class} for which this type information is for.
      */
     @Override
-    Class<T> classType();
+    Class<T> getClassType();
 
     /**
      * @return the base type this entity is representing if any.
      */
-    Class<?> baseType();
+    Class<?> getBaseType();
 
     /**
      * @return true if instances of this type can be cached for reuse, false otherwise.
@@ -81,44 +81,44 @@ public interface Type<T> extends Expression<T> {
      * @return if {@link #isBuildable()} returns the factory that instantiates the builder instance,
      * otherwise null.
      */
-    <B> Supplier<B> builderFactory();
+    <B> Supplier<B> getBuilderFactory();
 
     /**
      * @param <B> builder type
      * @return if {@link #isBuildable()} returns the function that builds the final type from
      * a builder instance.
      */
-    <B> Function<B, T> buildFunction();
+    <B> Function<B, T> getBuildFunction();
 
     /**
      * @return A readonly collection of {@link Attribute}s that this type represents. (includes
      * all attributes)
      */
-    Set<Attribute<T, ?>> attributes();
+    Set<Attribute<T, ?>> getAttributes();
 
     /**
      * @return A readonly collection of {@link Attribute}s that are the key for this type.
      */
-    Set<Attribute<T, ?>> keyAttributes();
+    Set<Attribute<T, ?>> getKeyAttributes();
 
     /**
      * @return If there is only a single key that key's attribute, otherwise null.
      */
-    Attribute<T, ?> singleKeyAttribute();
+    Attribute<T, ?> getSingleKeyAttribute();
 
     /**
-     * @return {@link Supplier} instance used to provide new instances of {@link #classType()}.
+     * @return {@link Supplier} instance used to provide new instances of {@link #getClassType()}.
      */
-    Supplier<T> factory();
+    Supplier<T> getFactory();
 
     /**
      * @return {@link Function} provider for retrieving the {@link EntityProxy} for a
      * given entity instance.
      */
-    Function<T, EntityProxy<T>> proxyProvider();
+    Function<T, EntityProxy<T>> getProxyProvider();
 
     /**
      * @return optional table creation attributes {@link Table#createAttributes()}
      */
-    String[] tableCreateAttributes();
+    String[] getTableCreateAttributes();
 }

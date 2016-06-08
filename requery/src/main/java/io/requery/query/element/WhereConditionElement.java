@@ -113,7 +113,7 @@ public class WhereConditionElement<E> extends BaseLogicalElement<WhereConditionE
     }
 
     @Override
-    public String aliasName() {
-        return query.aliasName();
+    public String getAlias() {
+        return query.getAlias();
     }
 }

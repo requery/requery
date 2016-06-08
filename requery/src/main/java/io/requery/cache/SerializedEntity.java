@@ -39,9 +39,9 @@ class SerializedEntity<E> implements Serializable {
     private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         stream.defaultReadObject();
         Type<E> type = SerializationContext.getType(entityClass);
-        entity = type.factory().get();
-        EntityProxy<E> proxy = type.proxyProvider().apply(entity);
-        for (Attribute<E, ?> attribute : type.attributes()) {
+        entity = type.getFactory().get();
+        EntityProxy<E> proxy = type.getProxyProvider().apply(entity);
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
             // currently only non-associative properties are serialized
             if (attribute.isAssociation()) {
                 proxy.setState(attribute, PropertyState.FETCH);
@@ -55,8 +55,8 @@ class SerializedEntity<E> implements Serializable {
     private void writeObject(ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
         Type<E> type = SerializationContext.getType(entityClass);
-        EntityProxy<E> proxy = type.proxyProvider().apply(entity);
-        for (Attribute<E, ?> attribute : type.attributes()) {
+        EntityProxy<E> proxy = type.getProxyProvider().apply(entity);
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
             if (attribute.isAssociation()) {
                 continue;
             }

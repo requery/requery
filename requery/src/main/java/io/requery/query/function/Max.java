@@ -23,7 +23,7 @@ public class Max<V> extends Function<V> {
     private final Expression<V> expression;
 
     private Max(Expression<V> expression) {
-        super("max", expression.classType());
+        super("max", expression.getClassType());
         this.expression = expression;
     }
 

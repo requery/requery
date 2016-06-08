@@ -39,17 +39,17 @@ public class NamedExpression<V> extends FieldExpression<V> {
     }
 
     @Override
-    public String name() {
+    public String getName() {
         return name;
     }
 
     @Override
-    public Class<V> classType() {
+    public Class<V> getClassType() {
         return type;
     }
 
     @Override
-    public ExpressionType type() {
+    public ExpressionType getExpressionType() {
         return ExpressionType.NAME;
     }
 }

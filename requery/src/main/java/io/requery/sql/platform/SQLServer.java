@@ -100,7 +100,7 @@ public class SQLServer extends Generic {
                 Set<Type<?>> types = query.entityTypes();
                 if (types != null && !types.isEmpty()) {
                     Type<?> type = types.iterator().next();
-                    for (Attribute attribute : type.attributes()) {
+                    for (Attribute attribute : type.getAttributes()) {
                         if (attribute.isKey()) {
                             query.orderBy((Expression) attribute);
                             break;

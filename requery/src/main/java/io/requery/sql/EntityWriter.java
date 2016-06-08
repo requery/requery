@@ -101,7 +101,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         boolean hasGeneratedKey = false;
         boolean hasForeignKeys = false;
         Attribute<E, ?> versionAttribute = null;
-        for (Attribute<E, ?> attribute : type.attributes()) {
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
             if (attribute.isKey() && attribute.isGenerated()) {
                 hasGeneratedKey = true;
             }
@@ -115,16 +115,16 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         this.hasGeneratedKey = hasGeneratedKey;
         this.hasForeignKeys = hasForeignKeys;
         this.versionAttribute = versionAttribute;
-        this.keyAttribute = type.singleKeyAttribute();
-        Collection<Attribute<E, ?>> keys = type.keyAttributes();
+        this.keyAttribute = type.getSingleKeyAttribute();
+        Collection<Attribute<E, ?>> keys = type.getKeyAttributes();
         generatedColumnNames = new String[keys.size()];
         int i = 0;
         for (Attribute attribute : keys) {
-            generatedColumnNames[i++] = attribute.name();
+            generatedColumnNames[i++] = attribute.getName();
         }
-        entityClass = type.classType();
-        proxyProvider = type.proxyProvider();
-        cacheable = !type.keyAttributes().isEmpty() && type.isCacheable();
+        entityClass = type.getClassType();
+        proxyProvider = type.getProxyProvider();
+        cacheable = !type.getKeyAttributes().isEmpty() && type.isCacheable();
         stateless = type.isStateless();
 
         Predicate<Attribute<E, ?>> bindable = new Predicate<Attribute<E, ?>>() {
@@ -138,8 +138,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
         };
         // create bindable attributes as an array for performance
-        bindableAttributes = Attributes.attributesToArray(type.attributes(), bindable);
-        associativeAttributes = Attributes.attributesToArray(type.attributes(),
+        bindableAttributes = Attributes.attributesToArray(type.getAttributes(), bindable);
+        associativeAttributes = Attributes.attributesToArray(type.getAttributes(),
             new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
@@ -147,7 +147,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
         });
         // for the update statement add key/version conditions
-        int keyCount = keyAttribute != null ? 1 : type.keyAttributes().size();
+        int keyCount = keyAttribute != null ? 1 : type.getKeyAttributes().size();
         boolean hasVersion = versionAttribute != null;
         whereAttributes = Attributes.newArray(keyCount + (hasVersion ? 1 : 0));
         int index = 0;
@@ -200,7 +200,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             if (referenced != null) {
                 EntityProxy<S> otherProxy = context.proxyOf(referenced, false);
                 if (otherProxy != null && !otherProxy.isLinked()) {
-                    Class<? extends S> key = otherProxy.type().classType();
+                    Class<? extends S> key = otherProxy.type().getClassType();
                     List<S> values = elements.get(key);
                     if (values == null) {
                         elements.put(key, values = new ArrayList<>());
@@ -296,7 +296,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (keyAttribute != null) {
             readKeyFromResult(keyAttribute, proxy, results);
         } else {
-            for (Attribute<E, ?> key : type.keyAttributes()) {
+            for (Attribute<E, ?> key : type.getKeyAttributes()) {
                 readKeyFromResult(key, proxy, results);
             }
         }
@@ -307,15 +307,15 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         throws SQLException {
 
         Object generatedKey;
-        String column = key.name();
+        String column = key.getName();
         int resultIndex = 1;
         try {
             // try find column if driver supports it
             resultIndex = results.findColumn(column);
         } catch (SQLException ignored) {
         }
-        if (key.primitiveKind() != null) {
-            switch (key.primitiveKind()) {
+        if (key.getPrimitiveKind() != null) {
+            switch (key.getPrimitiveKind()) {
                 case INT:
                     int intValue = mapping.readInt(results, resultIndex);
                     proxy.setInt((Attribute<E, Integer>) key, intValue, PropertyState.LOADED);
@@ -339,7 +339,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                                E element,
                                Predicate<Attribute<E, ?>> filter) throws SQLException {
         int i = 0;
-        EntityProxy<E> proxy = type.proxyProvider().apply(element);
+        EntityProxy<E> proxy = type.getProxyProvider().apply(element);
         for (Attribute<E, ?> attribute : bindableAttributes) {
             if (filter != null && !filter.test(attribute)) {
                 continue;
@@ -349,14 +349,14 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 Object value = proxy.get(attribute, false);
                 if (value != null) {
                     Attribute<Object, Object> referenced =
-                        Attributes.get(attribute.referencedAttribute());
+                        Attributes.get(attribute.getReferencedAttribute());
                     Function<Object, EntityProxy<Object>> proxyProvider =
-                        referenced.declaringType().proxyProvider();
+                        referenced.getDeclaringType().getProxyProvider();
                     value = proxyProvider.apply(value).get(referenced, false);
                 }
                 mapping.write((Expression) attribute, statement, i + 1, value);
             } else {
-                if (attribute.primitiveKind() != null) {
+                if (attribute.getPrimitiveKind() != null) {
                     mapPrimitiveType(proxy, attribute, statement, i + 1);
                 } else {
                     Object value = proxy.get(attribute, false);
@@ -374,7 +374,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     private void mapPrimitiveType(EntityProxy<E> proxy,
                                   Attribute<E, ?> attribute,
                                   PreparedStatement statement, int index) throws SQLException {
-        switch (attribute.primitiveKind()) {
+        switch (attribute.getPrimitiveKind()) {
             case BYTE:
                 byte byteValue = proxy.getByte((Attribute<E, Byte>) attribute);
                 mapping.writeByte(statement, index, byteValue);
@@ -547,7 +547,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     if (attribute == versionAttribute) {
                         mapping.write((Expression) attribute, statement, index + 1, version);
                     } else {
-                        if (attribute.primitiveKind() != null) {
+                        if (attribute.getPrimitiveKind() != null) {
                             mapPrimitiveType(proxy, attribute, statement, index + 1);
                         } else {
                             Object value = proxy.get(attribute, false);
@@ -584,7 +584,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             if (keyAttribute != null) {
                 query.where(Attributes.query(keyAttribute).equal("?"));
             } else {
-                for (Attribute<E, ?> attribute : type.keyAttributes()) {
+                for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
                     query.where(Attributes.query(attribute).equal("?"));
                 }
             }
@@ -629,12 +629,13 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             if (!isModified) {
                 continue;
             }
-            Cardinality cardinality = attribute.cardinality();
+            Cardinality cardinality = attribute.getCardinality();
             switch (cardinality) {
                 case ONE_TO_ONE:
                     S value = (S) proxy.get(attribute, false);
                     if (value != null) {
-                        Attribute<S, Object> mapped = Attributes.get(attribute.mappedAttribute());
+                        Attribute<S, Object> mapped =
+                                Attributes.get(attribute.getMappedAttribute());
                         EntityProxy<S> referred = context.proxyOf(value, true);
                         referred.set(mapped, entity, PropertyState.MODIFIED);
                         cascadeWrite(mode, value, referred);
@@ -668,7 +669,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     }
                     break;
                 case MANY_TO_MANY:
-                    Class referencedClass = attribute.referencedClass();
+                    Class referencedClass = attribute.getReferencedClass();
                     if (referencedClass == null) {
                         throw new IllegalStateException(
                             "Invalid referenced class in " + attribute.toString());
@@ -676,17 +677,18 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     Type<?> referencedType = model.typeOf(referencedClass);
                     QueryAttribute<S, Object> tKey = null;
                     QueryAttribute<S, Object> uKey = null;
-                    for (Attribute a : referencedType.attributes()) {
-                        if (entityClass.isAssignableFrom(a.referencedClass())) {
+                    for (Attribute a : referencedType.getAttributes()) {
+                        if (entityClass.isAssignableFrom(a.getReferencedClass())) {
                             tKey = Attributes.query(a);
-                        } else if (attribute.elementClass().isAssignableFrom(a.referencedClass())) {
+                        } else if (attribute.getElementClass().isAssignableFrom(
+                                a.getReferencedClass())) {
                             uKey = Attributes.query(a);
                         }
                     }
                     Objects.requireNotNull(tKey);
                     Objects.requireNotNull(uKey);
-                    Attribute<E, Object> tRef = Attributes.get(tKey.referencedAttribute());
-                    Attribute<S, Object> uRef = Attributes.get(uKey.referencedAttribute());
+                    Attribute<E, Object> tRef = Attributes.get(tKey.getReferencedAttribute());
+                    Attribute<S, Object> uRef = Attributes.get(uKey.getReferencedAttribute());
 
                     CollectionChanges<?, S> changes = null;
                     relation = proxy.get(attribute, false);
@@ -699,11 +701,11 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         }
                     }
                     for (S added : addedElements) {
-                        S junction = (S) referencedType.factory().get();
+                        S junction = (S) referencedType.getFactory().get();
                         EntityProxy<S> junctionProxy = context.proxyOf(junction, false);
                         EntityProxy<S> uProxy = context.proxyOf(added, false);
 
-                        if (attribute.cascadeActions().contains(CascadeAction.SAVE)) {
+                        if (attribute.getCascadeActions().contains(CascadeAction.SAVE)) {
                             cascadeWrite(mode, added, uProxy);
                         }
                         Object tValue = proxy.get(tRef, false);
@@ -719,7 +721,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         for (S removed : changes.removedElements()) {
                             Object otherValue = context.proxyOf(removed, false).get(uRef);
                             Class<? extends S> removeType = (Class<? extends S>)
-                                referencedType.classType();
+                                referencedType.getClassType();
 
                             Supplier<Scalar<Integer>> query = queryable.delete(removeType)
                                 .where(tKey.equal(keyValue))
@@ -736,13 +738,13 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 default:
                     break;
             }
-            context.read(type.classType()).refresh(entity, proxy, attribute);
+            context.read(type.getClassType()).refresh(entity, proxy, attribute);
         }
     }
 
     private void incrementVersion(EntityProxy<E> proxy) {
         Object version = proxy.get(versionAttribute);
-        Class<?> type = versionAttribute.classType();
+        Class<?> type = versionAttribute.getClassType();
         if (type == Long.class || type == long.class) {
             if (version == null) {
                 version = 1L;
@@ -760,7 +762,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         } else if (type == Timestamp.class) {
             version = new Timestamp(System.currentTimeMillis());
         } else {
-            throw new PersistenceException("Unsupported version: " + versionAttribute.classType());
+            throw new PersistenceException("Unsupported version: " +
+                    versionAttribute.getClassType());
         }
         proxy.setObject(versionAttribute, version, PropertyState.MODIFIED);
     }
@@ -770,7 +773,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                                                         Attribute attribute,
                                                         Object value) {
         EntityProxy<U> proxy = context.proxyOf(entity, false);
-        Attribute<U, Object> inverse = Attributes.get(attribute.mappedAttribute());
+        Attribute<U, Object> inverse = Attributes.get(attribute.getMappedAttribute());
         proxy.set(inverse, value, PropertyState.MODIFIED);
         cascadeWrite(mode, entity, proxy);
     }
@@ -783,13 +786,13 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         }
         // if cascade delete and the property is not loaded (load it)
         for (Attribute<E, ?> attribute : associativeAttributes) {
-            boolean delete = attribute.cascadeActions().contains(CascadeAction.DELETE);
+            boolean delete = attribute.getCascadeActions().contains(CascadeAction.DELETE);
             if (delete && (stateless || proxy.getState(attribute) == PropertyState.FETCH)) {
-                context.read(type.classType()).refresh(entity, proxy, attribute);
+                context.read(type.getClassType()).refresh(entity, proxy, attribute);
             }
         }
         Deletion<Scalar<Integer>> deletion = queryable.delete(entityClass);
-        for (Attribute<E, ?> attribute : type.keyAttributes()) {
+        for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
             QueryAttribute<E, Object> id = Attributes.query(attribute);
             deletion.where(id.equal(proxy.get(attribute)));
         }
@@ -812,14 +815,15 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         // if deleting any foreign key reference would cascade to this entity then marked true
         boolean cascade = false;
         for (Attribute<E, ?> attribute : associativeAttributes) {
-            boolean delete = attribute.cascadeActions().contains(CascadeAction.DELETE);
+            boolean delete = attribute.getCascadeActions().contains(CascadeAction.DELETE);
             Object value = proxy.get(attribute, false);
             proxy.set(attribute, null, PropertyState.LOADED);
             if (value != null) {
-                if (attribute.isForeignKey() && attribute.deleteAction() == ReferentialAction.CASCADE) {
+                if (attribute.isForeignKey() &&
+                    attribute.getDeleteAction() == ReferentialAction.CASCADE) {
                     cascade = true;
                 }
-                switch (attribute.cardinality()) {
+                switch (attribute.getCardinality()) {
                     case ONE_TO_ONE:
                     case MANY_TO_ONE:
                         @SuppressWarnings("unchecked")
@@ -858,7 +862,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             while (iterator.hasNext() && ids.size() < batchSize) {
                 E entity = iterator.next();
                 EntityProxy<E> proxy = proxyProvider.apply(entity);
-                if (versionAttribute != null || type.keyAttributes().size() > 1) {
+                if (versionAttribute != null || type.getKeyAttributes().size() > 1) {
                     // not optimized if version column has to be checked, or multiple primary keys
                     // TODO could use JDBC batching
                     delete(entity, proxy);
@@ -880,7 +884,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             // optimized case: delete from T where key in (keys...)
             if (ids.size() > 0) {
                 Deletion<Scalar<Integer>> deletion = queryable.delete(entityClass);
-                for (Attribute<E, ?> attribute : type.keyAttributes()) {
+                for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
                     QueryAttribute<E, Object> id = Attributes.query(attribute);
                     deletion.where(id.in(ids));
                 }
@@ -909,7 +913,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             if (proxy == null) {
                 proxy = context.proxyOf(entity, false);
             }
-            EntityWriter<U, S> writer = context.write(proxy.type().classType());
+            EntityWriter<U, S> writer = context.write(proxy.type().getClassType());
             if (mode == CascadeMode.AUTO) {
                 mode = proxy.isLinked() || hasKey(proxy)? CascadeMode.UPDATE : CascadeMode.INSERT;
             }
@@ -930,7 +934,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     private <U extends S> void cascadeRemove(E entity, U element, boolean delete) {
         EntityProxy<U> proxy = context.proxyOf(element, false);
         if (proxy != null) {
-            EntityWriter<U, S> writer = context.write(proxy.type().classType());
+            EntityWriter<U, S> writer = context.write(proxy.type().getClassType());
             if (delete && proxy.isLinked()) {
                 writer.delete(element, proxy);
             } else {
@@ -941,8 +945,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
     private <U extends S> boolean hasKey(EntityProxy<U> proxy) {
         Type<U> type = proxy.type();
-        if (type.keyAttributes().size() > 0) {
-            for (Attribute<U, ?> attribute : type.keyAttributes()) {
+        if (type.getKeyAttributes().size() > 0) {
+            for (Attribute<U, ?> attribute : type.getKeyAttributes()) {
                 PropertyState state = proxy.getState(attribute);
                 if (!(state == PropertyState.MODIFIED || state == PropertyState.LOADED)) {
                     return false;
@@ -956,7 +960,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     private void removeEntity(EntityProxy<E> proxy, S entity) {
         for (Attribute<E, ?> attribute : associativeAttributes) {
             Object value = proxy.get(attribute, false);
-            switch (attribute.cardinality()) {
+            switch (attribute.getCardinality()) {
                 case ONE_TO_ONE:
                 case MANY_TO_ONE:
                     if (value == entity) {

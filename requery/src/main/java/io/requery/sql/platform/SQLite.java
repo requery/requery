@@ -126,7 +126,7 @@ public class SQLite extends Generic {
             // insert or replace into <table> select(columns...) from
             // (select "column1" as c1...) as new left join (select ... from <table>)
             //  on prev.key = new.key
-            Type<?> type = ((Attribute)values.keySet().iterator().next()).declaringType();
+            Type<?> type = ((Attribute)values.keySet().iterator().next()).getDeclaringType();
             qb.keyword(INSERT, OR, REPLACE, INTO)
                 .tableNames(values.keySet())
                 .openParenthesis()
@@ -136,7 +136,7 @@ public class SQLite extends Generic {
                         if (value instanceof Attribute) {
                             Attribute attribute = (Attribute) value;
                             if (attribute.isForeignKey() &&
-                                attribute.deleteAction() == ReferentialAction.CASCADE) {
+                                attribute.getDeleteAction() == ReferentialAction.CASCADE) {
                                 throw new IllegalStateException("replace would cause cascade");
                             }
                             qb.attribute(attribute);
@@ -158,7 +158,7 @@ public class SQLite extends Generic {
                 .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
                     public void append(QueryBuilder qb, Expression expression) {
-                        qb.append("? ").keyword(AS).append(expression.name());
+                        qb.append("? ").keyword(AS).append(expression.getName());
                         output.parameters().add(expression, values.get(expression));
                     }
                 })
@@ -169,12 +169,12 @@ public class SQLite extends Generic {
                 .keyword(SELECT)
                 .commaSeparatedExpressions(values.keySet())
                 .keyword(FROM)
-                .tableName(type.name())
+                .tableName(type.getName())
                 .closeParenthesis().space().keyword(AS).append(previousAlias).space()
                 .keyword(ON)
-                .aliasAttribute(previousAlias, type.singleKeyAttribute())
+                .aliasAttribute(previousAlias, type.getSingleKeyAttribute())
                 .append(" = ")
-                .aliasAttribute(newAlias, type.singleKeyAttribute());
+                .aliasAttribute(newAlias, type.getSingleKeyAttribute());
         }
     }
 }

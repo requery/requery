@@ -53,11 +53,11 @@ public class MutableTuple implements Tuple, Serializable {
     }
 
     private String keyOf(Expression<?> expression) {
-        String key = expression.name();
+        String key = expression.getName();
         if (expression instanceof Aliasable) {
-            String aliasName = ((Aliasable) expression).aliasName();
-            if (aliasName != null) {
-                key = aliasName;
+            String alias = ((Aliasable) expression).getAlias();
+            if (alias != null) {
+                key = alias;
             }
         }
         return key == null ? null : key.toLowerCase(Locale.ROOT);
@@ -74,7 +74,7 @@ public class MutableTuple implements Tuple, Serializable {
         if (value == null) {
             return null;
         }
-        Class<V> type = key.classType();
+        Class<V> type = key.getClassType();
         if (type.isPrimitive()) {
             @SuppressWarnings("unchecked")
             V result = (V) boxedTypes.get(type).cast(value);

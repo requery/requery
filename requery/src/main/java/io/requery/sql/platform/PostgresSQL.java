@@ -172,7 +172,7 @@ public class PostgresSQL extends Generic {
         @Override
         public void write(final Output output, final Map<Expression<?>, Object> values) {
             QueryBuilder qb = output.builder();
-            Type<?> type = ((Attribute)values.keySet().iterator().next()).declaringType();
+            Type<?> type = ((Attribute)values.keySet().iterator().next()).getDeclaringType();
             // insert into <table> (<columns>) values (<values)
             // on conflict do update (<column>=EXCLUDED.<value>...
             qb.keyword(INSERT, INTO)
@@ -192,14 +192,14 @@ public class PostgresSQL extends Generic {
                 .closeParenthesis().space()
                 .keyword(ON, CONFLICT)
                 .openParenthesis()
-                .attribute(type.singleKeyAttribute())
+                .attribute(type.getSingleKeyAttribute())
                 .closeParenthesis().space()
                 .keyword(DO, UPDATE, SET)
                 .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
                     public void append(QueryBuilder qb, Expression<?> value) {
                         qb.attribute((Attribute) value);
-                        qb.append("= EXCLUDED." + value.name());
+                        qb.append("= EXCLUDED." + value.getName());
                     }
                 });
         }

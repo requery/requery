@@ -51,22 +51,22 @@ abstract class BaseType<T> implements Type<T> {
     }
 
     @Override
-    public String name() {
+    public String getName() {
         return name;
     }
 
     @Override
-    public Class<T> classType() {
+    public Class<T> getClassType() {
         return type;
     }
 
     @Override
-    public Class<? super T> baseType() {
+    public Class<? super T> getBaseType() {
         return baseType;
     }
 
     @Override
-    public ExpressionType type() {
+    public ExpressionType getExpressionType() {
         return ExpressionType.NAME;
     }
 
@@ -96,46 +96,46 @@ abstract class BaseType<T> implements Type<T> {
     }
 
     @Override
-    public Set<Attribute<T, ?>> attributes() {
+    public Set<Attribute<T, ?>> getAttributes() {
         return attributes;
     }
 
     @Override
-    public Set<Attribute<T, ?>> keyAttributes() {
+    public Set<Attribute<T, ?>> getKeyAttributes() {
         return keyAttributes;
     }
 
     @Override
-    public Attribute<T, ?> singleKeyAttribute() {
+    public Attribute<T, ?> getSingleKeyAttribute() {
         return keyAttribute;
     }
 
     @Override
-    public <B> Supplier<B> builderFactory() {
+    public <B> Supplier<B> getBuilderFactory() {
         @SuppressWarnings("unchecked")
         Supplier<B> supplier = (Supplier<B>) builderFactory;
         return supplier;
     }
 
     @Override
-    public <B> Function<B, T> buildFunction() {
+    public <B> Function<B, T> getBuildFunction() {
         @SuppressWarnings("unchecked")
         Function<B, T> function = (Function<B, T>) buildFunction;
         return function;
     }
 
     @Override
-    public Supplier<T> factory() {
+    public Supplier<T> getFactory() {
         return factory;
     }
 
     @Override
-    public Function<T, EntityProxy<T>> proxyProvider() {
+    public Function<T, EntityProxy<T>> getProxyProvider() {
         return proxyProvider;
     }
 
     @Override
-    public String[] tableCreateAttributes() {
+    public String[] getTableCreateAttributes() {
         return tableCreateAttributes;
     }
 
@@ -143,8 +143,8 @@ abstract class BaseType<T> implements Type<T> {
     public boolean equals(Object obj) {
         if (obj instanceof Type) {
             Type other = (Type) obj;
-            return Objects.equals(classType(), other.classType()) &&
-                   Objects.equals(name(), other.name());
+            return Objects.equals(getClassType(), other.getClassType()) &&
+                   Objects.equals(getName(), other.getName());
         }
         return false;
     }

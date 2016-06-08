@@ -24,22 +24,22 @@ import java.util.LinkedHashSet;
 final class ImmutableType<T> extends BaseType<T> {
 
     ImmutableType(TypeBuilder<T> builder) {
-        this.type = builder.classType();
-        this.baseType = builder.baseType();
-        this.name = builder.name();
+        this.type = builder.getClassType();
+        this.baseType = builder.getBaseType();
+        this.name = builder.getName();
         this.cacheable = builder.isCacheable();
         this.readOnly = builder.isReadOnly();
         this.immutable = builder.isImmutable();
         this.stateless = builder.isStateless();
-        this.factory = builder.factory();
-        this.proxyProvider = builder.proxyProvider();
-        this.tableCreateAttributes = builder.tableCreateAttributes();
-        this.builderFactory = builder.builderFactory();
-        this.buildFunction = builder.buildFunction();
+        this.factory = builder.getFactory();
+        this.proxyProvider = builder.getProxyProvider();
+        this.tableCreateAttributes = builder.getTableCreateAttributes();
+        this.builderFactory = builder.getBuilderFactory();
+        this.buildFunction = builder.getBuildFunction();
 
         LinkedHashSet<Attribute<T, ?>> attributes = new LinkedHashSet<>();
         LinkedHashSet<Attribute<T, ?>> keyAttributes = new LinkedHashSet<>();
-        for (Attribute<T, ?> attribute : builder.attributes()) {
+        for (Attribute<T, ?> attribute : builder.getAttributes()) {
             setDeclaringType(attribute);
             attributes.add(attribute);
             if (attribute.isKey()) {
@@ -60,7 +60,7 @@ final class ImmutableType<T> extends BaseType<T> {
                 @Override
                 public T get() {
                     try {
-                        return classType().newInstance();
+                        return getClassType().newInstance();
                     } catch (InstantiationException | IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }

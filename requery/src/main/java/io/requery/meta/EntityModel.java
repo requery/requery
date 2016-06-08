@@ -28,7 +28,7 @@ public interface EntityModel {
     /**
      * @return the name of the model (if given) otherwise an empty string.
      */
-    String name();
+    String getName();
 
     /**
      * Retrieves the meta {@link Type} information for the given entity class.
@@ -52,5 +52,5 @@ public interface EntityModel {
     /**
      * @return Read only collection of all {@link Type} elements in this model.
      */
-    Set<Type<?>> allTypes();
+    Set<Type<?>> getTypes();
 }

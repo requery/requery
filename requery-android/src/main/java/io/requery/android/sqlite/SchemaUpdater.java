@@ -56,15 +56,15 @@ public class SchemaUpdater {
         }
         // check for missing columns
         List<Attribute> missingAttributes = new ArrayList<>();
-        for (Type<?> type : configuration.entityModel().allTypes()) {
-            String tableName = type.name();
+        for (Type<?> type : configuration.getModel().getTypes()) {
+            String tableName = type.getName();
             Cursor cursor = queryFunction.apply("PRAGMA table_info(" + tableName + ")");
             Map<String, Attribute> map = new LinkedHashMap<>();
-            for (Attribute attribute : type.attributes()) {
+            for (Attribute attribute : type.getAttributes()) {
                 if (attribute.isAssociation() && !attribute.isForeignKey()) {
                     continue;
                 }
-                map.put(attribute.name(), attribute);
+                map.put(attribute.getName(), attribute);
             }
             if (cursor.getCount() > 0) {
                 int nameIndex = cursor.getColumnIndex("name");

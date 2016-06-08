@@ -171,10 +171,10 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
                 Type<E> type = null;
                 if (key instanceof Attribute) {
                     Attribute attribute = (Attribute) key;
-                    type = (Type<E>) attribute.declaringType();
+                    type = (Type<E>) attribute.getDeclaringType();
                 }
                 if (type != null) {
-                    EntityProxy<E> proxy = type.proxyProvider().apply(value);
+                    EntityProxy<E> proxy = type.getProxyProvider().apply(value);
                     map.put(proxy.get((Attribute<E, K>) key), value);
                 } else if (value instanceof Tuple) {
                     map.put(((Tuple) value).get(key), value);

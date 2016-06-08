@@ -24,7 +24,7 @@ public class Round<V> extends Function<V> {
     private final int decimals;
 
     private Round(Expression<V> expression, int decimals) {
-        super("round", expression.classType());
+        super("round", expression.getClassType());
         this.expression = expression;
         this.decimals = decimals;
     }

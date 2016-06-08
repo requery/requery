@@ -78,9 +78,9 @@ abstract class PreparedQueryOperation {
                 // allows entity arguments with single keys to be remapped to their keys
                 if (model.containsTypeOf(type)) {
                     Type<Object> entityType = model.typeOf(type);
-                    Attribute<Object, ?> keyAttribute = entityType.singleKeyAttribute();
+                    Attribute<Object, ?> keyAttribute = entityType.getSingleKeyAttribute();
                     if (keyAttribute != null) {
-                        value = keyAttribute.property().get(value);
+                        value = keyAttribute.getProperty().get(value);
                         expression = (Expression) keyAttribute;
                     }
                 }

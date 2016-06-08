@@ -34,7 +34,7 @@ public abstract class Function<V> extends FieldExpression<V> {
     }
 
     @Override
-    public ExpressionType type() {
+    public ExpressionType getExpressionType() {
         return ExpressionType.FUNCTION;
     }
 
@@ -45,17 +45,17 @@ public abstract class Function<V> extends FieldExpression<V> {
     }
 
     @Override
-    public String aliasName() {
+    public String getAlias() {
         return alias;
     }
 
     @Override
-    public Class<V> classType() {
+    public Class<V> getClassType() {
         return type;
     }
 
     @Override
-    public String name() {
+    public String getName() {
         return name;
     }
 
@@ -81,9 +81,9 @@ public abstract class Function<V> extends FieldExpression<V> {
         }
         if(obj instanceof Function) {
             Function other = (Function) obj;
-            return Objects.equals(name(), other.name()) &&
-                   Objects.equals(classType(), other.classType()) &&
-                   Objects.equals(aliasName(), other.aliasName()) &&
+            return Objects.equals(getName(), other.getName()) &&
+                   Objects.equals(getClassType(), other.getClassType()) &&
+                   Objects.equals(getAlias(), other.getAlias()) &&
                    Objects.equals(arguments(), other.arguments());
         }
         return false;
@@ -91,7 +91,7 @@ public abstract class Function<V> extends FieldExpression<V> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name(), classType(), aliasName(), arguments());
+        return Objects.hash(getName(), getClassType(), getAlias(), arguments());
     }
 
     private static class ArgumentExpression<X> implements Expression<X> {
@@ -103,17 +103,17 @@ public abstract class Function<V> extends FieldExpression<V> {
         }
 
         @Override
-        public String name() {
+        public String getName() {
             return "";
         }
 
         @Override
-        public Class<X> classType() {
+        public Class<X> getClassType() {
             return type;
         }
 
         @Override
-        public ExpressionType type() {
+        public ExpressionType getExpressionType() {
             return ExpressionType.FUNCTION;
         }
     }

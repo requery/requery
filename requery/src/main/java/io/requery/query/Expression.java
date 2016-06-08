@@ -28,15 +28,15 @@ public interface Expression<V> {
     /**
      * @return identifier of the expression
      */
-    String name();
+    String getName();
 
     /**
      * @return {@link Class} that results when the expression is evaluated
      */
-    Class<V> classType();
+    Class<V> getClassType();
 
     /**
      * @return type of the expression
      */
-    ExpressionType type();
+    ExpressionType getExpressionType();
 }

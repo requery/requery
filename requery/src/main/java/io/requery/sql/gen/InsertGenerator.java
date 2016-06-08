@@ -39,7 +39,7 @@ class InsertGenerator implements Generator<Map<Expression<?>, Object>> {
                     @Override
                     public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
                         Expression<?> key = value.getKey();
-                        switch (key.type()) {
+                        switch (key.getExpressionType()) {
                             case ATTRIBUTE:
                                 Attribute attribute = (Attribute) key;
                                 if (attribute.isGenerated()) {
@@ -48,7 +48,7 @@ class InsertGenerator implements Generator<Map<Expression<?>, Object>> {
                                 qb.attribute(attribute);
                                 break;
                             default:
-                                qb.append(key.name()).space();
+                                qb.append(key.getName()).space();
                                 break;
                         }
                     }

@@ -40,50 +40,50 @@ public interface Attribute<T, V> {
     /**
      * @return the type name, not this can be different from the member/field name.
      */
-    String name();
+    String getName();
 
     /**
      * @return the type of {@link Class} this attribute holds.
      */
-    Class<V> classType();
+    Class<V> getClassType();
 
     /**
      * @return The {@link Type} that contains this attribute.
      */
-    Type<T> declaringType();
+    Type<T> getDeclaringType();
 
     /**
      * @return {@link PrimitiveKind} of this attribute if this attribute is representing a
      * primitive field, returns null otherwise if the field is not primitive (including boxed
      * versions of types)
      */
-    PrimitiveKind primitiveKind();
+    PrimitiveKind getPrimitiveKind();
 
     /**
      * @return {@link Initializer} for defining the default value for the property representing the
      * attribute.
      */
-    Initializer<T, V> initializer();
+    Initializer<T, V> getInitializer();
 
     /**
      * @return {@link Property} representing access to the field of the entity.
      */
-    Property<T, V> property();
+    Property<T, V> getProperty();
 
     /**
      * @return Name of the source field or method that this attribute is mapped to.
      */
-    String propertyName();
+    String getPropertyName();
 
     /**
      * @return {@link Property} representing access to the state of the held property.
      */
-    Property<T, PropertyState> propertyState();
+    Property<T, PropertyState> getPropertyState();
 
     /**
      * @return {@link Property} used to apply the attribute a builder instance for the type.
      */
-    Property<?, V> builderProperty();
+    Property<?, V> getBuilderProperty();
 
     /**
      * @return true if this attribute is lazily loaded, false otherwise.
@@ -133,88 +133,88 @@ public interface Attribute<T, V> {
     /**
      * @return the default value expression for the column. Used during the table generation phase.
      */
-    String defaultValue();
+    String getDefaultValue();
 
     /**
      * @return for String types the max length of the field in the persistence store or null.
      */
-    Integer length();
+    Integer getLength();
 
     /**
      * @return for an {@link #isIndexed()} true attribute the index name(s), defaults to empty
      * (auto created).
      */
-    Set<String> indexNames();
+    Set<String> getIndexNames();
 
     /**
      * @return the collation for the attribute, defaults to null
      */
-    String collate();
+    String getCollate();
 
     /**
      * @return For a collection type the class of element in the collection.
      */
-    Class<?> elementClass();
+    Class<?> getElementClass();
 
     /**
      * @return For a map type the class of the key.
      */
-    Class<?> mapKeyClass();
+    Class<?> getMapKeyClass();
 
     /**
      * @return For a foreign key relationship the type being referenced.
      */
-    Class<?> referencedClass();
+    Class<?> getReferencedClass();
 
     /**
      * @return For a {@link #isAssociation()} true attribute the type of relation being represented.
      */
-    Cardinality cardinality();
+    Cardinality getCardinality();
 
     /**
      * @return For a {@link #isForeignKey()} attribute the action to take when the referenced entity
      * is deleted, otherwise null.
      */
-    ReferentialAction deleteAction();
+    ReferentialAction getDeleteAction();
 
     /**
      * @return For a {@link #isForeignKey()} attribute the action to take when the referenced entity
      * is updated, otherwise null.
      */
-    ReferentialAction updateAction();
+    ReferentialAction getUpdateAction();
 
     /**
      * @return For an associative attribute the action to take when the association is modified.
      */
-    Set<CascadeAction> cascadeActions();
+    Set<CascadeAction> getCascadeActions();
 
     /**
-     * @return the converter instance used to convert the {@link #classType()} to a persisted value
+     * @return the converter instance used to convert the {@link #getClassType()} to a persisted value
      * and vice versa.
      */
-    Converter<V, ?> converter();
+    Converter<V, ?> getConverter();
 
     /**
      * @return For a associative relationship the attribute that is the owning side of the
      * relationship. Note returns a provider since attributes may have cyclic dependencies.
      */
-    Supplier<Attribute> mappedAttribute();
+    Supplier<Attribute> getMappedAttribute();
 
     /**
      * @return For a foreign key relationship the attribute being referenced. Note returns a
      * provider since attributes may have cyclic dependencies.
      */
-    Supplier<Attribute> referencedAttribute();
+    Supplier<Attribute> getReferencedAttribute();
 
     /**
      * @return For a relationship with a multiple result query the attribute used to order the
      * query.
      */
-    Supplier<Attribute> orderByAttribute();
+    Supplier<Attribute> getOrderByAttribute();
 
     /**
-     * @return If {@link #orderByAttribute()} is specified the order direction to use in the
+     * @return If {@link #getOrderByAttribute()} is specified the order direction to use in the
      * generated query.
      */
-    Order orderByDirection();
+    Order getOrderByDirection();
 }

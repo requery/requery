@@ -36,78 +36,78 @@ public interface Configuration {
     /**
      * @return {@link Connection} provider. This provider must return a usable connection.
      */
-    ConnectionProvider connectionProvider();
+    ConnectionProvider getConnectionProvider();
 
     /**
      * @return {@link Platform} to use, if null the Platform will try to be determined automatically
      * via the Connection metadata.
      */
-    Platform platform();
+    Platform getPlatform();
 
     /**
      * @return {@link EntityModel} defining the model, must not be null.
      */
-    EntityModel entityModel();
+    EntityModel getModel();
 
     /**
      * @return {@link EntityCache} cache to use (if null no caching will be used)
      */
-    EntityCache entityCache();
+    EntityCache getCache();
 
     /**
      * @return the mapping implementation use (if null default mapping will be used)
      */
-    Mapping mapping();
+    Mapping getMapping();
 
     /**
      * @return for asynchronous operations the {@link Executor} that is used to perform the write.
      */
-    Executor writeExecutor();
+    Executor getWriteExecutor();
 
     /**
      * @return true if the default logging should be enabled
      */
-    boolean useDefaultLogging();
+    boolean getUseDefaultLogging();
 
     /**
      * @return true if the all the table names should be quoted.
      */
-    boolean quoteTableNames();
+    boolean getQuoteTableNames();
 
     /**
      * @return true if all column names should be quoted.
      */
-    boolean quoteColumnNames();
+    boolean getQuoteColumnNames();
 
     /**
      * @return number of statements to cache, 0 to disable caching.
      */
-    int statementCacheSize();
+    int getStatementCacheSize();
 
     /**
      * @return max number of statements to use in a batch insert or update operation.
      */
-    int batchUpdateSize();
+    int getBatchUpdateSize();
 
     /**
      * @return the mode of transactions enabled {@link TransactionMode}, defaults to
      * {@link TransactionMode#AUTO}
      */
-    TransactionMode transactionMode();
+    TransactionMode getTransactionMode();
 
     /**
      * @return optional default {@link TransactionIsolation} isolation to use for transactions.
      */
-    TransactionIsolation transactionIsolation();
+    TransactionIsolation getTransactionIsolation();
 
     /**
      * @return get the supplier of transaction listeners. One {@link TransactionListener} will be
      * requested per {@link io.requery.Transaction}
      */
-    Set<Supplier<TransactionListener>> transactionListenerFactories();
+    Set<Supplier<TransactionListener>> getTransactionListenerFactories();
 
     /**
      * @return get the set of default statement listeners
      */
-    Set<StatementListener> statementListeners();
+    Set<StatementListener> getStatementListeners();
 }

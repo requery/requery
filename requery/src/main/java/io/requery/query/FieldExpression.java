@@ -47,13 +47,13 @@ public abstract class FieldExpression<V> implements
     }
 
     @Override
-    public abstract String name();
+    public abstract String getName();
 
     @Override
-    public abstract ExpressionType type();
+    public abstract ExpressionType getExpressionType();
 
     @Override
-    public abstract Class<V> classType();
+    public abstract Class<V> getClassType();
 
     @Override
     public Expression<V> as(String alias) {
@@ -61,7 +61,7 @@ public abstract class FieldExpression<V> implements
     }
 
     @Override
-    public String aliasName() {
+    public String getAlias() {
         return null;
     }
 
@@ -336,16 +336,16 @@ public abstract class FieldExpression<V> implements
         }
         if(obj instanceof FieldExpression) {
             FieldExpression other = (FieldExpression) obj;
-            return Objects.equals(name(), other.name()) &&
-                   Objects.equals(classType(), other.classType()) &&
-                   Objects.equals(aliasName(), other.aliasName());
+            return Objects.equals(getName(), other.getName()) &&
+                   Objects.equals(getClassType(), other.getClassType()) &&
+                   Objects.equals(getAlias(), other.getAlias());
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name(), classType(), aliasName());
+        return Objects.hash(getName(), getClassType(), getAlias());
     }
 
     private static class ExpressionCondition<L, R> implements LogicalCondition<L, R> {
@@ -371,17 +371,17 @@ public abstract class FieldExpression<V> implements
         }
 
         @Override
-        public Operator operator() {
+        public Operator getOperator() {
             return operator;
         }
 
         @Override
-        public R rightOperand() {
+        public R getRightOperand() {
             return rightOperand;
         }
 
         @Override
-        public L leftOperand() {
+        public L getLeftOperand() {
             return leftOperand;
         }
 
@@ -436,17 +436,17 @@ public abstract class FieldExpression<V> implements
         }
 
         @Override
-        public String name() {
-            return expression.name();
+        public String getName() {
+            return expression.getName();
         }
 
         @Override
-        public Class<X> classType() {
-            return expression.classType();
+        public Class<X> getClassType() {
+            return expression.getClassType();
         }
 
         @Override
-        public ExpressionType type() {
+        public ExpressionType getExpressionType() {
             return ExpressionType.ORDERING;
         }
     }

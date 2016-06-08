@@ -19,16 +19,16 @@ package io.requery.meta;
 final class ImmutableAttribute<T, V> extends BaseAttribute<T, V> {
 
     ImmutableAttribute(AttributeBuilder<T, V> builder) {
-        name = builder.name();
-        classType = builder.classType();
-        primitiveKind = builder.primitiveKind();
-        property = builder.property();
-        propertyName = builder.propertyName();
-        propertyState = builder.propertyState();
-        initializer = builder.initializer();
-        builderProperty = builder.builderProperty();
+        name = builder.getName();
+        classType = builder.getClassType();
+        primitiveKind = builder.getPrimitiveKind();
+        property = builder.getProperty();
+        propertyName = builder.getPropertyName();
+        propertyState = builder.getPropertyState();
+        initializer = builder.getInitializer();
+        builderProperty = builder.getBuilderProperty();
         isLazy = builder.isLazy();
-        length = builder.length();
+        length = builder.getLength();
         isKey = builder.isKey();
         isUnique = builder.isUnique();
         isGenerated = builder.isGenerated();
@@ -36,21 +36,21 @@ final class ImmutableAttribute<T, V> extends BaseAttribute<T, V> {
         isVersion = builder.isVersion();
         isForeignKey = builder.isForeignKey();
         isIndex = builder.isIndexed();
-        defaultValue = builder.defaultValue();
-        collate = builder.collate();
-        indexNames = builder.indexNames();
-        cardinality = builder.cardinality();
-        deleteAction = builder.deleteAction();
-        updateAction = builder.updateAction();
-        cascadeActions = builder.cascadeActions();
-        referencedAttribute = builder.referencedAttribute();
-        referencedClass = builder.referencedClass();
-        mapKeyClass = builder.mapKeyClass();
-        elementClass = builder.elementClass();
+        defaultValue = builder.getDefaultValue();
+        collate = builder.getCollate();
+        indexNames = builder.getIndexNames();
+        cardinality = builder.getCardinality();
+        deleteAction = builder.getDeleteAction();
+        updateAction = builder.getUpdateAction();
+        cascadeActions = builder.getCascadeActions();
+        referencedAttribute = builder.getReferencedAttribute();
+        referencedClass = builder.getReferencedClass();
+        mapKeyClass = builder.getMapKeyClass();
+        elementClass = builder.getElementClass();
         isForeignKey = builder.isForeignKey();
-        converter = builder.converter();
-        mappedAttribute = builder.mappedAttribute();
-        orderByAttribute = builder.orderByAttribute();
-        orderByDirection = builder.orderByDirection();
+        converter = builder.getConverter();
+        mappedAttribute = builder.getMappedAttribute();
+        orderByAttribute = builder.getOrderByAttribute();
+        orderByDirection = builder.getOrderByDirection();
     }
 }

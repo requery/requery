@@ -54,7 +54,7 @@ class TransactionEntitiesSet extends LinkedHashSet<EntityProxy<?>> {
             proxy.unlink();
             Object key = proxy.key();
             if (key != null) {
-                cache.invalidate(proxy.type().classType(), key);
+                cache.invalidate(proxy.type().getClassType(), key);
             }
         }
         clear();

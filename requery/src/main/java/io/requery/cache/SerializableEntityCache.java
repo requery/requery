@@ -57,7 +57,7 @@ public class SerializableEntityCache implements EntityCache {
     }
 
     protected String getCacheName(Type<?> type) {
-        return type.name();
+        return type.getName();
     }
 
     protected <K, V> void configure(MutableConfiguration<K, V> configuration) {
@@ -65,14 +65,14 @@ public class SerializableEntityCache implements EntityCache {
     }
 
     private <T> Class getKeyClass(Type<T> type) {
-        Set<Attribute<T, ?>> ids = type.keyAttributes();
+        Set<Attribute<T, ?>> ids = type.getKeyAttributes();
         Class keyClass;
         if (ids.isEmpty()) {
             // use hash code
             return Integer.class;
         }
         if (ids.size() == 1) {
-            keyClass = ids.iterator().next().classType();
+            keyClass = ids.iterator().next().getClassType();
             if (keyClass.isPrimitive()) {
                 if (keyClass == int.class) {
                     keyClass = Integer.class;

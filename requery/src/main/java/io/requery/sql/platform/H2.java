@@ -65,7 +65,7 @@ public class H2 extends Generic {
         @Override
         public void write(final Output output, final Map<Expression<?>, Object> values) {
             QueryBuilder qb = output.builder();
-            Type<?> type = ((Attribute) values.keySet().iterator().next()).declaringType();
+            Type<?> type = ((Attribute) values.keySet().iterator().next()).getDeclaringType();
             qb.keyword(MERGE).keyword(INTO)
                 .tableNames(values.keySet())
                 .openParenthesis()
@@ -73,7 +73,7 @@ public class H2 extends Generic {
                 .closeParenthesis().space()
                 .keyword(KEY)
                 .openParenthesis()
-                .commaSeparatedAttributes(type.keyAttributes())
+                .commaSeparatedAttributes(type.getKeyAttributes())
                 .closeParenthesis().space()
                 .keyword(SELECT)
                 .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {

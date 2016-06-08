@@ -45,7 +45,7 @@ public class OrderByGenerator implements Generator<OrderByElement> {
             int size = orderBy.size();
             for (Expression<?> order : orderBy) {
                 output.appendColumn(order);
-                if (order.type() == ExpressionType.ORDERING) {
+                if (order.getExpressionType() == ExpressionType.ORDERING) {
                     OrderingExpression ordering = (OrderingExpression) order;
                     qb.keyword(ordering.getOrder() == Order.ASC ? ASC : DESC);
                     if(ordering.getNullOrder() != null) {

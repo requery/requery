@@ -24,7 +24,7 @@ public class Trim<V> extends Function<V> {
     private final String chars;
 
     private Trim(Expression<V> expression, String chars) {
-        super("trim", expression.classType());
+        super("trim", expression.getClassType());
         this.expression = expression;
         this.chars = chars;
     }

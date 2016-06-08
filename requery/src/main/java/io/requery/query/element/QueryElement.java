@@ -129,6 +129,7 @@ public class QueryElement<E> implements Selectable<E>,
         return updates == null ? Collections.<Expression<?>, Object>emptyMap() : updates;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Set<WhereConditionElement<?>> getWhereElements() {
         return (Set)where;
@@ -158,6 +159,7 @@ public class QueryElement<E> implements Selectable<E>,
         return groupBy;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Set<HavingConditionElement<?>> getHavingElements() {
         return (Set)having;
@@ -203,14 +205,14 @@ public class QueryElement<E> implements Selectable<E>,
                     expression = ((AliasedExpression) expression).innerExpression();
                 }
                 if (expression instanceof Attribute) {
-                    Type type = ((Attribute) expression).declaringType();
+                    Type type = ((Attribute) expression).getDeclaringType();
                     types.add(type);
                 } else if (expression instanceof Function) {
                     Function function = (Function) expression;
                     for (Object arg : function.arguments()) {
                         Type type = null;
                         if (arg instanceof Attribute) {
-                            type = ((Attribute) arg).declaringType();
+                            type = ((Attribute) arg).getDeclaringType();
                             types.add(type);
                         } else if (arg instanceof Class) {
                             type = model.typeOf((Class) arg);
@@ -232,17 +234,17 @@ public class QueryElement<E> implements Selectable<E>,
     }
 
     @Override
-    public String name() {
+    public String getName() {
         return "";
     }
 
     @Override
-    public Class<QueryElement> classType() {
+    public Class<QueryElement> getClassType() {
         return QueryElement.class;
     }
 
     @Override
-    public ExpressionType type() {
+    public ExpressionType getExpressionType() {
         return ExpressionType.QUERY;
     }
 
@@ -253,7 +255,7 @@ public class QueryElement<E> implements Selectable<E>,
     }
 
     @Override
-    public String aliasName() {
+    public String getAlias() {
         return aliasName;
     }
 
@@ -341,7 +343,7 @@ public class QueryElement<E> implements Selectable<E>,
     }
 
     private <J> JoinOn<E> createJoin(Class<J> type, JoinType joinType) {
-        String table = model.typeOf(type).name();
+        String table = model.typeOf(type).getName();
         JoinOnElement<E> join = new JoinOnElement<>(this, table, joinType);
         addJoinElement(join);
         return join;
