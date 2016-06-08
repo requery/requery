@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+## 1.0.0-beta22
+
+- Support Rx type changes for update queries
+- Fix RowCountException when deleting cascading entity
+- Fix ClassCastException when using CompositeKey
+
 ## 1.0.0-beta21
 
 - Support for @Embedded types
