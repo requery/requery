@@ -66,12 +66,19 @@ public abstract class QueryAdapter<E> extends BaseAdapter implements Closeable {
     }
 
     /**
-     * Creates a new adapter instance.
+     * Creates a new adapter instance without any type mapping.
+     */
+    protected QueryAdapter() {
+        this(null);
+    }
+
+    /**
+     * Creates a new adapter instance mapped to the given type.
      *
-     * @param type entity class type
+     * @param type entity type
      */
     protected QueryAdapter(Type<E> type) {
-        proxyProvider = type.getProxyProvider();
+        proxyProvider = type == null ? null : type.getProxyProvider();
         handler = new Handler();
     }
 
@@ -178,8 +185,11 @@ public abstract class QueryAdapter<E> extends BaseAdapter implements Closeable {
     @Override
     public long getItemId(int position) {
         E item = iterator.get(position);
-        EntityProxy<E> proxy = proxyProvider.apply(item);
-        Object key = proxy.key();
+        Object key = null;
+        if (proxyProvider != null) {
+            EntityProxy<E> proxy = proxyProvider.apply(item);
+            key = proxy.key();
+        }
         return key == null ? item.hashCode() : key.hashCode();
     }
 
