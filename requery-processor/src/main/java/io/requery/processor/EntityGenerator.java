@@ -741,8 +741,10 @@ class EntityGenerator implements SourceGenerator {
             builder.add(".setCascadeAction(" + joiner +  ")\n", args);
         }
         if (attribute.cardinality() != null) {
-            builder.add(".setCardinality($T.$L)\n",
-                ClassName.get(Cardinality.class), attribute.cardinality());
+            if (!expression) {
+                builder.add(".setCardinality($T.$L)\n",
+                        ClassName.get(Cardinality.class), attribute.cardinality());
+            }
 
             graph.referencingEntity(attribute).ifPresent(referenced -> {
                 Set<AttributeDescriptor> mappings =
