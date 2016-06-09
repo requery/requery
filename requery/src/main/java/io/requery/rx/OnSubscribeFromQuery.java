@@ -39,11 +39,9 @@ import java.util.concurrent.atomic.AtomicLong;
 class OnSubscribeFromQuery<T> implements Observable.OnSubscribe<T> {
 
     private final BaseResult<T> result;
-    private final Integer maxElements;
 
-    OnSubscribeFromQuery(BaseResult<T> result, Integer maxElements) {
+    OnSubscribeFromQuery(BaseResult<T> result) {
         this.result = result;
-        this.maxElements = maxElements;
     }
 
     @Override
@@ -69,8 +67,7 @@ class OnSubscribeFromQuery<T> implements Observable.OnSubscribe<T> {
             if (n == Long.MAX_VALUE && requested.compareAndSet(0, Long.MAX_VALUE)) {
                 // emitting all elements
                 try (CloseableIterator<T> iterator = result.iterator()) {
-                    while (!subscriber.isUnsubscribed() &&
-                        (maxElements == null || emitted.get() < maxElements)) {
+                    while (!subscriber.isUnsubscribed()) {
                         if (iterator.hasNext()) {
                             subscriber.onNext(iterator.next());
                             emitted.incrementAndGet();

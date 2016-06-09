@@ -95,8 +95,8 @@ public final class RxSupport {
         return false;
     }
 
-    public static <E> Observable<E> toObservable(final BaseResult<E> result, Integer limit) {
-        return Observable.create(new OnSubscribeFromQuery<>(result, limit));
+    public static <E> Observable<E> toObservable(final BaseResult<E> result) {
+        return Observable.create(new OnSubscribeFromQuery<>(result));
     }
 
     public static <E> Single<E> toSingle(final Scalar<E> scalar) {

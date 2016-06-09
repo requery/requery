@@ -140,7 +140,7 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
 
     @Override
     public rx.Observable<E> toObservable() {
-        return RxSupport.toObservable(this, maxSize);
+        return RxSupport.toObservable(this);
     }
 
     @Override
