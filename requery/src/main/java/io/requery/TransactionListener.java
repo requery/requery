@@ -42,9 +42,9 @@ public interface TransactionListener {
     /**
      * Invoked before the transaction is committed.
      *
-     * @param entities collection of entity types involved in the transaction
+     * @param types collection of entity types involved in the transaction
      */
-    void beforeCommit(Set<Type<?>> entities);
+    void beforeCommit(Set<Type<?>> types);
 
     /**
      * Invoked after the transaction is committed successfully.
