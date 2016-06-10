@@ -27,17 +27,17 @@ import io.requery.Converter;
 public class UriConverter implements Converter<Uri, String> {
 
     @Override
-    public Class<Uri> mappedType() {
+    public Class<Uri> getMappedType() {
         return Uri.class;
     }
 
     @Override
-    public Class<String> persistedType() {
+    public Class<String> getPersistedType() {
         return String.class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 

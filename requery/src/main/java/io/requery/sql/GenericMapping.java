@@ -141,7 +141,7 @@ public class GenericMapping implements Mapping {
         }
         platform.addMappings(this);
         for (Converter converter : converters) {
-            Class mapped = converter.mappedType();
+            Class mapped = converter.getMappedType();
             if (!types.containsKey(mapped)) {
                 this.converters.put(mapped, converter);
             }
@@ -222,7 +222,7 @@ public class GenericMapping implements Mapping {
         }
         if (attribute.getConverter() != null) {
             Converter<?, ?> converter = attribute.getConverter();
-            type = converter.persistedType();
+            type = converter.getPersistedType();
         }
         fieldType = getSubstitutedType(type);
         resolvedTypes.put(attribute, fieldType);
@@ -244,10 +244,10 @@ public class GenericMapping implements Mapping {
         // check conversion
         Converter<?, ?> converter = converterForType(type);
         if (converter != null) {
-            if (converter.persistedSize() != null) {
-                fieldType = fixedTypes.get(converter.persistedType());
+            if (converter.getPersistedSize() != null) {
+                fieldType = fixedTypes.get(converter.getPersistedType());
             }
-            type = converter.persistedType();
+            type = converter.getPersistedType();
         }
         if (fieldType == null) {
             fieldType = types.get(type);

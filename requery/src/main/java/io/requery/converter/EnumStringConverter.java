@@ -32,17 +32,17 @@ public class EnumStringConverter<E extends Enum> implements Converter<E, String>
     }
 
     @Override
-    public Class<E> mappedType() {
+    public Class<E> getMappedType() {
         return enumClass;
     }
 
     @Override
-    public Class<String> persistedType() {
+    public Class<String> getPersistedType() {
         return String.class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 

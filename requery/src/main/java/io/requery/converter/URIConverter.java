@@ -26,17 +26,17 @@ import java.net.URI;
 public class URIConverter implements Converter<URI, String> {
 
     @Override
-    public Class<URI> mappedType() {
+    public Class<URI> getMappedType() {
         return URI.class;
     }
 
     @Override
-    public Class<String> persistedType() {
+    public Class<String> getPersistedType() {
         return String.class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 

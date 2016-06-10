@@ -468,11 +468,11 @@ public class SchemaModifier {
                 converter = genericMapping.converterForType(attribute.getClassType());
             }
             if (fieldType.hasLength() ||
-                (converter != null && converter.persistedSize() != null)) {
+                (converter != null && converter.getPersistedSize() != null)) {
 
                 Integer length = attribute.getLength();
                 if (length == null && converter != null) {
-                    length = converter.persistedSize();
+                    length = converter.getPersistedSize();
                 }
                 if (length == null) {
                     length = fieldType.defaultLength();

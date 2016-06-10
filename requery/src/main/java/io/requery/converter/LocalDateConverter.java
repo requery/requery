@@ -28,17 +28,17 @@ import java.time.ZoneId;
 public class LocalDateConverter implements Converter<LocalDate, java.sql.Date> {
 
     @Override
-    public Class<LocalDate> mappedType() {
+    public Class<LocalDate> getMappedType() {
         return LocalDate.class;
     }
 
     @Override
-    public Class<java.sql.Date> persistedType() {
+    public Class<java.sql.Date> getPersistedType() {
         return java.sql.Date.class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 

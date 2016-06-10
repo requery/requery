@@ -125,7 +125,7 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
 
     @Override
     public Integer getLength() {
-        return converter != null ? converter.persistedSize() : length;
+        return converter != null ? converter.getPersistedSize() : length;
     }
 
     @Override

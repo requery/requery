@@ -53,17 +53,17 @@ public class ParcelConverter<T extends Parcelable> implements Converter<T, byte[
     }
 
     @Override
-    public Class<T> mappedType() {
+    public Class<T> getMappedType() {
         return type;
     }
 
     @Override
-    public Class<byte[]> persistedType() {
+    public Class<byte[]> getPersistedType() {
         return byte[].class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 

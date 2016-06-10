@@ -55,17 +55,17 @@ public interface Converter<A, B> {
     /**
      * @return the type to be converted.
      */
-    Class<A> mappedType();
+    Class<A> getMappedType();
 
     /**
      * @return the persisted type.
      */
-    Class<B> persistedType();
+    Class<B> getPersistedType();
 
     /**
      * @return size or length of the persisted type (optional) in bytes otherwise return null.
      */
-    @Nullable Integer persistedSize();
+    @Nullable Integer getPersistedSize();
 
     /**
      * Convert the mapped type A to the persisted type B.

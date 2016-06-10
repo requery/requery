@@ -32,17 +32,17 @@ public class EnumOrdinalConverter<E extends Enum> implements Converter<E, Intege
     }
 
     @Override
-    public Class<E> mappedType() {
+    public Class<E> getMappedType() {
         return enumClass;
     }
 
     @Override
-    public Class<Integer> persistedType() {
+    public Class<Integer> getPersistedType() {
         return Integer.class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 
@@ -56,6 +56,6 @@ public class EnumOrdinalConverter<E extends Enum> implements Converter<E, Intege
         if (value == null) {
             return null;
         }
-        return mappedType().getEnumConstants()[value];
+        return getMappedType().getEnumConstants()[value];
     }
 }
