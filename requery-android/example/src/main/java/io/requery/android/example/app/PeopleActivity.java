@@ -128,7 +128,7 @@ public class PeopleActivity extends AppCompatActivity {
         private final Random random = new Random();
         private final int[] colors = { Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA };
 
-        protected PersonAdapter() {
+        PersonAdapter() {
             super(PersonEntity.$TYPE);
         }
 
