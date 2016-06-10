@@ -21,7 +21,7 @@ class CompositeEntityStateListener<T> extends EntityStateEventListeners<T> imple
 
     private final T entity;
 
-    public CompositeEntityStateListener(T entity) {
+    CompositeEntityStateListener(T entity) {
         this.entity = entity;
     }
 

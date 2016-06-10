@@ -34,20 +34,14 @@ import java.util.concurrent.Executor;
 public interface Configuration {
 
     /**
+     * @return max number of statements to use in a batch insert or update operation.
+     */
+    int getBatchUpdateSize();
+
+    /**
      * @return {@link Connection} provider. This provider must return a usable connection.
      */
     ConnectionProvider getConnectionProvider();
-
-    /**
-     * @return {@link Platform} to use, if null the Platform will try to be determined automatically
-     * via the Connection metadata.
-     */
-    Platform getPlatform();
-
-    /**
-     * @return {@link EntityModel} defining the model, must not be null.
-     */
-    EntityModel getModel();
 
     /**
      * @return {@link EntityCache} cache to use (if null no caching will be used)
@@ -55,19 +49,26 @@ public interface Configuration {
     EntityCache getCache();
 
     /**
+     * @return {@link EntityStateListener} optional entity state listener that will receive state
+     * callbacks for all entity state changes
+     */
+    Set<EntityStateListener> getEntityStateListener();
+
+    /**
      * @return the mapping implementation use (if null default mapping will be used)
      */
     Mapping getMapping();
 
     /**
-     * @return for asynchronous operations the {@link Executor} that is used to perform the write.
+     * @return {@link EntityModel} defining the model, must not be null.
      */
-    Executor getWriteExecutor();
+    EntityModel getModel();
 
     /**
-     * @return true if the default logging should be enabled
+     * @return {@link Platform} to use, if null the Platform will try to be determined automatically
+     * via the Connection metadata.
      */
-    boolean getUseDefaultLogging();
+    Platform getPlatform();
 
     /**
      * @return true if the all the table names should be quoted.
@@ -85,9 +86,9 @@ public interface Configuration {
     int getStatementCacheSize();
 
     /**
-     * @return max number of statements to use in a batch insert or update operation.
+     * @return get the set of default statement listeners
      */
-    int getBatchUpdateSize();
+    Set<StatementListener> getStatementListeners();
 
     /**
      * @return the mode of transactions enabled {@link TransactionMode}, defaults to
@@ -107,7 +108,12 @@ public interface Configuration {
     Set<Supplier<TransactionListener>> getTransactionListenerFactories();
 
     /**
-     * @return get the set of default statement listeners
+     * @return true if the default logging should be enabled
      */
-    Set<StatementListener> getStatementListeners();
+    boolean getUseDefaultLogging();
+
+    /**
+     * @return for asynchronous operations the {@link Executor} that is used to perform the write.
+     */
+    Executor getWriteExecutor();
 }

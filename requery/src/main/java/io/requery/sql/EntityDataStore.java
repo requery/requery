@@ -168,20 +168,29 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         transactionProvider = new TransactionProvider(context);
         updateOperation = new UpdateOperation(context);
         countOperation = new SelectCountOperation(context);
+        Set<EntityStateListener<T>> entityListeners = new LinkedHashSet<>();
         if (configuration.getUseDefaultLogging()) {
             LoggingListener<T> logListener = new LoggingListener<>();
-            stateListeners.addPostLoadListener(logListener);
-            stateListeners.addPostInsertListener(logListener);
-            stateListeners.addPostDeleteListener(logListener);
-            stateListeners.addPostUpdateListener(logListener);
-            stateListeners.addPreInsertListener(logListener);
-            stateListeners.addPreDeleteListener(logListener);
-            stateListeners.addPreUpdateListener(logListener);
-            stateListeners.enableStateListeners(true);
+            entityListeners.add(logListener);
             statementListeners.add(logListener);
-        } else {
-            // disable the listener since it's used only for logging right now
-            stateListeners.enableStateListeners(false);
+        }
+        if (configuration.getEntityStateListener().isEmpty()) {
+            for (@SuppressWarnings("unchecked")
+                 EntityStateListener<T> listener : configuration.getEntityStateListener()) {
+                entityListeners.add(listener);
+            }
+        }
+        if (!entityListeners.isEmpty()){
+            stateListeners.enableStateListeners(true);
+            for (EntityStateListener<T> listener : entityListeners) {
+                stateListeners.addPostLoadListener(listener);
+                stateListeners.addPostInsertListener(listener);
+                stateListeners.addPostDeleteListener(listener);
+                stateListeners.addPostUpdateListener(listener);
+                stateListeners.addPreInsertListener(listener);
+                stateListeners.addPreDeleteListener(listener);
+                stateListeners.addPreUpdateListener(listener);
+            }
         }
     }
 

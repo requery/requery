@@ -44,6 +44,7 @@ public class ConfigurationBuilder {
     private final ConnectionProvider connectionProvider;
     private final Set<StatementListener> statementListeners;
     private final Set<Supplier<TransactionListener>> transactionListenerFactory;
+    private final Set<EntityStateListener> entityStateListeners;
     private Platform platform;
     private EntityCache cache;
     private Mapping mapping;
@@ -60,6 +61,7 @@ public class ConfigurationBuilder {
         this.connectionProvider = Objects.requireNotNull(connectionProvider);
         this.model = Objects.requireNotNull(model);
         this.statementListeners = new LinkedHashSet<>();
+        this.entityStateListeners = new LinkedHashSet<>();
         this.transactionListenerFactory = new LinkedHashSet<>();
         setQuoteTableNames(false);
         setQuoteColumnNames(false);
@@ -147,6 +149,11 @@ public class ConfigurationBuilder {
         return this;
     }
 
+    public ConfigurationBuilder addEntityStateListener(EntityStateListener listener) {
+        this.entityStateListeners.add(Objects.requireNotNull(listener));
+        return this;
+    }
+
     public ConfigurationBuilder setTransactionIsolation(TransactionIsolation isolation) {
         this.transactionIsolation = isolation;
         return this;
@@ -169,11 +176,11 @@ public class ConfigurationBuilder {
             batchUpdateSize,
             quoteTableNames,
             quoteColumnNames,
+            entityStateListeners,
             statementListeners,
             transactionMode,
             transactionIsolation,
             transactionListenerFactory,
             writeExecutor);
     }
-
 }

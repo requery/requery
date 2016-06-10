@@ -41,6 +41,7 @@ final class ImmutableConfiguration implements Configuration {
     private final TransactionMode transactionMode;
     private final TransactionIsolation transactionIsolation;
     private final ConnectionProvider connectionProvider;
+    private final Set<EntityStateListener> entityStateListeners;
     private final Set<StatementListener> statementListeners;
     private final Set<Supplier<TransactionListener>> transactionListenerFactories;
     private final Executor writeExecutor;
@@ -55,6 +56,7 @@ final class ImmutableConfiguration implements Configuration {
                            int batchUpdateSize,
                            boolean quoteTableNames,
                            boolean quoteColumnNames,
+                           Set<EntityStateListener> entityStateListeners,
                            Set<StatementListener> statementListeners,
                            TransactionMode transactionMode,
                            TransactionIsolation transactionIsolation,
@@ -71,6 +73,7 @@ final class ImmutableConfiguration implements Configuration {
         this.quoteTableNames = quoteTableNames;
         this.quoteColumnNames = quoteColumnNames;
         this.transactionMode = transactionMode;
+        this.entityStateListeners = Collections.unmodifiableSet(entityStateListeners);
         this.statementListeners = Collections.unmodifiableSet(statementListeners);
         this.transactionIsolation = transactionIsolation;
         this.transactionListenerFactories = transactionListenerFactories;
@@ -78,18 +81,8 @@ final class ImmutableConfiguration implements Configuration {
     }
 
     @Override
-    public ConnectionProvider getConnectionProvider() {
-        return connectionProvider;
-    }
-
-    @Override
-    public Platform getPlatform() {
-        return platform;
-    }
-
-    @Override
-    public EntityModel getModel() {
-        return model;
+    public int getBatchUpdateSize() {
+        return batchUpdateSize;
     }
 
     @Override
@@ -98,23 +91,28 @@ final class ImmutableConfiguration implements Configuration {
     }
 
     @Override
+    public ConnectionProvider getConnectionProvider() {
+        return connectionProvider;
+    }
+
+    @Override
+    public Set<EntityStateListener> getEntityStateListener() {
+        return entityStateListeners;
+    }
+
+    @Override
     public Mapping getMapping() {
         return mapping;
     }
 
     @Override
-    public boolean getUseDefaultLogging() {
-        return useDefaultLogging;
+    public EntityModel getModel() {
+        return model;
     }
 
     @Override
-    public int getStatementCacheSize() {
-        return statementCacheSize;
-    }
-
-    @Override
-    public int getBatchUpdateSize() {
-        return batchUpdateSize;
+    public Platform getPlatform() {
+        return platform;
     }
 
     @Override
@@ -125,6 +123,11 @@ final class ImmutableConfiguration implements Configuration {
     @Override
     public boolean getQuoteColumnNames() {
         return quoteColumnNames;
+    }
+
+    @Override
+    public int getStatementCacheSize() {
+        return statementCacheSize;
     }
 
     @Override
@@ -145,6 +148,11 @@ final class ImmutableConfiguration implements Configuration {
     @Override
     public TransactionMode getTransactionMode() {
         return transactionMode;
+    }
+
+    @Override
+    public boolean getUseDefaultLogging() {
+        return useDefaultLogging;
     }
 
     @Override
