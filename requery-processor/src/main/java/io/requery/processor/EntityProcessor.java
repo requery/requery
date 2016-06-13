@@ -93,7 +93,8 @@ public final class EntityProcessor extends AbstractProcessor {
                         entity = computeType(entities, typeElement);
                         // create or get the graph for it
                         String model = entity.modelName();
-                        graphs.computeIfAbsent(model, key -> new EntityGraph(types, embeddedTypes)).add(entity);
+                        graphs.computeIfAbsent(model,
+                                key -> new EntityGraph(types, embeddedTypes)).add(entity);
                     } else if (isSuperclass(typeElement)) {
                         entity = computeType(superTypes, typeElement);
                     } else if (isEmbeddable(typeElement)) {
