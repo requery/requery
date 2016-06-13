@@ -145,8 +145,9 @@ public final class EntityProcessor extends AbstractProcessor {
         }
         if (ElementValidator.hasErrors(validators)) {
             hasErrors = true;
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING,
-                "model has errors code generation may fail");
+            StringBuilder sb = new StringBuilder("Model has error(s) code generation may fail: ");
+            validators.forEach(validator -> sb.append(validator.toString()));
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, sb);
         }
 
         // generate

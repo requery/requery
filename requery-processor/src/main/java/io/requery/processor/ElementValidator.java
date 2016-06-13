@@ -22,6 +22,8 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -34,22 +36,23 @@ class ElementValidator {
 
     private final Element element;
     private final Messager messager;
-    private boolean hasErrors;
     private boolean hasWarnings;
+    private final Map<Element, String> errors;
 
     ElementValidator(Element element, ProcessingEnvironment processingEnvironment) {
         this.element = element;
         this.messager = processingEnvironment.getMessager();
+        errors = new LinkedHashMap<>();
     }
 
     void error(String message) {
-        hasErrors = true;
         messager.printMessage(Diagnostic.Kind.ERROR, message, element);
+        errors.put(element, message);
     }
 
     void error(String message, Class<? extends Annotation> annotation) {
-        hasErrors = true;
         printMessage(annotation, Diagnostic.Kind.ERROR, message);
+        errors.put(element, message);
     }
 
     void warning(String message) {
@@ -78,7 +81,7 @@ class ElementValidator {
     }
 
     boolean hasErrors() {
-        return hasErrors;
+        return !errors.values().isEmpty();
     }
 
     static boolean hasErrors(Set<ElementValidator> validators) {
@@ -88,5 +91,15 @@ class ElementValidator {
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        errors.entrySet().forEach(entry ->
+                sb.append(entry.getKey().getSimpleName())
+                  .append(" : ")
+                  .append(entry.getValue()));
+        return sb.toString();
     }
 }
