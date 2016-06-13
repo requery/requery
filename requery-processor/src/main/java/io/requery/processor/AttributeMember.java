@@ -149,7 +149,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         if (cardinality() != null && entity.isImmutable()) {
             validator.error("Immutable value type cannot contain relational references");
         }
-        checkReserved(name, validator);
+        checkReserved(name(), validator);
         isEmbedded = annotationOf(Embedded.class).isPresent() ||
             annotationOf(javax.persistence.Embedded.class).isPresent();
         indexNames.forEach(name -> checkReserved(name, validator));
