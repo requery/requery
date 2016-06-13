@@ -49,13 +49,7 @@ class ElementValidator {
 
     void error(String message, Class<? extends Annotation> annotation) {
         hasErrors = true;
-        String name = annotation.getName();
-        Optional<? extends AnnotationMirror> mirror = Mirrors.findAnnotationMirror(element, name);
-        if (mirror.isPresent()) {
-            messager.printMessage(Diagnostic.Kind.ERROR, message, element, mirror.get());
-        } else {
-            messager.printMessage(Diagnostic.Kind.ERROR, message);
-        }
+        printMessage(annotation, Diagnostic.Kind.ERROR, message);
     }
 
     void warning(String message) {
@@ -65,12 +59,17 @@ class ElementValidator {
 
     void warning(String message, Class<? extends Annotation> annotation) {
         hasWarnings = true;
+        printMessage(annotation, Diagnostic.Kind.WARNING, message);
+    }
+
+    private void printMessage(Class<? extends Annotation> annotation,
+                              Diagnostic.Kind kind, String message) {
         String name = annotation.getName();
         Optional<? extends AnnotationMirror> mirror = Mirrors.findAnnotationMirror(element, name);
         if (mirror.isPresent()) {
-            messager.printMessage(Diagnostic.Kind.WARNING, message, element, mirror.get());
+            messager.printMessage(kind, message, element, mirror.get());
         } else {
-            messager.printMessage(Diagnostic.Kind.WARNING, message);
+            messager.printMessage(kind, message);
         }
     }
 
