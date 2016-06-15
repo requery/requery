@@ -174,7 +174,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             entityListeners.add(logListener);
             statementListeners.add(logListener);
         }
-        if (configuration.getEntityStateListener().isEmpty()) {
+        if (!configuration.getEntityStateListener().isEmpty()) {
             for (@SuppressWarnings("unchecked")
                  EntityStateListener<T> listener : configuration.getEntityStateListener()) {
                 entityListeners.add(listener);
