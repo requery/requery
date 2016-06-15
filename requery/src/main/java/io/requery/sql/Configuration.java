@@ -52,7 +52,7 @@ public interface Configuration {
      * @return {@link EntityStateListener} optional entity state listener that will receive state
      * callbacks for all entity state changes
      */
-    Set<EntityStateListener> getEntityStateListener();
+    Set<EntityStateListener> getEntityStateListeners();
 
     /**
      * @return the mapping implementation use (if null default mapping will be used)

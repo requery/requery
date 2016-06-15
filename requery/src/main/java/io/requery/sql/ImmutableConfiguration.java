@@ -96,7 +96,7 @@ final class ImmutableConfiguration implements Configuration {
     }
 
     @Override
-    public Set<EntityStateListener> getEntityStateListener() {
+    public Set<EntityStateListener> getEntityStateListeners() {
         return entityStateListeners;
     }
 
