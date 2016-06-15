@@ -82,7 +82,8 @@ class JoinEntityGenerator implements SourceGenerator {
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addSuperinterface(Serializable.class)
             .addAnnotation(AnnotationSpec.builder(Entity.class)
-                .addMember("model", "$S", from.modelName()).build())
+                .addMember("model", "$S", from.modelName())
+                .addMember("stateless", "$L", from.isStateless()).build())
             .addAnnotation(AnnotationSpec.builder(Table.class)
                 .addMember("name", "$S", name).build());
         CodeGeneration.addGeneratedAnnotation(processingEnvironment, junctionType);
