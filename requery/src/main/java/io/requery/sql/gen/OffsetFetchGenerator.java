@@ -33,8 +33,10 @@ public class OffsetFetchGenerator extends LimitGenerator {
     public void write(Output output, LimitedElement query) {
         QueryBuilder qb = output.builder();
         Integer limit = query.getLimit();
-        Integer offset = query.getOffset();
-        write(qb, limit, offset);
+        if (limit != null && limit > 0) {
+            Integer offset = query.getOffset();
+            write(qb, limit, offset);
+        }
     }
 
     protected void write(QueryBuilder qb, Integer limit, Integer offset) {
