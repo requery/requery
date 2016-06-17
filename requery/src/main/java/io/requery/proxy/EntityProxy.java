@@ -74,7 +74,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     public <V> V get(Attribute<E, V> attribute, boolean fetch) {
         PropertyState state = fetch ? loadProperty(attribute) : getState(attribute);
         V value = attribute.getProperty().get(entity);
-        if (value == null && state == PropertyState.FETCH &&
+        if (value == null && (state == PropertyState.FETCH || stateless) &&
             attribute.getInitializer() != null) {
 
             value = attribute.getInitializer().initialize(this, attribute);
