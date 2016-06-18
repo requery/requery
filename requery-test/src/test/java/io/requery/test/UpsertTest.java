@@ -31,6 +31,7 @@ import io.requery.sql.platform.SQLite;
 import io.requery.test.model3.Event;
 import io.requery.test.model3.Models;
 import io.requery.test.model3.Place;
+import io.requery.test.model3.Tag;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -107,6 +108,21 @@ public class UpsertTest {
         place.setName("place");
         place.getEvents().add(event);
         data.upsert(place);
+    }
+
+    @Test
+    public void testUpsertManyToMany() {
+        Event event1 = new Event();
+        event1.setId(UUID.randomUUID());
+        Tag tag = new Tag();
+        tag.setId(UUID.randomUUID());
+        tag.getEvents().add(event1);
+        data.upsert(tag);
+        Event event2 = new Event();
+        event2.setId(UUID.randomUUID());
+        tag.getEvents().add(event2);
+        data.upsert(event2);
+        data.upsert(tag);
     }
 
     @Test

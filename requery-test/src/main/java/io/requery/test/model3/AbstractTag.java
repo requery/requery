@@ -21,23 +21,19 @@ import io.requery.Entity;
 import io.requery.JunctionTable;
 import io.requery.Key;
 import io.requery.ManyToMany;
-import io.requery.ManyToOne;
 
 import java.util.Set;
 import java.util.UUID;
 
 @Entity(model = "model3")
-public class AbstractEvent {
+public class AbstractTag {
 
     @Key
     protected UUID id;
 
     protected String name;
 
-    @ManyToOne
-    protected Place place;
-
     @JunctionTable
     @ManyToMany
-    protected Set<Tag> tags;
+    protected Set<Event> events;
 }
