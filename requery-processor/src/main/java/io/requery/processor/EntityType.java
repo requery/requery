@@ -23,6 +23,7 @@ import io.requery.PropertyNameStyle;
 import io.requery.ReadOnly;
 import io.requery.Table;
 import io.requery.Transient;
+import io.requery.sql.Keyword;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -132,6 +133,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             validator.warning(
                 "Entity contains only a single generated attribute may fail to persist");
         }
+        checkReserved(tableName(), validator);
         validations.add(validator);
         return validations;
     }
@@ -240,6 +242,13 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     boolean generatesAdditionalTypes() {
         return attributes.values().stream()
             .anyMatch(member -> member.associativeEntity().isPresent());
+    }
+
+    private void checkReserved(String name, ElementValidator validator) {
+        if (Stream.of(ReservedKeyword.values())
+                .anyMatch(keyword -> keyword.toString().equalsIgnoreCase(name))) {
+            validator.warning("Table or view name " + name + " may need to be escaped");
+        }
     }
 
     private String createModelName() {

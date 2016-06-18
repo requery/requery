@@ -449,7 +449,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     }
 
     private void checkReserved(String name, ElementValidator validator) {
-        if (Stream.of(Keyword.values())
+        if (Stream.of(ReservedKeyword.values())
             .anyMatch(keyword -> keyword.toString().equalsIgnoreCase(name))) {
             validator.warning("Column or index name " + name + " may need to be escaped");
         }
