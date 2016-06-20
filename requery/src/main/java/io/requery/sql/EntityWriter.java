@@ -693,6 +693,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     CollectionChanges<?, S> changes = null;
                     relation = proxy.get(attribute, false);
                     Iterable<S> addedElements = (Iterable<S>) relation;
+                    boolean isObservableCollection = relation instanceof ObservableCollection;
                     if (relation instanceof ObservableCollection) {
                         ObservableCollection<S> collection = (ObservableCollection<S>) relation;
                         changes = (CollectionChanges<?, S>) collection.observer();
@@ -714,7 +715,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         junctionProxy.set(tKey, tValue, PropertyState.MODIFIED);
                         junctionProxy.set(uKey, uValue, PropertyState.MODIFIED);
 
-                        cascadeWrite(CascadeMode.INSERT, junction, null);
+                        CascadeMode junctionCascadeMode =
+                                !isObservableCollection && mode == CascadeMode.UPSERT ?
+                                CascadeMode.UPSERT : CascadeMode.INSERT;
+                        cascadeWrite(junctionCascadeMode, junction, null);
                     }
                     if (changes != null) {
                         Object keyValue = proxy.get(tRef, false);
