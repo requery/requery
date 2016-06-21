@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 1.0.0-beta23
+
+- Support global entity state change listeners
+- Support Tuple result in Android query adapter
+- Fix NPE in query generation for MS SQL
+- Fix read timeout on Android when using toSelfObservable
+- Fix reserved name checks for table & column names
+
 ## 1.0.0-beta22
 
 - Support Rx type changes for update queries
