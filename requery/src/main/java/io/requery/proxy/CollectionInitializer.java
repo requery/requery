@@ -25,6 +25,7 @@ import io.requery.util.function.Supplier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -44,7 +45,8 @@ public class CollectionInitializer<E, V> implements Initializer<E, V>,
         Result<U> result = query == null ? null : query.get();
         Collection<U> collection;
         if (type == Set.class) {
-            HashSet<U> set = new HashSet<>();
+            Set<U> set = attribute.getOrderByAttribute() == null ?
+                    new HashSet<U>() : new LinkedHashSet<U>();
             if (result != null) {
                 result.collect(set);
             }
