@@ -23,7 +23,6 @@ import io.requery.PropertyNameStyle;
 import io.requery.ReadOnly;
 import io.requery.Table;
 import io.requery.Transient;
-import io.requery.sql.Keyword;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -95,15 +94,14 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                 .forEach(this::computeAttribute);
         }
         // find listener annotated methods
-        ElementFilter.methodsIn(element().getEnclosedElements()).stream().forEach(element -> {
-            ListenerAnnotations.all().forEach(annotation -> {
-                if (element.getAnnotation(annotation) != null) {
-                    ListenerMethod listener = listeners.computeIfAbsent(element,
-                        key -> new ListenerMethod(element));
-                    listener.annotations().put(annotation, element.getAnnotation(annotation));
-                }
-            });
-        });
+        ElementFilter.methodsIn(element().getEnclosedElements()).stream().forEach(element ->
+                ListenerAnnotations.all().forEach(annotation -> {
+            if (element.getAnnotation(annotation) != null) {
+                ListenerMethod listener = listeners.computeIfAbsent(element,
+                    key -> new ListenerMethod(element));
+                listener.annotations().put(annotation, element.getAnnotation(annotation));
+            }
+        }));
 
         Set<ProcessableElement<?>> elements = new LinkedHashSet<>();
         attributes().values().forEach(
@@ -156,7 +154,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         return type.getKind() != TypeKind.VOID &&
                element.getParameters().isEmpty() &&
                (isImmutable() || !element.getModifiers().contains(Modifier.FINAL)) &&
-               !type.equals(element().asType()) &&
+               (!isImmutable() || !type.equals(element().asType())) &&
                !type.equals(builderType().map(Element::asType).orElse(null)) &&
                !Mirrors.findAnnotationMirror(element, Transient.class).isPresent() &&
                !element.getModifiers().contains(Modifier.STATIC) &&
@@ -206,13 +204,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     private Optional<AttributeMember> computeAttribute(Element element) {
-        if (element.getKind() == ElementKind.METHOD) {
-            ExecutableElement executableElement = (ExecutableElement) element;
-            TypeMirror returnType = executableElement.getReturnType();
-            if (returnType.equals(element().asType())) {
-                return Optional.empty();
-            }
-        }
         return Optional.of((AttributeMember)
             attributes.computeIfAbsent(element, key -> new AttributeMember(element, this)));
     }
