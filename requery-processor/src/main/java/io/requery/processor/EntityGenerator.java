@@ -792,33 +792,37 @@ class EntityGenerator implements SourceGenerator {
         }
     }
 
-    private Optional<ClassName> generateJunctionType(AttributeDescriptor attribute,
-                                                     EntityDescriptor referenced,
-                                                     Set<AttributeDescriptor> mappings) {
-        ClassName joinName = null;
+    private Optional<TypeName> generateJunctionType(AttributeDescriptor attribute,
+                                                    EntityDescriptor referenced,
+                                                    Set<AttributeDescriptor> mappings) {
+        TypeName typeName = null;
         Optional<AssociativeEntityDescriptor> joinEntity = attribute.associativeEntity();
         if (joinEntity.isPresent()) {
-            // generate a special type for the junction table (with attributes)
-            if (!joinEntity.get().type().isPresent()) {
+            AssociativeEntityDescriptor descriptor = joinEntity.get();
+            Optional<TypeMirror> mirror = descriptor.type();
+            if (mirror.isPresent()) {
+                typeName = TypeName.get(mirror.get());
+            } else {
+                // generate a special type for the junction table (with attributes)
                 graph.referencingEntity(attribute).ifPresent(referencing -> {
                     JoinEntityGenerator generator = new JoinEntityGenerator(
-                        processingEnvironment, nameResolver, entity, referencing, attribute);
+                            processingEnvironment, nameResolver, entity, referencing, attribute);
                     try {
                         generator.generate();
                     } catch (IOException e) {
                         processingEnvironment.getMessager()
-                            .printMessage(Diagnostic.Kind.ERROR, e.toString());
+                                .printMessage(Diagnostic.Kind.ERROR, e.toString());
                         throw new RuntimeException(e);
                     }
                 });
+                typeName = nameResolver.joinEntityName(descriptor, entity, referenced);
             }
-            joinName = nameResolver.joinEntityName(joinEntity.get(), entity, referenced);
-        } else if ( mappings.size() == 1) {
+        } else if (mappings.size() == 1) {
             AttributeDescriptor mapped = mappings.iterator().next();
             return mapped.associativeEntity()
                 .map(e -> nameResolver.joinEntityName(e, referenced, entity));
         }
-        return Optional.ofNullable(joinName);
+        return Optional.ofNullable(typeName);
     }
 
     private void generateProperties(AttributeDescriptor attribute,
