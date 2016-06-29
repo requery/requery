@@ -450,7 +450,7 @@ public class SqliteMetaData implements DatabaseMetaData {
         select.put("SELF_REFERENCING_COL_NAME", null);
         select.put("REF_GENERATION", null);
         QueryBuilder qb = new QueryBuilder(
-            new QueryBuilder.Options(getIdentifierQuoteString(), true, false, false))
+            new QueryBuilder.Options(getIdentifierQuoteString(), true, null, null, false, false))
             .keyword(Keyword.SELECT)
             .commaSeparated(select.entrySet(),
                 new QueryBuilder.Appender<Map.Entry<String, String>>() {
