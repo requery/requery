@@ -22,6 +22,7 @@ import io.requery.cache.WeakEntityCache;
 import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
 import io.requery.util.Objects;
+import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
 
 import javax.sql.CommonDataSource;
@@ -55,6 +56,8 @@ public class ConfigurationBuilder {
     private int batchUpdateSize;
     private boolean quoteTableNames;
     private boolean quoteColumnNames;
+    private Function<String, String> tableTransformer;
+    private Function<String, String> columnTransformer;
     private Executor writeExecutor;
 
     public ConfigurationBuilder(ConnectionProvider connectionProvider, EntityModel model) {
@@ -70,6 +73,8 @@ public class ConfigurationBuilder {
         setBatchUpdateSize(64);
         setTransactionMode(TransactionMode.AUTO);
         setTransactionIsolation(null);
+        setTableTransformer(null);
+        setColumnTransformer(null);
     }
 
     public ConfigurationBuilder(CommonDataSource dataSource, EntityModel model) {
@@ -119,6 +124,16 @@ public class ConfigurationBuilder {
 
     public ConfigurationBuilder setQuoteTableNames(boolean quote) {
         this.quoteTableNames = quote;
+        return this;
+    }
+
+    public ConfigurationBuilder setTableTransformer(Function<String, String> function) {
+        this.tableTransformer = function;
+        return this;
+    }
+
+    public ConfigurationBuilder setColumnTransformer(Function<String, String> function) {
+        this.columnTransformer = function;
         return this;
     }
 
@@ -176,6 +191,8 @@ public class ConfigurationBuilder {
             batchUpdateSize,
             quoteTableNames,
             quoteColumnNames,
+            tableTransformer,
+            columnTransformer,
             entityStateListeners,
             statementListeners,
             transactionMode,

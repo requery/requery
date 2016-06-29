@@ -21,6 +21,7 @@ import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
 import io.requery.util.Objects;
+import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
 
 import java.util.Collections;
@@ -38,6 +39,8 @@ final class ImmutableConfiguration implements Configuration {
     private final int batchUpdateSize;
     private final boolean quoteTableNames;
     private final boolean quoteColumnNames;
+    private final Function<String, String> tableTransformer;
+    private final Function<String, String> columnTransformer;
     private final TransactionMode transactionMode;
     private final TransactionIsolation transactionIsolation;
     private final ConnectionProvider connectionProvider;
@@ -56,6 +59,8 @@ final class ImmutableConfiguration implements Configuration {
                            int batchUpdateSize,
                            boolean quoteTableNames,
                            boolean quoteColumnNames,
+                           Function<String, String> tableTransformer,
+                           Function<String, String> columnTransformer,
                            Set<EntityStateListener> entityStateListeners,
                            Set<StatementListener> statementListeners,
                            TransactionMode transactionMode,
@@ -72,6 +77,8 @@ final class ImmutableConfiguration implements Configuration {
         this.batchUpdateSize = batchUpdateSize;
         this.quoteTableNames = quoteTableNames;
         this.quoteColumnNames = quoteColumnNames;
+        this.tableTransformer = tableTransformer;
+        this.columnTransformer = columnTransformer;
         this.transactionMode = transactionMode;
         this.entityStateListeners = Collections.unmodifiableSet(entityStateListeners);
         this.statementListeners = Collections.unmodifiableSet(statementListeners);
@@ -123,6 +130,16 @@ final class ImmutableConfiguration implements Configuration {
     @Override
     public boolean getQuoteColumnNames() {
         return quoteColumnNames;
+    }
+
+    @Override
+    public Function<String, String> getColumnTransformer() {
+        return columnTransformer;
+    }
+
+    @Override
+    public Function<String, String> getTableTransformer() {
+        return tableTransformer;
     }
 
     @Override

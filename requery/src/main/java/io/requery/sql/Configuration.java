@@ -20,6 +20,7 @@ import io.requery.EntityCache;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
+import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
 
 import java.sql.Connection;
@@ -79,6 +80,16 @@ public interface Configuration {
      * @return true if all column names should be quoted.
      */
     boolean getQuoteColumnNames();
+
+    /**
+     * @return optional table name transformation function for all table names.
+     */
+    Function<String, String> getTableTransformer();
+
+    /**
+     * @return optional column name transformation function for all column names.
+     */
+    Function<String, String> getColumnTransformer();
 
     /**
      * @return number of statements to cache, 0 to disable caching.

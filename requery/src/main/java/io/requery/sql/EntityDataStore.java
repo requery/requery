@@ -88,13 +88,8 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     private final CompositeStatementListener statementListeners;
     private final UpdateOperation updateOperation;
     private final SelectCountOperation countOperation;
-    private final Executor writeExecutor;
     private final TransactionProvider transactionProvider;
-    private final TransactionIsolation defaultIsolation;
-    private final Set<Supplier<TransactionListener>> transactionListenerFactories;
-    private final int batchUpdateSize;
-    private final boolean quoteTableNames;
-    private final boolean quoteColumnNames;
+    private final Configuration configuration;
     private final AtomicBoolean closed;
     private TransactionMode transactionMode;
     private PreparedStatementCache statementCache;
@@ -145,12 +140,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         mapping = configuration.getMapping();
         platform = configuration.getPlatform();
         transactionMode = configuration.getTransactionMode();
-        writeExecutor = configuration.getWriteExecutor();
-        quoteColumnNames = configuration.getQuoteColumnNames();
-        quoteTableNames = configuration.getQuoteTableNames();
-        batchUpdateSize = configuration.getBatchUpdateSize();
-        defaultIsolation = configuration.getTransactionIsolation();
-        transactionListenerFactories = configuration.getTransactionListenerFactories();
+        this.configuration = configuration;
         statementListeners = new CompositeStatementListener(configuration.getStatementListeners());
         stateListeners = new CompositeEntityListener<>();
 
@@ -545,7 +535,10 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                 supportsBatchUpdates = metadata.supportsBatchUpdates();
                 String quoteIdentifier = metadata.getIdentifierQuoteString();
                 queryOptions = new QueryBuilder.Options(quoteIdentifier, true,
-                    quoteTableNames, quoteColumnNames);
+                    configuration.getTableTransformer(),
+                    configuration.getColumnTransformer(),
+                    configuration.getQuoteTableNames(),
+                    configuration.getQuoteColumnNames());
                 metadataChecked = true;
             } catch (SQLException e) {
                 throw new PersistenceException(e);
@@ -652,7 +645,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
         @Override
         public int batchUpdateSize() {
-            return batchUpdateSize;
+            return configuration.getBatchUpdateSize();
         }
 
         @Override
@@ -697,7 +690,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
         @Override
         public Set<Supplier<TransactionListener>> transactionListenerFactories() {
-            return transactionListenerFactories;
+            return configuration.getTransactionListenerFactories();
         }
 
         @Override
@@ -713,12 +706,12 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
         @Override
         public TransactionIsolation transactionIsolation() {
-            return defaultIsolation;
+            return configuration.getTransactionIsolation();
         }
 
         @Override
         public Executor writeExecutor() {
-            return writeExecutor;
+            return configuration.getWriteExecutor();
         }
     }
 }

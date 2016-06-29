@@ -101,6 +101,8 @@ public class SchemaModifier {
             try (Connection connection = getConnection()) {
                 String quoteIdentifier = connection.getMetaData().getIdentifierQuoteString();
                 queryOptions = new QueryBuilder.Options(quoteIdentifier, true,
+                    configuration.getTableTransformer(),
+                    configuration.getColumnTransformer(),
                     configuration.getQuoteTableNames(),
                     configuration.getQuoteColumnNames());
             } catch (SQLException e) {

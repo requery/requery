@@ -23,9 +23,7 @@ public class AliasedExpression<V> extends FieldExpression<V> {
     private final String name;
 
     public AliasedExpression(Expression<V> expression, String alias) {
-        this.expression = expression;
-        this.alias = alias;
-        this.name = expression.getName();
+        this(expression, expression.getName(), alias);
     }
 
     public AliasedExpression(Expression<V> expression, String name, String alias) {

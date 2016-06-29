@@ -20,6 +20,7 @@ import io.requery.meta.Attribute;
 import io.requery.meta.Type;
 import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
+import io.requery.util.function.Function;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -41,12 +42,16 @@ public class QueryBuilder implements CharSequence {
 
     public static class Options {
         private final String quotedIdentifier;
+        private final Function<String, String> tableTransformer;
+        private final Function<String, String> columnTransformer;
         private final boolean lowercaseKeywords;
         private final boolean quoteTableNames;
         private final boolean quoteColumnNames;
 
         public Options(String quotedIdentifier,
                        boolean lowercaseKeywords,
+                       Function<String, String> tableTransformer,
+                       Function<String, String> columnTransformer,
                        boolean quoteTableNames,
                        boolean quoteColumnNames) {
 
@@ -54,6 +59,8 @@ public class QueryBuilder implements CharSequence {
                 quotedIdentifier = "\"";
             }
             this.quotedIdentifier = quotedIdentifier;
+            this.tableTransformer = tableTransformer;
+            this.columnTransformer = columnTransformer;
             this.lowercaseKeywords = lowercaseKeywords;
             this.quoteTableNames = quoteTableNames;
             this.quoteColumnNames = quoteColumnNames;
@@ -107,10 +114,14 @@ public class QueryBuilder implements CharSequence {
     }
 
     public QueryBuilder tableName(Object value) {
-        if(options.quoteTableNames) {
-            appendIdentifier(value.toString(), options.quotedIdentifier);
+        String name = value.toString();
+        if (options.tableTransformer != null) {
+            name = options.tableTransformer.apply(name);
+        }
+        if (options.quoteTableNames) {
+            appendIdentifier(name, options.quotedIdentifier);
         } else {
-            append(value);
+            append(name);
         }
         return space();
     }
@@ -132,10 +143,12 @@ public class QueryBuilder implements CharSequence {
     }
 
     public QueryBuilder attribute(Attribute value) {
+        String name = options.columnTransformer == null ?
+                value.getName() : options.columnTransformer.apply(value.getName());
         if(options.quoteColumnNames) {
-            appendIdentifier(value.getName(), options.quotedIdentifier);
+            appendIdentifier(name, options.quotedIdentifier);
         } else {
-            append(value.getName());
+            append(name);
         }
         return space();
     }

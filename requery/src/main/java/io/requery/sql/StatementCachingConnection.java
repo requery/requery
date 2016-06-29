@@ -54,4 +54,3 @@ class StatementCachingConnection extends ConnectionDelegate {
         return statementCache.put(sql, statement);
     }
 }
-
