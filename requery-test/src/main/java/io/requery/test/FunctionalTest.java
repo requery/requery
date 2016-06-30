@@ -610,7 +610,6 @@ public abstract class FunctionalTest extends RandomData {
         person.getPhoneNumbers().add(phone1);
         person.getPhoneNumbers().add(phone2);
         data.insert(person);
-        data.refresh(person, Person.PHONE_NUMBERS);
         HashSet<Phone> set = new HashSet<>(person.getPhoneNumbers().toList());
         assertEquals(2, set.size());
         assertTrue(set.containsAll(Arrays.asList(phone1, phone2)));
