@@ -616,6 +616,19 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testInsertOneToManyOneInsertThroughList() {
+        Person person = randomPerson();
+        Phone phone1 = randomPhone();
+        Phone phone2 = randomPhone();
+        person.getPhoneNumbersList().add(phone1);
+        person.getPhoneNumbersList().add(phone2);
+        data.insert(person);
+        HashSet<Phone> set = new HashSet<>(person.getPhoneNumbersList());
+        assertEquals(2, set.size());
+        assertTrue(set.containsAll(Arrays.asList(phone1, phone2)));
+    }
+
+    @Test
     public void testManyToOneRefresh() {
         Person person = randomPerson();
         Phone phone1 = randomPhone();
