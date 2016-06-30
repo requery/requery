@@ -102,7 +102,7 @@ class EntityGraphValidator {
 
                     if (!referencedElement.isPresent()) {
                         validator.warning("Couldn't find referenced element " +
-                                attribute.referencedColumn() + " for " + attribute);
+                                referenced.get().typeName() + " for " + attribute);
                     } else {
                         // check all the foreign keys and see if they reference this entity
                         referenced.get().attributes().values().stream()
