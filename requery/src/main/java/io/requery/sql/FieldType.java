@@ -52,7 +52,7 @@ public interface FieldType<T> {
     /**
      * @return One of the {@link java.sql.Types} constants indicating the JDBC type
      */
-    int sqlType();
+    int getSqlType();
 
     /**
      * @return true if this data type has a length constraint, false otherwise.
@@ -62,16 +62,16 @@ public interface FieldType<T> {
     /**
      * @return the default length for the type (optional), null if not present.
      */
-    @Nullable Integer defaultLength();
+    @Nullable Integer getDefaultLength();
 
     /**
      * @return the identifier for the type can be {@link String} or {@link Keyword}
      */
-    Object identifier();
+    Object getIdentifier();
 
     /**
      * @return the identifier suffix appears after the identifier and any length size e.g.
      * id(255) suffix
      */
-    @Nullable String identifierSuffix();
+    @Nullable String getIdentifierSuffix();
 }

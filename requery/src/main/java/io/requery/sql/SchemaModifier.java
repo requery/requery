@@ -412,7 +412,7 @@ public class SchemaModifier {
             if (fieldType == null) {
                 fieldType = new IntegerType(int.class);
             }
-            qb.value(fieldType.identifier());
+            qb.value(fieldType.getIdentifier());
         }
         qb.keyword(REFERENCES);
         qb.tableName(referenced.getName());
@@ -462,7 +462,7 @@ public class SchemaModifier {
         if(!(attribute.isGenerated() && generatedColumnDefinition.skipTypeIdentifier())) {
 
             // type id
-            Object identifier = fieldType.identifier();
+            Object identifier = fieldType.getIdentifier();
             // type length
             Converter converter = attribute.getConverter();
             if (converter == null && mapping instanceof GenericMapping) {
@@ -477,7 +477,7 @@ public class SchemaModifier {
                     length = converter.getPersistedSize();
                 }
                 if (length == null) {
-                    length = fieldType.defaultLength();
+                    length = fieldType.getDefaultLength();
                 }
                 if (length == null) {
                     length = 255;
@@ -491,7 +491,7 @@ public class SchemaModifier {
             }
         }
 
-        String suffix = fieldType.identifierSuffix();
+        String suffix = fieldType.getIdentifierSuffix();
         if(suffix != null) {
             qb.append(suffix).space();
         }

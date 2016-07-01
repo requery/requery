@@ -101,7 +101,7 @@ public class SQLite extends Generic {
         }
 
         @Override
-        public Keyword identifier() {
+        public Keyword getIdentifier() {
             return INTEGER;
         }
 

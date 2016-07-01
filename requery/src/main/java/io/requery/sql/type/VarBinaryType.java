@@ -35,7 +35,7 @@ public class VarBinaryType extends BasicType<byte[]> {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.VARBINARY;
     }
 

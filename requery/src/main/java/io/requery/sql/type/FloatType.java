@@ -36,7 +36,7 @@ public class FloatType extends BasicType<Float> implements PrimitiveFloatType {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.FLOAT;
     }
 

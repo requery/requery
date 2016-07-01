@@ -36,7 +36,7 @@ public class RealType extends BasicType<Double> implements PrimitiveDoubleType {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.REAL;
     }
 

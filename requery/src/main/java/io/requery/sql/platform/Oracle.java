@@ -103,11 +103,11 @@ public class Oracle extends Generic {
 
         @Override
         public boolean hasLength() {
-            return sqlType() == Types.VARBINARY;
+            return getSqlType() == Types.VARBINARY;
         }
 
         @Override
-        public String identifier() {
+        public String getIdentifier() {
             return "raw";
         }
 
@@ -135,12 +135,12 @@ public class Oracle extends Generic {
         }
 
         @Override
-        public Integer defaultLength() {
+        public Integer getDefaultLength() {
             return 1;
         }
 
         @Override
-        public String identifier() {
+        public String getIdentifier() {
             return "number";
         }
 

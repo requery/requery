@@ -159,7 +159,7 @@ public class SQLServer extends Generic {
         }
 
         @Override
-        public Object identifier() {
+        public Object getIdentifier() {
             return "bit";
         }
 

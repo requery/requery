@@ -159,7 +159,7 @@ public class GenericMapping implements Mapping {
     private void replace(ClassMap<FieldType> map, int sqlType, FieldType replace) {
         Set<Class<?>> keys = new LinkedHashSet<>();
         for (Map.Entry<Class<?>, FieldType> entry : map.entrySet()) {
-            if (entry.getValue().sqlType() == sqlType) {
+            if (entry.getValue().getSqlType() == sqlType) {
                 keys.add(entry.getKey());
             }
         }
@@ -167,25 +167,25 @@ public class GenericMapping implements Mapping {
             map.put(type, replace);
         }
         // check if the replacement type replaces any of the primitive types
-        if (sqlType == primitiveIntType.sqlType() && replace instanceof PrimitiveIntType) {
+        if (sqlType == primitiveIntType.getSqlType() && replace instanceof PrimitiveIntType) {
             primitiveIntType = (PrimitiveIntType) replace;
         } else if (
-            sqlType == primitiveLongType.sqlType() && replace instanceof PrimitiveLongType) {
+            sqlType == primitiveLongType.getSqlType() && replace instanceof PrimitiveLongType) {
             primitiveLongType = (PrimitiveLongType) replace;
         } else if (
-            sqlType == primitiveShortType.sqlType() && replace instanceof PrimitiveShortType) {
+            sqlType == primitiveShortType.getSqlType() && replace instanceof PrimitiveShortType) {
             primitiveShortType = (PrimitiveShortType) replace;
         } else if (
-            sqlType == primitiveBooleanType.sqlType() && replace instanceof PrimitiveBooleanType) {
+            sqlType == primitiveBooleanType.getSqlType() && replace instanceof PrimitiveBooleanType) {
             primitiveBooleanType = (PrimitiveBooleanType) replace;
         } else if (
-            sqlType == primitiveFloatType.sqlType() && replace instanceof PrimitiveFloatType) {
+            sqlType == primitiveFloatType.getSqlType() && replace instanceof PrimitiveFloatType) {
             primitiveFloatType = (PrimitiveFloatType) replace;
         } else if (
-            sqlType == primitiveDoubleType.sqlType() && replace instanceof PrimitiveDoubleType) {
+            sqlType == primitiveDoubleType.getSqlType() && replace instanceof PrimitiveDoubleType) {
             primitiveDoubleType = (PrimitiveDoubleType) replace;
         } else if (
-            sqlType == primitiveByteType.sqlType() && replace instanceof PrimitiveByteType) {
+            sqlType == primitiveByteType.getSqlType() && replace instanceof PrimitiveByteType) {
             primitiveByteType = (PrimitiveByteType) replace;
         }
     }
@@ -232,7 +232,7 @@ public class GenericMapping implements Mapping {
     @Override
     public Class<?> typeOf(int sqlType) {
         for (Map.Entry<Class<?>, FieldType> entry : types.entrySet()) {
-            if (entry.getValue().sqlType() == sqlType) {
+            if (entry.getValue().getSqlType() == sqlType) {
                 return entry.getKey();
             }
         }

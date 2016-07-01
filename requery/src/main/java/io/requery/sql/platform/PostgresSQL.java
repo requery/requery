@@ -104,7 +104,7 @@ public class PostgresSQL extends Generic {
         }
 
         @Override
-        public String identifier() {
+        public String getIdentifier() {
             return "bytea";
         }
 
@@ -122,7 +122,7 @@ public class PostgresSQL extends Generic {
         }
 
         @Override
-        public String identifier() {
+        public String getIdentifier() {
             return "uuid";
         }
 

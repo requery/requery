@@ -36,7 +36,7 @@ public class TimeStampType extends BasicType<Timestamp> {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.TIMESTAMP;
     }
 }

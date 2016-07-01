@@ -36,7 +36,7 @@ public class BooleanType extends BasicType<Boolean> implements PrimitiveBooleanT
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.BOOLEAN;
     }
 

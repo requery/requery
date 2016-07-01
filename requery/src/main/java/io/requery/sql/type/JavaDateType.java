@@ -39,7 +39,7 @@ public class JavaDateType extends BasicType<Date> {
     @Override
     public void write(PreparedStatement statement, int index, Date value)
         throws SQLException {
-        int sqlType = sqlType();
+        int sqlType = getSqlType();
         if (value == null) {
             statement.setNull(index, sqlType);
         } else {
@@ -49,7 +49,7 @@ public class JavaDateType extends BasicType<Date> {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.DATE;
     }
 }

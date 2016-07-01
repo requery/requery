@@ -35,7 +35,7 @@ public class NVarCharType extends BasicType<String> {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.NVARCHAR;
     }
 
@@ -45,7 +45,7 @@ public class NVarCharType extends BasicType<String> {
     }
 
     @Override
-    public Integer defaultLength() {
+    public Integer getDefaultLength() {
         return 255;
     }
 }
