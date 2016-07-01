@@ -45,22 +45,21 @@ class ThreadLocalTransaction implements EntityTransaction, ConnectionProvider {
 
     @Override
     public Transaction begin() {
-        return begin(configuration.transactionIsolation());
+        return begin(configuration.getTransactionIsolation());
     }
 
     @Override
     public Transaction begin(TransactionIsolation isolation) {
         EntityTransaction transaction = threadLocal.get();
         if (transaction == null) {
-            EntityCache cache = configuration.cache();
-            ConnectionProvider connectionProvider = configuration.connectionProvider();
-            TransactionMode mode = configuration.transactionMode();
+            EntityCache cache = configuration.getCache();
+            TransactionMode mode = configuration.getTransactionMode();
             TransactionListener listener = new CompositeTransactionListener(
-                configuration.transactionListenerFactories());
+                configuration.getTransactionListenerFactories());
 
             transaction = mode == TransactionMode.MANAGED ?
-                new ManagedTransaction(listener, connectionProvider, cache) :
-                new ConnectionTransaction(listener, connectionProvider, cache,
+                new ManagedTransaction(listener, configuration, cache) :
+                new ConnectionTransaction(listener, configuration, cache,
                     mode != TransactionMode.NONE);
             threadLocal.set(transaction);
         }

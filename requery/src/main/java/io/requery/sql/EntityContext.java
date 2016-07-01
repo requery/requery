@@ -26,5 +26,5 @@ interface EntityContext<T> extends RuntimeConfiguration {
 
     <E> EntityProxy<E> proxyOf(E entity, boolean forUpdate);
 
-    CompositeEntityListener<T> stateListener();
+    CompositeEntityListener<T> getStateListener();
 }

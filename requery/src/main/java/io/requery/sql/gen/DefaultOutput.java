@@ -61,8 +61,8 @@ public class DefaultOutput implements Output {
     private boolean autoAlias;
 
     public DefaultOutput(RuntimeConfiguration configuration, QueryElement<?> query) {
-        this(configuration.statementGenerator(), query,
-            new QueryBuilder(configuration.queryBuilderOptions()), null, true);
+        this(configuration.getStatementGenerator(), query,
+            new QueryBuilder(configuration.getQueryBuilderOptions()), null, true);
     }
 
     public DefaultOutput(StatementGenerator statementGenerator, QueryElement<?> query,

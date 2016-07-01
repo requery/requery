@@ -35,7 +35,7 @@ class SelectCountOperation implements QueryOperation<Scalar<Integer>> {
 
     @Override
     public Scalar<Integer> evaluate(final QueryElement<Scalar<Integer>> query) {
-        return new BaseScalar<Integer>(configuration.writeExecutor()) {
+        return new BaseScalar<Integer>(configuration.getWriteExecutor()) {
             @Override
             public Integer evaluate() {
                 try (Result<Tuple> result = new SelectResult<>(configuration, query, reader)) {

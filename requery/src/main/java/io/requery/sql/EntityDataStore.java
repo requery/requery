@@ -448,7 +448,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     @Override
     public <E extends T> Insertion<Result<Tuple>> insert(Class<E> type) {
         checkClosed();
-        Type<E> entityType = context.model().typeOf(type);
+        Type<E> entityType = context.getModel().typeOf(type);
         Set<Expression<?>> keySelection = new LinkedHashSet<>();
         for (Attribute<E, ?> attribute : entityType.getKeyAttributes()) {
             keySelection.add((Expression<?>) attribute);
@@ -628,89 +628,84 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         }
 
         @Override
-        public CompositeEntityListener<T> stateListener() {
+        public CompositeEntityListener<T> getStateListener() {
             return stateListeners;
-        }
-
-        @Override
-        public ConnectionProvider connectionProvider() {
-            return this;
         }
 
         @Override
         public boolean supportsBatchUpdates() {
             checkConnectionMetadata();
-            return supportsBatchUpdates && batchUpdateSize() > 0;
+            return supportsBatchUpdates && getBatchUpdateSize() > 0;
         }
 
         @Override
-        public int batchUpdateSize() {
+        public int getBatchUpdateSize() {
             return configuration.getBatchUpdateSize();
         }
 
         @Override
-        public QueryBuilder.Options queryBuilderOptions() {
+        public QueryBuilder.Options getQueryBuilderOptions() {
             checkConnectionMetadata();
             return queryOptions;
         }
 
         @Override
-        public Mapping mapping() {
+        public Mapping getMapping() {
             return mapping;
         }
 
         @Override
-        public EntityModel model() {
+        public EntityModel getModel() {
             return entityModel;
         }
 
         @Override
-        public EntityCache cache() {
+        public EntityCache getCache() {
             return entityCache;
         }
 
         @Override
-        public Platform platform() {
+        public Platform getPlatform() {
             checkConnectionMetadata();
             return platform;
         }
 
         @Override
-        public StatementGenerator statementGenerator() {
+        public StatementGenerator getStatementGenerator() {
             if (statementGenerator == null) {
-                statementGenerator = StatementGenerator.create(platform());
+                statementGenerator = StatementGenerator.create(getPlatform());
             }
             return statementGenerator;
         }
 
         @Override
-        public StatementListener statementListener() {
+        public StatementListener getStatementListener() {
             return statementListeners;
         }
 
         @Override
-        public Set<Supplier<TransactionListener>> transactionListenerFactories() {
+        public Set<Supplier<TransactionListener>> getTransactionListenerFactories() {
             return configuration.getTransactionListenerFactories();
         }
 
         @Override
-        public TransactionProvider transactionProvider() {
+        public TransactionProvider getTransactionProvider() {
             return transactionProvider;
         }
 
         @Override
-        public TransactionMode transactionMode() {
+        public TransactionMode getTransactionMode() {
             checkConnectionMetadata();
             return transactionMode;
         }
 
         @Override
-        public TransactionIsolation transactionIsolation() {
+        public TransactionIsolation getTransactionIsolation() {
             return configuration.getTransactionIsolation();
         }
 
         @Override
-        public Executor writeExecutor() {
+        public Executor getWriteExecutor() {
             return configuration.getWriteExecutor();
         }
     }

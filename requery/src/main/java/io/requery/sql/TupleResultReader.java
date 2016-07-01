@@ -38,7 +38,7 @@ class TupleResultReader implements ResultReader<Tuple> {
         throws SQLException {
         MutableTuple tuple = new MutableTuple(selection.size());
         int index = 1;
-        Mapping mapping = configuration.mapping();
+        Mapping mapping = configuration.getMapping();
         for (Expression<?> expression : selection) {
             Object value = mapping.read(expression, results, index);
             tuple.set(index - 1, expression, value);

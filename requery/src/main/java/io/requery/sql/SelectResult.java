@@ -73,7 +73,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
         if (keepStatement && statement != null) {
             return statement;
         }
-        Connection connection = configuration.connectionProvider().getConnection();
+        Connection connection = configuration.getConnection();
         closeConnection = !(connection instanceof UncloseableConnection);
         Statement statement;
         if (!prepared) {
@@ -106,7 +106,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
             Statement statement = createStatement(!parameters.isEmpty());
             statement.setFetchSize(limit == null ? 0 : limit);
 
-            StatementListener listener = configuration.statementListener();
+            StatementListener listener = configuration.getStatementListener();
             listener.beforeExecuteQuery(statement, sql, parameters);
 
             ResultSet results;
@@ -114,7 +114,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
                 results = statement.executeQuery(sql);
             } else {
                 PreparedStatement preparedStatement = (PreparedStatement) statement;
-                Mapping mapping = configuration.mapping();
+                Mapping mapping = configuration.getMapping();
                 for (int i = 0; i < parameters.count(); i++) {
                     Expression expression = parameters.expressionAt(i);
                     Object value = parameters.valueAt(i);
@@ -166,7 +166,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
     @Override
     public void addTransactionListener(Supplier<TransactionListener> transactionListener) {
         if (transactionListener != null) {
-            configuration.transactionListenerFactories().add(transactionListener);
+            configuration.getTransactionListenerFactories().add(transactionListener);
         }
     }
 

@@ -52,17 +52,17 @@ class EntityUpdateOperation<E> extends UpdateOperation {
 
     @Override
     public Scalar<Integer> evaluate(final QueryElement<Scalar<Integer>> query) {
-        return new BaseScalar<Integer>(configuration.writeExecutor()) {
+        return new BaseScalar<Integer>(configuration.getWriteExecutor()) {
             @Override
             public Integer evaluate() {
                 // doesn't use the query params, just maps to the parameterBinder callback
-                QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
+                QueryBuilder qb = new QueryBuilder(configuration.getQueryBuilderOptions());
                 DefaultOutput output =
-                    new DefaultOutput(configuration.statementGenerator(), query, qb, null, false);
+                new DefaultOutput(configuration.getStatementGenerator(), query, qb, null, false);
                 String sql = output.toSql();
                 int result;
-                try (Connection connection = configuration.connectionProvider().getConnection()) {
-                    StatementListener listener = configuration.statementListener();
+                try (Connection connection = configuration.getConnection()) {
+                    StatementListener listener = configuration.getStatementListener();
                     try (PreparedStatement statement = prepare(sql, connection)) {
                         parameterBinder.bindParameters(statement, element, filter);
                         listener.beforeExecuteUpdate(statement, sql, null);

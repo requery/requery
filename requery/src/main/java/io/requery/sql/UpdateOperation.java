@@ -45,17 +45,17 @@ class UpdateOperation extends PreparedQueryOperation implements QueryOperation<S
 
     @Override
     public Scalar<Integer> evaluate(final QueryElement<Scalar<Integer>> query) {
-        return new BaseScalar<Integer>(configuration.writeExecutor()) {
+        return new BaseScalar<Integer>(configuration.getWriteExecutor()) {
             @Override
             public Integer evaluate() {
                 DefaultOutput output = new DefaultOutput(configuration, query);
                 String sql = output.toSql();
                 int result;
-                TransactionProvider transactionProvider = configuration.transactionProvider();
+                TransactionProvider transactionProvider = configuration.getTransactionProvider();
                 Set<Type<?>> types = query.entityTypes();
                 try (TransactionScope scope = new TransactionScope(transactionProvider, types);
-                     Connection connection = configuration.connectionProvider().getConnection()) {
-                    StatementListener listener = configuration.statementListener();
+                     Connection connection = configuration.getConnection()) {
+                    StatementListener listener = configuration.getStatementListener();
                     try (PreparedStatement statement = prepare(sql, connection)) {
                         BoundParameters parameters = output.parameters();
                         mapParameters(statement, parameters);

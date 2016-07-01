@@ -42,13 +42,13 @@ abstract class PreparedQueryOperation {
                            GeneratedResultReader generatedResultReader) {
         this.configuration = configuration;
         this.generatedResultReader = generatedResultReader;
-        this.model = configuration.model();
+        this.model = configuration.getModel();
     }
 
     PreparedStatement prepare(String sql, Connection connection) throws SQLException {
         PreparedStatement statement;
         if (generatedResultReader != null) {
-            if (configuration.platform().supportsGeneratedColumnsInPrepareStatement()) {
+            if (configuration.getPlatform().supportsGeneratedColumnsInPrepareStatement()) {
                 String[] generatedColumns = generatedResultReader.generatedColumns();
                 statement = connection.prepareStatement(sql, generatedColumns);
             } else {
@@ -85,7 +85,7 @@ abstract class PreparedQueryOperation {
                     }
                 }
             }
-            configuration.mapping().write(expression, statement, i + 1, value);
+            configuration.getMapping().write(expression, statement, i + 1, value);
         }
     }
 

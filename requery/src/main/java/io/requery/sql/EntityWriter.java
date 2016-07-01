@@ -94,9 +94,9 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         this.type = Objects.requireNotNull(type);
         this.context = Objects.requireNotNull(context);
         this.queryable = Objects.requireNotNull(queryable);
-        this.cache = this.context.cache();
-        this.model = this.context.model();
-        this.mapping = this.context.mapping();
+        this.cache = this.context.getCache();
+        this.model = this.context.getModel();
+        this.mapping = this.context.getMapping();
         // check type attributes
         boolean hasGeneratedKey = false;
         boolean hasForeignKeys = false;
@@ -138,8 +138,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
         };
         // create bindable attributes as an array for performance
-        bindableAttributes = Attributes.attributesToArray(type.getAttributes(), bindable);
-        associativeAttributes = Attributes.attributesToArray(type.getAttributes(),
+        bindableAttributes = Attributes.toArray(type.getAttributes(), bindable);
+        associativeAttributes = Attributes.toArray(type.getAttributes(),
             new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
@@ -169,12 +169,12 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     }
 
     private boolean hasSystemVersionColumn() {
-        return !context.platform().versionColumnDefinition().createColumn();
+        return !context.getPlatform().versionColumnDefinition().createColumn();
     }
 
     private boolean canBatchInStatement() {
         boolean canBatchStatement = context.supportsBatchUpdates();
-        boolean canBatchGeneratedKey = context.platform().supportsGeneratedKeysInBatchUpdate();
+        boolean canBatchGeneratedKey = context.getPlatform().supportsGeneratedKeysInBatchUpdate();
         return hasGeneratedKey ? canBatchStatement && canBatchGeneratedKey : canBatchStatement;
     }
 
@@ -214,7 +214,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     GeneratedKeys<E> batchInsert(Iterable<E> entities, boolean returnKeys) {
         // true if using JDBC batching
         final boolean batchInStatement = canBatchInStatement();
-        final int batchSize = context.batchUpdateSize();
+        final int batchSize = context.getBatchUpdateSize();
         final EntityReader<E, S> reader = context.read(entityClass);
         final Iterator<E> iterator = entities.iterator();
         final boolean isImmtuable = type.isImmutable();
@@ -237,7 +237,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 if (versionAttribute != null && !hasSystemVersionColumn()) {
                     incrementVersion(proxy);
                 }
-                context.stateListener().preInsert(entity, proxy);
+                context.getStateListener().preInsert(entity, proxy);
                 index++;
             }
             cascadeBatch(associations);
@@ -281,7 +281,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 checkRowsAffected(updates[i], entity, proxy);
                 proxy.link(reader);
                 updateAssociations(CascadeMode.AUTO, entity, proxy);
-                context.stateListener().postInsert(entity, proxy);
+                context.getStateListener().postInsert(entity, proxy);
                 // cache entity
                 if (cacheable) {
                     cache.put(entityClass, proxy.key(), entity);
@@ -446,13 +446,13 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         for (Attribute attribute : bindableAttributes) {
             query.value((Expression)attribute, null);
         }
-        context.stateListener().preInsert(entity, proxy);
+        context.getStateListener().preInsert(entity, proxy);
 
         checkRowsAffected(query.get().value(), entity, null);
         proxy.link(context.read(entityClass));
         updateAssociations(mode, entity, proxy);
 
-        context.stateListener().postInsert(entity, proxy);
+        context.getStateListener().postInsert(entity, proxy);
 
         // cache entity
         if (cacheable) {
@@ -465,7 +465,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (hasGeneratedKey) {
             throw new UnsupportedOperationException("Can't upsert entity with generated key");
         }
-        if (context.platform().supportsUpsert()) {
+        if (context.getPlatform().supportsUpsert()) {
             for (Attribute<E, ?> attribute : associativeAttributes) {
                 cascadeForeignKeyReference(CascadeMode.UPSERT, proxy, attribute);
             }
@@ -504,7 +504,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (whereAttributes.length == 0) {
             throw new MissingKeyException(proxy);
         }
-        context.stateListener().preUpdate(entity, proxy);
+        context.getStateListener().preUpdate(entity, proxy);
         // updates the entity using a query (not the query values are not specified but instead
         // mapped directly to avoid boxing)
         Predicate<Attribute<E, ?>> updateable = new Predicate<Attribute<E, ?>>() {
@@ -600,7 +600,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         } else {
             updateAssociations(mode, entity, proxy);
         }
-        context.stateListener().postUpdate(entity, proxy);
+        context.getStateListener().postUpdate(entity, proxy);
         return result;
     }
 
@@ -608,7 +608,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (versionAttribute != null) {
             QueryAttribute<E, Object> queryAttribute = Attributes.query(versionAttribute);
             VersionColumnDefinition versionColumnDefinition =
-                context.platform().versionColumnDefinition();
+                context.getPlatform().versionColumnDefinition();
             String columnName = versionColumnDefinition.columnName();
             if (!versionColumnDefinition.createColumn() && columnName != null) {
                 FieldExpression<Object> expression = (FieldExpression<Object>)
@@ -781,7 +781,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     }
 
     public void delete(E entity, EntityProxy<E> proxy) {
-        context.stateListener().preDelete(entity, proxy);
+        context.getStateListener().preDelete(entity, proxy);
         proxy.unlink();
         if (cacheable) {
             cache.invalidate(entityClass, proxy.key());
@@ -810,7 +810,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (!cascaded) {
             checkRowsAffected(rows, entity, proxy);
         }
-        context.stateListener().postDelete(entity, proxy);
+        context.getStateListener().postDelete(entity, proxy);
     }
 
     private boolean clearAssociations(E entity, EntityProxy<E> proxy) {
@@ -856,7 +856,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
     void batchDelete(Iterable<E> entities) {
 
-        final int batchSize = context.batchUpdateSize();
+        final int batchSize = context.getBatchUpdateSize();
         final Iterator<E> iterator = entities.iterator();
 
         while (iterator.hasNext()) {
@@ -869,7 +869,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     // TODO could use JDBC batching
                     delete(entity, proxy);
                 } else {
-                    context.stateListener().preDelete(entity, proxy);
+                    context.getStateListener().preDelete(entity, proxy);
                     boolean cascaded = clearAssociations(entity, proxy);
 
                     Object key = proxy.key();
@@ -880,7 +880,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         ids.add(key);
                     }
                     proxy.unlink();
-                    context.stateListener().postDelete(entity, proxy);
+                    context.getStateListener().postDelete(entity, proxy);
                 }
             }
             // optimized case: delete from T where key in (keys...)

@@ -88,8 +88,8 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         this.type = Objects.requireNotNull(type);
         this.context = Objects.requireNotNull(context);
         this.queryable = Objects.requireNotNull(queryable);
-        this.cache = this.context.cache();
-        this.mapping = this.context.mapping();
+        this.cache = this.context.getCache();
+        this.mapping = this.context.getMapping();
         this.stateless = type.isStateless();
         this.cacheable = type.isCacheable();
         // compute default/minimum selections for the type
@@ -112,7 +112,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         // optimization for single key attribute
         keyAttribute = Attributes.query(type.getSingleKeyAttribute());
         // attributes converted to array for performance
-        defaultSelectionAttributes = Attributes.attributesToArray(selectAttributes,
+        defaultSelectionAttributes = Attributes.toArray(selectAttributes,
             new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
@@ -139,7 +139,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
 
     private Expression aliasVersion(Attribute attribute) {
         // special handling for system version column
-        String columnName = context.platform().versionColumnDefinition().columnName();
+        String columnName = context.getPlatform().versionColumnDefinition().columnName();
         if (attribute.isVersion() && columnName != null) {
             Expression<?> expression = (Expression<?>) attribute;
             return new AliasedExpression<>(expression, columnName, expression.getName());
@@ -194,12 +194,12 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         FilteringIterator<Attribute<E, ?>> filterator =
             new FilteringIterator<>(attributes.iterator(), basicFilter);
         if (filterator.hasNext()) {
-            QueryBuilder qb = new QueryBuilder(context.queryBuilderOptions())
+            QueryBuilder qb = new QueryBuilder(context.getQueryBuilderOptions())
                 .keyword(SELECT)
                 .commaSeparated(filterator, new QueryBuilder.Appender<Attribute<E, ?>>() {
                     @Override
                     public void append(QueryBuilder qb, Attribute<E, ?> value) {
-                        String versionColumn = context.platform()
+                        String versionColumn = context.getPlatform()
                                 .versionColumnDefinition().columnName();
                         if (value.isVersion() && versionColumn != null) {
                             qb.append(versionColumn).space()
@@ -216,7 +216,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 .appendWhereConditions(type.getKeyAttributes());
 
             String sql = qb.toString();
-            try (Connection connection = context.connectionProvider().getConnection();
+            try (Connection connection = context.getConnection();
                  PreparedStatement statement = connection.prepareStatement(sql)) {
                 int index = 1;
                 for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
@@ -226,9 +226,9 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     }
                     mapping.write((Expression) attribute, statement, index++, value);
                 }
-                context.statementListener().beforeExecuteQuery(statement, sql, null);
+                context.getStatementListener().beforeExecuteQuery(statement, sql, null);
                 ResultSet results = statement.executeQuery();
-                context.statementListener().afterExecuteQuery(statement);
+                context.getStatementListener().afterExecuteQuery(statement);
                 if (results.next()) {
                     Attribute[] selection = new Attribute[attributes.size()];
                     attributes.toArray(selection);
@@ -293,7 +293,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     if (entity == null) {
                         return null;
                     }
-                    EntityProxy<Q> referredProxy = context.model()
+                    EntityProxy<Q> referredProxy = context.getModel()
                         .typeOf(uType).getProxyProvider().apply(entity);
 
                     key = referredProxy.get(keyAttribute);
@@ -312,7 +312,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 Class<Q> uType = (Class<Q>) attribute.getElementClass();
                 QueryAttribute<E, Object> tKey = null;
                 QueryAttribute<Q, Object> uKey = null;
-                Type<?> junctionType = context.model().typeOf(attribute.getReferencedClass());
+                Type<?> junctionType = context.getModel().typeOf(attribute.getReferencedClass());
                 for (Attribute a : junctionType.getAttributes()) {
                     if (type.getClassType().isAssignableFrom(a.getReferencedClass())) {
                         tKey = Attributes.query(a);
@@ -417,7 +417,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
 
                 SelectOperation<E> select = new SelectOperation<>(context, resultReader);
                 QueryElement<Result<E>> query =
-                    new QueryElement<>(QueryType.SELECT, context.model(), select);
+                    new QueryElement<>(QueryType.SELECT, context.getModel(), select);
 
                 try (Result<E> result = query.select(selection).where(condition).get()) {
                     result.each(collector);
@@ -569,7 +569,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             }
         }
         if (!wasCached) {
-            context.stateListener().postLoad(entity, proxy);
+            context.getStateListener().postLoad(entity, proxy);
         }
         return entity;
     }

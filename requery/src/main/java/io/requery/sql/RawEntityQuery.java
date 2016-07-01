@@ -53,7 +53,7 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
     RawEntityQuery(EntityContext<S> context, Class<E> cls, String sql, Object[] parameters) {
         super(context, null);
         ParameterInliner inlined = new ParameterInliner(sql, parameters).apply();
-        this.type = configuration.model().typeOf(cls);
+        this.type = configuration.getModel().typeOf(cls);
         this.sql = inlined.sql();
         this.reader = context.read(cls);
         boundParameters = new BoundParameters(inlined.parameters());
@@ -62,7 +62,7 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
     @Override
     public Result<E> get() {
         try {
-            Connection connection = configuration.connectionProvider().getConnection();
+            Connection connection = configuration.getConnection();
             PreparedStatement statement = prepare(sql, connection);
             mapParameters(statement, boundParameters);
             return new EntityResult(statement);
@@ -82,7 +82,7 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
         @Override
         public CloseableIterator<E> iterator(int skip, int take) {
             try {
-                StatementListener listener = configuration.statementListener();
+                StatementListener listener = configuration.getStatementListener();
                 listener.beforeExecuteQuery(statement, sql, boundParameters);
                 ResultSet results = statement.executeQuery();
                 listener.afterExecuteQuery(statement);
@@ -101,7 +101,7 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
                         attributes.add(attribute);
                     }
                 }
-                Attribute[] array = Attributes.attributesToArray(attributes,
+                Attribute[] array = Attributes.toArray(attributes,
                     new Predicate<Attribute<E, ?>>() {
                     @Override
                     public boolean test(Attribute<E, ?> value) {

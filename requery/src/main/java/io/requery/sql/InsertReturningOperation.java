@@ -72,8 +72,8 @@ class InsertReturningOperation extends PreparedQueryOperation implements
         BoundParameters parameters = generator.parameters();
         int count;
         try {
-            Connection connection = configuration.connectionProvider().getConnection();
-            StatementListener listener = configuration.statementListener();
+            Connection connection = configuration.getConnection();
+            StatementListener listener = configuration.getStatementListener();
             PreparedStatement statement = prepare(sql, connection);
             mapParameters(statement, parameters);
             listener.beforeExecuteUpdate(statement, sql, parameters);

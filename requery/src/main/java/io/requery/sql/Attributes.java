@@ -42,8 +42,8 @@ final class Attributes {
         return new Attribute[size];
     }
 
-    static <E> Attribute<E, ?>[] attributesToArray(Collection<Attribute<E, ?>> attributes,
-                                                   Predicate<Attribute<E, ?>> filter) {
+    static <E> Attribute<E, ?>[] toArray(Collection<Attribute<E, ?>> attributes,
+                                         Predicate<Attribute<E, ?>> filter) {
         LinkedHashSet<Attribute> filtered = new LinkedHashSet<>();
         for (Attribute<E, ?> attribute : attributes) {
             if (filter == null || filter.test(attribute)) {

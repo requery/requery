@@ -56,10 +56,10 @@ class BatchUpdateOperation<E> extends PreparedQueryOperation implements QueryOpe
     public int[] evaluate(QueryElement<int[]> query) {
         int[] result = batchInStatement ? null : new int[length];
 
-        try (Connection connection = configuration.connectionProvider().getConnection()) {
+        try (Connection connection = configuration.getConnection()) {
             DefaultOutput generator = new DefaultOutput(configuration, query);
             String sql = generator.toSql();
-            StatementListener listener = configuration.statementListener();
+            StatementListener listener = configuration.getStatementListener();
 
             try (PreparedStatement statement = prepare(sql, connection)) {
                 for (int i = 0; i < length; i++) {
