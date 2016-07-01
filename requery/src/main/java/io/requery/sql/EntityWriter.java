@@ -414,8 +414,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                                    boolean returnKeys, CascadeMode mode) {
         GeneratedResultReader keyReader = null;
         // if the type is immutable return the key(s) to the caller instead of modifying the object
-        final GeneratedKeys<E> keys =
-            returnKeys && hasGeneratedKey?
+        final GeneratedKeys<E> keys = (returnKeys && hasGeneratedKey) ?
                 new GeneratedKeys<>(type.isImmutable() ? null : proxy) : null;
 
         if (hasGeneratedKey) {
@@ -497,12 +496,11 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         }
     }
 
-    public void update(E entity, final EntityProxy<E> proxy) {
+    public void update(E entity, EntityProxy<E> proxy) {
         update(entity, proxy, true, CascadeMode.AUTO);
     }
 
-    private int update(E entity, final EntityProxy<E> proxy,
-                       boolean checkRowCount, CascadeMode mode) {
+    private int update(E entity, final EntityProxy<E> proxy, boolean checkCount, CascadeMode mode) {
         if (whereAttributes.length == 0) {
             throw new MissingKeyException(proxy);
         }
@@ -519,8 +517,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         };
         boolean hasVersion = versionAttribute != null;
         final Object version = hasVersion ? proxy.get(versionAttribute, true) : null;
-        boolean modified = false;
         if (hasVersion) {
+            boolean modified = false;
             for (Attribute<E, ?> attribute : bindableAttributes) {
                 if (attribute != versionAttribute && updateable.test(attribute)) {
                     modified = true;
@@ -570,7 +568,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             // persist the foreign key object if needed
             S referenced = foreignKeyReference(proxy, attribute);
-            if (referenced != null) {
+            if (referenced != null && !stateless) {
                 proxy.setState(attribute, PropertyState.LOADED);
                 cascadeWrite(mode, referenced, null);
                 // reset the state temporarily for the updateable filter
@@ -593,7 +591,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             result = query.get().value();
             proxy.link(context.read(entityClass));
-            if (checkRowCount) {
+            if (checkCount) {
                 checkRowsAffected(result, entity, proxy);
             }
             if (result > 0) {
