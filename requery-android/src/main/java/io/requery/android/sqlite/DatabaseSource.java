@@ -53,6 +53,7 @@ import java.sql.SQLNonTransientConnectionException;
  *
  * @author Nikhil Purushe
  */
+@SuppressWarnings("WeakerAccess")
 public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider<SQLiteDatabase> {
 
     private final Platform platform;
@@ -104,6 +105,16 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
         this(context, model, name, factory, version, new SQLite());
     }
 
+    /**
+     * Creates a new {@link DatabaseSource} instance.
+     *
+     * @param context context
+     * @param model   the entity model
+     * @param name    database filename
+     * @param factory optional {@link android.database.sqlite.SQLiteDatabase.CursorFactory}
+     * @param version the schema version
+     * @param platform platform instance
+     */
     public DatabaseSource(Context context,
                           EntityModel model,
                           @Nullable String name,
