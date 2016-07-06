@@ -629,7 +629,7 @@ class EntityGenerator implements SourceGenerator {
             builder.add("\nnew $T($S, $T.class, $T.class)\n",
                 builderName, attribute.name(), ClassName.get(collectionElement), name);
 
-        } else if (attribute.isMap()) {
+        } else if (attribute.isMap() && attribute.cardinality() != null) {
             List<TypeMirror> parameters = Mirrors.listGenericTypeArguments(typeMirror);
             // key type
             TypeName keyName = TypeName.get(parameters.get(0));

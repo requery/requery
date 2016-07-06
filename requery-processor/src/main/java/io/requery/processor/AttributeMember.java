@@ -46,7 +46,6 @@ import io.requery.meta.MapAttributeBuilder;
 import io.requery.meta.ResultAttributeBuilder;
 import io.requery.meta.SetAttributeBuilder;
 import io.requery.query.Order;
-import io.requery.sql.Keyword;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -184,7 +183,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                     isIterable = Mirrors.isInstance(types, element, Iterable.class);
                 }
                 isMap = Mirrors.isInstance(types, element, Map.class);
-                if (isMap) {
+                if (isMap && cardinality != null) {
                     builderClass = MapAttributeBuilder.class;
                 }
                 isOptional = Mirrors.isInstance(types, element, Optional.class);
