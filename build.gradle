@@ -7,7 +7,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
+        classpath 'com.android.tools.build:gradle:2.1.2'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
     }
 }
@@ -35,7 +35,7 @@ if (localProperties.exists()) {
     properties.load(localProperties.newDataInputStream())
 }
 
-configure([project(':requery'), project(':requery-processor')]) {
+configure([project(':requery'), project(':requery-processor'), project(':requery-kotlin')]) {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
 
@@ -80,7 +80,7 @@ configure([project(':requery'), project(':requery-processor')]) {
     }
 }
 
-configure([project(':requery'), project(':requery-processor'), project(':requery-android')]) {
+configure([project(':requery'), project(':requery-processor'), project(':requery-android'), project(':requery-kotlin')]) {
     apply plugin: 'com.jfrog.bintray'
 
     bintray {
