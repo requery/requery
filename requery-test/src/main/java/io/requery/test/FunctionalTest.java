@@ -491,11 +491,14 @@ public abstract class FunctionalTest extends RandomData {
     public void testDeleteCascadeOneToOne() {
         Address address = randomAddress();
         data.insert(address);
-        assertTrue(address.getId() > 0);
+        int id = address.getId();
+        assertTrue(id > 0);
         Person person = randomPerson();
+        person.setAddress(address);
         data.insert(person);
         data.delete(person);
         assertNull(address.getPerson());
+        assertNull(data.findByKey(Address.class, id));
     }
 
     @Test
