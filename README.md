@@ -1,6 +1,6 @@
 ![requery](http://requery.github.io/logo.png)
 
-A light but powerful object mapping and SQL generator for Java/Android with RxJava and Java 8 support.
+A light but powerful object mapping and SQL generator for Java/Kotlin/Android with RxJava and Java 8 support.
 Easily map to or create databases, perform queries and updates from any platform that uses Java.
 
 [![Build Status](https://travis-ci.org/requery/requery.svg?branch=master)](https://travis-ci.org/requery/requery)
@@ -108,6 +108,14 @@ abstract class AbstractPerson {
     // .join(Group_Person.class).on(Group_ID.equal(Group_Person.GROUP_ID))
     // .join(Person.class).on(Group_Person.PERSON_ID.equal(Person.ID))
     // .where(Person.ID.equal(id))
+}
+```
+
+**[Kotlin](https://kotlinlang.org/) Kotlin specific support using property references and infix functions:**
+
+```kotlin
+data {
+    val result = select(Person::class) where (Person::age gt 21) and (Person::name eq "Bob") limit 10
 }
 ```
 
@@ -282,9 +290,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.0.0-beta23'
-    compile 'io.requery:requery-android:1.0.0-beta23' // for android
-    apt 'io.requery:requery-processor:1.0.0-beta23'   // use an APT plugin
+    compile 'io.requery:requery:1.0.0-rc1'
+    compile 'io.requery:requery-android:1.0.0-rc1' // for android
+    apt 'io.requery:requery-processor:1.0.0-rc1'   // use an APT plugin
 }
 ```
 
