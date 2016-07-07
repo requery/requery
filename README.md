@@ -111,7 +111,7 @@ abstract class AbstractPerson {
 }
 ```
 
-**[Kotlin](https://kotlinlang.org/) Kotlin specific support using property references and infix functions:**
+**[Kotlin](https://github.com/requery/requery/wiki/Kotlin) specific support using property references and infix functions:**
 
 ```kotlin
 data {
