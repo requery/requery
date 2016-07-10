@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+## 1.0.0-rc1
+
+- Kotlin module
+- Support global custom table / column naming
+- Fix self referencing table when used in a relationship
+- Fix relational column ordering when using a set
+
 ## 1.0.0-beta23
 
 - Support global entity state change listeners
