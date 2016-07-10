@@ -18,7 +18,7 @@ abstract class AbstractPerson {
     @Key @Generated
     int id;
 
-    @Index(name = "name_index")              // table specification
+    @Index("name_index")                     // table specification
     String name;
 
     @OneToMany                               // relationships 1:1, 1:many, many to many
