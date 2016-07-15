@@ -796,10 +796,9 @@ class EntityGenerator implements SourceGenerator {
                                                     EntityDescriptor referenced,
                                                     Set<AttributeDescriptor> mappings) {
         TypeName typeName = null;
-        Optional<AssociativeEntityDescriptor> joinEntity = attribute.associativeEntity();
-        if (joinEntity.isPresent()) {
-            AssociativeEntityDescriptor descriptor = joinEntity.get();
-            Optional<TypeMirror> mirror = descriptor.type();
+        Optional<AssociativeEntityDescriptor> descriptor = attribute.associativeEntity();
+        if (descriptor.isPresent()) {
+            Optional<TypeMirror> mirror = descriptor.get().type();
             if (mirror.isPresent()) {
                 typeName = TypeName.get(mirror.get());
             } else {
@@ -815,12 +814,18 @@ class EntityGenerator implements SourceGenerator {
                         throw new RuntimeException(e);
                     }
                 });
-                typeName = nameResolver.joinEntityName(descriptor, entity, referenced);
+                typeName = nameResolver.joinEntityName(descriptor.get(), entity, referenced);
             }
         } else if (mappings.size() == 1) {
-            AttributeDescriptor mapped = mappings.iterator().next();
-            return mapped.associativeEntity()
-                .map(e -> nameResolver.joinEntityName(e, referenced, entity));
+            descriptor = mappings.iterator().next().associativeEntity();
+            if (descriptor.isPresent()) {
+                Optional<TypeMirror> mirror = descriptor.get().type();
+                if (mirror.isPresent()) {
+                    typeName = TypeName.get(mirror.get());
+                } else {
+                    typeName = nameResolver.joinEntityName(descriptor.get(), referenced, entity);
+                }
+            }
         }
         return Optional.ofNullable(typeName);
     }
