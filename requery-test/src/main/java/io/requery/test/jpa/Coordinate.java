@@ -1,4 +1,4 @@
-package io.requery.test.modeljpa;
+package io.requery.test.jpa;
 
 
 import javax.persistence.Column;

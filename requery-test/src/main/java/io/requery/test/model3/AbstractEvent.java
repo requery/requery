@@ -18,7 +18,6 @@ package io.requery.test.model3;
 
 
 import io.requery.Entity;
-import io.requery.JunctionTable;
 import io.requery.Key;
 import io.requery.ManyToMany;
 import io.requery.ManyToOne;
@@ -37,7 +36,6 @@ public class AbstractEvent {
     @ManyToOne
     protected Place place;
 
-    @JunctionTable
     @ManyToMany
     protected Set<Tag> tags;
 }

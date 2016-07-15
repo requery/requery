@@ -25,15 +25,15 @@ import io.requery.sql.EntityDataStore;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.H2;
-import io.requery.test.modeljpa.AddressEntity;
-import io.requery.test.modeljpa.AddressType;
-import io.requery.test.modeljpa.Group;
-import io.requery.test.modeljpa.GroupEntity;
-import io.requery.test.modeljpa.GroupType;
-import io.requery.test.modeljpa.Models;
-import io.requery.test.modeljpa.Person;
-import io.requery.test.modeljpa.PersonEntity;
-import io.requery.test.modeljpa.PhoneEntity;
+import io.requery.test.jpa.AddressEntity;
+import io.requery.test.jpa.AddressType;
+import io.requery.test.jpa.Group;
+import io.requery.test.jpa.GroupEntity;
+import io.requery.test.jpa.GroupType;
+import io.requery.test.jpa.Models;
+import io.requery.test.jpa.Person;
+import io.requery.test.jpa.PersonEntity;
+import io.requery.test.jpa.PhoneEntity;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class JPAModelTest {
 
     protected EntityDataStore<Serializable> data;
 
-    static PersonEntity randomPerson() {
+    private static PersonEntity randomPerson() {
         Random random = new Random();
         PersonEntity person = new PersonEntity();
         String[] firstNames = new String[]{"Alice", "Bob", "Carol"};
@@ -86,7 +86,7 @@ public class JPAModelTest {
     @Before
     public void setup() throws SQLException {
         CommonDataSource dataSource = DatabaseType.getDataSource(new H2());
-        EntityModel model = Models.MODELJPA;
+        EntityModel model = Models.JPA;
 
         CachingProvider provider = Caching.getCachingProvider();
         CacheManager cacheManager = provider.getCacheManager();

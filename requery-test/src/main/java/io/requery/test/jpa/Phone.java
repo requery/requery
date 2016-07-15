@@ -14,9 +14,23 @@
  * limitations under the License.
  */
 
-package io.requery.test.modeljpa;
+package io.requery.test.jpa;
 
-public enum AddressType {
-    HOME,
-    WORK
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import java.io.Serializable;
+
+@Entity
+public interface Phone extends Serializable {
+
+    @Id
+    @GeneratedValue
+    int getId();
+    String getPhoneNumber();
+    boolean isNormalized();
+
+    @ManyToOne
+    Person getOwner();
 }

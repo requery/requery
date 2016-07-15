@@ -26,11 +26,11 @@ import io.requery.sql.EntityDataStore;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.SQLite;
-import io.requery.test.modelautovalue.Models;
-import io.requery.test.modelautovalue.Person;
-import io.requery.test.modelautovalue.PersonType;
-import io.requery.test.modelautovalue.Phone;
-import io.requery.test.modelautovalue.PhoneType;
+import io.requery.test.autovalue.Models;
+import io.requery.test.autovalue.Person;
+import io.requery.test.autovalue.PersonType;
+import io.requery.test.autovalue.Phone;
+import io.requery.test.autovalue.PhoneType;
 import io.requery.util.function.Consumer;
 import org.junit.After;
 import org.junit.Before;
@@ -82,7 +82,7 @@ public class AutoValueModelTest {
     @Before
     public void setup() throws SQLException {
         CommonDataSource dataSource = DatabaseType.getDataSource(new SQLite());
-        EntityModel model = Models.MODELAUTOVALUE;
+        EntityModel model = Models.AUTOVALUE;
         Configuration configuration = new ConfigurationBuilder(dataSource, model)
             .useDefaultLogging()
             .setEntityCache(new EntityCacheBuilder(model)
@@ -162,6 +162,7 @@ public class AutoValueModelTest {
         assertTrue(person.getName().equals("Bobby"));
     }
 
+    @Test
     public void testDelete() throws MalformedURLException {
         Integer key = randomPerson();
         Person p = data.findByKey(Person.class, key);

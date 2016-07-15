@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.requery.test.modeljpa;
+package io.requery.test.jpa;
 
 public enum GroupType {
     PUBLIC,

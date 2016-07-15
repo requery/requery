@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.requery.test.modelautovalue;
+package io.requery.test.autovalue;
 
 
 import com.google.auto.value.AutoValue;
