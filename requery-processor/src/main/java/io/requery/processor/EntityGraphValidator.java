@@ -163,7 +163,7 @@ class EntityGraphValidator {
                     "@JunctionTable/@JoinTable annotation");
             }
             if (sourceAssociation.isPresent() && mappedAssociation.isPresent()) {
-                validator.warning("@JunctionTable should be specified on only one side of a " +
+                validator.error("@JunctionTable should be specified on only one side of a " +
                     "ManyToMany relationship");
             }
         } else if (sourceCardinality == Cardinality.ONE_TO_ONE) {
