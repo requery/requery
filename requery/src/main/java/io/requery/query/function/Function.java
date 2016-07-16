@@ -28,7 +28,7 @@ public abstract class Function<V> extends FieldExpression<V> {
     private final Class<V> type;
     private String alias;
 
-    protected Function(String name, Class<V> type) {
+    public Function(String name, Class<V> type) {
         this.name = name;
         this.type = type;
     }

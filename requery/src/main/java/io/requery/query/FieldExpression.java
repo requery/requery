@@ -18,6 +18,7 @@ package io.requery.query;
 
 import io.requery.query.function.Abs;
 import io.requery.query.function.Avg;
+import io.requery.query.function.Function;
 import io.requery.query.function.Lower;
 import io.requery.query.function.Max;
 import io.requery.query.function.Min;
@@ -133,6 +134,16 @@ public abstract class FieldExpression<V> implements
     @Override
     public Lower<V> lower() {
         return Lower.lower(this);
+    }
+
+    @Override
+    public Function<V> function(String name) {
+        return new Function<V>(name, getClassType()) {
+            @Override
+            public Object[] arguments() {
+                return new Object[]{FieldExpression.this};
+            }
+        };
     }
 
     @Override

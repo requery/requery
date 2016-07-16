@@ -26,6 +26,7 @@ import io.requery.meta.Type
 import io.requery.meta.TypeDeclarable
 import io.requery.query.*
 import io.requery.query.function.*
+import io.requery.query.function.Function
 import io.requery.util.function.Supplier
 import java.util.LinkedHashSet
 
@@ -89,6 +90,13 @@ abstract class BaseExpression<V> protected constructor() :
     override fun substr(offset: Int, length: Int): Substr<V> = Substr.substr(this, offset, length)
     override fun upper(): Upper<V> = Upper.upper(this)
     override fun lower(): Lower<V> = Lower.lower(this)
+    override fun function(name: String): Function<V> {
+        return object : Function<V>(name, classType) {
+            override fun arguments(): Array<out Any> {
+                return arrayOf(this@BaseExpression)
+            }
+        }
+    }
 
     override fun eq(value: V): Logical<out Expression<V>, V> = LogicalExpression(this, Operator.EQUAL, value)
     override fun ne(value: V): Logical<out Expression<V>, V> = LogicalExpression(this, Operator.NOT_EQUAL, value)
