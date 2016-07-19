@@ -27,6 +27,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -38,6 +39,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -113,18 +115,20 @@ public final class EntityProcessor extends AbstractProcessor {
 
         for (EntityType entity : entities.values()) {
             // add the annotated elements from the super type (if any)
+            if (entity.element().getKind() == ElementKind.INTERFACE) {
+                List<? extends TypeMirror> interfaces = entity.element().getInterfaces();
+                for (TypeMirror mirror : interfaces) {
+                    TypeElement superElement = elements.getTypeElement(mirror.toString());
+                    if (superElement != null) {
+                        mergeSuperType(entity, superElement);
+                    }
+                }
+            }
             TypeMirror typeMirror = entity.element().getSuperclass();
             while (typeMirror.getKind() != TypeKind.NONE) {
                 TypeElement superElement = elements.getTypeElement(typeMirror.toString());
                 if (superElement != null) {
-                    EntityType superType = superTypes.get(superElement);
-                    if (superType == null && isSuperclass(superElement)) {
-                        superType = computeType(superTypes, superElement);
-                    }
-                    if (superType != null) {
-                        superType.process(processingEnv);
-                        entity.merge(superType);
-                    }
+                    mergeSuperType(entity, superElement);
                     typeMirror = superElement.getSuperclass();
                 } else {
                     break;
@@ -194,6 +198,17 @@ public final class EntityProcessor extends AbstractProcessor {
             }
         }
         return false;
+    }
+
+    private void mergeSuperType(EntityType entity, TypeElement superElement) {
+        EntityType superType = superTypes.get(superElement);
+        if (superType == null && isSuperclass(superElement)) {
+            superType = computeType(superTypes, superElement);
+        }
+        if (superType != null) {
+            superType.process(processingEnv);
+            entity.merge(superType);
+        }
     }
 
     private EntityType computeType(Map<TypeElement, EntityType> map, TypeElement element) {

@@ -126,7 +126,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         if (attributes.values().isEmpty()) {
             validator.error("Entity contains no attributes");
         }
-        if (!isReadOnly() && attributes.values().size() == 1 &&
+        if (!isReadOnly() && !isEmbedded() && attributes.values().size() == 1 &&
             attributes.values().iterator().next().isGenerated()) {
             validator.warning(
                 "Entity contains only a single generated attribute may fail to persist");
