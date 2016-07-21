@@ -45,7 +45,12 @@ public final class RxSupport {
     }
 
     public static <S> SingleEntityStore<S> toReactiveStore(BlockingEntityStore<S> store) {
-        return new SingleEntityStoreFromBlocking<>(store);
+        return toReactiveStore(store, null);
+    }
+
+    public static <S> SingleEntityStore<S> toReactiveStore(BlockingEntityStore<S> store,
+                                                           Scheduler subscribeOn) {
+        return new SingleEntityStoreFromBlocking<>(store, subscribeOn);
     }
 
     public static <T> Observable<Result<T>> toResultObservable(final Result<T> result) {

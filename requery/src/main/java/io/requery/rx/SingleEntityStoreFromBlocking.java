@@ -61,10 +61,6 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
     private final ExecutorService executor;
     private final boolean createdExecutor;
 
-    SingleEntityStoreFromBlocking(BlockingEntityStore<T> delegate) {
-        this(delegate, null);
-    }
-
     SingleEntityStoreFromBlocking(BlockingEntityStore<T> delegate,
                                   @Nullable Scheduler subscribeOn) {
         this.delegate = Objects.requireNotNull(delegate);
