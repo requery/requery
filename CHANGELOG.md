@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 1.0.0-rc2
+
+- Support custom function calls on expressions in generated sql
+- Support @Superclass on interface entity types
+- Fix @Transient property not generated when using an interface entity type
+- Fix @JunctionTable.type() error during processing
+- Fix @JunctionTable custom column referencedColumn not used
+
 ## 1.0.0-rc1
 
 - Kotlin module
