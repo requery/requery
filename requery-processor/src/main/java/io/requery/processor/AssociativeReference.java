@@ -32,15 +32,18 @@ class AssociativeReference {
     private final ReferentialAction deleteAction;
     private final ReferentialAction updateAction;
     private final TypeElement referenceType;
+    private final String referencedColumn;
 
     AssociativeReference(String name,
                          TypeElement referenceType,
+                         String referencedColumn,
                          ReferentialAction deleteAction,
                          ReferentialAction updateAction) {
         this.name = name;
+        this.referencedColumn = referencedColumn;
+        this.referenceType = referenceType;
         this.deleteAction = deleteAction;
         this.updateAction = updateAction;
-        this.referenceType = referenceType;
     }
 
     String name() {
@@ -59,6 +62,10 @@ class AssociativeReference {
         return referenceType;
     }
 
+    String referencedColumn() {
+        return referencedColumn;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof AssociativeReference) {
@@ -66,13 +73,14 @@ class AssociativeReference {
             return Objects.equals(name, other.name) &&
                 Objects.equals(deleteAction, other.deleteAction) &&
                 Objects.equals(updateAction, other.updateAction) &&
-                Objects.equals(referenceType, other.referenceType);
+                Objects.equals(referenceType, other.referenceType) &&
+                Objects.equals(referencedColumn, other.referencedColumn);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, deleteAction, updateAction, referenceType);
+        return Objects.hash(name, deleteAction, updateAction, referenceType, referencedColumn);
     }
 }

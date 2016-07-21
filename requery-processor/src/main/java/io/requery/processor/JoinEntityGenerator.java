@@ -97,6 +97,7 @@ class JoinEntityGenerator implements SourceGenerator {
                 AssociativeReference reference = new AssociativeReference(
                     type.tableName() + "Id",
                     type.element(),
+                    null,
                     ReferentialAction.CASCADE,
                     ReferentialAction.CASCADE );
                 references.add(reference);
@@ -133,6 +134,9 @@ class JoinEntityGenerator implements SourceGenerator {
                 key.addMember("references", "$L.class",
                     nameResolver.generatedTypeNameOf(referenceElement)
                         .orElseThrow(IllegalStateException::new));
+            }
+            if (reference.referencedColumn() != null) {
+                key.addMember("referencedColumn", "$S", reference.referencedColumn());
             }
             AnnotationSpec.Builder id = AnnotationSpec.builder(Key.class);
             TypeName typeName = TypeName.get(Integer.class);

@@ -39,13 +39,13 @@ class JoinTableAssociation implements AssociativeEntityDescriptor {
             String columnName = column.name();
             ForeignKey foreignKey = column.foreignKey();
             ReferentialAction action = mapConstraint(foreignKey.value());
-            columns.add(new AssociativeReference(columnName, null, action, action));
+            columns.add(new AssociativeReference(columnName, null, null, action, action));
         }
         for (JoinColumn column : table.inverseJoinColumns()) {
             String columnName = column.name();
             ForeignKey foreignKey = column.foreignKey();
             ReferentialAction action = mapConstraint(foreignKey.value());
-            columns.add(new AssociativeReference(columnName, null, action, action));
+            columns.add(new AssociativeReference(columnName, null, null, action, action));
         }
     }
 
