@@ -171,12 +171,14 @@ class EntityGenerator implements SourceGenerator {
         Modifier memberVisibility = entity.isEmbedded() ? Modifier.PROTECTED : Modifier.PRIVATE;
         // generate property states
         if (!entity.isStateless()) {
-            for (AttributeDescriptor attribute : entity.attributes().values()) {
+            entity.attributes().values().stream()
+                    .filter(attribute -> !attribute.isTransient())
+                    .forEach(attribute -> {
                 TypeName stateType = ClassName.get(PropertyState.class);
                 builder.addField(FieldSpec
-                    .builder(stateType, propertyStateFieldName(attribute), memberVisibility)
-                    .build());
-            }
+                        .builder(stateType, propertyStateFieldName(attribute), memberVisibility)
+                        .build());
+            });
         }
         // only generate for interfaces or if the entity is immutable but has no builder
         boolean generateMembers = typeElement.getKind().isInterface() ||
