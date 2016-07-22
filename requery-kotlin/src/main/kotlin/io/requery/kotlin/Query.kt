@@ -29,34 +29,25 @@ operator fun <R> Return<R>.invoke() = get()
 interface Conditional<Q, V> {
 
     infix fun eq(value: V): Q
-    infix fun `==`(value: V): Q = eq(value)
     infix fun ne(value: V): Q
-    infix fun `!=`(value: V): Q = ne(value)
     infix fun lt(value: V): Q
     infix fun gt(value: V): Q
     infix fun lte(value: V): Q
     infix fun gte(value: V): Q
     infix fun eq(value: Expression<V>): Q
-    infix fun `==`(value: Expression<V>): Q = eq(value)
     infix fun ne(value: Expression<V>): Q
-    infix fun `!=`(value: Expression<V>): Q = eq(value)
     infix fun lt(value: Expression<V>): Q
     infix fun gt(value: Expression<V>): Q
     infix fun lte(value: Expression<V>): Q
     infix fun gte(value: Expression<V>): Q
     infix fun `in`(values: Collection<V>): Q
     infix fun notIn(values: Collection<V>): Q
-    fun `not in`(values: Collection<V>): Q = notIn(values)
     fun `in`(query: Return<*>): Q
     fun notIn(query: Return<*>): Q
-    fun `not in`(query: Return<*>): Q = notIn(query)
     fun isNull(): Q
-    fun `is null`(): Q = isNull()
     fun notNull(): Q
-    fun `not null`(): Q = notNull()
     infix fun like(expression: String): Q
     infix fun notLike(expression: String): Q
-    fun `not like`(expression: String): Q = notLike(expression)
     fun between(start: V, end: V): Q
 }
 
