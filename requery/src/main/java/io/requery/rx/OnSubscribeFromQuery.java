@@ -73,6 +73,7 @@ class OnSubscribeFromQuery<T> implements Observable.OnSubscribe<T> {
                             emitted.incrementAndGet();
                         } else {
                             subscriber.onCompleted();
+                            break;
                         }
                     }
                 }
@@ -94,7 +95,7 @@ class OnSubscribeFromQuery<T> implements Observable.OnSubscribe<T> {
                         // no more items
                         if (!subscriber.isUnsubscribed() && i < count) {
                             subscriber.onCompleted();
-                            return;
+                            break;
                         }
                         count = requested.addAndGet(-count);
                     }
