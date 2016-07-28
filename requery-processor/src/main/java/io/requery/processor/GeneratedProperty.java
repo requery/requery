@@ -28,27 +28,25 @@ class GeneratedProperty {
 
     private final String readName;
     private final String writeName;
-    private final TypeName targetName;
-    private final TypeName propertyTypeName;
+    private final TypeName entity;
+    private final TypeName typeName;
     private String methodSuffix;
+    private String accessSuffix;
     private boolean useMethod;
     private boolean isNullable;
     private boolean isReadOnly;
     private boolean isWriteOnly;
 
-    GeneratedProperty(String propertyName, TypeName targetName, TypeName propertyTypeName) {
-        this(propertyName, propertyName, targetName, propertyTypeName);
+    GeneratedProperty(String propertyName, TypeName entity, TypeName typeName) {
+        this(propertyName, propertyName, entity, typeName);
     }
 
-    GeneratedProperty(String readName,
-                      String writeName,
-                      TypeName targetName,
-                      TypeName propertyTypeName) {
-        this.methodSuffix = "";
+    GeneratedProperty(String readName, String writeName, TypeName entity, TypeName typeName) {
         this.readName = readName;
         this.writeName = writeName;
-        this.targetName = targetName;
-        this.propertyTypeName = propertyTypeName;
+        this.entity = entity;
+        this.typeName = typeName;
+        this.methodSuffix = "";
     }
 
     GeneratedProperty setUseMethod(boolean useMethod) {
@@ -56,8 +54,13 @@ class GeneratedProperty {
         return this;
     }
 
-    GeneratedProperty setSuffix(String suffix) {
+    GeneratedProperty setMethodSuffix(String suffix) {
         this.methodSuffix = suffix;
+        return this;
+    }
+
+    GeneratedProperty setAccessSuffix(String suffix) {
+        this.accessSuffix = suffix;
         return this;
     }
 
@@ -77,38 +80,33 @@ class GeneratedProperty {
     }
 
     void build(TypeSpec.Builder builder) {
-        addPropertyMethods(builder);
-    }
-
-    private void addPropertyMethods(TypeSpec.Builder builder) {
-        String suffix = methodSuffix;
         // get
-        MethodSpec.Builder getMethod = CodeGeneration.overridePublicMethod("get" + suffix)
-            .addParameter(targetName, "entity")
-            .returns(propertyTypeName);
+        MethodSpec.Builder getMethod = CodeGeneration.overridePublicMethod("get" + methodSuffix)
+            .addParameter(entity, "entity")
+            .returns(typeName);
+        final String accessName = "entity" + (accessSuffix == null ? "" : accessSuffix);
         if (isWriteOnly) {
             getMethod.addStatement("throw new UnsupportedOperationException()");
         } else {
-            getMethod.addStatement(useMethod ?
-                "return entity.$L()" : "return entity.$L", readName);
+            getMethod.addStatement(useMethod?
+                "return $L.$L()" : "return $L.$L", accessName, readName);
         }
         // set
-        MethodSpec.Builder setMethod = CodeGeneration.overridePublicMethod("set" + suffix)
-            .addParameter(targetName, "entity")
-            .addParameter(propertyTypeName, "value");
+        MethodSpec.Builder setMethod = CodeGeneration.overridePublicMethod("set" + methodSuffix)
+            .addParameter(entity, "entity")
+            .addParameter(typeName, "value");
         if (isReadOnly) {
             setMethod.addStatement("throw new UnsupportedOperationException()");
         } else {
-            CodeBlock.Builder setterBlock = CodeBlock.builder();
+            CodeBlock.Builder block = CodeBlock.builder();
             if (isNullable) {
-                setterBlock.beginControlFlow("if(value != null)");
+                block.beginControlFlow("if(value != null)");
             }
-            setterBlock.addStatement(useMethod ?
-                "entity.$L(value)" : "entity.$L = value", writeName);
+            block.addStatement(useMethod? "$L.$L(value)" : "$L.$L = value", accessName, writeName);
             if (isNullable) {
-                setterBlock.endControlFlow();
+                block.endControlFlow();
             }
-            setMethod.addCode(setterBlock.build());
+            setMethod.addCode(block.build());
         }
         builder.addMethod(getMethod.build());
         builder.addMethod(setMethod.build());

@@ -121,30 +121,25 @@ class EntityMetaGenerator extends EntityPartGenerator {
         } else if (entity.isImmutable()) {
 
             // the builder name (if there is no builder than this class is the builder)
-            TypeName builderName = entity.builderType().map(
-                    element -> TypeName.get(element.asType())).orElse(typeName);
+            TypeName builderName = typeName;
 
             TypeSpec.Builder typeFactory = TypeSpec.anonymousClassBuilder("")
                     .addSuperinterface(parameterizedTypeName(Supplier.class, builderName));
             MethodSpec.Builder buildMethod =
                     CodeGeneration.overridePublicMethod("get").returns(builderName);
 
-            if (entity.builderFactoryMethod().isPresent()) {
-                buildMethod.addStatement("return $T.$L()", targetName,
-                        entity.builderFactoryMethod()
-                                .map(method -> method.getSimpleName().toString()).orElse(""));
-            } else {
-                buildMethod.addStatement("return new $T()", builderName);
-            }
+            buildMethod.addStatement("return new $T()", builderName);
             typeFactory.addMethod(buildMethod.build());
             block.add(".setBuilderFactory($L)\n", typeFactory.build());
 
+            String statement = entity.builderType().isPresent() ?
+                    "return value.builder.build()" : "return value.build()";
             TypeSpec.Builder buildFunction = TypeSpec.anonymousClassBuilder("")
                     .addSuperinterface(parameterizedTypeName(Function.class, builderName, targetName))
                     .addMethod(
                             CodeGeneration.overridePublicMethod("apply")
                                     .addParameter(builderName, "value")
-                                    .addStatement("return value.build()")
+                                    .addStatement(statement)
                                     .returns(targetName)
                                     .build());
             block.add(".setBuilderFunction($L)\n", buildFunction.build());
@@ -258,13 +253,13 @@ class EntityMetaGenerator extends EntityPartGenerator {
         if (attribute.isIterable()) {
             typeMirror = tryFirstTypeArgument(typeMirror);
             TypeName name = nameResolver.tryGeneratedTypeName(typeMirror);
-            TypeElement collectionElement = (TypeElement) types.asElement(attribute.typeMirror());
+            TypeElement collection = (TypeElement) types.asElement(attribute.typeMirror());
 
             ParameterizedTypeName builderName = parameterizedTypeName(
                 attribute.builderClass(), targetName, typeName, name);
 
             builder.add("\nnew $T($S, $T.class, $T.class)\n",
-                builderName, attribute.name(), ClassName.get(collectionElement), name);
+                builderName, attribute.name(), ClassName.get(collection), name);
 
         } else if (attribute.isMap() && attribute.cardinality() != null) {
             List<TypeMirror> parameters = Mirrors.listGenericTypeArguments(typeMirror);
@@ -298,11 +293,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
             builder.add(statement, builderName, attribute.name(), classType);
         }
         if (!expression) {
-            String prefix = "";
-            if (parent != null) {
-                prefix = parent.getterName() + "().";
-            }
-            generateProperties(attribute, typeMirror, targetName, typeName, builder, prefix);
+            generateProperties(attribute, parent, typeMirror, targetName, typeName, builder);
         }
         // attribute builder properties
         if (attribute.isKey()) {
@@ -468,28 +459,32 @@ class EntityMetaGenerator extends EntityPartGenerator {
     }
 
     private void generateProperties(AttributeDescriptor attribute,
+                                    AttributeDescriptor parent,
                                     TypeMirror typeMirror,
                                     TypeName targetName,
                                     TypeName attributeName,
-                                    CodeBlock.Builder block,
-                                    String accessPrefix) {
+                                    CodeBlock.Builder block) {
+        String prefix = "";
+        if (parent != null) {
+            prefix = parent.getterName() + "().";
+        }
         // boxed get/set using Objects
         Class propertyClass = propertyClassFor(typeMirror);
         ParameterizedTypeName propertyType = propertyName(propertyClass, targetName, attributeName);
 
-        TypeSpec.Builder propertyBuilder = TypeSpec.anonymousClassBuilder("")
+        TypeSpec.Builder builder = TypeSpec.anonymousClassBuilder("")
             .addSuperinterface(propertyType);
 
         boolean isNullable = typeMirror.getKind().isPrimitive() && attribute.isNullable();
         boolean useGetter = entity.isUnimplementable() || entity.isImmutable();
         boolean useSetter = entity.isUnimplementable();
-        String getName = accessPrefix + (useGetter? attribute.getterName() : attribute.fieldName());
-        String setName = accessPrefix + (useSetter? attribute.setterName() : attribute.fieldName());
+        String getName = prefix + (useGetter? attribute.getterName() : attribute.fieldName());
+        String setName = prefix + (useSetter? attribute.setterName() : attribute.fieldName());
         new GeneratedProperty(getName, setName, targetName, attributeName)
                 .setNullable(isNullable)
                 .setReadOnly(entity.isImmutable())
                 .setUseMethod(useGetter)
-                .build(propertyBuilder);
+                .build(builder);
 
         // additional primitive get/set if the type is primitive
         if (propertyClass != Property.class) {
@@ -497,12 +492,12 @@ class EntityMetaGenerator extends EntityPartGenerator {
             String name = Names.upperCaseFirst(attribute.typeMirror().toString());
 
             new GeneratedProperty(getName, setName, targetName, primitiveType)
-                .setSuffix(name)
+                .setMethodSuffix(name)
                 .setReadOnly(entity.isImmutable())
                 .setUseMethod(useGetter)
-                .build(propertyBuilder);
+                .build(builder);
         }
-        block.add(".setProperty($L)\n", propertyBuilder.build());
+        block.add(".setProperty($L)\n", builder.build());
         block.add(".setPropertyName($S)\n", attribute.element().getSimpleName());
 
         // property state get/set
@@ -510,20 +505,24 @@ class EntityMetaGenerator extends EntityPartGenerator {
             ClassName stateClass = ClassName.get(PropertyState.class);
             TypeSpec.Builder stateType = TypeSpec.anonymousClassBuilder("")
                 .addSuperinterface(parameterizedTypeName(Property.class, targetName, stateClass));
-            String fieldName = accessPrefix + propertyStateFieldName(attribute);
+            String fieldName = prefix + propertyStateFieldName(attribute);
             new GeneratedProperty(fieldName, targetName, stateClass).build(stateType);
             block.add(".setPropertyState($L)\n", stateType.build());
         }
 
         // if immutable add setter for the builder
-        if (entity.isImmutable() && "".equals(accessPrefix)) {
+        if (entity.isImmutable()) {
             String propertyName = attribute.fieldName();
             TypeName builderName = typeName;
             useSetter = false;
+            String parameterSuffix = null;
             Optional<TypeElement> builderType = entity.builderType();
             if (builderType.isPresent()) {
+                parameterSuffix = ".builder";
+                if (parent != null) {
+                    parameterSuffix = "." + parent.fieldName() + "Builder";
+                }
                 propertyName = attribute.setterName();
-                builderName = TypeName.get(builderType.get().asType());
                 useSetter = true;
                 for (ExecutableElement method :
                     ElementFilter.methodsIn(builderType.get().getEnclosedElements())) {
@@ -546,12 +545,14 @@ class EntityMetaGenerator extends EntityPartGenerator {
             new GeneratedProperty(propertyName, builderName, attributeName)
                     .setWriteOnly(true)
                     .setUseMethod(useSetter)
+                    .setAccessSuffix(parameterSuffix)
                     .build(builderProperty);
             if (propertyClass != Property.class) {
                 TypeName primitiveType = TypeName.get(attribute.typeMirror());
                 String name = Names.upperCaseFirst(attribute.typeMirror().toString());
                 new GeneratedProperty(propertyName, builderName, primitiveType)
-                    .setSuffix(name)
+                    .setMethodSuffix(name)
+                    .setAccessSuffix(parameterSuffix)
                     .setUseMethod(useSetter)
                     .setWriteOnly(true)
                     .build(builderProperty);

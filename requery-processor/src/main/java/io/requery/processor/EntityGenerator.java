@@ -121,7 +121,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
     }
 
     private void generateMembers(TypeSpec.Builder builder) {
-        Modifier memberVisibility = entity.isEmbedded() ? Modifier.PROTECTED : Modifier.PRIVATE;
+        Modifier visibility = entity.isEmbedded() ? Modifier.PROTECTED : Modifier.PRIVATE;
         // generate property states
         if (!entity.isStateless()) {
             entity.attributes().values().stream()
@@ -129,7 +129,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     .forEach(attribute -> {
                 TypeName stateType = ClassName.get(PropertyState.class);
                 builder.addField(FieldSpec
-                        .builder(stateType, propertyStateFieldName(attribute), memberVisibility)
+                        .builder(stateType, propertyStateFieldName(attribute), visibility)
                         .build());
             });
         }
@@ -144,21 +144,46 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                 if (element.getKind() == ElementKind.METHOD) {
                     ExecutableElement methodElement = (ExecutableElement) element;
                     TypeMirror typeMirror = methodElement.getReturnType();
-                    TypeName fieldTypeName;
+                    TypeName fieldName;
                     if (attribute.isIterable()) {
-                        fieldTypeName = parameterizedCollectionName(typeMirror);
+                        fieldName = parameterizedCollectionName(typeMirror);
                     } else if (attribute.isOptional()) {
                         typeMirror = tryFirstTypeArgument(attribute.typeMirror());
-                        fieldTypeName = TypeName.get(typeMirror);
+                        fieldName = TypeName.get(typeMirror);
                     } else {
-                        fieldTypeName = nameResolver.tryGeneratedTypeName(typeMirror);
+                        fieldName = nameResolver.tryGeneratedTypeName(typeMirror);
                     }
                     builder.addField(FieldSpec
-                        .builder(fieldTypeName, attribute.fieldName(), memberVisibility)
+                        .builder(fieldName, attribute.fieldName(), visibility)
                         .build());
                 }
             }
+        } else if (entity.isImmutable()) {
+            TypeName builderName = entity.builderType().map(
+                    element -> TypeName.get(element.asType())).orElse(typeName);
+            builder.addField(initializeBuilder(entity, builderName, "builder"));
+
+            entity.attributes().values().stream()
+                .filter(AttributeDescriptor::isEmbedded)
+                .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded ->
+                        embedded.builderType().ifPresent(type -> {
+                    TypeName embedName = TypeName.get(type.asType());
+                    String fieldName = attribute.fieldName() + "Builder";
+                    builder.addField(initializeBuilder(embedded, embedName, fieldName));
+                })));
         }
+    }
+
+    private FieldSpec initializeBuilder(EntityDescriptor entity, TypeName name, String fieldName) {
+        FieldSpec.Builder builder = FieldSpec.builder(name, fieldName, Modifier.PROTECTED);
+        if (entity.builderFactoryMethod().isPresent()) {
+            TypeName baseName = TypeName.get(entity.element().asType());
+            builder.initializer("$T.$L()", baseName, entity.builderFactoryMethod()
+                            .map(method -> method.getSimpleName().toString()).orElse(""));
+        } else {
+            builder.initializer("new $T()", name);
+        }
+        return builder.build();
     }
 
     private void generateConstructors(TypeSpec.Builder builder) {
