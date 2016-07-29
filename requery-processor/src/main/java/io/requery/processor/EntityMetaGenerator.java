@@ -54,6 +54,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -63,10 +64,15 @@ class EntityMetaGenerator extends EntityPartGenerator {
 
     private static final String KOTLIN_ATTRIBUTE_DELEGATE = "io.requery.meta.AttributeDelegate";
 
+    private final HashSet<String> attributeNames;
+    private final HashSet<String> expressionNames;
+
     EntityMetaGenerator(ProcessingEnvironment processingEnvironment,
                         EntityGraph graph,
                         EntityDescriptor entity) {
         super(processingEnvironment, graph, entity);
+        attributeNames = new HashSet<>();
+        expressionNames = new HashSet<>();
     }
 
     void generate(TypeSpec.Builder builder) {
@@ -88,7 +94,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                         String name = fieldName + "_ID";
                         TypeMirror mirror = foreignKey.typeMirror();
                         builder.addField(
-                            generateAttribute(attribute, targetName, name, mirror, true, null) );
+                            generateAttribute(attribute, null, targetName, name, mirror, true) );
                         expressionNames.add(name);
                     });
             }
@@ -98,7 +104,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
             } else {
                 TypeMirror mirror = attribute.typeMirror();
                 builder.addField(
-                    generateAttribute(attribute, targetName, fieldName, mirror, false, null) );
+                    generateAttribute(attribute, null, targetName, fieldName, mirror, false) );
                 attributeNames.add(fieldName);
             }
         });
@@ -204,7 +210,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 Names.removeMemberPrefixes(attribute.fieldName()));
             TypeMirror mirror = attribute.typeMirror();
             builder.addField(
-                generateAttribute(attribute, targetName, fieldName, mirror, false, parent));
+                generateAttribute(attribute, parent, targetName, fieldName, mirror, false));
             attributeNames.add(fieldName);
         });
         // generate an embedded implementation for this (the parent) entity
@@ -216,11 +222,11 @@ class EntityMetaGenerator extends EntityPartGenerator {
     }
 
     private FieldSpec generateAttribute(AttributeDescriptor attribute,
+                                        AttributeDescriptor parent,
                                         TypeName targetName,
                                         String fieldName,
                                         TypeMirror mirror,
-                                        boolean expression,
-                                        AttributeDescriptor parent) {
+                                        boolean expression) {
         TypeMirror typeMirror = mirror;
         TypeName typeName;
         if (attribute.isIterable()) {
