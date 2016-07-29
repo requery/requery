@@ -120,28 +120,35 @@ class EntityMetaGenerator extends EntityPartGenerator {
             block.add(".setFactory(new $L())\n", ClassName.bestGuess(factoryName));
         } else if (entity.isImmutable()) {
 
-            // the builder name (if there is no builder than this class is the builder)
-            TypeName builderName = typeName;
+            // returns this class as the builder
+            TypeSpec.Builder supplier = TypeSpec.anonymousClassBuilder("")
+                    .addSuperinterface(parameterizedTypeName(Supplier.class, typeName));
+            supplier.addMethod(CodeGeneration.overridePublicMethod("get")
+                    .returns(typeName)
+                    .addStatement("return new $T()", typeName).build());
+            block.add(".setBuilderFactory($L)\n", supplier.build());
 
-            TypeSpec.Builder typeFactory = TypeSpec.anonymousClassBuilder("")
-                    .addSuperinterface(parameterizedTypeName(Supplier.class, builderName));
-            MethodSpec.Builder buildMethod =
-                    CodeGeneration.overridePublicMethod("get").returns(builderName);
+            MethodSpec.Builder applyMethod = CodeGeneration.overridePublicMethod("apply")
+                    .addParameter(typeName, "value")
+                    .returns(targetName);
 
-            buildMethod.addStatement("return new $T()", builderName);
-            typeFactory.addMethod(buildMethod.build());
-            block.add(".setBuilderFactory($L)\n", typeFactory.build());
+            // add embedded builder calls
+            entity.attributes().values().stream()
+                .filter(AttributeDescriptor::isEmbedded)
+                .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded ->
+                    embedded.builderType().ifPresent(type -> {
+                        String fieldName = attribute.fieldName() + "Builder";
+                        String methodName = attribute.setterName();
+                        applyMethod.addStatement(
+                                "value.builder.$L(value.$L.build())", methodName, fieldName);
+                    })));
 
-            String statement = entity.builderType().isPresent() ?
-                    "return value.builder.build()" : "return value.build()";
+            applyMethod.addStatement(entity.builderType().isPresent() ?
+                    "return value.builder.build()" : "return value.build()");
+
             TypeSpec.Builder buildFunction = TypeSpec.anonymousClassBuilder("")
-                    .addSuperinterface(parameterizedTypeName(Function.class, builderName, targetName))
-                    .addMethod(
-                            CodeGeneration.overridePublicMethod("apply")
-                                    .addParameter(builderName, "value")
-                                    .addStatement(statement)
-                                    .returns(targetName)
-                                    .build());
+                    .addSuperinterface(parameterizedTypeName(Function.class, typeName, targetName))
+                    .addMethod(applyMethod.build());
             block.add(".setBuilderFunction($L)\n", buildFunction.build());
         } else {
             TypeSpec.Builder typeFactory = TypeSpec.anonymousClassBuilder("")
