@@ -1118,6 +1118,19 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testQueryUpdateRefresh() {
+        Person person = randomPerson();
+        data.insert(person);
+        int id = person.getId();
+        int rowCount = data.update(Person.class)
+                .set(Person.AGE, 50)
+                .where(Person.ID.eq(id)).get().value();
+        assertEquals(1, rowCount);
+        Person selected = data.select(Person.class).where(Person.ID.eq(id)).get().first();
+        assertSame(50, selected.getAge());
+    }
+
+    @Test
     public void testQueryCoalesce() {
         Person person = randomPerson();
         person.setName("Carol");
