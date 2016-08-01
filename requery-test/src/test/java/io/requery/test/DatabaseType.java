@@ -1,6 +1,6 @@
 package io.requery.test;
 
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import com.mysql.cj.jdbc.MysqlDataSource;
 import io.requery.sql.Platform;
 import io.requery.sql.platform.Derby;
 import io.requery.sql.platform.MySQL;
