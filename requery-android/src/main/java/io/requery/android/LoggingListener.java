@@ -85,7 +85,7 @@ public class LoggingListener implements StatementListener,
 
     @Override
     public void beforeExecuteUpdate(Statement statement, String sql, BoundParameters parameters) {
-        Log.i(tag, String.format("beforeExecuteUpdate %s sql: %s", statement, sql));
+        Log.i(tag, String.format("beforeExecuteUpdate sql: %s", sql));
     }
 
     @Override
@@ -95,7 +95,7 @@ public class LoggingListener implements StatementListener,
 
     @Override
     public void beforeExecuteQuery(Statement statement, String sql, BoundParameters parameters) {
-        Log.i(tag, String.format("beforeExecuteQuery %s sql: %s", statement, sql));
+        Log.i(tag, String.format("beforeExecuteQuery sql: %s", sql));
     }
 
     @Override
