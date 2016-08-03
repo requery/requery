@@ -606,7 +606,7 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
-    public void testInsertOneToManyOneInsert() {
+    public void testInsertOneToManyInsert() {
         Person person = randomPerson();
         Phone phone1 = randomPhone();
         Phone phone2 = randomPhone();
@@ -619,7 +619,7 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
-    public void testInsertOneToManyOneInsertThroughList() {
+    public void testInsertOneToManyInsertThroughList() {
         Person person = randomPerson();
         Phone phone1 = randomPhone();
         Phone phone2 = randomPhone();
