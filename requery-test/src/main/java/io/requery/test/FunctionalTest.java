@@ -616,6 +616,7 @@ public abstract class FunctionalTest extends RandomData {
         HashSet<Phone> set = new HashSet<>(person.getPhoneNumbers().toList());
         assertEquals(2, set.size());
         assertTrue(set.containsAll(Arrays.asList(phone1, phone2)));
+        assertSame(2, data.select(Phone.class).get().toList().size());
     }
 
     @Test
