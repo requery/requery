@@ -3,12 +3,14 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
 buildscript {
+    ext.kotlin_version = '1.0.3'
     repositories {
         jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.1.2'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
