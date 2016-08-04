@@ -93,7 +93,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                 .forEach(this::computeAttribute);
         }
         // find listener annotated methods
-        ElementFilter.methodsIn(element().getEnclosedElements()).stream().forEach(element ->
+        ElementFilter.methodsIn(element().getEnclosedElements()).forEach(element ->
                 ListenerAnnotations.all().forEach(annotation -> {
             if (element.getAnnotation(annotation) != null) {
                 ListenerMethod listener = listeners.computeIfAbsent(element,
