@@ -237,7 +237,7 @@ Feature               |  requery |  ORMLite |  Squidb  |  DBFlow   | GreenDao
 Relational mapping    |  Y       |  Y(1)    |  N       |  Y        | Y(1)
 Inverse relationships |  Y       |  N       |  N       |  N        | N
 Compile time          |  Y       |  N       |  Y       |  Y        | Y(2)
-Query DSL             |  Y       |  N       |  N(3)    |  N(3)     | N(3)
+Query DSL             |  Y       |  N       |  N(3)    |  Y        | N(3)
 JDBC Support          |  Y       |  Y       |  N       |  N        | N
 Table Generation      |  Y       |  Y       |  Y       |  Y        | Y
 JPA annotations       |  Y       |  Y       |  N       |  N        | N
