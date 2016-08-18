@@ -563,7 +563,7 @@ public class SchemaModifier {
                              Set<Attribute<?,?>> attributes,
                              Type<?> type, TableCreationMode mode) {
         qb.keyword(CREATE);
-        if (attributes.size() == 1 && attributes.iterator().next().isUnique()) {
+        if (attributes.size() >= 1 && attributes.iterator().next().isUnique()) {
             qb.keyword(UNIQUE);
         }
         qb.keyword(INDEX);
