@@ -5,6 +5,10 @@ import io.requery.*
 @Entity(model = "kt")
 interface Address : Persistable {
 
+    companion object {
+        const val CONSTANT = "value"
+    }
+
     @get:Key
     @get:Generated
     var id: Int

@@ -175,9 +175,13 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             case FIELD:
                 if(annotatedElement.getModifiers().contains(Modifier.STATIC) ||
                    annotatedElement.getModifiers().contains(Modifier.FINAL)) {
-                    processingEnvironment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                            annotationElement.getSimpleName() +
+                    // check if this a requery annotation
+                    String packageName = Entity.class.getPackage().getName();
+                    if (annotationElement.getQualifiedName().toString().startsWith(packageName)) {
+                        processingEnvironment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                                annotationElement.getQualifiedName() +
                                     " not applicable to static or final member", annotatedElement);
+                    }
                 } else {
                     VariableElement element = (VariableElement) annotatedElement;
                     Optional<AttributeMember> attribute = computeAttribute(element);
