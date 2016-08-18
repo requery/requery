@@ -39,8 +39,8 @@ android {
 
 dependencies {
     compile project(':requery')
-    compile 'com.android.support:support-v4:24.0.0'
-    compile 'com.android.support:recyclerview-v7:24.0.0'
+    compile 'com.android.support:support-v4:24.1.1'
+    compile 'com.android.support:recyclerview-v7:24.1.1'
     compile 'net.zetetic:android-database-sqlcipher:3.5.1'
     compile 'io.requery:sqlite-android:3.13.0-3'
     androidTestCompile project(':requery-test')
@@ -48,8 +48,8 @@ dependencies {
     androidTestCompile 'com.android.support.test:rules:0.5'
 }
 
-publish.dependsOn assembleRelease
-bintrayUpload.dependsOn assembleRelease
+publish.dependsOn 'assembleRelease'
+bintrayUpload.dependsOn 'assembleRelease'
 
 android.libraryVariants
 publishing {
