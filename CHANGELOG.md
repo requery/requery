@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 1.0.0-rc3
+
+- Support embeddable AutoValue types
+- Fix Kotlin processing of interfaces containing companion objects
+- Fix Kotlin query matching attributes to property names
+- Fix Kotlin unsupported method names on Android 
+- Fix multiple column unique constraint
+
 ## 1.0.0-rc2
 
 - Support custom function calls on expressions in generated sql
