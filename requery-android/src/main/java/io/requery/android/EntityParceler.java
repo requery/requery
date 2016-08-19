@@ -47,7 +47,7 @@ public class EntityParceler<T> {
             Class<?> typeClass = attribute.getClassType();
             Object value;
             if (typeClass.isEnum()) {
-                String name = (String) in.readValue(null);
+                String name = (String) in.readValue(getClass().getClassLoader());
                 if (name == null) {
                     value = null;
                 } else {
@@ -56,7 +56,7 @@ public class EntityParceler<T> {
                     value = Enum.valueOf(enumClass, name);
                 }
             } else {
-                value = in.readValue(null);
+                value = in.readValue(getClass().getClassLoader());
             }
             PropertyState state = PropertyState.LOADED;
             if (!type.isStateless()) {
