@@ -78,9 +78,11 @@ inline fun <reified T : Persistable, R> findAttribute(property: KProperty1<T, R>
         AttributeDelegate<T, R> {
     val type: Type<*> = AttributeDelegate.types
             .filter { type -> (type.classType == T::class.java || type.baseType == T::class.java)}
-            .first();
+            .first()
     val attribute: Attribute<*, *>? = type.attributes
-            .filter { attribute -> attribute.name.equals(property.name) }.firstOrNull()
+            .filter { attribute ->
+                attribute.propertyName.replaceFirst("get", "")
+                        .equals(property.name, ignoreCase = true) }.firstOrNull()
     @Suppress("UNCHECKED_CAST")
     return attribute as AttributeDelegate<T, R>
 }
