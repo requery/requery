@@ -372,13 +372,17 @@ public abstract class FieldExpression<V> implements
         }
 
         @Override
-        public <V> LogicalCondition<?, ?> and(Condition<V, ?> condition) {
-            return new ExpressionCondition<>(this, Operator.AND, condition);
+        public <V> LogicalCondition<LogicalCondition<L, R>, Condition<?, ?>> and(
+                Condition<V, ?> condition) {
+            return new ExpressionCondition<LogicalCondition<L, R>, Condition<?, ?>>(
+                    this, Operator.AND, condition);
         }
 
         @Override
-        public <V> LogicalCondition<?, ?> or(Condition<V, ?> condition) {
-            return new ExpressionCondition<>(this, Operator.OR, condition);
+        public <V> LogicalCondition<LogicalCondition<L, R>, Condition<?, ?>> or(
+                Condition<V, ?> condition) {
+            return new ExpressionCondition<LogicalCondition<L, R>, Condition<?, ?>>(
+                    this, Operator.OR, condition);
         }
 
         @Override

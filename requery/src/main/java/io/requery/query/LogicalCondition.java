@@ -22,5 +22,6 @@ package io.requery.query;
  * @param <L> left operand type
  * @param <R> right operand type
  */
-public interface LogicalCondition<L, R> extends Condition<L, R>, AndOr<LogicalCondition<?, ?>> {
+public interface LogicalCondition<L, R> extends Condition<L, R>,
+        AndOr<LogicalCondition<LogicalCondition<L, R>, Condition<?, ?>>> {
 }
