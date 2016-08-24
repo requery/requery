@@ -464,5 +464,10 @@ public abstract class FieldExpression<V> implements
         public ExpressionType getExpressionType() {
             return ExpressionType.ORDERING;
         }
+
+        @Override
+        public Expression<X> getInnerExpression() {
+            return expression;
+        }
     }
 }

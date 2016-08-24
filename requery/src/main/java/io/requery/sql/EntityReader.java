@@ -432,7 +432,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                                 Object value = tuple.get(expression);
                                 if (expression instanceof AliasedExpression) {
                                     AliasedExpression aliased = (AliasedExpression) expression;
-                                    expression = aliased.innerExpression();
+                                    expression = aliased.getInnerExpression();
                                 }
                                 Attribute<E, Object> attribute =
                                     Attributes.query((Attribute) expression);

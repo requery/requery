@@ -52,7 +52,7 @@ public class AliasedExpression<V> extends FieldExpression<V> {
         return alias;
     }
 
-    public Expression<V> innerExpression() {
+    public Expression<V> getInnerExpression() {
         return expression;
     }
 }

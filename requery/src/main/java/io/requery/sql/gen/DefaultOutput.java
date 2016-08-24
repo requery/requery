@@ -25,6 +25,7 @@ import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
 import io.requery.query.NamedExpression;
 import io.requery.query.Operator;
+import io.requery.query.OrderingExpression;
 import io.requery.query.element.JoinConditionElement;
 import io.requery.query.element.JoinOnElement;
 import io.requery.query.element.LogicalElement;
@@ -151,7 +152,10 @@ public class DefaultOutput implements Output {
     private static Expression<?> unwrapExpression(Expression<?> expression) {
         if (expression.getExpressionType() == ExpressionType.ALIAS) {
             AliasedExpression aliased = (AliasedExpression) expression;
-            return aliased.innerExpression();
+            return aliased.getInnerExpression();
+        } else if (expression.getExpressionType() == ExpressionType.ORDERING) {
+            OrderingExpression ordering = (OrderingExpression) expression;
+            return ordering.getInnerExpression();
         }
         return expression;
     }
@@ -170,8 +174,8 @@ public class DefaultOutput implements Output {
         String alias = findAlias(expression);
         if (expression instanceof Function) {
             appendFunction((Function) expression);
-        } else if (autoAlias && expression instanceof Attribute && alias == null) {
-            aliases.prefix(qb, (Attribute) expression);
+        } else if (autoAlias && alias == null) {
+            aliases.prefix(qb, expression);
         } else {
             if(alias == null || alias.length() == 0) {
                 appendColumnExpression(expression);

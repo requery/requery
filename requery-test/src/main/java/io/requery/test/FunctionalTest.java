@@ -908,6 +908,21 @@ public abstract class FunctionalTest extends RandomData {
         assertTrue(result >= 5); // derby rounds up
     }
 
+    @Test
+    public void testQueryJoinOrderBy() {
+        Person person = randomPerson();
+        person.setAddress(randomAddress());
+        data.insert(person);
+        // not a useful query just tests the sql output
+        Result<Address> result = data.select(Address.class)
+                .join(Person.class).on(Person.ADDRESS_ID.eq(Person.ID))
+                .where(Person.ID.eq(person.getId()))
+                .orderBy(Address.CITY.desc())
+                .get();
+        List<Address> addresses = result.toList();
+        assertTrue(addresses.size() > 0);
+    }
+
     @SuppressWarnings("MagicConstant")
     @Test
     public void testQuerySelectMin() {

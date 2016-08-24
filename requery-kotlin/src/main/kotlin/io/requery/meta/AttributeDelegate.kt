@@ -153,5 +153,6 @@ abstract class BaseExpression<V> protected constructor() :
         override fun getName(): String = expression.getName()
         override fun getClassType(): Class<X> = expression.getClassType()
         override fun getExpressionType(): ExpressionType = ExpressionType.ORDERING
+        override fun getInnerExpression(): Expression<X> = expression
     }
 }

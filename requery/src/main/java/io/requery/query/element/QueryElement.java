@@ -202,7 +202,7 @@ public class QueryElement<E> implements Selectable<E>,
             }
             for (Expression<?> expression : expressions) {
                 if (expression instanceof AliasedExpression) {
-                    expression = ((AliasedExpression) expression).innerExpression();
+                    expression = ((AliasedExpression) expression).getInnerExpression();
                 }
                 if (expression instanceof Attribute) {
                     Type type = ((Attribute) expression).getDeclaringType();
