@@ -463,35 +463,40 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
     public void upsert(E entity, final EntityProxy<E> proxy) {
         if (hasGeneratedKey) {
-            throw new UnsupportedOperationException("Can't upsert entity with generated key");
-        }
-        if (context.getPlatform().supportsUpsert()) {
-            for (Attribute<E, ?> attribute : associativeAttributes) {
-                cascadeForeignKeyReference(CascadeMode.UPSERT, proxy, attribute);
-            }
-            if (versionAttribute != null && !hasSystemVersionColumn()) {
-                incrementVersion(proxy);
-            }
-            List<Attribute<E, ?>> attributes = Arrays.asList(bindableAttributes);
-            UpdateOperation upsert = new UpdateOperation(context);
-            QueryElement<Scalar<Integer>> element =
-                new QueryElement<>(QueryType.UPSERT, model, upsert);
-            for (Attribute<E, ?> attribute : attributes) {
-                element.value((Expression) attribute, proxy.get(attribute, false));
-            }
-            int rows = upsert.evaluate(element).value();
-            if (rows <= 0) {
-                throw new RowCountException(1, rows);
-            }
-            proxy.link(context.read(entityClass));
-            updateAssociations(CascadeMode.UPSERT, entity, proxy);
-            if (cacheable) {
-                cache.put(entityClass, proxy.key(), entity);
+            if (hasKey(proxy)) {
+                update(entity, proxy, true, CascadeMode.UPSERT);
+            } else {
+                insert(entity, proxy, false, CascadeMode.UPSERT);
             }
         } else {
-            // not a real upsert, but can be ok for embedded databases
-            if (update(entity, proxy, false, CascadeMode.UPSERT) == 0) {
-                insert(entity, proxy, false, CascadeMode.UPSERT);
+            if (context.getPlatform().supportsUpsert()) {
+                for (Attribute<E, ?> attribute : associativeAttributes) {
+                    cascadeForeignKeyReference(CascadeMode.UPSERT, proxy, attribute);
+                }
+                if (versionAttribute != null && !hasSystemVersionColumn()) {
+                    incrementVersion(proxy);
+                }
+                List<Attribute<E, ?>> attributes = Arrays.asList(bindableAttributes);
+                UpdateOperation upsert = new UpdateOperation(context);
+                QueryElement<Scalar<Integer>> element =
+                        new QueryElement<>(QueryType.UPSERT, model, upsert);
+                for (Attribute<E, ?> attribute : attributes) {
+                    element.value((Expression) attribute, proxy.get(attribute, false));
+                }
+                int rows = upsert.evaluate(element).value();
+                if (rows <= 0) {
+                    throw new RowCountException(1, rows);
+                }
+                proxy.link(context.read(entityClass));
+                updateAssociations(CascadeMode.UPSERT, entity, proxy);
+                if (cacheable) {
+                    cache.put(entityClass, proxy.key(), entity);
+                }
+            } else {
+                // not a real upsert, but can be ok for embedded databases
+                if (update(entity, proxy, false, CascadeMode.UPSERT) == 0) {
+                    insert(entity, proxy, false, CascadeMode.UPSERT);
+                }
             }
         }
     }
