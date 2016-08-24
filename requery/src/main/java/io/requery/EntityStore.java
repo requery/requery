@@ -90,7 +90,9 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
 
     /**
      * Update the given entity. If the given entity has modified properties those changes will be
-     * persisted otherwise the method will do nothing.
+     * persisted otherwise the method will do nothing. A property is considered modified
+     * if its associated setter has been called, so only modifying the state of a property's content
+     * will not cause an update to happen.
      *
      * @param entity to update
      * @param <E>    entity type
