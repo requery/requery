@@ -391,6 +391,8 @@ public class GenericMapping implements Mapping {
     }
 
     public void addConverter(Converter<?, ?> converter, Class<?>... classes) {
+        converters.put(converter.getMappedType(), converter);
+        // optional additional mapped classes
         for (Class<?> type : classes) {
             converters.put(type, converter);
         }
