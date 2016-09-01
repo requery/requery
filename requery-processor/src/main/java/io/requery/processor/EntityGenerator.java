@@ -16,6 +16,7 @@
 
 package io.requery.processor;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -23,6 +24,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
 import io.requery.Entity;
 import io.requery.Persistable;
 import io.requery.PropertyNameStyle;
@@ -285,14 +287,45 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                 readOnly = false;
             }
             if (!readOnly) {
+
+                TypeName setTypeName = unboxedTypeName;
+                boolean castType = false;
+
+                // use wildcard generic collection type if necessary
+                if (SourceLanguage.of(entity.element()) == SourceLanguage.KOTLIN &&
+                    setTypeName instanceof ParameterizedTypeName) {
+
+                    ParameterizedTypeName parameterizedName = (ParameterizedTypeName) setTypeName;
+                    List<TypeName> arguments = parameterizedName.typeArguments;
+                    List<TypeName> wildcards = new ArrayList<>();
+                    for (TypeName argument : arguments) {
+                        if (!(argument instanceof WildcardTypeName)) {
+                            wildcards.add(WildcardTypeName.subtypeOf(argument));
+                        } else {
+                            wildcards.add(argument);
+                        }
+                    }
+                    TypeName[] array = new TypeName[wildcards.size()];
+                    setTypeName = ParameterizedTypeName.get(parameterizedName.rawType,
+                            wildcards.toArray(array));
+                    castType = true;
+                }
+
                 String paramName = Names.lowerCaseFirst(Names.removeMemberPrefixes(attributeName));
                 MethodSpec.Builder setter = MethodSpec.methodBuilder(setterName)
                         .addModifiers(Modifier.PUBLIC)
-                        .addParameter(unboxedTypeName, paramName);
+                        .addParameter(setTypeName, paramName);
                 if (useField) {
                     setter.addStatement("this.$L = $L", attributeName, paramName);
                 } else {
-                    setter.addStatement("$L.set($L, $L)", PROXY_NAME, fieldName, paramName);
+                    if (castType) {
+                        setter.addAnnotation(AnnotationSpec.builder(SuppressWarnings.class)
+                                .addMember("value", "$S", "unchecked").build());
+                        setter.addStatement("$L.set($L, ($T)$L)",
+                                PROXY_NAME, fieldName, unboxedTypeName, paramName);
+                    } else {
+                        setter.addStatement("$L.set($L, $L)", PROXY_NAME, fieldName, paramName);
+                    }
                 }
                 memberExtensions.forEach(extension -> extension.addToSetter(attribute, setter));
 
