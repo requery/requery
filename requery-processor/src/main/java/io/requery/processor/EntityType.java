@@ -22,6 +22,7 @@ import io.requery.Factory;
 import io.requery.PropertyNameStyle;
 import io.requery.ReadOnly;
 import io.requery.Table;
+import io.requery.Transient;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -156,6 +157,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                (!isImmutable() || !type.equals(element().asType())) &&
                !type.equals(builderType().map(Element::asType).orElse(null)) &&
                !element.getModifiers().contains(Modifier.STATIC) &&
+               !element.getModifiers().contains(Modifier.DEFAULT) &&
+               !Mirrors.findAnnotationMirror(element(), Transient.class).isPresent() &&
                !name.equals("toString") && !name.equals("hashCode");
     }
 
