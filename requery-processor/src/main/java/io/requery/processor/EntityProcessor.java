@@ -65,6 +65,7 @@ public final class EntityProcessor extends AbstractProcessor {
     private Map<String, EntityGraph> graphs;
     private Map<TypeElement, EntityType> superTypes;
     private Map<TypeElement, EntityType> embeddedTypes;
+    private Set<String> generatedModelPackages;
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -74,9 +75,10 @@ public final class EntityProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
+        embeddedTypes = new LinkedHashMap<>();
+        generatedModelPackages = new LinkedHashSet<>();
         graphs = new LinkedHashMap<>();
         superTypes = new LinkedHashMap<>();
-        embeddedTypes = new LinkedHashMap<>();
     }
 
     @Override
@@ -167,28 +169,31 @@ public final class EntityProcessor extends AbstractProcessor {
 
         if (getOption(GENERATE_MODEL, true)) {
             Map<String, Collection<EntityDescriptor>> packagesMap = new LinkedHashMap<>();
-            Map<String, Boolean> canGenerate = new HashMap<>();
-            for (EntityType entity : entities.values()) {
+            Set<EntityDescriptor> allEntities = graphs.values().stream()
+                .flatMap(graph -> graph.entities().stream())
+                .collect(Collectors.toSet());
+
+            for (EntityDescriptor entity : allEntities) {
                 EntityGraph graph = graphs.get(entity.modelName());
                 String packageName = findModelPackageName(graph);
-                canGenerate.computeIfAbsent(packageName, key -> true);
+                packagesMap.computeIfAbsent(packageName, key -> new LinkedHashSet<>());
+                packagesMap.get(packageName).addAll(graph.entities());
+            }
+
+            for (EntityDescriptor entity : entities.values()) {
+                EntityGraph graph = graphs.get(entity.modelName());
+                String packageName = findModelPackageName(graph);
                 if (entity.generatesAdditionalTypes()) {
-                    canGenerate.put(packageName, false);
-                }
-                if (packagesMap.containsKey(packageName)) {
-                    packagesMap.get(packageName).addAll(graph.entities());
-                } else {
-                    packagesMap.put(packageName, new LinkedHashSet<>(graph.entities()));
+                    packagesMap.remove(packageName);
                 }
             }
 
-            generators.addAll(
-                packagesMap.entrySet().stream()
-                    .filter(entry -> !entry.getValue().isEmpty())
-                    .filter(entry -> canGenerate.get(entry.getKey()))
-                    .map(entry ->
-                        new ModelGenerator(processingEnv, entry.getKey(), entry.getValue()))
-                    .collect(Collectors.toList()));
+            generators.addAll( packagesMap.entrySet().stream()
+                .filter(entry -> !entry.getValue().isEmpty())
+                .filter(entry -> !generatedModelPackages.contains(entry.getKey()))
+                .map(entry -> { generatedModelPackages.add(entry.getKey()); return entry; })
+                .map(entry -> new ModelGenerator(processingEnv, entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList()));
         }
         for (SourceGenerator generator : generators) {
             try {

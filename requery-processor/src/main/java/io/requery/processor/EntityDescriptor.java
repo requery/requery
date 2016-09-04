@@ -43,6 +43,11 @@ interface EntityDescriptor {
     Map<Element, ? extends AttributeDescriptor> attributes();
 
     /**
+     * @return true if this entity type requires additional types to be generated to compile.
+     */
+    boolean generatesAdditionalTypes();
+
+    /**
      * @return map of elements to listener methods
      */
     Map<Element, ? extends ListenerDescriptor> listeners();

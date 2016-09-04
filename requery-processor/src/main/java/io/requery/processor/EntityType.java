@@ -235,7 +235,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         });
     }
 
-    boolean generatesAdditionalTypes() {
+    @Override
+    public boolean generatesAdditionalTypes() {
         return attributes.values().stream()
             .anyMatch(member -> member.associativeEntity().isPresent());
     }
