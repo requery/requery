@@ -23,7 +23,7 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-interface EntityStore<T : Any, R> : Queryable<T>, AutoCloseable {
+interface EntityStore<T : Any, out R> : Queryable<T>, AutoCloseable {
 
     override fun close()
     infix fun <E : T> insert(entity: E): R
