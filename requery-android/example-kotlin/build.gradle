@@ -3,18 +3,22 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 apply plugin: 'com.android.application'
-apply plugin: 'com.neenbedankt.android-apt'
+apply plugin: 'kotlin-android'
+
+kapt {
+    generateStubs = true
+}
 
 android {
     compileSdkVersion 24
     buildToolsVersion "24.0.0"
 
     defaultConfig {
-        applicationId "io.requery.android.example.app"
+        applicationId "io.requery.android.example.kotlinapp"
         minSdkVersion 15
         targetSdkVersion 24
         versionCode 1
@@ -26,25 +30,21 @@ android {
             proguardFiles 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
     lintOptions {
         abortOnError false
     }
-    dataBinding {
-        enabled = true
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
     }
 }
 
 dependencies {
     compile 'com.android.support:appcompat-v7:24.2.0'
     compile 'com.android.support:recyclerview-v7:24.2.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile 'io.reactivex:rxjava:1.1.9'
     compile 'io.reactivex:rxandroid:1.1.0'
-    compile 'io.requery:sqlite-android:3.13.0-1'
     compile 'io.requery:requery:1.0.0-rc2'
     compile 'io.requery:requery-android:1.0.0-rc2'
-    apt 'io.requery:requery-processor:1.0.0-rc2'
+    kapt 'io.requery:requery-processor:1.0.0-rc2'
 }
