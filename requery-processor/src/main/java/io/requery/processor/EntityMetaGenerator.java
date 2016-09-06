@@ -343,7 +343,8 @@ class EntityMetaGenerator extends EntityPartGenerator {
 
                 graph.referencingAttribute(attribute, referenced).ifPresent(
                     referencedAttribute -> {
-                        String name = Names.upperCaseUnderscore(referencedAttribute.fieldName());
+                        String name = Names.upperCaseUnderscore(
+                                Names.removeMemberPrefixes(referencedAttribute.fieldName()));
                         TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                             ClassName.get(Attribute.class),
                             CodeBlock.builder().addStatement("return $T.$L",
