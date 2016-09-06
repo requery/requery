@@ -4,16 +4,12 @@ import io.requery.Persistable
 import io.requery.android.example.app.model.AddressEntity
 import io.requery.android.example.app.model.Person
 import io.requery.android.example.app.model.PersonEntity
-import io.requery.rx.SingleEntityStore
+import io.requery.sql.KotlinEntityDataStore
 import rx.Observable
-
-import java.util.Comparator
-import java.util.Random
-import java.util.TreeSet
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.Callable
 
-class CreatePeople(val data: SingleEntityStore<Persistable>) : Callable<Observable<Iterable<Person>>> {
+class CreatePeople(val data: KotlinEntityDataStore<Persistable>) : Callable<Observable<Iterable<Person>>> {
 
     override fun call(): Observable<Iterable<Person>> {
         val firstNames = arrayOf("Alice", "Bob", "Carol", "Chloe", "Dan", "Emily", "Emma", "Eric",
@@ -45,6 +41,6 @@ class CreatePeople(val data: SingleEntityStore<Persistable>) : Callable<Observab
             person.address = address
             people.add(person)
         }
-        return data.insert(people).toObservable()
+        return Observable.fromCallable { data.insert(people) }
     }
 }

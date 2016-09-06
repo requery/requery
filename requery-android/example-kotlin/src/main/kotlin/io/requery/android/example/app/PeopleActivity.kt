@@ -15,7 +15,7 @@ import io.requery.android.QueryRecyclerAdapter
 import io.requery.android.example.app.model.Person
 import io.requery.android.example.app.model.PersonEntity
 import io.requery.query.Result
-import io.requery.rx.SingleEntityStore
+import io.requery.sql.KotlinEntityDataStore
 import rx.Observable
 import rx.schedulers.Schedulers
 import java.util.*
@@ -28,7 +28,7 @@ import java.util.concurrent.Executors
  */
 class PeopleActivity : AppCompatActivity() {
 
-    private lateinit var data: SingleEntityStore<Persistable>
+    private lateinit var data: KotlinEntityDataStore<Persistable>
     private lateinit var executor: ExecutorService
     private lateinit var adapter: PersonAdapter
 
@@ -44,7 +44,7 @@ class PeopleActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        data.count(Person::class.java).get().toSingle().subscribe { integer ->
+        data.count(Person::class).get().toSingle().subscribe { integer ->
             if (integer === 0) {
                 Observable.fromCallable(CreatePeople(data))
                     .flatMap { o -> o }
@@ -93,7 +93,7 @@ class PeopleActivity : AppCompatActivity() {
         private val colors = intArrayOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA)
 
         override fun performQuery(): Result<PersonEntity> {
-            return data!!.select(PersonEntity::class.java).orderBy(PersonEntity.NAME.lower()).get()
+            return data.select(PersonEntity::class).orderBy(PersonEntity.NAME.lower()).get()
         }
 
         override fun onBindViewHolder(item: PersonEntity, holder: PersonHolder, position: Int) {

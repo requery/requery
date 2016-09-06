@@ -6,12 +6,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
 import io.requery.Persistable
-import io.requery.android.example.app.model.AddressEntity
-import io.requery.android.example.app.model.Person
-import io.requery.android.example.app.model.PersonEntity
-import io.requery.android.example.app.model.Phone
-import io.requery.android.example.app.model.PhoneEntity
-import io.requery.rx.SingleEntityStore
+import io.requery.android.example.app.model.*
+import io.requery.sql.KotlinEntityDataStore
+import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 
 /**
@@ -19,7 +16,7 @@ import rx.android.schedulers.AndroidSchedulers
  */
 class PersonEditActivity : AppCompatActivity() {
 
-    private lateinit var data: SingleEntityStore<Persistable>
+    private lateinit var data: KotlinEntityDataStore<Persistable>
     private lateinit var person: Person
 
     companion object {
@@ -38,9 +35,10 @@ class PersonEditActivity : AppCompatActivity() {
             person = PersonEntity() // creating a new person
             setPerson(person)
         } else {
-            data.findByKey(PersonEntity::class.java, personId)
-                    .subscribeOn(AndroidSchedulers.mainThread())
-                    .subscribe { person -> setPerson(person) }
+            Observable.fromCallable {
+                data.findByKey(PersonEntity::class, personId)
+            } .subscribeOn(AndroidSchedulers.mainThread())
+              .subscribe { person -> setPerson(person) }
         }
     }
 
@@ -106,9 +104,9 @@ class PersonEditActivity : AppCompatActivity() {
         address.state = getViewText(R.id.state)
         // save the person
         if (person.id === 0) {
-            data.insert(person).subscribe({ finish() })
+            Observable.fromCallable { data.insert(person) }.subscribe({ finish() })
         } else {
-            data.update(person).subscribe({ finish() })
+            Observable.fromCallable { data.update(person) }.subscribe({ finish() })
         }
     }
 }
