@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 1.0.0-rc4
+
+- Fix compilation of certain queries under Java 8
+- Fix Android Uri converter not applied
+- Fix multiple model definitions inside the same java package
+- Fix member prefixes in Attribute static field names not removed
+- Fix Kotlin attribute missing declared type definitions
+
 ## 1.0.0-rc3
 
 - Support embeddable AutoValue types

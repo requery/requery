@@ -44,7 +44,7 @@ dependencies {
     compile 'io.reactivex:rxjava:1.1.9'
     compile 'io.reactivex:rxandroid:1.1.0'
     compile 'io.requery:sqlite-android:3.13.0-1'
-    compile 'io.requery:requery:1.0.0-rc3'
-    compile 'io.requery:requery-android:1.0.0-rc3'
-    apt 'io.requery:requery-processor:1.0.0-rc3'
+    compile 'io.requery:requery:1.0.0-rc4'
+    compile 'io.requery:requery-android:1.0.0-rc4'
+    apt 'io.requery:requery-processor:1.0.0-rc4'
 }

@@ -44,7 +44,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile 'io.reactivex:rxjava:1.1.9'
     compile 'io.reactivex:rxandroid:1.1.0'
-    compile 'io.requery:requery:1.0.0-rc3'
-    compile 'io.requery:requery-android:1.0.0-rc3'
-    kapt 'io.requery:requery-processor:1.0.0-rc3'
+    compile 'io.requery:requery:1.0.0-rc4'
+    compile 'io.requery:requery-android:1.0.0-rc4'
+    kapt 'io.requery:requery-processor:1.0.0-rc4'
 }
