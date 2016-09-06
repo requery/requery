@@ -44,20 +44,21 @@ class AttributeDelegate<T, V>(attribute : QueryAttribute<T, V>) :
 
     // captures types for use with property extensions
     companion object {
-        val types : MutableSet<Type<*>> = LinkedHashSet();
+        val types : MutableSet<Type<*>> = LinkedHashSet()
     }
 
-    private val attribute : QueryAttribute<T, V> = attribute;
-    private var type: Type<T>? = null;
+    private val attribute : QueryAttribute<T, V> = attribute
 
     override fun getName(): String = attribute.name
     override fun getExpressionType(): ExpressionType = attribute.expressionType
     override fun getClassType(): Class<V> = attribute.classType
-    override fun getDeclaringType(): Type<T>? = type
+    override fun getDeclaringType(): Type<T> = attribute.declaringType
 
     override fun setDeclaringType(type: Type<T>) {
-        this.type = type;
-        types.add(type);
+        if (attribute is BaseAttribute) {
+            attribute.declaringType = type
+        }
+        types.add(type)
     }
 
     override fun get(): QueryAttribute<T, V> = attribute

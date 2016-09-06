@@ -76,6 +76,8 @@ final class ImmutableType<T> extends BaseType<T> {
             @SuppressWarnings("unchecked")
             TypeDeclarable<T> declarable = (TypeDeclarable<T>) expression;
             declarable.setDeclaringType(this);
+        } else {
+            throw new UnsupportedOperationException();
         }
     }
 }
