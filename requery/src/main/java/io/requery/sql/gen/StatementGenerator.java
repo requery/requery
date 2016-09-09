@@ -70,7 +70,7 @@ public final class StatementGenerator implements Generator<QueryElement<?>> {
                 select.write(output, query);
                 break;
             case INSERT:
-                insert.write(output, checkEmpty(query.updateValues()));
+                insert.write(output, query.updateValues());
                 break;
             case UPDATE:
                 update.write(output, checkEmpty(query.updateValues()));

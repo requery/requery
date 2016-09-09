@@ -22,6 +22,7 @@ import io.requery.sql.QueryBuilder;
 
 import java.util.Map;
 
+import static io.requery.sql.Keyword.DEFAULT;
 import static io.requery.sql.Keyword.INSERT;
 import static io.requery.sql.Keyword.INTO;
 import static io.requery.sql.Keyword.VALUES;
@@ -54,16 +55,21 @@ class InsertGenerator implements Generator<Map<Expression<?>, Object>> {
                     }
                 })
             .closeParenthesis()
-            .space()
-            .keyword(VALUES)
-            .openParenthesis()
-            .commaSeparated(values.entrySet(),
-                new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
-                    @Override
-                    public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
-                        output.appendConditionValue(value.getKey(), value.getValue());
-                    }
-                })
-            .closeParenthesis();
+            .space();
+
+            if (!values.isEmpty()) {
+                qb.keyword(VALUES)
+                .openParenthesis()
+                .commaSeparated(values.entrySet(),
+                    new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
+                        @Override
+                        public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
+                            output.appendConditionValue(value.getKey(), value.getValue());
+                        }
+                    })
+                .closeParenthesis();
+            } else {
+                qb.keyword(DEFAULT, VALUES);
+            }
     }
 }
