@@ -58,7 +58,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
 
     private final Platform platform;
     private final EntityModel model;
-    private final Mapping mapping;
+    private Mapping mapping;
     private SQLiteDatabase db;
     private Configuration configuration;
     private boolean configured;
@@ -126,7 +126,6 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
             throw new IllegalArgumentException("null model");
         }
         this.platform = platform;
-        this.mapping = onCreateMapping(platform);
         this.model = model;
         this.mode = TableCreationMode.CREATE_NOT_EXISTS;
     }
@@ -179,6 +178,12 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
 
     @Override
     public Configuration getConfiguration() {
+        if (mapping == null) {
+            mapping = onCreateMapping(platform);
+        }
+        if (mapping == null) {
+            throw new IllegalStateException();
+        }
         if (configuration == null) {
             ConfigurationBuilder builder = new ConfigurationBuilder(this, model)
                 .setMapping(mapping)
