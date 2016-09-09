@@ -133,11 +133,8 @@ public class SchemaModifier {
                 statement.execute(sql);
                 statementListeners.afterExecuteUpdate(statement);
             }
-            if (mode == TableCreationMode.CREATE ||
-                mode == TableCreationMode.CREATE_NOT_EXISTS) {
-                for (Type<?> type : sorted) {
-                    createIndexes(connection, mode, type);
-                }
+            for (Type<?> type : sorted) {
+                createIndexes(connection, mode, type);
             }
             connection.commit();
         } catch (SQLException e) {
