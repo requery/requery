@@ -109,46 +109,45 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setArray(int parameterIndex, Array theArray) throws SQLException {
+    public void setArray(int parameterIndex, Array x) throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
 
     @Override
-    public void setAsciiStream(int parameterIndex, InputStream theInputStream, int length)
+    public void setAsciiStream(int parameterIndex, InputStream x, int length)
             throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
 
     @Override
-    public void setBigDecimal(int parameterIndex, BigDecimal theBigDecimal) throws SQLException {
-        bindNullOrString(parameterIndex, theBigDecimal);
+    public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
+        bindNullOrString(parameterIndex, x);
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream theInputStream, int length)
-            throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream x, int length) throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
 
     @Override
-    public void setBlob(int parameterIndex, Blob theBlob) throws SQLException {
-        setBytes(parameterIndex, theBlob.getBytes(0, (int) theBlob.length()));
+    public void setBlob(int parameterIndex, Blob x) throws SQLException {
+        setBytes(parameterIndex, x.getBytes(0, (int) x.length()));
     }
 
     @Override
-    public void setBoolean(int parameterIndex, boolean theBoolean) throws SQLException {
-        long value = theBoolean ? 1 : 0;
+    public void setBoolean(int parameterIndex, boolean x) throws SQLException {
+        long value = x ? 1 : 0;
         bindLong(parameterIndex, value);
     }
 
     @Override
-    public void setByte(int parameterIndex, byte theByte) throws SQLException {
-        bindLong(parameterIndex, (long) theByte);
+    public void setByte(int parameterIndex, byte x) throws SQLException {
+        bindLong(parameterIndex, (long) x);
     }
 
     @Override
-    public void setBytes(int parameterIndex, byte[] theBytes) throws SQLException {
-        bindBlob(parameterIndex, theBytes);
+    public void setBytes(int parameterIndex, byte[] x) throws SQLException {
+        bindBlob(parameterIndex, x);
     }
 
     @Override
@@ -157,42 +156,42 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setClob(int parameterIndex, Clob theClob) throws SQLException {
+    public void setClob(int parameterIndex, Clob x) throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
 
     @Override
-    public void setDate(int parameterIndex, Date theDate) throws SQLException {
-        setDate(parameterIndex, theDate, null);
+    public void setDate(int parameterIndex, Date x) throws SQLException {
+        setDate(parameterIndex, x, null);
     }
 
     @Override
-    public void setDate(int parameterIndex, Date theDate, Calendar cal) throws SQLException {
-        if (theDate == null) {
+    public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
+        if (x == null) {
             bindNullOrString(parameterIndex, null);
         } else {
-            bindLong(parameterIndex, theDate.getTime());
+            bindLong(parameterIndex, x.getTime());
         }
     }
 
     @Override
-    public void setDouble(int parameterIndex, double theDouble) throws SQLException {
-        bindDouble(parameterIndex, theDouble);
+    public void setDouble(int parameterIndex, double x) throws SQLException {
+        bindDouble(parameterIndex, x);
     }
 
     @Override
-    public void setFloat(int parameterIndex, float theFloat) throws SQLException {
-        bindDouble(parameterIndex, (double) theFloat);
+    public void setFloat(int parameterIndex, float x) throws SQLException {
+        bindDouble(parameterIndex, (double) x);
     }
 
     @Override
-    public void setInt(int parameterIndex, int theInt) throws SQLException {
-        bindLong(parameterIndex, (long) theInt);
+    public void setInt(int parameterIndex, int x) throws SQLException {
+        bindLong(parameterIndex, (long) x);
     }
 
     @Override
-    public void setLong(int parameterIndex, long theLong) throws SQLException {
-        bindLong(parameterIndex, theLong);
+    public void setLong(int parameterIndex, long x) throws SQLException {
+        bindLong(parameterIndex, x);
     }
 
     @Override
@@ -206,104 +205,104 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setObject(int parameterIndex, Object theObject) throws SQLException {
-        if (theObject == null) {
+    public void setObject(int parameterIndex, Object x) throws SQLException {
+        if (x == null) {
             setNull(parameterIndex, Types.NULL);
         } else {
-            if (theObject instanceof String) {
-                setString(parameterIndex, theObject.toString());
-            } else if (theObject instanceof Byte) {
-                setByte(parameterIndex, (Byte) theObject);
-            } else if (theObject instanceof Short) {
-                setShort(parameterIndex, (Short) theObject);
-            } else if (theObject instanceof Integer) {
-                setInt(parameterIndex, (Integer) theObject);
-            } else if (theObject instanceof Long) {
-                setLong(parameterIndex, (Long) theObject);
-            } else if (theObject instanceof Double) {
-                setDouble(parameterIndex, (Double) theObject);
-            } else if (theObject instanceof Float) {
-                setFloat(parameterIndex, (Float) theObject);
-            } else if (theObject instanceof Boolean) {
-                setLong(parameterIndex, (Boolean) theObject ? 1 : 0);
-            } else if (theObject instanceof byte[]) {
-                setBytes(parameterIndex, (byte[]) theObject);
-            } else if (theObject instanceof Date) {
-                setDate(parameterIndex, (Date) theObject);
-            } else if (theObject instanceof java.util.Date) {
-                java.util.Date date = (java.util.Date) theObject;
+            if (x instanceof String) {
+                setString(parameterIndex, x.toString());
+            } else if (x instanceof Byte) {
+                setByte(parameterIndex, (Byte) x);
+            } else if (x instanceof Short) {
+                setShort(parameterIndex, (Short) x);
+            } else if (x instanceof Integer) {
+                setInt(parameterIndex, (Integer) x);
+            } else if (x instanceof Long) {
+                setLong(parameterIndex, (Long) x);
+            } else if (x instanceof Double) {
+                setDouble(parameterIndex, (Double) x);
+            } else if (x instanceof Float) {
+                setFloat(parameterIndex, (Float) x);
+            } else if (x instanceof Boolean) {
+                setLong(parameterIndex, (Boolean) x ? 1 : 0);
+            } else if (x instanceof byte[]) {
+                setBytes(parameterIndex, (byte[]) x);
+            } else if (x instanceof Date) {
+                setDate(parameterIndex, (Date) x);
+            } else if (x instanceof java.util.Date) {
+                java.util.Date date = (java.util.Date) x;
                 setDate(parameterIndex, new Date(date.getTime()));
             } else {
-                throw new SQLException("unhandled type " + theObject.getClass().getCanonicalName());
+                throw new SQLException("unhandled type " + x.getClass().getCanonicalName());
             }
         }
     }
 
     @Override
-    public void setObject(int parameterIndex, Object theObject, int targetSqlType)
+    public void setObject(int parameterIndex, Object x, int targetSqlType)
             throws SQLException {
-        if (theObject == null || targetSqlType == Types.NULL) {
+        if (x == null || targetSqlType == Types.NULL) {
             setNull(parameterIndex, Types.NULL);
             return;
         }
         switch (targetSqlType) {
             case Types.INTEGER:
             case Types.SMALLINT:
-                if (theObject instanceof Integer) {
-                    bindLong(parameterIndex, ((Integer) theObject).longValue());
-                } else if (theObject instanceof Long) {
-                    bindLong(parameterIndex, (Long) theObject);
-                } else if (theObject instanceof Short) {
-                    bindLong(parameterIndex, ((Short) theObject).longValue());
+                if (x instanceof Integer) {
+                    bindLong(parameterIndex, ((Integer) x).longValue());
+                } else if (x instanceof Long) {
+                    bindLong(parameterIndex, (Long) x);
+                } else if (x instanceof Short) {
+                    bindLong(parameterIndex, ((Short) x).longValue());
                 }
                 break;
             case Types.TINYINT:
-                if (theObject instanceof Byte) {
-                    bindLong(parameterIndex, ((Byte) theObject).longValue());
+                if (x instanceof Byte) {
+                    bindLong(parameterIndex, ((Byte) x).longValue());
                 }
                 break;
             case Types.DOUBLE:
             case Types.FLOAT:
             case Types.REAL:
-                if (theObject instanceof Double) {
-                    setDouble(parameterIndex, (Double) theObject);
-                } else if (theObject instanceof Float) {
-                    setFloat(parameterIndex, (Float) theObject);
+                if (x instanceof Double) {
+                    setDouble(parameterIndex, (Double) x);
+                } else if (x instanceof Float) {
+                    setFloat(parameterIndex, (Float) x);
                 }
                 break;
             case Types.BLOB:
             case Types.BINARY:
             case Types.VARBINARY:
-                setBytes(parameterIndex, (byte[]) theObject);
+                setBytes(parameterIndex, (byte[]) x);
                 break;
             case Types.BOOLEAN:
-                Boolean value = (Boolean) theObject;
+                Boolean value = (Boolean) x;
                 setBoolean(parameterIndex, value);
                 break;
             case Types.VARCHAR:
             case Types.NVARCHAR:
-                String string = theObject instanceof String ?
-                        (String) theObject : theObject.toString();
+                String string = x instanceof String ?
+                        (String) x : x.toString();
                 setString(parameterIndex, string);
                 break;
             case Types.DATE:
-                if (theObject instanceof Date) {
-                    Date date = (Date) theObject;
+                if (x instanceof Date) {
+                    Date date = (Date) x;
                     setLong(parameterIndex, date.getTime());
-                } else if (theObject instanceof java.util.Date) {
-                    java.util.Date date = (java.util.Date) theObject;
+                } else if (x instanceof java.util.Date) {
+                    java.util.Date date = (java.util.Date) x;
                     setLong(parameterIndex, date.getTime());
                 }
                 break;
             case Types.TIMESTAMP:
-                if (theObject instanceof Timestamp) {
-                    Timestamp timestamp = (Timestamp) theObject;
+                if (x instanceof Timestamp) {
+                    Timestamp timestamp = (Timestamp) x;
                     setLong(parameterIndex, timestamp.getTime());
                 }
                 break;
             case Types.BIGINT:
-                if (theObject instanceof BigInteger) {
-                    BigInteger bigInteger = (BigInteger) theObject;
+                if (x instanceof BigInteger) {
+                    BigInteger bigInteger = (BigInteger) x;
                     bindNullOrString(parameterIndex, bigInteger.toString());
                 }
                 break;
@@ -313,82 +312,82 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setObject(int parameterIndex, Object theObject, int targetSqlType, int scale)
+    public void setObject(int parameterIndex, Object x, int targetSqlType, int scale)
             throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
 
     @Override
-    public void setRef(int parameterIndex, Ref theRef) throws SQLException {
+    public void setRef(int parameterIndex, Ref x) throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
 
     @Override
-    public void setShort(int parameterIndex, short theShort) throws SQLException {
-        bindLong(parameterIndex, (long) theShort);
+    public void setShort(int parameterIndex, short x) throws SQLException {
+        bindLong(parameterIndex, (long) x);
     }
 
     @Override
-    public void setString(int parameterIndex, String theString) throws SQLException {
-        bindNullOrString(parameterIndex, theString);
+    public void setString(int parameterIndex, String x) throws SQLException {
+        bindNullOrString(parameterIndex, x);
     }
 
     @Override
-    public void setTime(int parameterIndex, Time theTime) throws SQLException {
-        if (theTime == null) {
+    public void setTime(int parameterIndex, Time x) throws SQLException {
+        if (x == null) {
             bindNullOrString(parameterIndex, null);
         } else {
-            bindLong(parameterIndex, theTime.getTime());
+            bindLong(parameterIndex, x.getTime());
         }
     }
 
     @Override
-    public void setTime(int parameterIndex, Time theTime, Calendar cal) throws SQLException {
-        if (theTime == null) {
+    public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
+        if (x == null) {
             bindNullOrString(parameterIndex, null);
         } else {
-            bindLong(parameterIndex, theTime.getTime());
+            bindLong(parameterIndex, x.getTime());
         }
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp theTimestamp) throws SQLException {
-        if (theTimestamp == null) {
+    public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
+        if (x == null) {
             bindNullOrString(parameterIndex, null);
         } else {
-            bindLong(parameterIndex, theTimestamp.getTime());
+            bindLong(parameterIndex, x.getTime());
         }
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp theTimestamp, Calendar cal)
+    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal)
         throws SQLException {
-        if (theTimestamp == null) {
+        if (x == null) {
             bindNullOrString(parameterIndex, null);
         } else {
-            bindLong(parameterIndex, theTimestamp.getTime());
+            bindLong(parameterIndex, x.getTime());
         }
     }
 
     @Override
-    public void setUnicodeStream(int parameterIndex, InputStream theInputStream, int length)
+    public void setUnicodeStream(int parameterIndex, InputStream x, int length)
             throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
 
     @Override
-    public void setURL(int parameterIndex, URL theURL) throws SQLException {
-        bindNullOrString(parameterIndex, theURL);
+    public void setURL(int parameterIndex, URL x) throws SQLException {
+        bindNullOrString(parameterIndex, x);
     }
 
     @Override
-    public void setRowId(int parameterIndex, RowId theRowId) throws SQLException {
+    public void setRowId(int parameterIndex, RowId x) throws SQLException {
         throw new SQLFeatureNotSupportedException();
     }
 
     @Override
-    public void setNString(int parameterIndex, String theString) throws SQLException {
-        bindNullOrString(parameterIndex, theString);
+    public void setNString(int parameterIndex, String x) throws SQLException {
+        bindNullOrString(parameterIndex, x);
     }
 
     @Override
