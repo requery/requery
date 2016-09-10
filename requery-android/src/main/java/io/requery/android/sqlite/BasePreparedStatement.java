@@ -232,6 +232,8 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
             } else if (x instanceof java.util.Date) {
                 java.util.Date date = (java.util.Date) x;
                 setDate(parameterIndex, new Date(date.getTime()));
+            } else if (x instanceof BigDecimal) {
+                setBigDecimal(parameterIndex, (BigDecimal) x);
             } else {
                 throw new SQLException("unhandled type " + x.getClass().getCanonicalName());
             }
@@ -268,6 +270,11 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
                     setDouble(parameterIndex, (Double) x);
                 } else if (x instanceof Float) {
                     setFloat(parameterIndex, (Float) x);
+                }
+                break;
+            case Types.DECIMAL:
+                if (x instanceof BigDecimal) {
+                    setBigDecimal(parameterIndex, (BigDecimal) x);
                 }
                 break;
             case Types.BLOB:
