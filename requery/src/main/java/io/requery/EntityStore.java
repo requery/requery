@@ -91,7 +91,7 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
     /**
      * Update the given entity. If the given entity has modified properties those changes will be
      * persisted otherwise the method will do nothing. A property is considered modified
-     * if its associated setter has been called, so only modifying the state of a property's content
+     * if its associated setter has been called, modifying the state of a property's content
      * will not cause an update to happen.
      *
      * @param entity to update
@@ -109,6 +109,16 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
      * @return the operation result.
      */
     <E extends T> R update(Iterable<E> entities);
+
+    /**
+     * Update specific attributes of entity regardless of any modification state.
+     *
+     * @param entity     to refresh
+     * @param attributes attributes to update, attributes should be of type E
+     * @param <E>        entity type
+     * @return the operation result.
+     */
+    <E extends T> R update(E entity, Attribute<?, ?>... attributes);
 
     /**
      * Upserts (insert or update) the given entity. Note that upserting may be an expensive

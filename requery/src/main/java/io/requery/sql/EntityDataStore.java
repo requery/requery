@@ -196,9 +196,13 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
                 EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
-                GeneratedKeys<E> key = writer.insert(entity, proxy, keyClass != null);
+                GeneratedKeys<E> key = null;
+                if (keyClass != null) {
+                    key = new GeneratedKeys<>(proxy.type().isImmutable() ? null : proxy);
+                }
+                writer.insert(entity, proxy, key);
                 transaction.commit();
-                if (key != null && key.size() > 0 && keyClass != null) {
+                if (key != null && key.size() > 0) {
                     return keyClass.cast(key.get(0));
                 }
             }
@@ -238,6 +242,20 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
                 context.write(proxy.type().getClassType()).update(entity, proxy);
+                transaction.commit();
+                return entity;
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <E extends T> E update(E entity, Attribute<?, ?>... attributes) {
+        try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
+            EntityProxy<E> proxy = context.proxyOf(entity, true);
+            synchronized (proxy.syncObject()) {
+                context.write(proxy.type().getClassType())
+                        .update(entity, proxy, (Attribute<E, ?>[]) attributes);
                 transaction.commit();
                 return entity;
             }

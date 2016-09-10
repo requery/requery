@@ -118,6 +118,17 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     }
 
     @Override
+    public <E extends T> CompletionStage<E> update(final E entity,
+                                                   final Attribute<?, ?>... attributes) {
+        return CompletableFuture.supplyAsync(new Supplier<E>() {
+            @Override
+            public E get() {
+                return delegate.update(entity, attributes);
+            }
+        }, executor);
+    }
+
+    @Override
     public <E extends T> CompletableFuture<Iterable<E>> update(final Iterable<E> entities) {
         return CompletableFuture.supplyAsync(new Supplier<Iterable<E>>() {
             @Override

@@ -62,6 +62,10 @@ public abstract class SingleEntityStore<T> implements EntityStore<T, Single<?>> 
 
     @Override
     @CheckReturnValue
+    public abstract <E extends T> Single<E> update(E entity, Attribute<?, ?>... attributes);
+
+    @Override
+    @CheckReturnValue
     public abstract <E extends T> Single<Iterable<E>> update(Iterable<E> entities);
 
     @Override

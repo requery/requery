@@ -16,12 +16,10 @@
 
 package io.requery.sql;
 
-import io.requery.meta.Attribute;
-import io.requery.query.Scalar;
 import io.requery.query.BaseScalar;
+import io.requery.query.Scalar;
 import io.requery.query.element.QueryElement;
 import io.requery.sql.gen.DefaultOutput;
-import io.requery.util.function.Predicate;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,24 +28,11 @@ import java.sql.SQLException;
 /**
  * Extends {@link UpdateOperation} specifically for binding to an entity, skipping the query
  * parameters to avoid boxing overhead.
- *
- * @param <E> entity type
  */
-class EntityUpdateOperation<E> extends UpdateOperation {
+abstract class EntityUpdateOperation extends UpdateOperation {
 
-    private final E element;
-    private final ParameterBinder<E> parameterBinder;
-    private final Predicate<Attribute<E, ?>> filter;
-
-    EntityUpdateOperation(RuntimeConfiguration configuration,
-                          E element,
-                          ParameterBinder<E> parameterBinder,
-                          Predicate<Attribute<E, ?>> filter,
-                          GeneratedResultReader resultReader) {
+    EntityUpdateOperation(RuntimeConfiguration configuration, GeneratedResultReader resultReader) {
         super(configuration, resultReader);
-        this.element = element;
-        this.filter = filter;
-        this.parameterBinder = parameterBinder;
     }
 
     @Override
@@ -64,7 +49,7 @@ class EntityUpdateOperation<E> extends UpdateOperation {
                 try (Connection connection = configuration.getConnection()) {
                     StatementListener listener = configuration.getStatementListener();
                     try (PreparedStatement statement = prepare(sql, connection)) {
-                        parameterBinder.bindParameters(statement, element, filter);
+                        bindParameters(statement);
                         listener.beforeExecuteUpdate(statement, sql, null);
                         result = statement.executeUpdate();
                         listener.afterExecuteUpdate(statement);
@@ -77,4 +62,6 @@ class EntityUpdateOperation<E> extends UpdateOperation {
             }
         };
     }
+
+    public abstract int bindParameters(PreparedStatement statement) throws SQLException;
 }

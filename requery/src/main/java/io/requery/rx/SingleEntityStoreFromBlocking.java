@@ -127,6 +127,16 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
     }
 
     @Override
+    public <E extends T> Single<E> update(final E entity, final Attribute<?, ?>... attributes) {
+        return RxSupport.toSingle(new Supplier<E>() {
+            @Override
+            public E get() {
+                return delegate.update(entity, attributes);
+            }
+        }, subscribeOn);
+    }
+
+    @Override
     public <E extends T> Single<Iterable<E>> update(final Iterable<E> entities) {
         return RxSupport.toSingle(new Supplier<Iterable<E>>() {
             @Override

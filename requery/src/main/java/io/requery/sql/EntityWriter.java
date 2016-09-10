@@ -22,7 +22,6 @@ import io.requery.PersistenceException;
 import io.requery.Queryable;
 import io.requery.ReferentialAction;
 import io.requery.meta.Attribute;
-import io.requery.meta.Cardinality;
 import io.requery.meta.EntityModel;
 import io.requery.meta.QueryAttribute;
 import io.requery.meta.Type;
@@ -69,7 +68,7 @@ import static io.requery.query.element.QueryType.UPDATE;
  */
 class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
-    private enum CascadeMode { AUTO, INSERT, UPDATE, UPSERT }
+    private enum Cascade { AUTO, INSERT, UPDATE, UPSERT }
 
     private final EntityCache cache;
     private final EntityModel model;
@@ -161,8 +160,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
     private void checkRowsAffected(int count, E entity, EntityProxy<E> proxy) {
         if (proxy != null && versionAttribute != null && count == 0) {
-            Object version = proxy.get(versionAttribute);
-            throw new OptimisticLockException(entity, version);
+            throw new OptimisticLockException(entity, proxy.get(versionAttribute));
         } else if (count != 1) {
             throw new RowCountException(1, count);
         }
@@ -193,24 +191,6 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         return null;
     }
 
-    private void findCascadePreInserts(EntityProxy<E> proxy,
-                                       Map<Class<? extends S>, List<S>> elements) {
-        for (Attribute<E, ?> attribute : associativeAttributes) {
-            S referenced = foreignKeyReference(proxy, attribute);
-            if (referenced != null) {
-                EntityProxy<S> otherProxy = context.proxyOf(referenced, false);
-                if (otherProxy != null && !otherProxy.isLinked()) {
-                    Class<? extends S> key = otherProxy.type().getClassType();
-                    List<S> values = elements.get(key);
-                    if (values == null) {
-                        elements.put(key, values = new ArrayList<>());
-                    }
-                    values.add(referenced);
-                }
-            }
-        }
-    }
-
     GeneratedKeys<E> batchInsert(Iterable<E> entities, boolean returnKeys) {
         // true if using JDBC batching
         final boolean batchInStatement = canBatchInStatement();
@@ -232,20 +212,31 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 EntityProxy<E> proxy = proxyProvider.apply(entity);
                 elements[index] = entity;
                 if (hasForeignKeys) {
-                    findCascadePreInserts(proxy, associations);
+                    for (Attribute<E, ?> attribute : associativeAttributes) {
+                        S referenced = foreignKeyReference(proxy, attribute);
+                        if (referenced != null) {
+                            EntityProxy<S> otherProxy = context.proxyOf(referenced, false);
+                            if (otherProxy != null && !otherProxy.isLinked()) {
+                                Class<? extends S> key = otherProxy.type().getClassType();
+                                List<S> values = associations.get(key);
+                                if (values == null) {
+                                    associations.put(key, values = new ArrayList<>());
+                                }
+                                values.add(referenced);
+                            }
+                        }
+                    }
                 }
-                if (versionAttribute != null && !hasSystemVersionColumn()) {
-                    incrementVersion(proxy);
-                }
+                incrementVersion(proxy);
                 context.getStateListener().preInsert(entity, proxy);
                 index++;
             }
             cascadeBatch(associations);
 
             final int count = index;
-            GeneratedResultReader generatedKeyReader = null;
+            GeneratedResultReader keyReader = null;
             if (hasGeneratedKey) {
-                generatedKeyReader = new GeneratedResultReader() {
+                keyReader = new GeneratedResultReader() {
                     @Override
                     public void read(int index, ResultSet results) throws SQLException {
                         // check if reading batch keys, otherwise read 1
@@ -266,10 +257,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     }
                 };
             }
-            BatchUpdateOperation<E> updater = new BatchUpdateOperation<>(
-                context, elements, count, this, generatedKeyReader, batchInStatement);
+            BatchUpdateOperation<E> operation = new BatchUpdateOperation<>(
+                context, elements, count, this, keyReader, batchInStatement);
 
-            QueryElement<int[]> query = new QueryElement<>(QueryType.INSERT, model, updater);
+            QueryElement<int[]> query = new QueryElement<>(QueryType.INSERT, model, operation);
             query.from(entityClass);
             for (Attribute attribute : bindableAttributes) {
                 query.value((Expression)attribute, null);
@@ -280,7 +271,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 EntityProxy<E> proxy = proxyProvider.apply(entity);
                 checkRowsAffected(updates[i], entity, proxy);
                 proxy.link(reader);
-                updateAssociations(CascadeMode.AUTO, entity, proxy);
+                updateAssociations(Cascade.AUTO, entity, proxy, null);
                 context.getStateListener().postInsert(entity, proxy);
                 // cache entity
                 if (cacheable) {
@@ -335,9 +326,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     }
 
     @Override
-    public int bindParameters(PreparedStatement statement,
-                               E element,
-                               Predicate<Attribute<E, ?>> filter) throws SQLException {
+    public int bindParameters(PreparedStatement statement, E element,
+                              Predicate<Attribute<E, ?>> filter) throws SQLException {
         int i = 0;
         EntityProxy<E> proxy = type.getProxyProvider().apply(element);
         for (Attribute<E, ?> attribute : bindableAttributes) {
@@ -371,8 +361,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     }
 
     @SuppressWarnings("unchecked") // checked by primitiveKind()
-    private void mapPrimitiveType(EntityProxy<E> proxy,
-                                  Attribute<E, ?> attribute,
+    private void mapPrimitiveType(EntityProxy<E> proxy, Attribute<E, ?> attribute,
                                   PreparedStatement statement, int index) throws SQLException {
         switch (attribute.getPrimitiveKind()) {
             case BYTE:
@@ -406,23 +395,20 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         }
     }
 
-    public GeneratedKeys<E> insert(E entity, final EntityProxy<E> proxy, boolean returnKeys) {
-        return insert(entity, proxy, returnKeys, CascadeMode.AUTO);
+    void insert(E entity, final EntityProxy<E> proxy, GeneratedKeys<E> keys) {
+        insert(entity, proxy, Cascade.AUTO, keys);
     }
 
-    public GeneratedKeys<E> insert(E entity, final EntityProxy<E> proxy,
-                                   boolean returnKeys, CascadeMode mode) {
-        GeneratedResultReader keyReader = null;
+    void insert(final E entity, EntityProxy<E> proxy, Cascade mode, GeneratedKeys<E> keys) {
         // if the type is immutable return the key(s) to the caller instead of modifying the object
-        final GeneratedKeys<E> keys = (returnKeys && hasGeneratedKey) ?
-                new GeneratedKeys<>(type.isImmutable() ? null : proxy) : null;
-
+        GeneratedResultReader keyReader = null;
         if (hasGeneratedKey) {
+            final Settable<E> settable = keys == null ? proxy : keys;
             keyReader = new GeneratedResultReader() {
                 @Override
                 public void read(int index, ResultSet results) throws SQLException {
                     if (results.next()) {
-                        readGeneratedKeys(keys == null ? proxy : keys, results);
+                        readGeneratedKeys(settable, results);
                     }
                 }
                 @Override
@@ -431,18 +417,20 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 }
             };
         }
-        EntityUpdateOperation<E> insert =
-            new EntityUpdateOperation<>(context, entity, this, null, keyReader);
+        EntityUpdateOperation insert = new EntityUpdateOperation(context, keyReader) {
+            @Override
+            public int bindParameters(PreparedStatement statement) throws SQLException {
+                return EntityWriter.this.bindParameters(statement, entity, null);
+            }
+        };
         QueryElement<Scalar<Integer>> query = new QueryElement<>(QueryType.INSERT, model, insert);
         query.from(entityClass);
 
         for (Attribute<E, ?> attribute : associativeAttributes) {
             // persist the foreign key object if needed
-            cascadeForeignKeyReference(CascadeMode.INSERT, proxy, attribute);
+            cascadeKeyReference(Cascade.INSERT, proxy, attribute);
         }
-        if (versionAttribute != null && !hasSystemVersionColumn()) {
-            incrementVersion(proxy);
-        }
+        incrementVersion(proxy);
         for (Attribute attribute : bindableAttributes) {
             query.value((Expression)attribute, null);
         }
@@ -450,7 +438,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
         checkRowsAffected(query.get().value(), entity, null);
         proxy.link(context.read(entityClass));
-        updateAssociations(mode, entity, proxy);
+        updateAssociations(mode, entity, proxy, null);
 
         context.getStateListener().postInsert(entity, proxy);
 
@@ -458,24 +446,21 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (cacheable) {
             cache.put(entityClass, proxy.key(), entity);
         }
-        return keys;
     }
 
     public void upsert(E entity, final EntityProxy<E> proxy) {
         if (hasGeneratedKey) {
             if (hasKey(proxy)) {
-                update(entity, proxy, true, CascadeMode.UPSERT);
+                update(entity, proxy, Cascade.UPSERT, null, null);
             } else {
-                insert(entity, proxy, false, CascadeMode.UPSERT);
+                insert(entity, proxy, Cascade.UPSERT, null);
             }
         } else {
             if (context.getPlatform().supportsUpsert()) {
                 for (Attribute<E, ?> attribute : associativeAttributes) {
-                    cascadeForeignKeyReference(CascadeMode.UPSERT, proxy, attribute);
+                    cascadeKeyReference(Cascade.UPSERT, proxy, attribute);
                 }
-                if (versionAttribute != null && !hasSystemVersionColumn()) {
-                    incrementVersion(proxy);
-                }
+                incrementVersion(proxy);
                 List<Attribute<E, ?>> attributes = Arrays.asList(bindableAttributes);
                 UpdateOperation upsert = new UpdateOperation(context);
                 QueryElement<Scalar<Integer>> element =
@@ -488,63 +473,68 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     throw new RowCountException(1, rows);
                 }
                 proxy.link(context.read(entityClass));
-                updateAssociations(CascadeMode.UPSERT, entity, proxy);
+                updateAssociations(Cascade.UPSERT, entity, proxy, null);
                 if (cacheable) {
                     cache.put(entityClass, proxy.key(), entity);
                 }
             } else {
                 // not a real upsert, but can be ok for embedded databases
-                if (update(entity, proxy, false, CascadeMode.UPSERT) == 0) {
-                    insert(entity, proxy, false, CascadeMode.UPSERT);
+                if (update(entity, proxy, Cascade.UPSERT, null, null) == 0) {
+                    insert(entity, proxy, Cascade.UPSERT, null);
                 }
             }
         }
+    }
+
+    public void update(E entity, EntityProxy<E> proxy, final Attribute<E, ?>[] attributes) {
+        final List<Attribute<E, ?>> list = Arrays.asList(attributes);
+        update(entity, proxy, Cascade.AUTO,
+            new Predicate<Attribute<E, ?>>() {
+                @Override
+                public boolean test(Attribute<E, ?> value) {
+                    return list.contains(value) && !value.isAssociation();
+                }
+            }, new Predicate<Attribute<E, ?>>() {
+                @Override
+                public boolean test(Attribute<E, ?> value) {
+                    return list.contains(value) && value.isAssociation();
+                }
+            });
     }
 
     public void update(E entity, EntityProxy<E> proxy) {
-        update(entity, proxy, true, CascadeMode.AUTO);
+        int count = update(entity, proxy, Cascade.AUTO, null, null);
+        if (count != -1) {
+            checkRowsAffected(count, entity, proxy);
+        }
     }
 
-    private int update(E entity, final EntityProxy<E> proxy, boolean checkCount, CascadeMode mode) {
-        if (whereAttributes.length == 0) {
-            throw new MissingKeyException(proxy);
-        }
+    private int update(final E entity, final EntityProxy<E> proxy, Cascade mode,
+                       Predicate<Attribute<E, ?>> filterBindable,
+                       Predicate<Attribute<E, ?>> filterAssociations) {
+
         context.getStateListener().preUpdate(entity, proxy);
         // updates the entity using a query (not the query values are not specified but instead
         // mapped directly to avoid boxing)
-        Predicate<Attribute<E, ?>> updateable = new Predicate<Attribute<E, ?>>() {
-            @Override
-            public boolean test(Attribute<E, ?> value) {
-                return stateless ||
-                    ((proxy.getState(value) == PropertyState.MODIFIED) &&
-                    (!value.isAssociation() || value.isForeignKey() || value.isKey()));
-            }
-        };
-        boolean hasVersion = versionAttribute != null;
-        final Object version = hasVersion ? proxy.get(versionAttribute, true) : null;
-        if (hasVersion) {
-            boolean modified = false;
-            for (Attribute<E, ?> attribute : bindableAttributes) {
-                if (attribute != versionAttribute && updateable.test(attribute)) {
-                    modified = true;
-                    break;
+        if (filterBindable == null) {
+            filterBindable = new Predicate<Attribute<E, ?>>() {
+                @Override
+                public boolean test(Attribute<E, ?> value) {
+                    return stateless ||
+                            ((proxy.getState(value) == PropertyState.MODIFIED) &&
+                            (!value.isAssociation() || value.isForeignKey() || value.isKey()));
                 }
-            }
-            if (modified) {
-                if (version == null) {
-                    throw new MissingVersionException(proxy);
-                }
-                if (!hasSystemVersionColumn()) {
-                    incrementVersion(proxy);
-                }
-            }
+            };
         }
-        ParameterBinder<E> binder = new ParameterBinder<E>() {
+        boolean hasVersion = versionAttribute != null;
+        final Object version = hasVersion ? incrementVersion(proxy, filterBindable) : null;
+        final Predicate<Attribute<E, ?>> filter = filterBindable;
+
+        EntityUpdateOperation operation = new EntityUpdateOperation(context, null) {
             @Override
-            public int bindParameters(PreparedStatement statement, E element,
-                                      Predicate<Attribute<E, ?>> filter) throws SQLException {
+            public int bindParameters(PreparedStatement statement) throws SQLException {
                 // first write the changed properties
-                int index = EntityWriter.this.bindParameters(statement, element, filter);
+                int index = EntityWriter.this.bindParameters(statement, entity, filter);
                 // write the where arguments
                 for (Attribute<E, ?> attribute : whereAttributes) {
                     if (attribute == versionAttribute) {
@@ -562,13 +552,11 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 return index;
             }
         };
-        EntityUpdateOperation<E> operation =
-            new EntityUpdateOperation<>(context, entity, binder, updateable, null);
         QueryElement<Scalar<Integer>> query = new QueryElement<>(UPDATE, model, operation);
         query.from(entityClass);
         int count = 0;
         for (Attribute<E, ?> attribute : bindableAttributes) {
-            if (!updateable.test(attribute)) {
+            if (!filterBindable.test(attribute)) {
                 continue;
             }
             // persist the foreign key object if needed
@@ -596,192 +584,204 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             result = query.get().value();
             proxy.link(context.read(entityClass));
-            if (checkCount) {
-                checkRowsAffected(result, entity, proxy);
-            }
             if (result > 0) {
-                updateAssociations(mode, entity, proxy);
+                updateAssociations(mode, entity, proxy, filterAssociations);
             }
         } else {
-            updateAssociations(mode, entity, proxy);
+            updateAssociations(mode, entity, proxy, filterAssociations);
         }
         context.getStateListener().postUpdate(entity, proxy);
         return result;
     }
 
     private void addVersionCondition(Where<?> where, Object version) {
-        if (versionAttribute != null) {
-            QueryAttribute<E, Object> queryAttribute = Attributes.query(versionAttribute);
-            VersionColumnDefinition versionColumnDefinition =
-                context.getPlatform().versionColumnDefinition();
-            String columnName = versionColumnDefinition.columnName();
-            if (!versionColumnDefinition.createColumn() && columnName != null) {
-                FieldExpression<Object> expression = (FieldExpression<Object>)
-                        queryAttribute.as(columnName);
-                where.where(expression.equal(version));
-            } else {
-                where.where(queryAttribute.equal(version));
+        QueryAttribute<E, Object> attribute = Attributes.query(versionAttribute);
+        VersionColumnDefinition definition = context.getPlatform().versionColumnDefinition();
+        String name = definition.columnName();
+        if (!definition.createColumn() && name != null) {
+            FieldExpression<Object> expression = (FieldExpression<Object>) attribute.as(name);
+            where.where(expression.equal(version));
+        } else {
+            where.where(attribute.equal(version));
+        }
+    }
+
+    private void updateAssociations(Cascade mode, E entity, EntityProxy<E> proxy,
+                                    Predicate<Attribute<E, ?>> filter) {
+        for (Attribute<E, ?> attribute : associativeAttributes) {
+            if ((filter != null && filter.test(attribute)) ||
+                    (stateless || proxy.getState(attribute) == PropertyState.MODIFIED)) {
+                updateAssociation(mode, entity, proxy, attribute);
             }
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void updateAssociations(CascadeMode mode, E entity, EntityProxy<E> proxy) {
-        for (Attribute<E, ?> attribute : associativeAttributes) {
-            boolean isModified = stateless || proxy.getState(attribute) == PropertyState.MODIFIED;
-            if (!isModified) {
-                continue;
-            }
-            Cardinality cardinality = attribute.getCardinality();
-            switch (cardinality) {
-                case ONE_TO_ONE:
-                    S value = (S) proxy.get(attribute, false);
-                    if (value != null) {
-                        Attribute<S, Object> mapped =
-                                Attributes.get(attribute.getMappedAttribute());
-                        EntityProxy<S> referred = context.proxyOf(value, true);
-                        referred.set(mapped, entity, PropertyState.MODIFIED);
-                        cascadeWrite(mode, value, referred);
-                    } else if (!stateless) {
-                        throw new PersistenceException(
+    private void updateAssociation(Cascade mode, E entity, EntityProxy<E> proxy,
+                                   Attribute<E, ?> attribute) {
+        switch (attribute.getCardinality()) {
+            case ONE_TO_ONE:
+                S value = (S) proxy.get(attribute, false);
+                if (value != null) {
+                    Attribute<S, Object> mapped = Attributes.get(attribute.getMappedAttribute());
+                    EntityProxy<S> referred = context.proxyOf(value, true);
+                    referred.set(mapped, entity, PropertyState.MODIFIED);
+                    cascadeWrite(mode, value, referred);
+                } else if (!stateless) {
+                    throw new PersistenceException(
                             "1-1 relationship can only be removed from the owning side");
-                    }
-                    break;
-                case ONE_TO_MANY:
-                    Object relation = proxy.get(attribute, false);
-                    if (relation instanceof ObservableCollection) {
-                        ObservableCollection<S> collection = (ObservableCollection<S>) relation;
-                        CollectionChanges<?, S> changes =
+                }
+                break;
+            case ONE_TO_MANY:
+                Object relation = proxy.get(attribute, false);
+                if (relation instanceof ObservableCollection) {
+                    ObservableCollection<S> collection = (ObservableCollection<S>) relation;
+                    CollectionChanges<?, S> changes =
                             (CollectionChanges<?, S>) collection.observer();
-                        List<S> added = new ArrayList<>(changes.addedElements());
-                        List<S> removed = new ArrayList<>(changes.removedElements());
-                        changes.clear();
-                        for (S element : added) {
-                            updateInverseAssociation(mode, element, attribute, entity);
-                        }
-                        for (S element : removed) {
-                            updateInverseAssociation(CascadeMode.UPDATE, element, attribute, null);
-                        }
-                    } else if (relation instanceof Iterable) {
-                        Iterable<S> iterable = (Iterable<S>) relation;
-                        for (S added : iterable) {
-                            updateInverseAssociation(mode, added, attribute, entity);
-                        }
-                    } else {
-                        throw new IllegalStateException("unsupported relation type " + relation);
+                    List<S> added = new ArrayList<>(changes.addedElements());
+                    List<S> removed = new ArrayList<>(changes.removedElements());
+                    changes.clear();
+                    for (S element : added) {
+                        updateMappedAssociation(mode, element, attribute, entity);
                     }
-                    break;
-                case MANY_TO_MANY:
-                    Class referencedClass = attribute.getReferencedClass();
-                    if (referencedClass == null) {
-                        throw new IllegalStateException(
-                            "Invalid referenced class in " + attribute.toString());
+                    for (S element : removed) {
+                        updateMappedAssociation(Cascade.UPDATE, element, attribute, null);
                     }
-                    Type<?> referencedType = model.typeOf(referencedClass);
-                    QueryAttribute<S, Object> tKey = null;
-                    QueryAttribute<S, Object> uKey = null;
-                    for (Attribute a : referencedType.getAttributes()) {
-                        if (entityClass.isAssignableFrom(a.getReferencedClass())) {
-                            tKey = Attributes.query(a);
-                        } else if (attribute.getElementClass().isAssignableFrom(
-                                a.getReferencedClass())) {
-                            uKey = Attributes.query(a);
-                        }
+                } else if (relation instanceof Iterable) {
+                    Iterable<S> iterable = (Iterable<S>) relation;
+                    for (S added : iterable) {
+                        updateMappedAssociation(mode, added, attribute, entity);
                     }
-                    Objects.requireNotNull(tKey);
-                    Objects.requireNotNull(uKey);
-                    Attribute<E, Object> tRef = Attributes.get(tKey.getReferencedAttribute());
-                    Attribute<S, Object> uRef = Attributes.get(uKey.getReferencedAttribute());
+                } else {
+                    throw new IllegalStateException("unsupported relation type " + relation);
+                }
+                break;
+            case MANY_TO_MANY:
+                Class referencedClass = attribute.getReferencedClass();
+                if (referencedClass == null) {
+                    throw new IllegalStateException("Invalid referenced class in " + attribute);
+                }
+                Type<?> referencedType = model.typeOf(referencedClass);
+                QueryAttribute<S, Object> tKey = null;
+                QueryAttribute<S, Object> uKey = null;
+                for (Attribute a : referencedType.getAttributes()) {
+                    if (entityClass.isAssignableFrom(a.getReferencedClass())) {
+                        tKey = Attributes.query(a);
+                    } else if (attribute.getElementClass().isAssignableFrom(
+                            a.getReferencedClass())) {
+                        uKey = Attributes.query(a);
+                    }
+                }
+                Objects.requireNotNull(tKey);
+                Objects.requireNotNull(uKey);
+                Attribute<E, Object> tRef = Attributes.get(tKey.getReferencedAttribute());
+                Attribute<S, Object> uRef = Attributes.get(uKey.getReferencedAttribute());
 
-                    CollectionChanges<?, S> changes = null;
-                    relation = proxy.get(attribute, false);
-                    Iterable<S> addedElements = (Iterable<S>) relation;
-                    boolean isObservableCollection = relation instanceof ObservableCollection;
-                    if (relation instanceof ObservableCollection) {
-                        ObservableCollection<S> collection = (ObservableCollection<S>) relation;
-                        changes = (CollectionChanges<?, S>) collection.observer();
-                        if (changes != null) {
-                            addedElements = changes.addedElements();
-                        }
-                    }
-                    for (S added : addedElements) {
-                        S junction = (S) referencedType.getFactory().get();
-                        EntityProxy<S> junctionProxy = context.proxyOf(junction, false);
-                        EntityProxy<S> uProxy = context.proxyOf(added, false);
-
-                        if (attribute.getCascadeActions().contains(CascadeAction.SAVE)) {
-                            cascadeWrite(mode, added, uProxy);
-                        }
-                        Object tValue = proxy.get(tRef, false);
-                        Object uValue = uProxy.get(uRef, false);
-
-                        junctionProxy.set(tKey, tValue, PropertyState.MODIFIED);
-                        junctionProxy.set(uKey, uValue, PropertyState.MODIFIED);
-
-                        CascadeMode junctionCascadeMode =
-                                !isObservableCollection && mode == CascadeMode.UPSERT ?
-                                CascadeMode.UPSERT : CascadeMode.INSERT;
-                        cascadeWrite(junctionCascadeMode, junction, null);
-                    }
+                CollectionChanges<?, S> changes = null;
+                relation = proxy.get(attribute, false);
+                Iterable<S> addedElements = (Iterable<S>) relation;
+                boolean isObservable = relation instanceof ObservableCollection;
+                if (relation instanceof ObservableCollection) {
+                    ObservableCollection<S> collection = (ObservableCollection<S>) relation;
+                    changes = (CollectionChanges<?, S>) collection.observer();
                     if (changes != null) {
-                        Object keyValue = proxy.get(tRef, false);
-                        for (S removed : changes.removedElements()) {
-                            Object otherValue = context.proxyOf(removed, false).get(uRef);
-                            Class<? extends S> removeType = (Class<? extends S>)
+                        addedElements = changes.addedElements();
+                    }
+                }
+                for (S added : addedElements) {
+                    S junction = (S) referencedType.getFactory().get();
+                    EntityProxy<S> junctionProxy = context.proxyOf(junction, false);
+                    EntityProxy<S> uProxy = context.proxyOf(added, false);
+
+                    if (attribute.getCascadeActions().contains(CascadeAction.SAVE)) {
+                        cascadeWrite(mode, added, uProxy);
+                    }
+                    Object tValue = proxy.get(tRef, false);
+                    Object uValue = uProxy.get(uRef, false);
+
+                    junctionProxy.set(tKey, tValue, PropertyState.MODIFIED);
+                    junctionProxy.set(uKey, uValue, PropertyState.MODIFIED);
+
+                    Cascade cascade = !isObservable && mode == Cascade.UPSERT ?
+                            Cascade.UPSERT : Cascade.INSERT;
+                    cascadeWrite(cascade, junction, null);
+                }
+                if (changes != null) {
+                    Object keyValue = proxy.get(tRef, false);
+                    for (S removed : changes.removedElements()) {
+                        Object otherValue = context.proxyOf(removed, false).get(uRef);
+                        Class<? extends S> removeType = (Class<? extends S>)
                                 referencedType.getClassType();
 
-                            Supplier<Scalar<Integer>> query = queryable.delete(removeType)
+                        Supplier<Scalar<Integer>> query = queryable.delete(removeType)
                                 .where(tKey.equal(keyValue))
                                 .and(uKey.equal(otherValue));
-                            int count = query.get().value();
-                            if (count != 1) {
-                                throw new RowCountException(1, count);
-                            }
+                        int count = query.get().value();
+                        if (count != 1) {
+                            throw new RowCountException(1, count);
                         }
-                        changes.clear();
                     }
-                    break;
-                case MANY_TO_ONE:
-                default:
-                    break;
-            }
-            context.read(type.getClassType()).refresh(entity, proxy, attribute);
+                    changes.clear();
+                }
+                break;
+            case MANY_TO_ONE:
+            default:
+                break;
         }
+        context.read(type.getClassType()).refresh(entity, proxy, attribute);
     }
 
     private void incrementVersion(EntityProxy<E> proxy) {
-        Object version = proxy.get(versionAttribute);
-        Class<?> type = versionAttribute.getClassType();
-        if (type == Long.class || type == long.class) {
-            if (version == null) {
-                version = 1L;
+        if (versionAttribute != null && !hasSystemVersionColumn()) {
+            Object version = proxy.get(versionAttribute);
+            Class<?> type = versionAttribute.getClassType();
+            if (type == Long.class || type == long.class) {
+                if (version == null) {
+                    version = 1L;
+                } else {
+                    Long value = (Long) version;
+                    version = value + 1;
+                }
+            } else if (type == Integer.class || type == int.class) {
+                if (version == null) {
+                    version = 1;
+                } else {
+                    Integer value = (Integer) version;
+                    version = value + 1;
+                }
+            } else if (type == Timestamp.class) {
+                version = new Timestamp(System.currentTimeMillis());
             } else {
-                Long value = (Long) version;
-                version = value + 1;
+                throw new PersistenceException("Unsupported version type: " +
+                        versionAttribute.getClassType());
             }
-        } else if (type == Integer.class || type == int.class) {
-            if (version == null) {
-                version = 1;
-            } else {
-                Integer value = (Integer) version;
-                version = value + 1;
-            }
-        } else if (type == Timestamp.class) {
-            version = new Timestamp(System.currentTimeMillis());
-        } else {
-            throw new PersistenceException("Unsupported version: " +
-                    versionAttribute.getClassType());
+            proxy.setObject(versionAttribute, version, PropertyState.MODIFIED);
         }
-        proxy.setObject(versionAttribute, version, PropertyState.MODIFIED);
     }
 
-    private <U extends S> void updateInverseAssociation(CascadeMode mode,
-                                                        U entity,
-                                                        Attribute attribute,
-                                                        Object value) {
-        EntityProxy<U> proxy = context.proxyOf(entity, false);
-        Attribute<U, Object> inverse = Attributes.get(attribute.getMappedAttribute());
-        proxy.set(inverse, value, PropertyState.MODIFIED);
+    private Object incrementVersion(EntityProxy<E> proxy, Predicate<Attribute<E, ?>> filter) {
+        boolean modified = false;
+        for (Attribute<E, ?> attribute : bindableAttributes) {
+            if (attribute != versionAttribute && filter.test(attribute)) {
+                modified = true;
+                break;
+            }
+        }
+        final Object version = proxy.get(versionAttribute, true);
+        if (modified) {
+            if (version == null) {
+                throw new MissingVersionException(proxy);
+            }
+            incrementVersion(proxy);
+        }
+        return version;
+    }
+
+    private void updateMappedAssociation(Cascade mode, S entity, Attribute attribute,
+                                         Object value) {
+        EntityProxy<S> proxy = context.proxyOf(entity, false);
+        Attribute<S, Object> mapped = Attributes.get(attribute.getMappedAttribute());
+        proxy.set(mapped, value, PropertyState.MODIFIED);
         cascadeWrite(mode, entity, proxy);
     }
 
@@ -859,6 +859,53 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         return cascade;
     }
 
+    private void cascadeKeyReference(Cascade mode, EntityProxy<E> proxy,
+                                     Attribute<E, ?> attribute) {
+        S referenced = foreignKeyReference(proxy, attribute);
+        if (referenced != null && proxy.getState(attribute) == PropertyState.MODIFIED) {
+            EntityProxy<S> referred = context.proxyOf(referenced, false);
+            if (!referred.isLinked()) {
+                proxy.setState(attribute, PropertyState.LOADED);
+                cascadeWrite(mode, referenced, null);
+            }
+        }
+    }
+
+    private <U extends S> void cascadeWrite(Cascade mode, U entity, EntityProxy<U> proxy) {
+        if (entity != null) {
+            if (proxy == null) {
+                proxy = context.proxyOf(entity, false);
+            }
+            EntityWriter<U, S> writer = context.write(proxy.type().getClassType());
+            if (mode == Cascade.AUTO) {
+                mode = proxy.isLinked() || hasKey(proxy)? Cascade.UPDATE : Cascade.INSERT;
+            }
+            switch (mode) {
+                case INSERT:
+                    writer.insert(entity, proxy, mode, null);
+                    break;
+                case UPDATE:
+                    writer.update(entity, proxy, mode, null, null);
+                    break;
+                case UPSERT:
+                    writer.upsert(entity, proxy);
+                    break;
+            }
+        }
+    }
+
+    private <U extends S> void cascadeRemove(E entity, U element, boolean delete) {
+        EntityProxy<U> proxy = context.proxyOf(element, false);
+        if (proxy != null) {
+            EntityWriter<U, S> writer = context.write(proxy.type().getClassType());
+            if (delete && proxy.isLinked()) {
+                writer.delete(element, proxy);
+            } else {
+                writer.removeEntity(proxy, entity);
+            }
+        }
+    }
+
     void batchDelete(Iterable<E> entities) {
 
         final int batchSize = context.getBatchUpdateSize();
@@ -899,53 +946,6 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 if (rows != ids.size()) {
                     throw new RowCountException(ids.size(), rows);
                 }
-            }
-        }
-    }
-
-    private void cascadeForeignKeyReference(CascadeMode mode, EntityProxy<E> proxy,
-                                            Attribute<E, ?> attribute) {
-        S referenced = foreignKeyReference(proxy, attribute);
-        if (referenced != null && proxy.getState(attribute) == PropertyState.MODIFIED) {
-            EntityProxy<S> referred = context.proxyOf(referenced, false);
-            if (!referred.isLinked()) {
-                proxy.setState(attribute, PropertyState.LOADED);
-                cascadeWrite(mode, referenced, null);
-            }
-        }
-    }
-
-    private <U extends S> void cascadeWrite(CascadeMode mode, U entity, EntityProxy<U> proxy) {
-        if (entity != null) {
-            if (proxy == null) {
-                proxy = context.proxyOf(entity, false);
-            }
-            EntityWriter<U, S> writer = context.write(proxy.type().getClassType());
-            if (mode == CascadeMode.AUTO) {
-                mode = proxy.isLinked() || hasKey(proxy)? CascadeMode.UPDATE : CascadeMode.INSERT;
-            }
-            switch (mode) {
-                case INSERT:
-                    writer.insert(entity, proxy, false, mode);
-                    break;
-                case UPDATE:
-                    writer.update(entity, proxy, false, mode);
-                    break;
-                case UPSERT:
-                    writer.upsert(entity, proxy);
-                    break;
-            }
-        }
-    }
-
-    private <U extends S> void cascadeRemove(E entity, U element, boolean delete) {
-        EntityProxy<U> proxy = context.proxyOf(element, false);
-        if (proxy != null) {
-            EntityWriter<U, S> writer = context.write(proxy.type().getClassType());
-            if (delete && proxy.isLinked()) {
-                writer.delete(element, proxy);
-            } else {
-                writer.removeEntity(proxy, entity);
             }
         }
     }
