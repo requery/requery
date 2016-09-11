@@ -38,9 +38,11 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -65,18 +67,18 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
     private final Set<TypeGenerationExtension> typeExtensions;
     private final Set<PropertyGenerationExtension> memberExtensions;
 
-    EntityGenerator(ProcessingEnvironment processingEnvironment,
+    EntityGenerator(ProcessingEnvironment processingEnv,
                     EntityGraph graph,
                     EntityDescriptor entity,
                     EntityDescriptor parent) {
-        super(processingEnvironment, graph, entity);
+        super(processingEnv, graph, entity);
         this.parent = parent;
         typeExtensions = new HashSet<>();
         memberExtensions = new HashSet<>();
         // android extensions
         typeExtensions.add(new AndroidParcelableExtension(types));
         AndroidObservableExtension observable =
-            new AndroidObservableExtension(entity, processingEnvironment);
+            new AndroidObservableExtension(entity, processingEnv);
         typeExtensions.add(observable);
         memberExtensions.add(observable);
     }
@@ -300,7 +302,13 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     List<TypeName> wildcards = new ArrayList<>();
                     for (TypeName argument : arguments) {
                         if (!(argument instanceof WildcardTypeName)) {
-                            wildcards.add(WildcardTypeName.subtypeOf(argument));
+                            Elements elements = processingEnv.getElementUtils();
+                            TypeElement element = elements.getTypeElement(argument.toString());
+                            if (element != null && element.getKind() == ElementKind.INTERFACE) {
+                                wildcards.add(WildcardTypeName.subtypeOf(argument));
+                            } else {
+                                wildcards.add(argument);
+                            }
                         } else {
                             wildcards.add(argument);
                         }
