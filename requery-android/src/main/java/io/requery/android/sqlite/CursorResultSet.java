@@ -446,7 +446,7 @@ public class CursorResultSet extends NonUpdateableResultSet implements ResultSet
         if(cursor.isNull(columnIndex - 1)) {
             return null;
         }
-        return new Timestamp(getLong(columnIndex - 1));
+        return new Timestamp(cursor.getLong(columnIndex - 1));
     }
 
     @Override
