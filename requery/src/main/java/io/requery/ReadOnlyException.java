@@ -20,5 +20,4 @@ package io.requery;
  * Exception thrown when attempting to modify a {@link ReadOnly} entity or field.
  */
 public class ReadOnlyException extends PersistenceException {
-
 }
