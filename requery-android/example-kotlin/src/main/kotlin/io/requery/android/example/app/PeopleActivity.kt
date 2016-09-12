@@ -12,8 +12,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import io.requery.Persistable
 import io.requery.android.QueryRecyclerAdapter
+import io.requery.android.example.app.model.Models
 import io.requery.android.example.app.model.Person
 import io.requery.android.example.app.model.PersonEntity
+import io.requery.kotlin.lower
 import io.requery.query.Result
 import io.requery.sql.KotlinEntityDataStore
 import rx.Observable
@@ -87,16 +89,17 @@ class PeopleActivity : AppCompatActivity() {
     }
 
     private inner class PersonAdapter internal constructor() :
-            QueryRecyclerAdapter<PersonEntity, PersonHolder>(PersonEntity.`$TYPE`), View.OnClickListener {
+            QueryRecyclerAdapter<Person, PersonHolder>(Models.DEFAULT, Person::class.java),
+            View.OnClickListener {
 
         private val random = Random()
         private val colors = intArrayOf(Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA)
 
-        override fun performQuery(): Result<PersonEntity> {
-            return data.select(PersonEntity::class).orderBy(PersonEntity.NAME.lower()).get()
+        override fun performQuery(): Result<Person> {
+            return ( data select(Person::class) orderBy Person::name.lower() ).get()
         }
 
-        override fun onBindViewHolder(item: PersonEntity, holder: PersonHolder, position: Int) {
+        override fun onBindViewHolder(item: Person, holder: PersonHolder, position: Int) {
             holder.name!!.text = item.name
             holder.image!!.setBackgroundColor(colors[random.nextInt(colors.size)])
             holder.itemView.tag = item
