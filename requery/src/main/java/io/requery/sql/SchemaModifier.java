@@ -143,7 +143,7 @@ public class SchemaModifier {
     }
 
     /**
-     * Convience method to generated the create table statements as a string.
+     * Convenience method to generated the create table statements as a string.
      *
      * @param mode table creation mode
      * @return DDL string
