@@ -702,7 +702,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     junctionProxy.set(tKey, tValue, PropertyState.MODIFIED);
                     junctionProxy.set(uKey, uValue, PropertyState.MODIFIED);
 
-                    Cascade cascade = !isObservable && mode == Cascade.UPSERT ?
+                    Cascade cascade = isObservable && mode == Cascade.UPSERT ?
                             Cascade.UPSERT : Cascade.INSERT;
                     cascadeWrite(cascade, junction, null);
                 }
