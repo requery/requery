@@ -17,6 +17,7 @@
 package io.requery.android;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
@@ -45,7 +46,7 @@ public class EntityParceler<T> {
                 continue;
             }
             Class<?> typeClass = attribute.getClassType();
-            Object value;
+            Object value = null;
             if (typeClass.isEnum()) {
                 String name = (String) in.readValue(getClass().getClassLoader());
                 if (name == null) {
@@ -54,6 +55,19 @@ public class EntityParceler<T> {
                     @SuppressWarnings("unchecked")
                     Class<? extends Enum> enumClass = (Class<? extends Enum>) typeClass;
                     value = Enum.valueOf(enumClass, name);
+                }
+            } else if (typeClass.isArray()) {
+                int length = in.readInt();
+                if (length >= 0) {
+                    try {
+                        Parcelable.Creator creator = (Parcelable.Creator<?>)
+                                typeClass.getField("CREATOR").get(null);
+                        Object[] array = creator.newArray(length);
+                        in.readTypedArray(array, creator);
+                        value = array;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             } else {
                 value = in.readValue(getClass().getClassLoader());
@@ -75,12 +89,22 @@ public class EntityParceler<T> {
             }
             Object value = proxy.get(attribute, false);
             Class<?> typeClass = attribute.getClassType();
-            if (typeClass.isEnum()) {
-                if (value != null) {
-                    value = value.toString();
+            if (typeClass.isArray()) {
+                Parcelable[] array = (Parcelable[]) value;
+                if (array == null) {
+                    out.writeInt(-1);
+                } else {
+                    out.writeInt(array.length);
+                    out.writeTypedArray(array, 0);
                 }
+            } else {
+                if (typeClass.isEnum()) {
+                    if (value != null) {
+                        value = value.toString();
+                    }
+                }
+                out.writeValue(value);
             }
-            out.writeValue(value);
             if (!type.isStateless()) {
                 PropertyState state = proxy.getState(attribute);
                 out.writeString(state.toString());
