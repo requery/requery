@@ -17,12 +17,14 @@
 package io.requery.rx;
 
 import io.requery.BlockingEntityStore;
+import io.requery.TransactionListenable;
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
 import io.requery.query.BaseResult;
 import io.requery.query.Result;
 import io.requery.query.Scalar;
 import io.requery.query.element.QueryElement;
+import io.requery.query.element.QueryWrapper;
 import io.requery.util.function.Supplier;
 import rx.Observable;
 import rx.Scheduler;
@@ -54,13 +56,13 @@ public final class RxSupport {
     }
 
     public static <T> Observable<Result<T>> toResultObservable(final Result<T> result) {
-        if (!(result instanceof ObservableResult)) {
+        if (!(result instanceof TransactionListenable)) {
             throw new UnsupportedOperationException();
         }
-        ObservableResult observableResult = (ObservableResult) result;
-        final QueryElement<?> element = observableResult.unwrapQuery();
+        TransactionListenable listenable = (TransactionListenable) result;
+        final QueryElement<?> element = ((QueryWrapper) result).unwrapQuery();
         // ensure the transaction listener is added in the target data store
-        observableResult.addTransactionListener(typeChanges);
+        listenable.addTransactionListener(typeChanges);
         return typeChanges.commitSubject()
             .filter(new Func1<Set<Type<?>>, Boolean>() {
                 @Override
@@ -76,7 +78,7 @@ public final class RxSupport {
             }).startWith(result);
     }
 
-    private static boolean referencesType(Set<Type<?>> source, Set<Type<?>> changed) {
+    public static boolean referencesType(Set<Type<?>> source, Set<Type<?>> changed) {
         for (Type<?> type : source) {
             for (Attribute<?, ?> attribute : type.getAttributes()) {
                 // find if any referencing types that maybe affected by changes to the type

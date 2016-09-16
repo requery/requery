@@ -52,6 +52,11 @@ public abstract class BaseScalar<E> implements Scalar<E> {
     }
 
     @Override
+    public E call() throws Exception {
+        return value();
+    }
+
+    @Override
     public void consume(Consumer<? super E> action) {
         action.accept(value());
     }
@@ -78,6 +83,11 @@ public abstract class BaseScalar<E> implements Scalar<E> {
     @Override
     public rx.Single<E> toSingle() {
         return RxSupport.toSingle(this);
+    }
+
+    @Override
+    public io.reactivex.Single<E> single() {
+        return io.reactivex.Single.fromCallable(this);
     }
 
     @Override

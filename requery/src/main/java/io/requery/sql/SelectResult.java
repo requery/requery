@@ -22,7 +22,8 @@ import io.requery.meta.Attribute;
 import io.requery.query.BaseResult;
 import io.requery.query.Expression;
 import io.requery.query.element.QueryElement;
-import io.requery.rx.ObservableResult;
+import io.requery.TransactionListenable;
+import io.requery.query.element.QueryWrapper;
 import io.requery.sql.gen.DefaultOutput;
 import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
@@ -40,7 +41,7 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, CloseableIterable<E> {
+class SelectResult<E> extends BaseResult<E> implements TransactionListenable, QueryWrapper, CloseableIterable<E> {
 
     private final QueryElement<?> query;
     private final RuntimeConfiguration configuration;
@@ -164,9 +165,9 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
     }
 
     @Override
-    public void addTransactionListener(Supplier<TransactionListener> transactionListener) {
-        if (transactionListener != null) {
-            configuration.getTransactionListenerFactories().add(transactionListener);
+    public void addTransactionListener(Supplier<TransactionListener> supplier) {
+        if (supplier != null) {
+            configuration.getTransactionListenerFactories().add(supplier);
         }
     }
 

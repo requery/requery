@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package io.requery.rx;
+package io.requery;
 
-import io.requery.TransactionListener;
-import io.requery.query.Result;
-import io.requery.query.element.QueryWrapper;
 import io.requery.util.function.Supplier;
 
-public interface ObservableResult<E> extends Result<E>, QueryWrapper {
-
-    void addTransactionListener(Supplier<TransactionListener> transactionListener);
+public interface TransactionListenable {
+    void addTransactionListener(Supplier<TransactionListener> supplier);
 }

@@ -20,12 +20,11 @@ import io.requery.proxy.CollectionChanges;
 import io.requery.util.CloseableIterator;
 import io.requery.util.CollectionObserver;
 import io.requery.util.CompositeIterator;
-import io.requery.util.function.Consumer;
 import io.requery.util.FilteringIterator;
 import io.requery.util.ObservableCollection;
+import io.requery.util.function.Consumer;
 import io.requery.util.function.Predicate;
 import io.requery.util.function.Supplier;
-import rx.Observable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -180,7 +179,23 @@ public class ModifiableResult<E> implements MutableResult<E>, ObservableCollecti
     }
 
     @Override
-    public Observable<Result<E>> toSelfObservable() {
+    public rx.Observable<Result<E>> toSelfObservable() {
         return result == null ? rx.Observable.<Result<E>>empty() : result.toSelfObservable();
+    }
+
+    @Override
+    public io.reactivex.Flowable<E> flowable() {
+        return result == null ? io.reactivex.Flowable.<E>empty() : result.flowable();
+    }
+
+    @Override
+    public io.reactivex.Observable<E> observable() {
+        return result == null ? io.reactivex.Observable.<E>empty() : result.observable();
+    }
+
+    @Override
+    public io.reactivex.Observable<Result<E>> observableResult() {
+        return result == null ? io.reactivex.Observable.<Result<E>>empty() :
+               result.observableResult();
     }
 }

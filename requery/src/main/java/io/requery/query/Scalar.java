@@ -20,6 +20,7 @@ import io.requery.util.function.Consumer;
 import io.requery.util.function.Supplier;
 
 import javax.annotation.CheckReturnValue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -28,12 +29,18 @@ import java.util.concurrent.Executor;
  *
  * @param <E> type of element.
  */
-public interface Scalar<E> {
+public interface Scalar<E> extends Callable<E> {
 
     /**
      * @return the scalar value, causing the query to be executed.
      */
     E value();
+
+    /**
+     * @return the scalar value, causing the query to be executed.
+     */
+    @Override
+    E call() throws Exception;
 
     /**
      * Consume the result with the given {@link Consumer}.
@@ -63,6 +70,14 @@ public interface Scalar<E> {
      */
     @CheckReturnValue
     rx.Single<E> toSingle();
+
+    /**
+     * Converts this Scalar computation to a single {@link io.reactivex.Single}.
+     *
+     * @return {@link io.reactivex.Single} for the result of this query.
+     */
+    @CheckReturnValue
+    io.reactivex.Single<E> single();
 
     /**
      * @return {@link Supplier} for the result of this query.
