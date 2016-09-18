@@ -1,3 +1,4 @@
+rootProject.name = 'requery-persistence'
 include ':requery'
 include ':requery-processor'
 include ':requery-test'
