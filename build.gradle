@@ -3,6 +3,7 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
 buildscript {
+    ext.android_buildtools_version = '24.0.2'
     ext.kotlin_version = '1.0.3'
     repositories {
         jcenter()
