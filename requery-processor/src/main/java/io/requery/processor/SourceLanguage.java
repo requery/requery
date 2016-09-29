@@ -18,6 +18,7 @@ package io.requery.processor;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,7 +26,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents the source language type an annotation definition is present in. Besides Java other
@@ -40,6 +43,7 @@ enum SourceLanguage {
     KOTLIN;
 
     private static final Map<TypeElement, SourceLanguage> map = new LinkedHashMap<>();
+    private static final Set<TypeElement> annotations = new LinkedHashSet<>();
 
     static SourceLanguage of(TypeElement element) {
         if (map.containsKey(element)) {
@@ -50,11 +54,16 @@ enum SourceLanguage {
 
     static void map(ProcessingEnvironment environment) {
         map.clear();
+        annotations.clear();
         try {
             readKaptTypes(environment, map);
         } catch (IOException e) {
             environment.getMessager().printMessage(Diagnostic.Kind.WARNING, e.toString());
         }
+    }
+
+    protected static Set<TypeElement> getAnnotations() {
+        return annotations;
     }
 
     // reads the file specified in kapt.annotations determine if a specific type element is from
@@ -97,6 +106,13 @@ enum SourceLanguage {
                     String qname = packageName + "." + name; // not supporting nested classes
                     TypeElement element = environment.getElementUtils().getTypeElement(qname);
                     if (element != null) {
+                        environment.getMessager().printMessage(Diagnostic.Kind.OTHER,
+                                "kapt @ " + annotationType + " on " + element.getQualifiedName());
+                        Elements elements = environment.getElementUtils();
+                        TypeElement annotationElement = elements.getTypeElement(annotationType);
+                        if (annotationElement != null) {
+                            annotations.add(annotationElement);
+                        }
                         map.put(element, SourceLanguage.KOTLIN);
                     }
                 }

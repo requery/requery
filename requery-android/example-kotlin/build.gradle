@@ -44,5 +44,5 @@ dependencies {
     compile 'io.requery:requery:1.0.0-rc4'
     compile 'io.requery:requery-android:1.0.0-rc4'
     compile 'io.requery:requery-kotlin:1.0.0-rc4'
-    kapt 'io.requery:requery-processor:1.0.0-rc4'
+    kapt project(':requery-processor')
 }

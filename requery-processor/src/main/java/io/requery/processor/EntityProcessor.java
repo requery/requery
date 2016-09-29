@@ -88,7 +88,14 @@ public final class EntityProcessor extends AbstractProcessor {
         SourceLanguage.map(processingEnv);
         Types types = processingEnv.getTypeUtils();
 
-        for (TypeElement annotation : annotations) {
+        Set<TypeElement> annotationElements = new LinkedHashSet<>();
+        if (isEmptyKotlinAnnotationSet(annotations)) {
+            annotationElements.addAll(SourceLanguage.getAnnotations());
+        } else {
+            annotationElements.addAll(annotations);
+        }
+
+        for (TypeElement annotation : annotationElements) {
             for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
                 typeElementOf(element).ifPresent(typeElement -> {
                     EntityType entity = null;
@@ -291,5 +298,16 @@ public final class EntityProcessor extends AbstractProcessor {
             }
         }
         return packageName;
+    }
+
+    // Kotlin 1.0.4 the set of annotation elements is empty except for '__gen.KotlinAptAnnotation'
+    private boolean isEmptyKotlinAnnotationSet(Set<? extends TypeElement> annotations) {
+        if (annotations.size() == 1) {
+            TypeElement element = annotations.iterator().next();
+            if (element.getQualifiedName().contentEquals("__gen.KotlinAptAnnotation")) {
+                return true;
+            }
+        }
+        return false;
     }
 }
