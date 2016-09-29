@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+## 1.0.0
+
+- Support for RxJava 2.0
+- Support update on specific attributes
+- Support insert with default values
+- Support Kotlin 1.0.4
+- Fix Android mapping support for BigDecimal
+- Fix cascading Many-to-Many inserts
+
 ## 1.0.0-rc4
 
 - Fix compilation of certain queries under Java 8
