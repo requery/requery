@@ -9,6 +9,7 @@
 -dontwarn android.support.**
 -dontwarn io.requery.cache.**
 -dontwarn io.requery.rx.**
+-dontwarn io.requery.reactivex.**
 -dontwarn io.requery.android.sqlcipher.**
 -dontwarn io.requery.android.sqlitex.**
 -keepclassmembers enum io.requery.** {
