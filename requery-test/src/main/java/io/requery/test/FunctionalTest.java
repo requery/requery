@@ -771,11 +771,14 @@ public abstract class FunctionalTest extends RandomData {
         for (int i = 0; i < 3; i++) {
             try (Result<Person> query = data.select(Person.class)
                     .where(Person.NAME.equal(name))
+                    .orderBy(Person.NAME)
                     .limit(5).get()) {
                 assertEquals(5, query.toList().size());
             }
             try (Result<Person> query = data.select(Person.class)
-                    .where(Person.NAME.equal(name)).limit(5).offset(5).get()) {
+                    .where(Person.NAME.equal(name))
+                    .orderBy(Person.NAME)
+                    .limit(5).offset(5).get()) {
                 assertEquals(5, query.toList().size());
             }
         }
