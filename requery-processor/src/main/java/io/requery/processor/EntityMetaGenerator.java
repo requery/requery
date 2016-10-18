@@ -182,13 +182,22 @@ class EntityMetaGenerator extends EntityPartGenerator {
 
         block.add(".setProxyProvider($L)\n", proxyProvider.build());
 
-        if (entity.tableAttributes() != null && entity.tableAttributes().length > 0) {
+        if (entity.tableAttributes().length > 0) {
             StringJoiner joiner = new StringJoiner(",", "new String[] {", "}");
             for (String attribute : entity.tableAttributes()) {
                 joiner.add("\"" + attribute + "\"");
             }
             block.add(".setTableCreateAttributes($L)\n", joiner.toString());
         }
+
+        if (entity.tableUniqueIndexes().length > 0) {
+            StringJoiner joiner = new StringJoiner(",", "new String[] {", "}");
+            for (String attribute : entity.tableUniqueIndexes()) {
+                joiner.add("\"" + attribute + "\"");
+            }
+            block.add(".setTableUniqueIndexes($L)\n", joiner.toString());
+        }
+
         attributeNames.forEach(name -> block.add(".addAttribute($L)\n", name));
         expressionNames.forEach(name -> block.add(".addExpression($L)\n", name));
         block.add(".build()");

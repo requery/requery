@@ -98,6 +98,11 @@ public class TypeBuilder<T> extends BaseType<T> {
         return this;
     }
 
+    public TypeBuilder<T> setTableUniqueIndexes(String[] indexes) {
+        this.tableUniqueIndexes = indexes;
+        return this;
+    }
+
     public TypeBuilder<T> addAttribute(Attribute<T, ?> attribute) {
         this.attributes.add(attribute);
         return this;

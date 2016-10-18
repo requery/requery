@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -560,7 +561,9 @@ public class SchemaModifier {
                              Set<Attribute<?,?>> attributes,
                              Type<?> type, TableCreationMode mode) {
         qb.keyword(CREATE);
-        if (attributes.size() >= 1 && attributes.iterator().next().isUnique()) {
+        if ((attributes.size() >= 1 && attributes.iterator().next().isUnique()) ||
+            (type.getTableUniqueIndexes() != null &&
+             Arrays.asList(type.getTableUniqueIndexes()).contains(indexName))) {
             qb.keyword(UNIQUE);
         }
         qb.keyword(INDEX);

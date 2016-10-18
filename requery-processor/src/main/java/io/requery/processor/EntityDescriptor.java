@@ -74,9 +74,14 @@ interface EntityDescriptor {
     String classFactoryName();
 
     /**
-     * @return table attributes used during table generataion
+     * @return table attributes used during table generation
      */
     String[] tableAttributes();
+
+    /**
+     * @return table unique indexes used during table generation
+     */
+    String[] tableUniqueIndexes();
 
     /**
      * @return {@link PropertyNameStyle} style of the accessors in the entity

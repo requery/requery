@@ -40,6 +40,7 @@ abstract class BaseType<T> implements Type<T> {
     Function<T, EntityProxy<T>> proxyProvider;
     Set<Class<?>> referencedTypes;
     String[] tableCreateAttributes;
+    String[] tableUniqueIndexes;
     Supplier<?> builderFactory;
     Function<?, T> buildFunction;
     Set<Attribute<T, ?>> keyAttributes;
@@ -137,6 +138,11 @@ abstract class BaseType<T> implements Type<T> {
     @Override
     public String[] getTableCreateAttributes() {
         return tableCreateAttributes;
+    }
+
+    @Override
+    public String[] getTableUniqueIndexes() {
+        return tableUniqueIndexes;
     }
 
     @Override

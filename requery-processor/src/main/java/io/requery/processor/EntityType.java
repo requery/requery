@@ -41,6 +41,7 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.persistence.Cacheable;
 import javax.persistence.Embeddable;
+import javax.persistence.Index;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -50,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -344,6 +346,19 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     @Override
     public String[] tableAttributes() {
         return annotationOf(Table.class).map(Table::createAttributes).orElse(new String[]{});
+    }
+
+    @Override
+    public String[] tableUniqueIndexes() {
+        if (annotationOf(javax.persistence.Table.class).isPresent()) {
+            Index[] indexes = annotationOf(javax.persistence.Table.class)
+                    .map(javax.persistence.Table::indexes)
+                    .orElse(new Index[0]);
+            Set<String> names = Stream.of(indexes).filter(Index::unique)
+                    .map(Index::name).collect(Collectors.toSet());
+            return names.toArray(new String[names.size()]);
+        }
+        return annotationOf(Table.class).map(Table::uniqueIndexes).orElse(new String[]{});
     }
 
     @Override

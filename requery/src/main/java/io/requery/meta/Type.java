@@ -121,4 +121,9 @@ public interface Type<T> extends Expression<T> {
      * @return optional table creation attributes {@link Table#createAttributes()}
      */
     String[] getTableCreateAttributes();
+
+    /**
+     * @return optional unique index names {@link Table#uniqueIndexes()} ()}
+     */
+    String[] getTableUniqueIndexes();
 }
