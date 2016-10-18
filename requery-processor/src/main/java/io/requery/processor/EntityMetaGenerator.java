@@ -398,7 +398,8 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 }
                 if (mappings.size() == 1) {
                     AttributeDescriptor mapped = mappings.iterator().next();
-                    String staticMemberName = Names.upperCaseUnderscore(mapped.fieldName());
+                    String staticMemberName = Names.upperCaseUnderscore(
+                            Names.removeMemberPrefixes(mapped.fieldName()));
 
                     TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                         ClassName.get(Attribute.class),
