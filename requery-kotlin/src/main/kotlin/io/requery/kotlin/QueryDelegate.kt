@@ -16,16 +16,14 @@
 
 package io.requery.kotlin
 
-import io.requery.Persistable
 import io.requery.meta.EntityModel
 import io.requery.query.Condition
 import io.requery.query.Expression
 import io.requery.query.Return
 import io.requery.query.element.*
 import io.requery.util.function.Supplier
-import java.util.ArrayList
+import java.util.*
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
 
 class ExistsDelegate<E : Any>(element: ExistsElement<E>, query : QueryDelegate<E>)
 : Exists<SetGroupByOrderByLimit<E>> {
@@ -147,13 +145,13 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
 
     override fun except(): Selectable<E> = QueryDelegate(element.except() as QueryElement<E>)
 
-    override fun join(type: KClass<Any>): JoinOn<E> =
+    override fun join(type: KClass<out Any>): JoinOn<E> =
             JoinOnDelegate(element.join(type.java) as JoinOnElement<E>, this)
 
-    override fun leftJoin(type: KClass<Any>): JoinOn<E> =
+    override fun leftJoin(type: KClass<out Any>): JoinOn<E> =
             JoinOnDelegate(element.leftJoin(type.java) as JoinOnElement<E>, this)
 
-    override fun rightJoin(type: KClass<Any>): JoinOn<E> =
+    override fun rightJoin(type: KClass<out Any>): JoinOn<E> =
             JoinOnDelegate(element.rightJoin(type.java) as JoinOnElement<E>, this)
 
     override fun <J> join(query: Return<J>): JoinOn<E> =
