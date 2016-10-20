@@ -356,7 +356,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                 E entity = iterator.next();
                 EntityProxy<E> proxy = context.proxyOf(entity, false);
                 EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
-                writer.batchDelete(entities);
+                writer.delete(entities);
                 transaction.commit();
             }
         }
