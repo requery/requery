@@ -225,12 +225,10 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                 EntityProxy<E> proxy = context.proxyOf(entity, true);
                 EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
                 GeneratedKeys<E> keys = writer.batchInsert(entities, keyClass != null);
-                if (keys != null) {
-                    @SuppressWarnings("unchecked")
-                    Iterable<K> result = (Iterable<K>) keys;
-                    return result;
-                }
                 transaction.commit();
+                @SuppressWarnings("unchecked")
+                Iterable<K> result = (Iterable<K>) keys;
+                return result;
             }
         }
         return null;
