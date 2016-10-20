@@ -845,6 +845,15 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testQueryByUUID() {
+        Person person = randomPerson();
+        data.insert(person);
+        UUID uuid = person.getUUID();
+        Person result = data.select(Person.class).where(Person.UUID.eq(uuid)).get().first();
+        assertEquals(person, result);
+    }
+
+    @Test
     public void testQuerySelectDistinct() {
         for (int i = 0; i < 10; i++) {
             Person person = randomPerson();
