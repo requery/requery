@@ -101,9 +101,9 @@ interface Insertion<E> : Return<E> {
 }
 
 interface Join<E> {
-    infix fun join(type: KClass<Any>): JoinOn<E>
-    infix fun leftJoin(type: KClass<Any>): JoinOn<E>
-    infix fun rightJoin(type: KClass<Any>): JoinOn<E>
+    infix fun join(type: KClass<out Any>): JoinOn<E>
+    infix fun leftJoin(type: KClass<out Any>): JoinOn<E>
+    infix fun rightJoin(type: KClass<out Any>): JoinOn<E>
     infix fun <J> join(query: Return<J>): JoinOn<E>
     infix fun <J> leftJoin(query: Return<J>): JoinOn<E>
     infix fun <J> rightJoin(query: Return<J>): JoinOn<E>
