@@ -80,7 +80,7 @@ class SqlitePreparedStatement extends BasePreparedStatement {
         } else {
             statement.bindBlob(index, value);
             if (bindings != null) {
-                bindings.add("x\'" + byteToHexString(value) + "\'");
+                bindBlobLiteral(index, value);
             }
         }
     }
