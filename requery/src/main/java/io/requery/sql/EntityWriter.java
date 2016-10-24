@@ -479,14 +479,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 }
             } else {
                 // not a real upsert, but can be ok for embedded databases
-                Predicate<Attribute<E, ?>> forceUpdate = new Predicate<Attribute<E, ?>>() {
-                    @Override
-                    public boolean test(Attribute<E, ?> value) {
-                        return true;
-                    }
-                };
-
-                int updateResult = update(entity, proxy, Cascade.UPSERT, forceUpdate, null);
+                int updateResult = update(entity, proxy, Cascade.UPSERT, null, null);
                 if (updateResult == -1 || updateResult == 0) {
                     insert(entity, proxy, Cascade.UPSERT, null);
                 }
