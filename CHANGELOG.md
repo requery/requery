@@ -1,6 +1,17 @@
 Change Log
 ==========
 
+## 1.0.1
+
+- Support multi-column unique indexes
+- Support delete on entities with no key
+- Fix EntityStore.insert method returning generated keys transaction not committed
+- Fix Android proguard rules for RxJava 2.0
+- Fix Android sqlite blob query arguments not working
+- Fix Android onCreateMapping invocation for SqlitexDatabaseSource
+- Fix Kotlin type variance parameter on join queries
+- Fix m prefixed member name not removed in generated setMappedAttribute
+
 ## 1.0.0
 
 - Support for RxJava 2.0
