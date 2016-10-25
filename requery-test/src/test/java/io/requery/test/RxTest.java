@@ -110,6 +110,28 @@ public class RxTest extends RandomData {
     }
 
     @Test
+    public void testInsertList() throws Exception {
+        final List<Person> items = new ArrayList<>();
+        for (int i = 0; i < 1; i++) {
+            Person person = randomPerson();
+            items.add(person);
+        }
+        final CountDownLatch latch = new CountDownLatch(1);
+        data.insert(items).subscribe(new Action1<Iterable<Person>>() {
+            @Override
+            public void call(Iterable<Person> iterable) {
+                List<Person> queried = data.select(Person.class).get().toList();
+                try {
+                    assertEquals(queried, items);
+                } finally {
+                    latch.countDown();
+                }
+            }
+        });
+        latch.await();
+    }
+
+    @Test
     public void testDelete() throws Exception {
         Person person = randomPerson();
         data.insert(person).flatMap(new Func1<Person, Single<Void>>() {

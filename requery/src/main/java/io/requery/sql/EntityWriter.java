@@ -78,6 +78,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     private final Queryable<S> queryable;
     private final boolean hasGeneratedKey;
     private final boolean hasForeignKeys;
+    private final int keyCount;
     private final Attribute<E, ?> keyAttribute;
     private final Attribute<E, ?> versionAttribute;
     private final Attribute<E, ?>[] bindableAttributes;
@@ -115,6 +116,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         this.hasForeignKeys = hasForeignKeys;
         this.versionAttribute = versionAttribute;
         this.keyAttribute = type.getSingleKeyAttribute();
+        this.keyCount = type.getKeyAttributes().size();
         Collection<Attribute<E, ?>> keys = type.getKeyAttributes();
         generatedColumnNames = new String[keys.size()];
         int i = 0;
@@ -145,16 +147,21 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 return value.isAssociation();
             }
         });
-        // for the update statement add key/version conditions
-        int keyCount = keyAttribute != null ? 1 : type.getKeyAttributes().size();
-        boolean hasVersion = versionAttribute != null;
-        whereAttributes = Attributes.newArray(keyCount + (hasVersion ? 1 : 0));
-        int index = 0;
-        for (Attribute<E, ?> attribute : keys) {
-            whereAttributes[index++] = attribute;
-        }
-        if (hasVersion) {
-            whereAttributes[index] = versionAttribute;
+
+        // for the update/delete statement add key/version conditions
+        if (keyCount == 0) {
+            whereAttributes = Attributes.newArray(type.getAttributes().size());
+            type.getAttributes().toArray(whereAttributes);
+        } else {
+            boolean hasVersion = versionAttribute != null;
+            whereAttributes = Attributes.newArray(keyCount + (hasVersion ? 1 : 0));
+            int index = 0;
+            for (Attribute<E, ?> attribute : keys) {
+                whereAttributes[index++] = attribute;
+            }
+            if (hasVersion) {
+                whereAttributes[index] = versionAttribute;
+            }
         }
     }
 
@@ -798,18 +805,22 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 context.read(type.getClassType()).refresh(entity, proxy, attribute);
             }
         }
+
         Deletion<Scalar<Integer>> deletion = queryable.delete(entityClass);
-        for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
-            QueryAttribute<E, Object> id = Attributes.query(attribute);
-            deletion.where(id.equal(proxy.get(attribute)));
-        }
-        if (versionAttribute != null) {
-            Object version = proxy.get(versionAttribute, true);
-            if (version == null) {
-                throw new MissingVersionException(proxy);
+
+        for (Attribute<E, ?> attribute : whereAttributes) {
+            if (attribute == versionAttribute) {
+                Object version = proxy.get(versionAttribute, true);
+                if (version == null) {
+                    throw new MissingVersionException(proxy);
+                }
+                addVersionCondition(deletion, version);
+            } else {
+                QueryAttribute<E, Object> id = Attributes.query(attribute);
+                deletion.where(id.equal(proxy.get(attribute)));
             }
-            addVersionCondition(deletion, version);
         }
+
         int rows = deletion.get().value();
         boolean cascaded = clearAssociations(entity, proxy);
         if (!cascaded) {
@@ -906,8 +917,17 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         }
     }
 
-    void batchDelete(Iterable<E> entities) {
+    void delete(Iterable<E> entities) {
+        if (keyCount == 0) {
+            for (E entity : entities) {
+                delete(entity, type.getProxyProvider().apply(entity));
+            }
+        } else {
+            batchDelete(entities);
+        }
+    }
 
+    private void batchDelete(Iterable<E> entities) {
         final int batchSize = context.getBatchUpdateSize();
         final Iterator<E> iterator = entities.iterator();
 

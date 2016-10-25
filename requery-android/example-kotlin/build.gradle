@@ -41,8 +41,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "io.reactivex:rxjava:$rxjava_version"
     compile 'io.reactivex:rxandroid:1.2.1'
-    compile 'io.requery:requery:1.0.0-rc4'
-    compile 'io.requery:requery-android:1.0.0-rc4'
-    compile 'io.requery:requery-kotlin:1.0.0-rc4'
+    compile 'io.requery:requery:1.0.0'
+    compile 'io.requery:requery-android:1.0.0'
+    compile 'io.requery:requery-kotlin:1.0.0'
     kapt project(':requery-processor')
 }

@@ -7,7 +7,7 @@ buildscript {
     ext.jpa_version = '2.1.1'
     ext.kotlin_version = '1.0.4'
     ext.rxjava_version = '1.2.0'
-    ext.rxjava2_version = '2.0.0-RC4'
+    ext.rxjava2_version = '2.0.0-RC5'
     repositories {
         jcenter()
     }
@@ -33,7 +33,7 @@ idea {
 }
 
 group = 'io.requery'
-version = '1.0.0'
+version = '1.0.1'
 description = 'A light but powerful object mapper and SQL generator for Java/Android'
 
 Properties properties = new Properties()
