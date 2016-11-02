@@ -57,7 +57,7 @@ class KotlinEntityDataStore<T : Persistable>(configuration: Configuration) : Blo
     }
 
     override fun <E : T> select(vararg attributes: QueryableAttribute<E, *>): Selection<Result<E>> {
-        if (attributes.size == 0) {
+        if (attributes.isEmpty()) {
             throw IllegalArgumentException()
         }
         val classType = attributes[0].declaringType.classType
@@ -129,7 +129,7 @@ class KotlinEntityDataStore<T : Persistable>(configuration: Configuration) : Blo
 
     override fun <E : T> refresh(entities: Iterable<E>, vararg attributes: Attribute<*, *>): Iterable<E> =
             data.refresh(entities, *attributes)
-    override fun <E : T> refreshAll(entity: E): E = refreshAll(entity)
+    override fun <E : T> refreshAll(entity: E): E = data.refreshAll(entity)
 
     override fun <E : T> delete(entity: E): Void = data.delete(entity)
     override fun <E : T> delete(entities: Iterable<E>): Void = data.delete(entities)
