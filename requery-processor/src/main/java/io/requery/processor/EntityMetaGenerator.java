@@ -83,8 +83,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
             .filter(attribute -> !attribute.isTransient())
             .forEach(attribute -> {
 
-            String fieldName = Names.upperCaseUnderscore(
-                Names.removeMemberPrefixes(attribute.fieldName()));
+            String fieldName = upperCaseUnderscoreRemovePrefixes(attribute.fieldName());
 
             if (attribute.isForeignKey() && attribute.cardinality() != null) {
                 // generate a foreign key attribute for use in queries but not stored in the type
@@ -215,8 +214,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                                   TypeName targetName) {
         // generate the embedded attributes into this type
         embedded.attributes().values().forEach(attribute -> {
-            String fieldName = Names.upperCaseUnderscore(
-                Names.removeMemberPrefixes(attribute.fieldName()));
+            String fieldName = upperCaseUnderscoreRemovePrefixes(attribute.fieldName());
             TypeMirror mirror = attribute.typeMirror();
             builder.addField(
                 generateAttribute(attribute, parent, targetName, fieldName, mirror, false));
@@ -352,8 +350,8 @@ class EntityMetaGenerator extends EntityPartGenerator {
 
                 graph.referencingAttribute(attribute, referenced).ifPresent(
                     referencedAttribute -> {
-                        String name = Names.upperCaseUnderscore(
-                                Names.removeMemberPrefixes(referencedAttribute.fieldName()));
+                        String name =
+                                upperCaseUnderscoreRemovePrefixes(referencedAttribute.fieldName());
                         TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                             ClassName.get(Attribute.class),
                             CodeBlock.builder().addStatement("return $T.$L",
@@ -407,8 +405,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 }
                 if (mappings.size() == 1) {
                     AttributeDescriptor mapped = mappings.iterator().next();
-                    String staticMemberName = Names.upperCaseUnderscore(
-                            Names.removeMemberPrefixes(mapped.fieldName()));
+                    String staticMemberName = upperCaseUnderscoreRemovePrefixes(mapped.fieldName());
 
                     TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                         ClassName.get(Attribute.class),
@@ -422,7 +419,8 @@ class EntityMetaGenerator extends EntityPartGenerator {
                         .filter(entry -> entry.name().equals(attribute.orderBy()))
                         .findFirst().ifPresent(orderBy -> {
 
-                        String staticMemberName = Names.upperCaseUnderscore(orderBy.fieldName());
+                        String staticMemberName =
+                                upperCaseUnderscoreRemovePrefixes(orderBy.fieldName());
                         TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                             ClassName.get(Attribute.class),
                             CodeBlock.builder().addStatement("return $T.$L",
@@ -612,5 +610,9 @@ class EntityMetaGenerator extends EntityPartGenerator {
             }
         }
         return Property.class;
+    }
+
+    private static String upperCaseUnderscoreRemovePrefixes(String name) {
+        return Names.upperCaseUnderscore(Names.removeMemberPrefixes(name));
     }
 }
