@@ -18,8 +18,6 @@ package io.requery.reactivex;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Single;
 import io.requery.BlockingEntityStore;
 import io.requery.meta.Attribute;
@@ -302,29 +300,32 @@ class WrappedEntityStore<T> extends ReactiveEntityStore<T> {
     @Override
     public final <E> Observable<E> runInTransaction(final List<Single<? extends E>> elements) {
         Objects.requireNotNull(elements);
-        return Observable.create(new ObservableOnSubscribe<E>() {
+        Observable<E> startTransaction = Completable.fromCallable(new Callable<Object>() {
             @Override
-            public void subscribe(final ObservableEmitter<E> e) throws Exception {
-                delegate.runInTransaction(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        try {
-                            for (Single<?> single : elements) {
-                                Object value = single.blockingGet();
-                                if (value != null) {
-                                    @SuppressWarnings("unchecked")
-                                    E next = (E) value;
-                                    e.onNext(next);
-                                }
-                            }
-                            e.onComplete();
-                        } catch (Throwable t) {
-                            e.onError(t);
-                        }
-                        return null;
-                    }
-                });
+            public Object call() throws Exception {
+                if (!delegate.transaction().active()) {
+                    delegate.transaction().begin();
+                }
+                return delegate;
             }
-        });
+        }).toObservable();
+
+        Observable<E> commitTransaction = Completable.fromCallable(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                try {
+                    delegate.transaction().commit();
+                } finally {
+                    delegate.transaction().close();
+                }
+                return delegate;
+            }
+        }).toObservable();
+
+        Observable<E> current = startTransaction;
+        for (Single<? extends E> single : elements) {
+            current = current.concatWith(single.toObservable());
+        }
+        return current.concatWith(commitTransaction);
     }
 }

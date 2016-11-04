@@ -33,6 +33,7 @@ import rx.functions.Func1;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * Support utility class for use with RxJava
@@ -107,11 +108,17 @@ public final class RxSupport {
     }
 
     public static <E> Single<E> toSingle(final Scalar<E> scalar) {
-        return Single.create(new SingleOnSubscribeFromSupplier<>(scalar.toSupplier()));
+        return Single.fromCallable(scalar);
     }
 
-    static <E> Single<E> toSingle(Supplier<E> supplier, Scheduler subscribeOn) {
-        Single<E> single = Single.create(new SingleOnSubscribeFromSupplier<>(supplier));
+    static <E> Single<E> toSingle(final Supplier<E> supplier, Scheduler subscribeOn) {
+
+        Single<E> single = Single.fromCallable(new Callable<E>() {
+            @Override
+            public E call() throws Exception {
+                return supplier.get();
+            }
+        });
         if (subscribeOn != null) {
             return single.subscribeOn(subscribeOn);
         }

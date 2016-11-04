@@ -29,10 +29,10 @@ import io.requery.query.Tuple;
 import io.requery.query.Update;
 import io.requery.util.Objects;
 import io.requery.util.function.Supplier;
+import rx.Completable;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Single;
-import rx.Subscriber;
 import rx.schedulers.Schedulers;
 
 import javax.annotation.Nullable;
@@ -323,30 +323,33 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
     @Override
     public final <E> Observable<E> runInTransaction(final List<Single<? extends E>> elements) {
         Objects.requireNotNull(elements);
-        return Observable.create(new Observable.OnSubscribe<E>() {
+
+        Observable<E> startTransaction = Completable.fromCallable(new Callable<Object>() {
             @Override
-            public void call(final Subscriber<? super E> subscriber) {
-                delegate.runInTransaction(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        try {
-                            subscriber.onStart();
-                            for (Single<?> single : elements) {
-                                Object value = single.toBlocking().value();
-                                if (value != null) {
-                                    @SuppressWarnings("unchecked")
-                                    E next = (E) value;
-                                    subscriber.onNext(next);
-                                }
-                            }
-                            subscriber.onCompleted();
-                        } catch (Throwable t) {
-                            subscriber.onError(t);
-                        }
-                        return null;
-                    }
-                });
+            public Object call() throws Exception {
+                if (!delegate.transaction().active()) {
+                    delegate.transaction().begin();
+                }
+                return delegate;
             }
-        });
+        }).toObservable();
+
+        Observable<E> commitTransaction = Completable.fromCallable(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                try {
+                    delegate.transaction().commit();
+                } finally {
+                    delegate.transaction().close();
+                }
+                return delegate;
+            }
+        }).toObservable();
+
+        Observable<E> current = startTransaction;
+        for (Single<? extends E> single : elements) {
+            current = current.concatWith(single.toObservable());
+        }
+        return current.concatWith(commitTransaction).subscribeOn(subscribeOn);
     }
 }

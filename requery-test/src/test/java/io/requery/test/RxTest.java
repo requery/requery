@@ -317,7 +317,7 @@ public class RxTest extends RandomData {
         data.runInTransaction(
                 data.insert(person),
                 data.update(person),
-                data.delete(person)).subscribe(new Action1<Object>() {
+                data.delete(person)).toBlocking().forEach(new Action1<Object>() {
             @Override
             public void call(Object o) {
 
@@ -325,10 +325,11 @@ public class RxTest extends RandomData {
         });
         assertEquals(0, data.count(Person.class).get().value().intValue());
 
+        final Person person2 = randomPerson();
         data.runInTransaction(
-            data.insert(person)).subscribe(new Action1<Person>() {
+            data.insert(person2)).toBlocking().forEach(new Action1<Person>() {
             @Override
-            public void call(Person o) {
+            public void call(Person person) {
 
             }
         });
