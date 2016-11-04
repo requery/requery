@@ -25,7 +25,6 @@ import io.requery.query.Result;
 import io.requery.query.Scalar;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryWrapper;
-import io.requery.util.function.Supplier;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Single;
@@ -33,7 +32,6 @@ import rx.functions.Func1;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 /**
  * Support utility class for use with RxJava
@@ -109,19 +107,5 @@ public final class RxSupport {
 
     public static <E> Single<E> toSingle(final Scalar<E> scalar) {
         return Single.fromCallable(scalar);
-    }
-
-    static <E> Single<E> toSingle(final Supplier<E> supplier, Scheduler subscribeOn) {
-
-        Single<E> single = Single.fromCallable(new Callable<E>() {
-            @Override
-            public E call() throws Exception {
-                return supplier.get();
-            }
-        });
-        if (subscribeOn != null) {
-            return single.subscribeOn(subscribeOn);
-        }
-        return single;
     }
 }

@@ -28,7 +28,6 @@ import io.requery.query.Selection;
 import io.requery.query.Tuple;
 import io.requery.query.Update;
 import io.requery.util.Objects;
-import io.requery.util.function.Supplier;
 import rx.Completable;
 import rx.Observable;
 import rx.Scheduler;
@@ -77,167 +76,166 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
 
     @Override
     public <E extends T> Single<E> insert(final E entity) {
-        return RxSupport.toSingle(new Supplier<E>() {
+        return Single.fromCallable(new Callable<E>() {
             @Override
-            public E get() {
+            public E call() {
                 return delegate.insert(entity);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<Iterable<E>> insert(final Iterable<E> entities) {
-        return RxSupport.toSingle(new Supplier<Iterable<E>>() {
+        return Single.fromCallable(new Callable<Iterable<E>>() {
             @Override
-            public Iterable<E> get() {
+            public Iterable<E> call() {
                 return delegate.insert(entities);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <K, E extends T> Single<K> insert(final E entity, final Class<K> keyClass) {
-        return RxSupport.toSingle(new Supplier<K>() {
+        return Single.fromCallable(new Callable<K>() {
             @Override
-            public K get() {
+            public K call() {
                 return delegate.insert(entity, keyClass);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <K, E extends T> Single<Iterable<K>> insert(final Iterable<E> entities,
                                                        final Class<K> keyClass) {
-        return RxSupport.toSingle(new Supplier<Iterable<K>>() {
+        return Single.fromCallable(new Callable<Iterable<K>>() {
             @Override
-            public Iterable<K> get() {
+            public Iterable<K> call() {
                 return delegate.insert(entities, keyClass);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<E> update(final E entity) {
-        return RxSupport.toSingle(new Supplier<E>() {
+        return Single.fromCallable(new Callable<E>() {
             @Override
-            public E get() {
+            public E call() {
                 return delegate.update(entity);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<E> update(final E entity, final Attribute<?, ?>... attributes) {
-        return RxSupport.toSingle(new Supplier<E>() {
+        return Single.fromCallable(new Callable<E>() {
             @Override
-            public E get() {
+            public E call() {
                 return delegate.update(entity, attributes);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<Iterable<E>> update(final Iterable<E> entities) {
-        return RxSupport.toSingle(new Supplier<Iterable<E>>() {
+        return Single.fromCallable(new Callable<Iterable<E>>() {
             @Override
-            public Iterable<E> get() {
+            public Iterable<E> call() {
                 return delegate.update(entities);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<E> upsert(final E entity) {
-        return RxSupport.toSingle(new Supplier<E>() {
+        return Single.fromCallable(new Callable<E>() {
             @Override
-            public E get() {
+            public E call() {
                 return delegate.upsert(entity);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<Iterable<E>> upsert(final Iterable<E> entities) {
-        return RxSupport.toSingle(new Supplier<Iterable<E>>() {
+        return Single.fromCallable(new Callable<Iterable<E>>() {
             @Override
-            public Iterable<E> get() {
+            public Iterable<E> call() {
                 return delegate.upsert(entities);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<E> refresh(final E entity) {
-        return RxSupport.toSingle(new Supplier<E>() {
+        return Single.fromCallable(new Callable<E>() {
             @Override
-            public E get() {
+            public E call() {
                 return delegate.refresh(entity);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
-    public <E extends T> Single<E> refresh(final E entity,
-                                           final Attribute<?, ?>... attributes) {
-        return RxSupport.toSingle(new Supplier<E>() {
+    public <E extends T> Single<E> refresh(final E entity, final Attribute<?, ?>... attributes) {
+        return Single.fromCallable(new Callable<E>() {
             @Override
-            public E get() {
+            public E call() {
                 return delegate.refresh(entity, attributes);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<Iterable<E>> refresh(final Iterable<E> entities,
                                                      final Attribute<?, ?>... attributes) {
-        return RxSupport.toSingle(new Supplier<Iterable<E>>() {
+        return Single.fromCallable(new Callable<Iterable<E>>() {
             @Override
-            public Iterable<E> get() {
+            public Iterable<E> call() {
                 return delegate.refresh(entities, attributes);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<E> refreshAll(final E entity) {
-        return RxSupport.toSingle(new Supplier<E>() {
+        return Single.fromCallable(new Callable<E>() {
             @Override
-            public E get() {
+            public E call() {
                 return delegate.refreshAll(entity);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<Void> delete(final E entity) {
-        return RxSupport.toSingle(new Supplier<Void>() {
+        return Single.fromCallable(new Callable<Void>() {
             @Override
-            public Void get() {
+            public Void call() {
                 delegate.delete(entity);
                 return null;
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T> Single<Void> delete(final Iterable<E> entities) {
-        return RxSupport.toSingle(new Supplier<Void>() {
+        return Single.fromCallable(new Callable<Void>() {
             @Override
-            public Void get() {
+            public Void call() {
                 delegate.delete(entities);
                 return null;
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
     public <E extends T, K> Single<E> findByKey(final Class<E> type, final K key) {
-        return RxSupport.toSingle(new Supplier<E>() {
+        return Single.fromCallable(new Callable<E>() {
             @Override
-            public E get() {
+            public E call() {
                 return delegate.findByKey(type, key);
             }
-        }, subscribeOn);
+        }).subscribeOn(subscribeOn);
     }
 
     @Override
