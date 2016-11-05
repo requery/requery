@@ -16,6 +16,7 @@
 
 package io.requery.processor;
 
+
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -28,6 +29,7 @@ import com.squareup.javapoet.WildcardTypeName;
 import io.requery.Entity;
 import io.requery.Persistable;
 import io.requery.PropertyNameStyle;
+import io.requery.meta.Attribute;
 import io.requery.proxy.EntityProxy;
 import io.requery.proxy.PreInsertListener;
 import io.requery.proxy.PropertyState;
@@ -52,6 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * Generates a java class file from an abstract class marked with the {@link Entity} annotation.
@@ -136,6 +139,19 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                         .builder(stateType, propertyStateFieldName(attribute), visibility)
                         .build());
             });
+        }
+        if (entity.isEmbedded() && !(entity.isImmutable() || entity.isUnimplementable())) {
+            entity.attributes().values().stream()
+                    .filter(attribute -> !attribute.isTransient())
+                    .forEach(attribute -> {
+                        ParameterizedTypeName attributeType = ParameterizedTypeName.get(
+                                ClassName.get(Attribute.class), nameResolver.typeNameOf(parent),
+                                resolveAttributeType(attribute));
+                        builder.addField(FieldSpec
+                                .builder(attributeType, attributeFieldName(attribute),
+                                        Modifier.PRIVATE, Modifier.FINAL)
+                                .build());
+                    });
         }
         // only generate for interfaces or if the entity is immutable but has no builder
         boolean generateMembers = typeElement.getKind().isInterface() ||
@@ -253,7 +269,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             String getterName = attribute.getterName();
             String fieldName = Names.upperCaseUnderscore(Names.removeMemberPrefixes(attributeName));
             if (entity.isEmbedded()) {
-                fieldName = nameResolver.typeNameOf(parent) + "." + fieldName;
+                fieldName = attributeFieldName(attribute);
             }
             // getter
             MethodSpec.Builder getter = MethodSpec.methodBuilder(getterName)
@@ -351,6 +367,17 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         if (entity.isEmbedded()) {
             constructor.addParameter(ParameterSpec.builder(proxyName, "proxy").build());
             constructor.addStatement("this.$L = proxy", PROXY_NAME);
+            entity.attributes().values().stream()
+                    .filter(attribute -> !attribute.isTransient())
+                    .forEach(attribute -> {
+                        ParameterizedTypeName attributeType = ParameterizedTypeName.get(
+                                ClassName.get(Attribute.class), nameResolver.typeNameOf(parent),
+                                resolveAttributeType(attribute));
+                        constructor.addParameter(ParameterSpec
+                                .builder(attributeType, attribute.name()).build());
+                        constructor.addStatement("this.$L = $L",
+                                attributeFieldName(attribute), attribute.name());
+                    });
         }
         generateListeners(constructor);
         // initialize the generated embedded entities
@@ -358,7 +385,10 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             .filter(AttributeDescriptor::isEmbedded)
             .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded -> {
                 ClassName embeddedName = nameResolver.embeddedTypeNameOf(embedded, entity);
-                constructor.addStatement("$L = new $T($L)",
+                String format = embedded.attributes().values().stream().map(attr ->
+                        Names.upperCaseUnderscore(Names.removeMemberPrefixes(attr.fieldName())))
+                        .collect(Collectors.joining(", ", "$L = new $T($L, ", ")"));
+                constructor.addStatement(format.toString(),
                     attribute.fieldName(), embeddedName, PROXY_NAME);
             }));
         builder.addMethod(constructor.build());
