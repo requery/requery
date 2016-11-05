@@ -55,6 +55,7 @@ import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -79,6 +80,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
         boolean metadataOnly = entity.isImmutable() || entity.isUnimplementable();
         TypeName targetName = metadataOnly? ClassName.get(entity.element()) : typeName;
 
+        List<QualifiedName> generatedEmbeddedTypes = new LinkedList<>();
         entity.attributes().values().stream()
             .filter(attribute -> !attribute.isTransient())
             .forEach(attribute -> {
@@ -98,8 +100,13 @@ class EntityMetaGenerator extends EntityPartGenerator {
                     });
             }
             if (attribute.isEmbedded()) {
-                graph.embeddedDescriptorOf(attribute).ifPresent(embedded ->
-                    generateEmbedded(attribute, embedded, builder, targetName));
+                graph.embeddedDescriptorOf(attribute).ifPresent(embedded -> {
+                    generateEmbeddedAttributes(attribute, embedded, builder, targetName);
+                    if (!generatedEmbeddedTypes.contains(embedded.typeName())) {
+                        generatedEmbeddedTypes.add(embedded.typeName());
+                        generateEmbeddedEntity(embedded);
+                    }
+                });
             } else {
                 TypeMirror mirror = attribute.typeMirror();
                 builder.addField(
@@ -208,10 +215,10 @@ class EntityMetaGenerator extends EntityPartGenerator {
                         .build());
     }
 
-    private void generateEmbedded(AttributeDescriptor parent,
-                                  EntityDescriptor embedded,
-                                  TypeSpec.Builder builder,
-                                  TypeName targetName) {
+    private void generateEmbeddedAttributes(AttributeDescriptor parent,
+                                            EntityDescriptor embedded,
+                                            TypeSpec.Builder builder,
+                                            TypeName targetName) {
         // generate the embedded attributes into this type
         embedded.attributes().values().forEach(attribute -> {
             String fieldName = upperCaseUnderscoreRemovePrefixes(attribute.fieldName());
@@ -220,6 +227,9 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 generateAttribute(attribute, parent, targetName, fieldName, mirror, false));
             attributeNames.add(fieldName);
         });
+    }
+
+    private void generateEmbeddedEntity(EntityDescriptor embedded) {
         // generate an embedded implementation for this (the parent) entity
         try {
             new EntityGenerator(processingEnv, graph, embedded, entity).generate();
