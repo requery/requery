@@ -386,7 +386,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded -> {
                 ClassName embeddedName = nameResolver.embeddedTypeNameOf(embedded, entity);
                 String format = embedded.attributes().values().stream().map(attr ->
-                        Names.upperCaseUnderscore(Names.removeMemberPrefixes(attr.fieldName())))
+                        Names.upperCaseUnderscore(embeddedAttributeName(attribute, attr)))
                         .collect(Collectors.joining(", ", "$L = new $T($L, ", ")"));
                 constructor.addStatement(format.toString(),
                     attribute.fieldName(), embeddedName, PROXY_NAME);

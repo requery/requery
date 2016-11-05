@@ -221,7 +221,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                                             TypeName targetName) {
         // generate the embedded attributes into this type
         embedded.attributes().values().forEach(attribute -> {
-            String fieldName = upperCaseUnderscoreRemovePrefixes(attribute.fieldName());
+            String fieldName = Names.upperCaseUnderscore(embeddedAttributeName(parent, attribute));
             TypeMirror mirror = attribute.typeMirror();
             builder.addField(
                 generateAttribute(attribute, parent, targetName, fieldName, mirror, false));
@@ -279,6 +279,10 @@ class EntityMetaGenerator extends EntityPartGenerator {
         }
 
         CodeBlock.Builder builder = CodeBlock.builder();
+        String attributeName = attribute.name();
+        if (parent != null && parent.isEmbedded()) {
+            attributeName = embeddedAttributeName(parent, attribute);
+        }
 
         if (attribute.isIterable()) {
             typeMirror = tryFirstTypeArgument(typeMirror);
@@ -289,7 +293,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 attribute.builderClass(), targetName, typeName, name);
 
             builder.add("\nnew $T($S, $T.class, $T.class)\n",
-                builderName, attribute.name(), ClassName.get(collection), name);
+                builderName, attributeName, ClassName.get(collection), name);
 
         } else if (attribute.isMap() && attribute.cardinality() != null) {
             List<TypeMirror> parameters = Mirrors.listGenericTypeArguments(typeMirror);
@@ -303,7 +307,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 attribute.builderClass(), targetName, typeName, keyName, valueName);
 
             builder.add("\nnew $T($S, $T.class, $T.class, $T.class)\n", builderName,
-                attribute.name(), ClassName.get(valueElement), keyName, valueName);
+                attributeName, ClassName.get(valueElement), keyName, valueName);
         } else {
             ParameterizedTypeName builderName = parameterizedTypeName(
                 attribute.builderClass(), targetName, typeName);
@@ -320,7 +324,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
             } else {
                 statement ="\nnew $T($S, $T.class)\n";
             }
-            builder.add(statement, builderName, attribute.name(), classType);
+            builder.add(statement, builderName, attributeName, classType);
         }
         if (!expression) {
             generateProperties(attribute, parent, typeMirror, targetName, typeName, builder);

@@ -63,6 +63,12 @@ abstract class EntityPartGenerator {
         return "$" + attribute.fieldName();
     }
 
+    static String embeddedAttributeName(AttributeDescriptor parent,
+                                        AttributeDescriptor embedded) {
+        return Names.removeMemberPrefixes(parent.fieldName())
+                + "_"+ Names.removeMemberPrefixes(embedded.name());
+    }
+
     TypeName resolveAttributeType(AttributeDescriptor attribute) {
         TypeName typeName;
         if (attribute.isIterable()) {
