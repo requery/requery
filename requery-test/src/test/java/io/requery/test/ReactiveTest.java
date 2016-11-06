@@ -19,6 +19,7 @@ package io.requery.test;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -38,6 +39,7 @@ import io.requery.sql.platform.HSQL;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.reactivestreams.Subscriber;
@@ -52,6 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
@@ -153,6 +156,31 @@ public class ReactiveTest extends RandomData {
             }
         }).blockingGet();
         assertTrue(person.getPhoneNumbers().toList().size() == 1);
+    }
+
+    @Test
+    public void testQueryEmpty() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        data.select(Person.class).get().observable()
+                .subscribe(new Consumer<Person>() {
+            @Override
+            public void accept(Person person) throws Exception {
+                Assert.fail();
+            }
+        }, new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+                Assert.fail();
+            }
+        }, new Action() {
+            @Override
+            public void run() throws Exception {
+                latch.countDown();
+            }
+        });
+        if (!latch.await(1, TimeUnit.SECONDS)) {
+            Assert.fail();
+        }
     }
 
     @Test
