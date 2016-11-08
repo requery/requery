@@ -17,6 +17,7 @@
 package io.requery.reactivex;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.requery.BlockingEntityStore;
@@ -211,8 +212,8 @@ class WrappedEntityStore<T> extends ReactiveEntityStore<T> {
     }
 
     @Override
-    public <E extends T, K> Single<E> findByKey(final Class<E> type, final K key) {
-        return Single.fromCallable(new Callable<E>() {
+    public <E extends T, K> Maybe<E> findByKey(final Class<E> type, final K key) {
+        return Maybe.fromCallable(new Callable<E>() {
             @Override
             public E call() throws Exception {
                 return delegate.findByKey(type, key);

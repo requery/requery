@@ -17,6 +17,7 @@
 package io.requery.reactivex;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.requery.EntityStore;
 import io.requery.meta.Attribute;
 import io.requery.query.Result;
@@ -102,7 +103,7 @@ public abstract class ReactiveEntityStore<T> implements EntityStore<T, Object> {
 
     @Override
     @CheckReturnValue
-    public abstract <E extends T, K> Single<E> findByKey(Class<E> type, K key);
+    public abstract <E extends T, K> Maybe<E> findByKey(Class<E> type, K key);
 
     @CheckReturnValue
     @SafeVarargs
