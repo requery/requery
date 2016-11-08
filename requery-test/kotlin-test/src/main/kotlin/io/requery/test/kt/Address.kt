@@ -26,4 +26,7 @@ interface Address : Persistable {
 
     @get:OneToOne(mappedBy = "address")
     val person: Person
+
+    @get:Transient
+    var description: String
 }
