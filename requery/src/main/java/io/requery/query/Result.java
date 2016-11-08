@@ -88,6 +88,15 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
     io.reactivex.Flowable<E> flowable();
 
     /**
+     * Converts the result stream to a {@link io.reactivex.Maybe} value, return the first element
+     * if present or completes if no results.
+     *
+     * @return maybe instance of the results of this query.
+     */
+    @CheckReturnValue
+    io.reactivex.Maybe<E> maybe();
+
+    /**
      * Converts the result stream to a {@link io.reactivex.Observable}. When the observable
      * terminates this result instance will be closed.
      *

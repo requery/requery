@@ -189,6 +189,11 @@ public class ModifiableResult<E> implements MutableResult<E>, ObservableCollecti
     }
 
     @Override
+    public io.reactivex.Maybe<E> maybe() {
+        return result == null ? io.reactivex.Maybe.<E>empty() : result.maybe();
+    }
+
+    @Override
     public io.reactivex.Observable<E> observable() {
         return result == null ? io.reactivex.Observable.<E>empty() : result.observable();
     }
