@@ -26,7 +26,6 @@ import io.requery.ForeignKey;
 import io.requery.Generated;
 import io.requery.Index;
 import io.requery.Key;
-import io.requery.ManyToMany;
 import io.requery.OneToMany;
 import io.requery.OneToOne;
 import io.requery.Persistable;
@@ -69,7 +68,4 @@ public interface Person extends Observable, Parcelable, Persistable {
 
     @OneToMany(mappedBy = "owner", cascade = {CascadeAction.DELETE, CascadeAction.SAVE})
     List<Phone> getPhoneNumberList();
-
-    @ManyToMany(mappedBy = "members", cascade = {CascadeAction.DELETE, CascadeAction.SAVE})
-    List<Group> getGroups();
 }
