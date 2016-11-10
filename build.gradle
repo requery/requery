@@ -3,7 +3,7 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
 buildscript {
-    ext.android_buildtools_version = '24.0.2'
+    ext.android_buildtools_version = '25.0.0'
     ext.jpa_version = '2.1.1'
     ext.kotlin_version = '1.0.5'
     ext.rxjava_version = '1.2.0'
