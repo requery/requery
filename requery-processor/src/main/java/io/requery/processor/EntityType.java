@@ -470,10 +470,22 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                 map.remove(matched);
             }
         }
+
+        // didn't work likely because the parameter names are missing
         if (names.isEmpty()) {
-            // didn't work likely because the parameter names are missing
-            for (Map.Entry<Element, AttributeDescriptor> entry : map.entrySet()) {
-                names.add(0, entry.getValue().fieldName());
+            // for kotlin data classes add processable element field names in order
+            if (sourceLanguage == SourceLanguage.KOTLIN && isUnimplementable()) {
+                ElementFilter.methodsIn(element().getEnclosedElements()).stream()
+                        .filter(this::isMethodProcessable)
+                        .forEach(getter ->
+                                names.addAll(map.entrySet().stream()
+                                        .filter(entry -> entry.getKey().equals(getter))
+                                        .map(entry -> entry.getValue().fieldName())
+                                        .collect(Collectors.toList())));
+            } else {
+                for (Map.Entry<Element, AttributeDescriptor> entry : map.entrySet()) {
+                    names.add(0, entry.getValue().fieldName());
+                }
             }
         }
         return names;
