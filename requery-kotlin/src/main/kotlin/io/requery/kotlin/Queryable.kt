@@ -57,6 +57,12 @@ inline operator fun <T : Persistable, reified E : T> Queryable<T>
     return select(*attributes.toTypedArray())
 }
 
+// selection only parts of object - returning data in Tuples
+inline fun <T : Persistable, reified E : T> Queryable<T>.selectPartial(vararg properties: KProperty1<E, *>): Selection<Result<Tuple>> {
+    val expressions: Array<Expression<*>> = Array(properties.size) { findAttribute(properties[it]) }
+    return select(*expressions)
+}
+
 interface QueryableAttribute<T, V> : Attribute<T, V>,
         Expression<V>,
         Functional<V>,

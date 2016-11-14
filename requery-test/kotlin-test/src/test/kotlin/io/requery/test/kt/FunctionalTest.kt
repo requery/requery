@@ -82,7 +82,7 @@ class FunctionalTest {
     }
 
     @Test
-    fun testSelectPartial() {
+    fun testSelectObjectWithPartialProperties() {
         val person = randomPerson()
         data.invoke {
             insert(person)
@@ -90,6 +90,33 @@ class FunctionalTest {
             val result = data.select(Person::id, Person::name) limit 1
             val first = result().first()
             assertNotNull(first.name)
+        }
+    }
+
+    @Test
+    fun testSelectPartialWithOneColumn() {
+        val person = randomPerson()
+        data.invoke {
+            insert(person)
+            assertTrue(person.id > 0)
+            val result = data.selectPartial(Person::name) limit 1
+            val first = result().first()
+            assertNotNull(first[0])
+            assertEquals(1, first.count())
+        }
+    }
+
+    @Test
+    fun testSelectPartialWithTwoColumns() {
+        val person = randomPerson()
+        data.invoke {
+            insert(person)
+            assertTrue(person.id > 0)
+            val result = data.selectPartial(Person::name, Person::email) limit 1
+            val first = result().first()
+            assertNotNull(first[0])
+            assertNotNull(first[1])
+            assertEquals(2, first.count())
         }
     }
 
