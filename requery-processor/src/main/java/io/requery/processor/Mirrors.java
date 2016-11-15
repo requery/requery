@@ -104,7 +104,7 @@ final class Mirrors {
                extendsClass(types, element, className);
     }
 
-    static boolean implementsInterface(Types types, TypeElement element, String interfaceName) {
+    private static boolean implementsInterface(Types types, TypeElement element, String interfaceName) {
         // check name or interfaces
         if (namesEqual(element, interfaceName)) {
             return true;
@@ -113,14 +113,14 @@ final class Mirrors {
         for (TypeMirror interfaceType : interfaces) {
             interfaceType = types.erasure(interfaceType);
             TypeElement typeElement = (TypeElement) types.asElement(interfaceType);
-            if (implementsInterface(types, typeElement, interfaceName)) {
+            if (typeElement != null && implementsInterface(types, typeElement, interfaceName)) {
                 return true;
             }
         }
         return false;
     }
 
-    static boolean extendsClass(Types types, TypeElement element, String className) {
+    private static boolean extendsClass(Types types, TypeElement element, String className) {
         if (namesEqual(element, className)) {
             return true;
         }
