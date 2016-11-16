@@ -16,6 +16,8 @@
 
 package io.requery.processor;
 
+import javax.lang.model.SourceVersion;
+
 /**
  * Naming utility class.
  *
@@ -73,8 +75,7 @@ final class Names {
             return string.substring(1);
         }
         // detect mSomething names, which are common in Android apps
-        if (string.length() > 1 &&
-            string.startsWith("m") && Character.isUpperCase(string.charAt(1))) {
+        if (string.length() > 1 && string.startsWith("m") && Character.isUpperCase(string.charAt(1))) {
             return string.substring(1);
         }
         return string;
@@ -87,8 +88,7 @@ final class Names {
             return string.substring(3);
         }
         // isSomething() -> Something
-        if (string.startsWith("is") && string.length() > 2 &&
-            Character.isUpperCase(string.charAt(2))) {
+        if (string.startsWith("is") && string.length() > 2 && Character.isUpperCase(string.charAt(2))) {
             return string.substring(2);
         }
         return string;
@@ -103,5 +103,9 @@ final class Names {
             return typeName.replaceFirst("Base", "");
         }
         return typeName;
+    }
+
+    public static String checkIfAttributeNameNotForbidden(CharSequence newName, CharSequence fallback) {
+        return SourceVersion.isName(newName) ? newName.toString() : fallback.toString();
     }
 }
