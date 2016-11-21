@@ -258,7 +258,7 @@ public class DefaultOutput implements Output {
         qb.keyword(CASE);
         for (Case.CaseCondition<?,?> condition : function.conditions()) {
             qb.keyword(WHEN);
-            appendOperation(condition.condition());
+            appendOperation(condition.condition(), 0);
             qb.keyword(THEN);
             // TODO just some databases need the value inline in a case statement
             if (condition.thenValue() instanceof CharSequence ||
@@ -307,7 +307,7 @@ public class DefaultOutput implements Output {
         }
     }
 
-    private void appendOperation(Condition condition) {
+    private void appendOperation(Condition condition, int depth) {
         Object leftOperand = condition.getLeftOperand();
         if (leftOperand instanceof Expression) {
             final Expression<?> expression = (Expression<?>) condition.getLeftOperand();
@@ -344,18 +344,24 @@ public class DefaultOutput implements Output {
                 appendQuery(wrapper);
                 qb.closeParenthesis().space();
             } else if (value instanceof Condition) {
-                appendOperation((Condition) value);
+                appendOperation((Condition) value, depth + 1);
             } else if (value != null) {
                 appendConditionValue(expression, value);
             }
         } else if(leftOperand instanceof Condition) {
-            appendOperation((Condition) leftOperand);
+            if (depth > 0) {
+                qb.openParenthesis();
+            }
+            appendOperation((Condition) leftOperand, depth + 1);
             appendOperator(condition.getOperator());
             Object value = condition.getRightOperand();
             if (value instanceof Condition) {
-                appendOperation((Condition) value);
+                appendOperation((Condition) value, depth + 1);
             } else {
                 throw new IllegalStateException();
+            }
+            if (depth > 0) {
+                qb.closeParenthesis().space();
             }
         } else {
             throw new IllegalStateException("unknown start expression type " + leftOperand);
@@ -404,14 +410,11 @@ public class DefaultOutput implements Output {
             }
         }
         Condition condition = element.getCondition();
-        boolean nested = false;
-        if (condition.getRightOperand() instanceof Condition) {
-            nested = true;
-        }
+        boolean nested = condition.getRightOperand() instanceof Condition;
         if (nested) {
             qb.openParenthesis();
         }
-        appendOperation(condition);
+        appendOperation(condition, 0);
         if (nested) {
             qb.closeParenthesis().space();
         }
