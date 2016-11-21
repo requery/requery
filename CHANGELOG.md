@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+## 1.0.2
+
+- Support repeated @Embedded fields
+- Support RxJava 2.0 maybe operator
+- Fix null TypeElement when using Android Jack compiler
+- Fix parentheses in nested conditional expressions
+- Fix parameter name ordering for kotlin data classes
+- Fix reserved name field names generated from properties
+- Fix incorrect behavior of Rx runInTransaction
+- Fix stack overflow in Kotlin refreshAll
+- Fix OrderBy attribute name prefix not removed
+
 ## 1.0.1
 
 - Support multi-column unique indexes

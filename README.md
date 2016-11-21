@@ -144,6 +144,8 @@ public interface Person {
 
 **[RxJava](https://github.com/ReactiveX/RxJava) [Observables](http://reactivex.io/documentation/observable.html):**
 
+Supports both RxJava 1.0 and 2.0
+
 ```java
 Observable<Person> observable = data
     .select(Person.class)
@@ -230,25 +232,7 @@ differences between requery and JPA providers like Hibernate or EclipseLink:
 Android
 -------
 
-Designed specifically with Android support in mind. Comparison to other Android libraries:
-
-Feature               |  requery |  ORMLite |  Squidb  |  DBFlow   | GreenDao
-----------------------|----------|----------|----------|-----------|-----------
-Relational mapping    |  Y       |  Y(1)    |  N       |  Y        | Y(1)
-Inverse relationships |  Y       |  N       |  N       |  N        | N
-Compile time          |  Y       |  N       |  Y       |  Y        | Y(2)
-Query DSL             |  Y       |  N       |  N(3)    |  Y        | N(3)
-JDBC Support          |  Y       |  Y       |  N       |  N        | N
-Table Generation      |  Y       |  Y       |  Y       |  Y        | Y
-JPA annotations       |  Y       |  Y       |  N       |  N        | N
-RxJava support        |  Y       |  N       |  Y(4)    |  N        | N
-
-1) Excludes Many-to-Many
-2) Not annotation based
-3) Builder only not DSL
-4) Table changes only
-
-See [requery-android/example](https://github.com/requery/requery/tree/master/requery-android/example)
+Designed specifically with Android support in mind. See [requery-android/example](https://github.com/requery/requery/tree/master/requery-android/example)
 for an example Android project using databinding and interface based entities. For more information
 see the [Android](https://github.com/requery/requery/wiki/Android) page.
 
@@ -282,7 +266,7 @@ Upserts are generated with the appropriate database specific query statements:
 Using it
 --------
 
-Currently beta versions are available on bintray jcenter / maven central.
+Versions are available on bintray jcenter / maven central.
 
 ```gradle
 repositories {
@@ -290,9 +274,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.0.1'
-    compile 'io.requery:requery-android:1.0.1' // for android
-    apt 'io.requery:requery-processor:1.0.1'   // use an APT plugin
+    compile 'io.requery:requery:1.0.2'
+    compile 'io.requery:requery-android:1.0.2' // for android
+    annotationProcessor 'io.requery:requery-processor:1.0.2'
 }
 ```
 
