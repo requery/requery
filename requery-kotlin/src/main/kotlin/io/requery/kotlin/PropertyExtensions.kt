@@ -16,7 +16,6 @@
 
 package io.requery.kotlin
 
-import io.requery.Persistable
 import io.requery.meta.Attribute
 import io.requery.meta.AttributeDelegate
 import io.requery.meta.Type
@@ -35,46 +34,46 @@ import io.requery.query.function.Trim
 import io.requery.query.function.Upper
 import kotlin.reflect.KProperty1
 
-inline fun <reified T : Persistable, R> KProperty1<T, R>.asc(): OrderingExpression<R> = findAttribute(this).asc()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.desc(): OrderingExpression<R> = findAttribute(this).desc()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.abs(): Abs<R> = findAttribute(this).abs()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.max(): Max<R> = findAttribute(this).max()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.min(): Min<R> = findAttribute(this).min()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.avg(): Avg<R> = findAttribute(this).avg()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.sum(): Sum<R> = findAttribute(this).sum()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.round(): Round<R> = findAttribute(this).round()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.round(decimals: Int): Round<R> = findAttribute(this).round(decimals)
-inline fun <reified T : Persistable, R> KProperty1<T, R>.trim(chars: String?): Trim<R> = findAttribute(this).trim(chars)
-inline fun <reified T : Persistable, R> KProperty1<T, R>.trim(): Trim<R> = findAttribute(this).trim()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.substr(offset: Int, length: Int): Substr<R> = findAttribute(this).substr(offset, length)
-inline fun <reified T : Persistable, R> KProperty1<T, R>.upper(): Upper<R> = findAttribute(this).upper()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.lower(): Lower<R> = findAttribute(this).lower()
+inline fun <reified T : Any, R> KProperty1<T, R>.asc(): OrderingExpression<R> = findAttribute(this).asc()
+inline fun <reified T : Any, R> KProperty1<T, R>.desc(): OrderingExpression<R> = findAttribute(this).desc()
+inline fun <reified T : Any, R> KProperty1<T, R>.abs(): Abs<R> = findAttribute(this).abs()
+inline fun <reified T : Any, R> KProperty1<T, R>.max(): Max<R> = findAttribute(this).max()
+inline fun <reified T : Any, R> KProperty1<T, R>.min(): Min<R> = findAttribute(this).min()
+inline fun <reified T : Any, R> KProperty1<T, R>.avg(): Avg<R> = findAttribute(this).avg()
+inline fun <reified T : Any, R> KProperty1<T, R>.sum(): Sum<R> = findAttribute(this).sum()
+inline fun <reified T : Any, R> KProperty1<T, R>.round(): Round<R> = findAttribute(this).round()
+inline fun <reified T : Any, R> KProperty1<T, R>.round(decimals: Int): Round<R> = findAttribute(this).round(decimals)
+inline fun <reified T : Any, R> KProperty1<T, R>.trim(chars: String?): Trim<R> = findAttribute(this).trim(chars)
+inline fun <reified T : Any, R> KProperty1<T, R>.trim(): Trim<R> = findAttribute(this).trim()
+inline fun <reified T : Any, R> KProperty1<T, R>.substr(offset: Int, length: Int): Substr<R> = findAttribute(this).substr(offset, length)
+inline fun <reified T : Any, R> KProperty1<T, R>.upper(): Upper<R> = findAttribute(this).upper()
+inline fun <reified T : Any, R> KProperty1<T, R>.lower(): Lower<R> = findAttribute(this).lower()
 
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.eq(value: R): Logical<out Expression<R>, R> = findAttribute(this).eq(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.ne(value: R): Logical<out Expression<R>, R> = findAttribute(this).ne(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.lt(value: R): Logical<out Expression<R>, R> = findAttribute(this).lt(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.gt(value: R): Logical<out Expression<R>, R> = findAttribute(this).gt(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.lte(value: R): Logical<out Expression<R>, R> = findAttribute(this).lte(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.gte(value: R): Logical<out Expression<R>, R> = findAttribute(this).gte(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.eq(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).eq(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.ne(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).ne(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.lt(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).lt(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.gt(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).gt(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.lte(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).lte(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.gte(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).gte(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.`in`(value: Collection<R>): Logical<out Expression<R>, out Collection<R>> = findAttribute(this).`in`(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.notIn(value: Collection<R>): Logical<out Expression<R>, out Collection<R>> = findAttribute(this).notIn(value)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.`in`(query: Return<*>): Logical<out Expression<R>, out Return<*>> = findAttribute(this).`in`(query)
-inline infix fun <reified T : Persistable, R> KProperty1<T, R>.notIn(query: Return<*>): Logical<out Expression<R>, out Return<*>> = findAttribute(this).notIn(query)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.eq(value: R): Logical<out Expression<R>, R> = findAttribute(this).eq(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.ne(value: R): Logical<out Expression<R>, R> = findAttribute(this).ne(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.lt(value: R): Logical<out Expression<R>, R> = findAttribute(this).lt(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.gt(value: R): Logical<out Expression<R>, R> = findAttribute(this).gt(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.lte(value: R): Logical<out Expression<R>, R> = findAttribute(this).lte(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.gte(value: R): Logical<out Expression<R>, R> = findAttribute(this).gte(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.eq(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).eq(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.ne(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).ne(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.lt(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).lt(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.gt(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).gt(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.lte(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).lte(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.gte(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).gte(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.`in`(value: Collection<R>): Logical<out Expression<R>, out Collection<R>> = findAttribute(this).`in`(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.notIn(value: Collection<R>): Logical<out Expression<R>, out Collection<R>> = findAttribute(this).notIn(value)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.`in`(query: Return<*>): Logical<out Expression<R>, out Return<*>> = findAttribute(this).`in`(query)
+inline infix fun <reified T : Any, R> KProperty1<T, R>.notIn(query: Return<*>): Logical<out Expression<R>, out Return<*>> = findAttribute(this).notIn(query)
 
-inline fun <reified T : Persistable, R> KProperty1<T, R>.isNull(): Logical<out Expression<R>, out R> = findAttribute(this).isNull()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.notNull(): Logical<out Expression<R>, out R> = findAttribute(this).notNull()
-inline fun <reified T : Persistable, R> KProperty1<T, R>.like(expression: String): Logical<out Expression<R>, out String> = findAttribute(this).like(expression)
-inline fun <reified T : Persistable, R> KProperty1<T, R>.notLike(expression: String): Logical<out Expression<R>, out String> = findAttribute(this).notLike(expression)
-inline fun <reified T : Persistable, R> KProperty1<T, R>.between(start: R, end: R): Logical<out Expression<R>, Any> = findAttribute(this).between(start, end)
+inline fun <reified T : Any, R> KProperty1<T, R>.isNull(): Logical<out Expression<R>, out R> = findAttribute(this).isNull()
+inline fun <reified T : Any, R> KProperty1<T, R>.notNull(): Logical<out Expression<R>, out R> = findAttribute(this).notNull()
+inline fun <reified T : Any, R> KProperty1<T, R>.like(expression: String): Logical<out Expression<R>, out String> = findAttribute(this).like(expression)
+inline fun <reified T : Any, R> KProperty1<T, R>.notLike(expression: String): Logical<out Expression<R>, out String> = findAttribute(this).notLike(expression)
+inline fun <reified T : Any, R> KProperty1<T, R>.between(start: R, end: R): Logical<out Expression<R>, Any> = findAttribute(this).between(start, end)
 
 /** Given a property find the corresponding generated attribute for it */
-inline fun <reified T : Persistable, R> findAttribute(property: KProperty1<T, R>):
+inline fun <reified T : Any, R> findAttribute(property: KProperty1<T, R>):
         AttributeDelegate<T, R> {
     val type: Type<*> = AttributeDelegate.types
             .filter { type -> (type.classType == T::class.java || type.baseType == T::class.java)}

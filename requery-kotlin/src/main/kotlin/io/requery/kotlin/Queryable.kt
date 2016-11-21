@@ -16,7 +16,6 @@
 
 package io.requery.kotlin
 
-import io.requery.Persistable
 import io.requery.meta.Attribute
 import io.requery.query.*
 import java.util.*
@@ -43,14 +42,14 @@ interface Queryable<T : Any> {
 }
 
 // property selection support
-inline fun <T : Persistable, reified E : T> Queryable<T>
+inline fun <T : Any, reified E : T> Queryable<T>
         .select(vararg properties: KProperty1<E, *>): Selection<Result<E>> {
     val attributes: MutableSet<QueryableAttribute<E, *>> = LinkedHashSet()
     properties.forEach { property -> attributes.add(findAttribute(property)) }
     return select(*attributes.toTypedArray())
 }
 
-inline operator fun <T : Persistable, reified E : T> Queryable<T>
+inline operator fun <T : Any, reified E : T> Queryable<T>
         .get(vararg properties: KProperty1<E, *>): Selection<Result<E>> {
     val attributes: MutableSet<QueryableAttribute<E, *>> = LinkedHashSet()
     properties.forEach { property -> attributes.add(findAttribute(property)) }
