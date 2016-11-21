@@ -19,7 +19,7 @@ targetCompatibility = 1.7
 dependencies {
     compile project(':requery')
     apt project(':requery-processor')
-    compile fileTree(include: ['*.jar'], dir: 'libs') // for Oracle/SQL server JDBC drivers
+    compile fileTree(include: ['*.jar'], dir: 'libs') // for Oracle JDBC drivers
     compile "io.reactivex:rxjava:$rxjava_version"
     compile "io.reactivex.rxjava2:rxjava:$rxjava2_version"
     compile "org.eclipse.persistence:javax.persistence:$jpa_version"
@@ -30,6 +30,7 @@ dependencies {
     testApt 'org.openjdk.jmh:jmh-generator-annprocess:1.12'
     testCompile 'mysql:mysql-connector-java:6.0.3'
     testCompile 'org.postgresql:postgresql:9.4.1209.jre7'
+    testCompile 'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8'
     testCompile 'org.xerial:sqlite-jdbc:3.8.11.2'
     testCompile 'org.apache.derby:derby:10.12.1.1'
     testCompile 'com.h2database:h2:1.4.192'
