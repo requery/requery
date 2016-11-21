@@ -134,7 +134,7 @@ class KotlinEntityDataStore<T : Persistable>(configuration: Configuration) : Blo
     override fun <E : T> delete(entity: E): Void = data.delete(entity)
     override fun <E : T> delete(entities: Iterable<E>): Void = data.delete(entities)
 
-    override fun <E : T, K> findByKey(type: KClass<E>, key: K): E = data.findByKey(type.java, key)
+    override fun <E : T, K> findByKey(type: KClass<E>, key: K): E? = data.findByKey(type.java, key)
 
     override fun <V> withTransaction(body: BlockingEntityStore<T>.() -> V): V {
         try {
