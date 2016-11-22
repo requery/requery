@@ -77,6 +77,7 @@ final class Mirrors {
                 }
                 return null;
             }
+
             @Override
             protected Void defaultAction(TypeMirror typeMirror, Void v) {
                 return null;
@@ -86,6 +87,9 @@ final class Mirrors {
     }
 
     static boolean isInstance(Types types, TypeElement element, Class<?> type) {
+        if (element == null) {
+            return false;
+        }
         String className = type.getCanonicalName();
         if (type.isInterface()) {
             return implementsInterface(types, element, className);
@@ -95,13 +99,16 @@ final class Mirrors {
     }
 
     static boolean isInstance(Types types, TypeElement element, String className) {
+        if (element == null) {
+            return false;
+        }
         // check name
         if (namesEqual(element, className)) {
             return true;
         }
         // check interfaces then super types
         return implementsInterface(types, element, className) ||
-               extendsClass(types, element, className);
+                extendsClass(types, element, className);
     }
 
     private static boolean implementsInterface(Types types, TypeElement element, String interfaceName) {
@@ -156,6 +163,6 @@ final class Mirrors {
     }
 
     private static boolean namesEqual(TypeElement element, String qualifiedName) {
-        return element.getQualifiedName().contentEquals(qualifiedName);
+        return element != null && element.getQualifiedName().contentEquals(qualifiedName);
     }
 }
