@@ -107,7 +107,7 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
             }
         }
         String literal = "x'" + byteToHexString(value) + "'";
-        sql = sql.substring(0, replace) + literal + sql.substring(replace + 1, sql.length() - 1);
+        sql = sql.substring(0, replace) + literal + sql.substring(replace + 1, sql.length());
     }
 
     @Override
