@@ -346,6 +346,9 @@ class EntityMetaGenerator extends EntityPartGenerator {
         if (attribute.columnLength() != null) {
             builder.add(".setLength($L)\n", attribute.columnLength());
         }
+        if (!Names.isEmpty(attribute.definition())) {
+            builder.add(".setDefinition($S)\n", attribute.definition());
+        }
         if (attribute.isVersion()) {
             builder.add(".setVersion($L)\n", attribute.isVersion());
         }

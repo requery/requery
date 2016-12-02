@@ -467,8 +467,12 @@ public class SchemaModifier {
                 GenericMapping genericMapping = (GenericMapping) mapping;
                 converter = genericMapping.converterForType(attribute.getClassType());
             }
-            if (fieldType.hasLength() ||
-                (converter != null && converter.getPersistedSize() != null)) {
+            boolean hasLength = fieldType.hasLength() ||
+                    (converter != null && converter.getPersistedSize() != null);
+
+            if (attribute.getDefinition() != null && attribute.getDefinition().length() > 0) {
+                qb.append(attribute.getDefinition());
+            } else if (hasLength) {
 
                 Integer length = attribute.getLength();
                 if (length == null && converter != null) {
@@ -483,10 +487,11 @@ public class SchemaModifier {
                 qb.append(identifier)
                         .openParenthesis()
                         .append(length)
-                        .closeParenthesis().space();
+                        .closeParenthesis();
             } else {
-                qb.append(identifier).space();
+                qb.append(identifier);
             }
+            qb.space();
         }
 
         String suffix = fieldType.getIdentifierSuffix();

@@ -120,6 +120,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private String referencedTable;
     private String mappedBy;
     private String defaultValue;
+    private String definition;
     private String collate;
     private String orderByColumn;
     private Order orderByDirection;
@@ -285,6 +286,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             isNullable = column.nullable();
             defaultValue = column.value();
             collate = column.collate();
+            definition = column.definition();
             if (column.length() > 0) {
                 length = column.length();
             }
@@ -344,6 +346,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             isNullable = persistenceColumn.nullable();
             length = persistenceColumn.length();
             isReadOnly = !persistenceColumn.updatable();
+            definition = persistenceColumn.columnDefinition();
         });
 
         annotationOf(Enumerated.class).ifPresent(enumerated -> {
@@ -658,6 +661,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     @Override
     public String defaultValue() {
         return defaultValue;
+    }
+
+    @Override
+    public String definition() {
+        return definition;
     }
 
     @Override

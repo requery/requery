@@ -26,6 +26,7 @@ final class ImmutableAttribute<T, V> extends BaseAttribute<T, V> {
         collate = builder.getCollate();
         converter = builder.getConverter();
         defaultValue = builder.getDefaultValue();
+        definition = builder.getDefinition();
         deleteAction = builder.getDeleteAction();
         elementClass = builder.getElementClass();
         indexNames = builder.getIndexNames();

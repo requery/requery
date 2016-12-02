@@ -74,15 +74,20 @@ public interface Attribute<T, V> {
     Type<T> getDeclaringType();
 
     /**
+     * @return the default value expression for the column. Used during the table generation phase.
+     */
+    String getDefaultValue();
+
+    /**
+     * @return optional table column definition {@link io.requery.Column#definition()}
+     */
+    String getDefinition();
+
+    /**
      * @return For a {@link #isForeignKey()} attribute the action to take when the referenced entity
      * is deleted, otherwise null.
      */
     ReferentialAction getDeleteAction();
-
-    /**
-     * @return the default value expression for the column. Used during the table generation phase.
-     */
-    String getDefaultValue();
 
     /**
      * @return For a collection type the class of element in the collection.

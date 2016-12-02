@@ -77,6 +77,11 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
         return this;
     }
 
+    public AttributeBuilder<T, V> setDefinition(String definition) {
+        this.definition = definition;
+        return this;
+    }
+
     public AttributeBuilder<T, V> setDeleteAction(ReferentialAction action) {
         this.deleteAction = action;
         return this;

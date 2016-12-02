@@ -42,6 +42,7 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     Converter<V, ?> converter;
     Type<T> declaringType;
     String defaultValue;
+    String definition;
     ReferentialAction deleteAction;
     Class<?> elementClass;
     Set<String> indexNames;
@@ -109,6 +110,11 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     }
 
     @Override
+    public String getDefinition() {
+        return definition;
+    }
+
+    @Override
     public ReferentialAction getDeleteAction() {
         return deleteAction;
     }
@@ -127,6 +133,7 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     public Set<String> getIndexNames() {
         return indexNames;
     }
+
     @Override
     public Initializer<T, V> getInitializer() {
         return initializer;
