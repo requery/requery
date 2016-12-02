@@ -34,7 +34,7 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:25.0.0'
     compile "io.reactivex:rxjava:$rxjava_version"
     compile 'io.reactivex:rxandroid:1.2.1'
-    compile 'io.requery:requery:1.0.1'
-    compile 'io.requery:requery-android:1.0.1'
-    annotationProcessor 'io.requery:requery-processor:1.0.1'
+    compile 'io.requery:requery:1.0.2'
+    compile 'io.requery:requery-android:1.0.2'
+    annotationProcessor 'io.requery:requery-processor:1.0.2'
 }
