@@ -84,32 +84,6 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
         return args;
     }
 
-    protected static String byteToHexString(byte[] bytes) {
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            sb.append(hex[(b >> 4) & 0xF]);
-            sb.append(hex[(b & 0xF)]);
-        }
-        return sb.toString();
-    }
-
-    // inlines a blob literal into the sql statement since it can't be used as bind parameter
-    protected void bindBlobLiteral(int index, byte[] value) {
-        int placeHolderIndex = 0;
-        int replace = 0;
-        for (int i = 0; i < sql.length(); i++) {
-            if (sql.charAt(i) == '?') {
-                placeHolderIndex++;
-                if (placeHolderIndex == index) {
-                    replace = i;
-                    break;
-                }
-            }
-        }
-        String literal = "x'" + byteToHexString(value) + "'";
-        sql = sql.substring(0, replace) + literal + sql.substring(replace + 1, sql.length());
-    }
-
     @Override
     public void addBatch() throws SQLException {
         throw new SQLFeatureNotSupportedException();
