@@ -133,7 +133,7 @@ class SqlitexPreparedStatement extends BasePreparedStatement {
     public ResultSet executeQuery() throws SQLException {
         try {
             String[] args = bindingsToArray();
-            cursor = connection.getDatabase().rawQuery(sql, args);
+            cursor = connection.getDatabase().rawQuery(getSql(), args);
             return queryResult = new CursorResultSet(this, cursor, false);
         } catch (SQLiteException e) {
             SqlitexConnection.throwSQLException(e);
