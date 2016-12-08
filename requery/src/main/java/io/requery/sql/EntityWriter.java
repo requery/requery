@@ -936,7 +936,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             while (iterator.hasNext() && ids.size() < batchSize) {
                 E entity = iterator.next();
                 EntityProxy<E> proxy = proxyProvider.apply(entity);
-                if (versionAttribute != null || type.getKeyAttributes().size() > 1) {
+                if (versionAttribute != null || keyCount > 1) {
                     // not optimized if version column has to be checked, or multiple primary keys
                     // TODO could use JDBC batching
                     delete(entity, proxy);
@@ -972,14 +972,14 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
     private <U extends S> boolean hasKey(EntityProxy<U> proxy) {
         Type<U> type = proxy.type();
-        if (type.getKeyAttributes().size() > 0) {
+        if (keyCount > 0) {
             for (Attribute<U, ?> attribute : type.getKeyAttributes()) {
                 PropertyState state = proxy.getState(attribute);
                 if (!(state == PropertyState.MODIFIED || state == PropertyState.LOADED)) {
                     return false;
                 }
             }
-            return true;
+            return hasGeneratedKey;
         }
         return false;
     }
