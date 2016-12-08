@@ -889,7 +889,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             EntityWriter<U, S> writer = context.write(proxy.type().getClassType());
             if (mode == Cascade.AUTO) {
-                mode = proxy.isLinked() || hasKey(proxy)? Cascade.UPDATE : Cascade.INSERT;
+                mode = proxy.isLinked()? Cascade.UPDATE : Cascade.UPSERT;
             }
             switch (mode) {
                 case INSERT:
@@ -979,7 +979,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     return false;
                 }
             }
-            return hasGeneratedKey;
+            return true;
         }
         return false;
     }
