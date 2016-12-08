@@ -192,24 +192,30 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             }
         }
         if (isIterable) {
-            validators.add(validateCollectionType(processingEnvironment));
+            ElementValidator validator = validateCollectionType(processingEnvironment);
+            if (validator != null) {
+                validators.add(validator);
+            }
         }
     }
 
     private ElementValidator validateCollectionType(ProcessingEnvironment processingEnvironment) {
         Types types = processingEnvironment.getTypeUtils();
         TypeElement collectionElement = (TypeElement) types.asElement(typeMirror());
-        ElementValidator validator = new ElementValidator(collectionElement, processingEnvironment);
-        if (Mirrors.isInstance(types, collectionElement, List.class)) {
-            builderClass = ListAttributeBuilder.class;
-        } else if (Mirrors.isInstance(types, collectionElement, Set.class)) {
-            builderClass = SetAttributeBuilder.class;
-        } else if (Mirrors.isInstance(types, collectionElement, Iterable.class)) {
-            builderClass = ResultAttributeBuilder.class;
-        } else {
-            validator.error("Invalid collection type, must be Set, List or Iterable");
+        if (collectionElement != null) {
+            ElementValidator validator = new ElementValidator(collectionElement, processingEnvironment);
+            if (Mirrors.isInstance(types, collectionElement, List.class)) {
+                builderClass = ListAttributeBuilder.class;
+            } else if (Mirrors.isInstance(types, collectionElement, Set.class)) {
+                builderClass = SetAttributeBuilder.class;
+            } else if (Mirrors.isInstance(types, collectionElement, Iterable.class)) {
+                builderClass = ResultAttributeBuilder.class;
+            } else {
+                validator.error("Invalid collection type, must be Set, List or Iterable");
+            }
+            return validator;
         }
-        return validator;
+        return null;
     }
 
     private void processFieldAccessAnnotations(ElementValidator validator) {

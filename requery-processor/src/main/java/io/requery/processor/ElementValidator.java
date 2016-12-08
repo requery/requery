@@ -24,6 +24,7 @@ import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -40,7 +41,7 @@ class ElementValidator {
     private final Map<Element, String> errors;
 
     ElementValidator(Element element, ProcessingEnvironment processingEnvironment) {
-        this.element = element;
+        this.element = Objects.requireNonNull(element);
         this.messager = processingEnvironment.getMessager();
         errors = new LinkedHashMap<>();
     }
