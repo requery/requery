@@ -27,17 +27,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import io.reactivex.Observable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import io.requery.Persistable;
 import io.requery.android.QueryRecyclerAdapter;
 import io.requery.android.example.app.databinding.PersonItemBinding;
 import io.requery.android.example.app.model.Person;
 import io.requery.android.example.app.model.PersonEntity;
 import io.requery.query.Result;
-import io.requery.rx.SingleEntityStore;
-import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
+import io.requery.reactivex.ReactiveEntityStore;
 
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -49,7 +49,7 @@ import java.util.concurrent.Executors;
  */
 public class PeopleActivity extends AppCompatActivity {
 
-    private SingleEntityStore<Persistable> data;
+    private ReactiveEntityStore<Persistable> data;
     private ExecutorService executor;
     private PersonAdapter adapter;
 
@@ -68,22 +68,22 @@ public class PeopleActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        data.count(Person.class).get().toSingle()
-            .subscribe(new Action1<Integer>() {
+        data.count(Person.class).get().single()
+            .subscribe(new Consumer<Integer>() {
             @Override
-            public void call(Integer integer) {
+            public void accept(Integer integer) {
                 if (integer == 0) {
                     Observable.fromCallable(new CreatePeople(data))
-                        .flatMap(new Func1<Observable<Iterable<Person>>, Observable<?>>() {
+                        .flatMap(new Function<Observable<Iterable<Person>>, Observable<?>>() {
                             @Override
-                            public Observable<?> call(Observable<Iterable<Person>> o) {
+                            public Observable<?> apply(Observable<Iterable<Person>> o) {
                                 return o;
                             }
                         })
                         .observeOn(Schedulers.computation())
-                        .subscribe(new Action1<Object>() {
+                        .subscribe(new Consumer<Object>() {
                             @Override
-                            public void call(Object o) {
+                            public void accept(Object o) {
                                 adapter.queryAsync();
                             }
                         });

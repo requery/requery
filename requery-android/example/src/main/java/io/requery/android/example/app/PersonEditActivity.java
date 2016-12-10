@@ -21,6 +21,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
 import io.requery.Persistable;
 import io.requery.android.example.app.databinding.ActivityEditPersonBinding;
 import io.requery.android.example.app.model.Address;
@@ -29,9 +31,7 @@ import io.requery.android.example.app.model.Person;
 import io.requery.android.example.app.model.PersonEntity;
 import io.requery.android.example.app.model.Phone;
 import io.requery.android.example.app.model.PhoneEntity;
-import io.requery.rx.SingleEntityStore;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
+import io.requery.reactivex.ReactiveEntityStore;
 
 /**
  * Simple activity allowing you to edit a Person entity using data binding.
@@ -40,7 +40,7 @@ public class PersonEditActivity extends AppCompatActivity {
 
     static final String EXTRA_PERSON_ID = "personId";
 
-    private SingleEntityStore<Persistable> data;
+    private ReactiveEntityStore<Persistable> data;
     private PersonEntity person;
     private ActivityEditPersonBinding binding;
 
@@ -59,9 +59,9 @@ public class PersonEditActivity extends AppCompatActivity {
         } else {
             data.findByKey(PersonEntity.class, personId)
                 .subscribeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<PersonEntity>() {
+                .subscribe(new Consumer<PersonEntity>() {
                 @Override
-                public void call(PersonEntity person) {
+                public void accept(PersonEntity person) {
                     PersonEditActivity.this.person = person;
                     binding.setPerson(person);
                 }
@@ -109,16 +109,16 @@ public class PersonEditActivity extends AppCompatActivity {
         address.setState(binding.state.getText().toString());
         // save the person
         if (person.getId() == 0) {
-            data.insert(person).subscribe(new Action1<Person>() {
+            data.insert(person).subscribe(new Consumer<Person>() {
                 @Override
-                public void call(Person person) {
+                public void accept(Person person) {
                     finish();
                 }
             });
         } else {
-            data.update(person).subscribe(new Action1<Person>() {
+            data.update(person).subscribe(new Consumer<Person>() {
                 @Override
-                public void call(Person person) {
+                public void accept(Person person) {
                     finish();
                 }
             });
