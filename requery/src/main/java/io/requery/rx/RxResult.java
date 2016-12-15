@@ -27,6 +27,11 @@ import rx.Observable;
 
 import javax.annotation.CheckReturnValue;
 
+/**
+ * {@link Result} type with RxJava conversion methods.
+ *
+ * @param <E> element type
+ */
 public class RxResult<E> extends ResultDelegate<E> implements QueryWrapper, TransactionListenable {
 
     RxResult(Result<E> delegate) {

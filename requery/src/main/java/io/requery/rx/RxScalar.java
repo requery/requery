@@ -22,6 +22,11 @@ import rx.Single;
 
 import javax.annotation.CheckReturnValue;
 
+/**
+ * {@link Scalar} type with RxJava conversion methods.
+ *
+ * @param <E> element type
+ */
 public class RxScalar<E> extends ScalarDelegate<E> {
 
     RxScalar(Scalar<E> delegate) {

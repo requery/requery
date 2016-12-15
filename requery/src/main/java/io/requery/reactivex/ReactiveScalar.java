@@ -21,6 +21,11 @@ import io.requery.query.ScalarDelegate;
 
 import javax.annotation.CheckReturnValue;
 
+/**
+ * {@link Scalar} type with RxJava 2.0 conversion methods.
+ *
+ * @param <E> element type
+ */
 public class ReactiveScalar<E> extends ScalarDelegate<E> {
 
     ReactiveScalar(Scalar<E> delegate) {

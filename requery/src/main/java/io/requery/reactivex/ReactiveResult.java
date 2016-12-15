@@ -31,6 +31,11 @@ import org.reactivestreams.Subscriber;
 import javax.annotation.CheckReturnValue;
 import java.util.concurrent.Callable;
 
+/**
+ * {@link Result} type with RxJava 2.0 conversion methods.
+ *
+ * @param <E> element type
+ */
 public class ReactiveResult<E> extends ResultDelegate<E> implements QueryWrapper, TransactionListenable {
 
     ReactiveResult(Result<E> delegate) {
