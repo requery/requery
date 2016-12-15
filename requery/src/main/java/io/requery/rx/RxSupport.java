@@ -17,8 +17,8 @@
 package io.requery.rx;
 
 import io.requery.BlockingEntityStore;
-import io.requery.meta.Attribute;
 import io.requery.meta.Type;
+import io.requery.meta.Types;
 import io.requery.query.element.QueryElement;
 import rx.Observable;
 import rx.functions.Func1;
@@ -51,7 +51,7 @@ public final class RxSupport {
                 @Override
                 public Boolean call(Set<Type<?>> types) {
                     return !Collections.disjoint(element.entityTypes(), types) ||
-                        referencesType(element.entityTypes(), types);
+                        Types.referencesType(element.entityTypes(), types);
                 }
             }).map(new Func1<Set<Type<?>>, RxResult<T>>() {
                 @Override
@@ -59,29 +59,5 @@ public final class RxSupport {
                     return result;
                 }
             }).startWith(result);
-    }
-
-    public static boolean referencesType(Set<Type<?>> source, Set<Type<?>> changed) {
-        for (Type<?> type : source) {
-            for (Attribute<?, ?> attribute : type.getAttributes()) {
-                // find if any referencing types that maybe affected by changes to the type
-                if (attribute.isAssociation()) {
-                    Attribute referenced = null;
-                    if (attribute.getReferencedAttribute() != null) {
-                        referenced = attribute.getReferencedAttribute().get();
-                    }
-                    if (attribute.getMappedAttribute() != null) {
-                        referenced = attribute.getMappedAttribute().get();
-                    }
-                    if (referenced != null) {
-                        Type<?> declared = referenced.getDeclaringType();
-                        if (changed.contains(declared)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
     }
 }

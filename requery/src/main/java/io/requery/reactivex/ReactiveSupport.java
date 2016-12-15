@@ -21,8 +21,8 @@ import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.requery.BlockingEntityStore;
 import io.requery.meta.Type;
+import io.requery.meta.Types;
 import io.requery.query.element.QueryElement;
-import io.requery.rx.RxSupport;
 
 import java.util.Collections;
 import java.util.Set;
@@ -50,7 +50,7 @@ public final class ReactiveSupport {
                 @Override
                 public boolean test(Set<Type<?>> types) {
                     return !Collections.disjoint(element.entityTypes(), types) ||
-                           RxSupport.referencesType(element.entityTypes(), types);
+                           Types.referencesType(element.entityTypes(), types);
                 }
             }).map(new Function<Set<Type<?>>, ReactiveResult<T>>() {
                 @Override
