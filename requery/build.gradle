@@ -8,6 +8,7 @@ dependencies {
     compileOnly 'javax.cache:cache-api:1.0.0'
     compileOnly "io.reactivex:rxjava:$rxjava_version"
     compileOnly "io.reactivex.rxjava2:rxjava:$rxjava2_version"
+    compileOnly "io.projectreactor:reactor-core:$reactor_version"
     compileOnly 'com.google.code.findbugs:jsr305:3.0.1'
 }
 

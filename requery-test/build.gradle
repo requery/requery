@@ -22,6 +22,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs') // for Oracle JDBC drivers
     compile "io.reactivex:rxjava:$rxjava_version"
     compile "io.reactivex.rxjava2:rxjava:$rxjava2_version"
+    compile "io.projectreactor:reactor-core:$reactor_version"
     compile "org.eclipse.persistence:javax.persistence:$jpa_version"
     compileOnly 'com.google.auto.value:auto-value:1.2'
     apt 'com.google.auto.value:auto-value:1.2'

@@ -16,8 +16,6 @@
 
 package io.requery.reactivex;
 
-import io.reactivex.internal.util.BackpressureHelper;
-import io.requery.query.BaseResult;
 import io.requery.query.Result;
 import io.requery.util.CloseableIterator;
 import org.reactivestreams.Subscriber;
@@ -26,7 +24,7 @@ import org.reactivestreams.Subscription;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-class QuerySubscription<T> implements Subscription {
+public class QuerySubscription<T> implements Subscription {
 
     private final Result<T> result;
     private final Subscriber<? super T> subscriber;
@@ -34,7 +32,7 @@ class QuerySubscription<T> implements Subscription {
     private final AtomicLong emitted;
     private final AtomicLong requested;
 
-    QuerySubscription(Result<T> result, Subscriber<? super T> subscriber) {
+    public QuerySubscription(Result<T> result, Subscriber<? super T> subscriber) {
         this.result = result;
         this.subscriber = subscriber;
         canceled = new AtomicBoolean();
@@ -47,7 +45,7 @@ class QuerySubscription<T> implements Subscription {
         try {
             if (n == Long.MAX_VALUE && requested.compareAndSet(0, Long.MAX_VALUE)) {
                 requestAll();
-            } else if (n > 0 && BackpressureHelper.add(requested, n) == 0) {
+            } else if (n > 0 && add(requested, n) == 0) {
                 requestN(n);
             }
         } catch (Throwable e) {
@@ -97,5 +95,24 @@ class QuerySubscription<T> implements Subscription {
     @Override
     public void cancel() {
         canceled.compareAndSet(false, true);
+    }
+
+    private static long add(AtomicLong requested, long n) {
+        while (true) {
+            long value = requested.get();
+
+            if (value == Long.MAX_VALUE) {
+                return Long.MAX_VALUE;
+            }
+
+            long update = value + n;
+            if (update < 0L) {
+                update = Long.MAX_VALUE;
+            }
+
+            if (requested.compareAndSet(value, update)) {
+                return value;
+            }
+        }
     }
 }
