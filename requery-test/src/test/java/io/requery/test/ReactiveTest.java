@@ -27,6 +27,7 @@ import io.requery.Persistable;
 import io.requery.cache.EntityCacheBuilder;
 import io.requery.meta.EntityModel;
 import io.requery.query.Result;
+import io.requery.reactivex.ReactiveResult;
 import io.requery.reactivex.ReactiveSupport;
 import io.requery.reactivex.ReactiveEntityStore;
 import io.requery.sql.Configuration;
@@ -135,7 +136,7 @@ public class ReactiveTest extends RandomData {
         });
         Person p = data.insert(person).blockingGet();
         assertTrue(p.getId() > 0);
-        int count = data.count(Person.class).get().toSingle().toBlocking().value();
+        int count = data.count(Person.class).get().single().blockingGet();
         assertEquals(1, count);
     }
 
@@ -220,9 +221,9 @@ public class ReactiveTest extends RandomData {
     public void testQuerySelfObservableMap() throws Exception {
         final AtomicInteger count = new AtomicInteger();
         Disposable disposable = data.select(Person.class).limit(2).get().observableResult()
-            .flatMap(new Function<Result<Person>, Observable<Person>>() {
+            .flatMap(new Function<ReactiveResult<Person>, Observable<Person>>() {
                 @Override
-                public Observable<Person> apply(Result<Person> persons) {
+                public Observable<Person> apply(ReactiveResult<Person> persons) {
                     return persons.observable();
                 }
             }).subscribe(new Consumer<Person>() {
@@ -309,7 +310,7 @@ public class ReactiveTest extends RandomData {
                 return data.insert(phone);
             }
         }).blockingGet();
-        int count = person.getPhoneNumbers().toObservable().count().toBlocking().first();
+        int count = person.getPhoneNumbers().toList().size();
         assertEquals(1, count);
     }
 

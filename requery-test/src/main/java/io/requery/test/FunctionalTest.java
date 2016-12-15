@@ -1019,7 +1019,7 @@ public abstract class FunctionalTest extends RandomData {
         data.insert(group);
         person.getGroups().add(group);
         data.update(person);
-        Return<Result<Tuple>> groupNames = data.select(Group.NAME)
+        Return<? extends Result<Tuple>> groupNames = data.select(Group.NAME)
                 .where(Group.NAME.equal(name));
         Person p = data.select(Person.class).where(Person.NAME.in(groupNames)).get().first();
         assertEquals(p.getName(), name);

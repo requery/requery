@@ -14,15 +14,26 @@
  * limitations under the License.
  */
 
-package io.requery.proxy;
+package io.requery.reactivex;
 
-import io.requery.meta.Attribute;
-import io.requery.query.Result;
-import io.requery.util.function.Supplier;
+import io.requery.query.Scalar;
+import io.requery.query.ScalarDelegate;
 
-public interface QueryInitializer<E, V> {
+import javax.annotation.CheckReturnValue;
 
-    <U> V initialize(EntityProxy<E> proxy,
-                     Attribute<E, V> attribute,
-                     Supplier<? extends Result<U>> query);
+public class ReactiveScalar<E> extends ScalarDelegate<E> {
+
+    ReactiveScalar(Scalar<E> delegate) {
+        super(delegate);
+    }
+
+    /**
+     * Converts this Scalar computation to a single {@link io.reactivex.Single}.
+     *
+     * @return {@link io.reactivex.Single} for the result of this query.
+     */
+    @CheckReturnValue
+    public io.reactivex.Single<E> single() {
+        return io.reactivex.Single.fromCallable(this);
+    }
 }

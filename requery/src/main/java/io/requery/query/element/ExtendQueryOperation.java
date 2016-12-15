@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package io.requery.proxy;
+package io.requery.query.element;
 
-import io.requery.meta.Attribute;
-import io.requery.query.Result;
-import io.requery.util.function.Supplier;
+import io.requery.util.function.Function;
 
-public interface QueryInitializer<E, V> {
+class ExtendQueryOperation<T extends S, S> implements QueryOperation<S> {
+    private final Function<S, T> transform;
+    private final QueryOperation<S> operation;
 
-    <U> V initialize(EntityProxy<E> proxy,
-                     Attribute<E, V> attribute,
-                     Supplier<? extends Result<U>> query);
+    ExtendQueryOperation(Function<S, T> transform, QueryOperation<S> operation) {
+        this.transform = transform;
+        this.operation = operation;
+    }
+
+    @Override
+    public S evaluate(QueryElement<S> query) {
+        return transform.apply(operation.evaluate(query));
+    }
 }

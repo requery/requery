@@ -23,24 +23,23 @@ import io.requery.query.Deletion;
 import io.requery.query.Expression;
 import io.requery.query.Insertion;
 import io.requery.query.Result;
+import io.requery.query.Return;
 import io.requery.query.Scalar;
 import io.requery.query.Selection;
 import io.requery.query.Tuple;
 import io.requery.query.Update;
+import io.requery.query.element.QueryElement;
 import io.requery.util.Objects;
+import io.requery.util.function.Function;
 import rx.Completable;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Single;
-import rx.schedulers.Schedulers;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Implementation of {@link SingleEntityStore} where all operations are passed through a
@@ -56,22 +55,9 @@ import java.util.concurrent.Executors;
 class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
 
     private final BlockingEntityStore<T> delegate;
-    private final Scheduler subscribeOn;
-    private final ExecutorService executor;
-    private final boolean createdExecutor;
 
-    SingleEntityStoreFromBlocking(BlockingEntityStore<T> delegate,
-                                  @Nullable Scheduler subscribeOn) {
+    SingleEntityStoreFromBlocking(BlockingEntityStore<T> delegate) {
         this.delegate = Objects.requireNotNull(delegate);
-        if (subscribeOn == null) {
-            createdExecutor = true;
-            executor = Executors.newSingleThreadExecutor();
-            this.subscribeOn = Schedulers.from(executor);
-        } else {
-            this.subscribeOn = subscribeOn;
-            executor = null;
-            createdExecutor = false;
-        }
     }
 
     @Override
@@ -81,7 +67,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public E call() {
                 return delegate.insert(entity);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -91,7 +77,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public Iterable<E> call() {
                 return delegate.insert(entities);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -101,7 +87,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public K call() {
                 return delegate.insert(entity, keyClass);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -112,7 +98,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public Iterable<K> call() {
                 return delegate.insert(entities, keyClass);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -122,7 +108,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public E call() {
                 return delegate.update(entity);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -132,7 +118,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public E call() {
                 return delegate.update(entity, attributes);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -142,7 +128,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public Iterable<E> call() {
                 return delegate.update(entities);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -152,7 +138,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public E call() {
                 return delegate.upsert(entity);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -162,7 +148,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public Iterable<E> call() {
                 return delegate.upsert(entities);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -172,7 +158,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public E call() {
                 return delegate.refresh(entity);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -182,7 +168,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public E call() {
                 return delegate.refresh(entity, attributes);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -193,7 +179,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public Iterable<E> call() {
                 return delegate.refresh(entities, attributes);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -203,7 +189,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public E call() {
                 return delegate.refreshAll(entity);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -214,7 +200,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
                 delegate.delete(entity);
                 return null;
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -225,7 +211,7 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
                 delegate.delete(entities);
                 return null;
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
@@ -235,82 +221,79 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
             public E call() {
                 return delegate.findByKey(type, key);
             }
-        }).subscribeOn(subscribeOn);
+        });
     }
 
     @Override
     public void close() {
         delegate.close();
-        if (executor != null && createdExecutor) {
-            executor.shutdown();
-        }
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Expression<?>... attributes) {
-        return delegate.select(attributes);
+    public Selection<RxResult<Tuple>> select(Expression<?>... attributes) {
+        return result(delegate.select(attributes));
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Set<? extends Expression<?>> expressions) {
-        return delegate.select(expressions);
+    public Selection<RxResult<Tuple>> select(Set<? extends Expression<?>> expressions) {
+        return result(delegate.select(expressions));
     }
 
     @Override
-    public Update<Scalar<Integer>> update() {
-        return delegate.update();
+    public Update<RxScalar<Integer>> update() {
+        return scalar(delegate.update());
     }
 
     @Override
-    public Deletion<Scalar<Integer>> delete() {
-        return delegate.delete();
+    public Deletion<RxScalar<Integer>> delete() {
+        return scalar(delegate.delete());
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(
+    public <E extends T> Selection<RxResult<E>> select(
         Class<E> type, QueryAttribute<?, ?>... attributes) {
-        return delegate.select(type, attributes);
+        return result(delegate.select(type, attributes));
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(
+    public <E extends T> Selection<RxResult<E>> select(
         Class<E> type, Set<? extends QueryAttribute<E, ?>> attributes) {
-        return delegate.select(type, attributes);
+        return result(delegate.select(type, attributes));
     }
 
     @Override
-    public <E extends T> Insertion<Result<Tuple>> insert(Class<E> type) {
-        return delegate.insert(type);
+    public <E extends T> Insertion<RxResult<Tuple>> insert(Class<E> type) {
+        return result(delegate.insert(type));
     }
 
     @Override
-    public <E extends T> Update<Scalar<Integer>> update(Class<E> type) {
-        return delegate.update(type);
+    public <E extends T> Update<RxScalar<Integer>> update(Class<E> type) {
+        return scalar(delegate.update(type));
     }
 
     @Override
-    public <E extends T> Deletion<Scalar<Integer>> delete(Class<E> type) {
-        return delegate.delete(type);
+    public <E extends T> Deletion<RxScalar<Integer>> delete(Class<E> type) {
+        return scalar(delegate.delete(type));
     }
 
     @Override
-    public <E extends T> Selection<Scalar<Integer>> count(Class<E> type) {
-        return delegate.count(type);
+    public <E extends T> Selection<RxScalar<Integer>> count(Class<E> type) {
+        return scalar(delegate.count(type));
     }
 
     @Override
-    public Selection<Scalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
-        return delegate.count(attributes);
+    public Selection<RxScalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
+        return scalar(delegate.count(attributes));
     }
 
     @Override
-    public Result<Tuple> raw(String query, Object... parameters) {
-        return delegate.raw(query, parameters);
+    public RxResult<Tuple> raw(String query, Object... parameters) {
+        return new RxResult<>(delegate.raw(query, parameters));
     }
 
     @Override
-    public <E extends T> Result<E> raw(Class<E> type, String query, Object... parameters) {
-        return delegate.raw(type, query, parameters);
+    public <E extends T> RxResult<E> raw(Class<E> type, String query, Object... parameters) {
+        return new RxResult<>(delegate.raw(type, query, parameters));
     }
 
     @Override
@@ -348,6 +331,28 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
         for (Single<? extends E> single : elements) {
             current = current.concatWith(single.toObservable());
         }
-        return current.concatWith(commitTransaction).subscribeOn(subscribeOn);
+        return current.concatWith(commitTransaction);
+    }
+
+    private static <E> QueryElement<RxResult<E>> result(Return<? extends Result<E>> query) {
+        @SuppressWarnings("unchecked")
+        QueryElement<Result<E>> element = (QueryElement<Result<E>>) query;
+        return element.extend(new Function<Result<E>, RxResult<E>>() {
+            @Override
+            public RxResult<E> apply(Result<E> result) {
+                return new RxResult<>(result);
+            }
+        });
+    }
+
+    private static <E> QueryElement<RxScalar<E>> scalar(Return<? extends Scalar<E>> query) {
+        @SuppressWarnings("unchecked")
+        QueryElement<Scalar<E>> element = (QueryElement<Scalar<E>>) query;
+        return element.extend(new Function<Scalar<E>, RxScalar<E>>() {
+            @Override
+            public RxScalar<E> apply(Scalar<E> result) {
+                return new RxScalar<>(result);
+            }
+        });
     }
 }

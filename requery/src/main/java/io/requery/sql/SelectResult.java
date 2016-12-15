@@ -25,7 +25,6 @@ import io.requery.query.element.QueryElement;
 import io.requery.TransactionListenable;
 import io.requery.query.element.QueryWrapper;
 import io.requery.sql.gen.DefaultOutput;
-import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
 import io.requery.util.function.Supplier;
 
@@ -41,7 +40,7 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-class SelectResult<E> extends BaseResult<E> implements TransactionListenable, QueryWrapper, CloseableIterable<E> {
+class SelectResult<E> extends BaseResult<E> implements TransactionListenable, QueryWrapper {
 
     private final QueryElement<?> query;
     private final RuntimeConfiguration configuration;

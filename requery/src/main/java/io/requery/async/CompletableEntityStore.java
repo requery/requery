@@ -243,59 +243,59 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Expression<?>... expressions) {
+    public Selection<? extends Result<Tuple>> select(Expression<?>... expressions) {
         return delegate.select(expressions);
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Set<? extends Expression<?>> expressions) {
+    public Selection<? extends Result<Tuple>> select(Set<? extends Expression<?>> expressions) {
         return delegate.select(expressions);
     }
 
     @Override
-    public Update<Scalar<Integer>> update() {
+    public Update<? extends Scalar<Integer>> update() {
         return delegate.update();
     }
 
     @Override
-    public Deletion<Scalar<Integer>> delete() {
+    public Deletion<? extends Scalar<Integer>> delete() {
         return delegate.delete();
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(Class<E> type,
+    public <E extends T> Selection<? extends Result<E>> select(Class<E> type,
                                                      QueryAttribute<?, ?>... attributes) {
         return delegate.select(type, attributes);
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(
+    public <E extends T> Selection<? extends Result<E>> select(
         Class<E> type, Set<? extends QueryAttribute<E, ?>> attributes) {
         return delegate.select(type, attributes);
     }
 
     @Override
-    public <E extends T> Insertion<Result<Tuple>> insert(Class<E> type) {
+    public <E extends T> Insertion<? extends Result<Tuple>> insert(Class<E> type) {
         return delegate.insert(type);
     }
 
     @Override
-    public <E extends T> Update<Scalar<Integer>> update(Class<E> type) {
+    public <E extends T> Update<? extends Scalar<Integer>> update(Class<E> type) {
         return delegate.update(type);
     }
 
     @Override
-    public <E extends T> Deletion<Scalar<Integer>> delete(Class<E> type) {
+    public <E extends T> Deletion<? extends Scalar<Integer>> delete(Class<E> type) {
         return delegate.delete(type);
     }
 
     @Override
-    public <E extends T> Selection<Scalar<Integer>> count(Class<E> type) {
+    public <E extends T> Selection<? extends Scalar<Integer>> count(Class<E> type) {
         return delegate.count(type);
     }
 
     @Override
-    public Selection<Scalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
+    public Selection<? extends Scalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
         return delegate.count(attributes);
     }
 

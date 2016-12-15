@@ -18,7 +18,6 @@ package io.requery.rx;
 
 import io.requery.EntityStore;
 import io.requery.meta.Attribute;
-import io.requery.query.Result;
 import rx.Observable;
 import rx.Single;
 
@@ -30,14 +29,14 @@ import java.util.List;
 /**
  * Extends {@link EntityStore} where all return values are single {@link rx.Single} instances
  * representing the outcome of each operation. {@link rx.Observable} query results can be obtained
- * via {@link Result#toObservable()}.
+ * via {@link RxResult#toObservable()}.
  *
  * @param <T> entity base type. See {@link EntityStore}.
  *
  * @author Nikhil Purushe
  */
 @ParametersAreNonnullByDefault
-public abstract class SingleEntityStore<T> implements EntityStore<T, Single<?>> {
+public abstract class SingleEntityStore<T> implements EntityStore<T, Single<?>>, RxQueryable<T> {
 
     @Override
     @CheckReturnValue
@@ -53,8 +52,7 @@ public abstract class SingleEntityStore<T> implements EntityStore<T, Single<?>> 
 
     @Override
     @CheckReturnValue
-    public abstract <K, E extends T> Single<Iterable<K>> insert(Iterable<E> entities,
-                                                                Class<K> keyClass);
+    public abstract <K, E extends T> Single<Iterable<K>> insert(Iterable<E> entities, Class<K> keyClass);
 
     @Override
     @CheckReturnValue
@@ -86,8 +84,7 @@ public abstract class SingleEntityStore<T> implements EntityStore<T, Single<?>> 
 
     @Override
     @CheckReturnValue
-    public abstract <E extends T> Single<Iterable<E>> refresh(Iterable<E> entities,
-                                                              Attribute<?, ?>... attributes);
+    public abstract <E extends T> Single<Iterable<E>> refresh(Iterable<E> entities, Attribute<?, ?>... attributes);
 
     @Override
     @CheckReturnValue

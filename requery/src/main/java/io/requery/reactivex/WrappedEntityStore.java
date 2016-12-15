@@ -27,11 +27,14 @@ import io.requery.query.Deletion;
 import io.requery.query.Expression;
 import io.requery.query.Insertion;
 import io.requery.query.Result;
+import io.requery.query.Return;
 import io.requery.query.Scalar;
 import io.requery.query.Selection;
 import io.requery.query.Tuple;
 import io.requery.query.Update;
+import io.requery.query.element.QueryElement;
 import io.requery.util.Objects;
+import io.requery.util.function.Function;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -227,70 +230,70 @@ class WrappedEntityStore<T> extends ReactiveEntityStore<T> {
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Expression<?>... attributes) {
-        return delegate.select(attributes);
+    public Selection<ReactiveResult<Tuple>> select(Expression<?>... attributes) {
+        return result(delegate.select(attributes));
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Set<? extends Expression<?>> expressions) {
-        return delegate.select(expressions);
+    public Selection<ReactiveResult<Tuple>> select(Set<? extends Expression<?>> expressions) {
+        return result(delegate.select(expressions));
     }
 
     @Override
-    public Update<Scalar<Integer>> update() {
-        return delegate.update();
+    public Update<ReactiveScalar<Integer>> update() {
+        return scalar(delegate.update());
     }
 
     @Override
-    public Deletion<Scalar<Integer>> delete() {
-        return delegate.delete();
+    public Deletion<ReactiveScalar<Integer>> delete() {
+        return scalar(delegate.delete());
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(
+    public <E extends T> Selection<ReactiveResult<E>> select(
         Class<E> type, QueryAttribute<?, ?>... attributes) {
-        return delegate.select(type, attributes);
+        return result(delegate.select(type, attributes));
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(
+    public <E extends T> Selection<ReactiveResult<E>> select(
         Class<E> type, Set<? extends QueryAttribute<E, ?>> attributes) {
-        return delegate.select(type, attributes);
+        return result(delegate.select(type, attributes));
     }
 
     @Override
-    public <E extends T> Insertion<Result<Tuple>> insert(Class<E> type) {
-        return delegate.insert(type);
+    public <E extends T> Insertion<ReactiveResult<Tuple>> insert(Class<E> type) {
+        return result(delegate.insert(type));
     }
 
     @Override
-    public <E extends T> Update<Scalar<Integer>> update(Class<E> type) {
-        return delegate.update(type);
+    public <E extends T> Update<ReactiveScalar<Integer>> update(Class<E> type) {
+        return scalar(delegate.update(type));
     }
 
     @Override
-    public <E extends T> Deletion<Scalar<Integer>> delete(Class<E> type) {
-        return delegate.delete(type);
+    public <E extends T> Deletion<ReactiveScalar<Integer>> delete(Class<E> type) {
+        return scalar(delegate.delete(type));
     }
 
     @Override
-    public <E extends T> Selection<Scalar<Integer>> count(Class<E> type) {
-        return delegate.count(type);
+    public <E extends T> Selection<ReactiveScalar<Integer>> count(Class<E> type) {
+        return scalar(delegate.count(type));
     }
 
     @Override
-    public Selection<Scalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
-        return delegate.count(attributes);
+    public Selection<ReactiveScalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
+        return scalar(delegate.count(attributes));
     }
 
     @Override
-    public Result<Tuple> raw(String query, Object... parameters) {
-        return delegate.raw(query, parameters);
+    public ReactiveResult<Tuple> raw(String query, Object... parameters) {
+        return new ReactiveResult<>(delegate.raw(query, parameters));
     }
 
     @Override
-    public <E extends T> Result<E> raw(Class<E> type, String query, Object... parameters) {
-        return delegate.raw(type, query, parameters);
+    public <E extends T> ReactiveResult<E> raw(Class<E> type, String query, Object... parameters) {
+        return new ReactiveResult<>(delegate.raw(type, query, parameters));
     }
 
     @Override
@@ -328,5 +331,27 @@ class WrappedEntityStore<T> extends ReactiveEntityStore<T> {
             current = current.concatWith(single.toObservable());
         }
         return current.concatWith(commitTransaction);
+    }
+
+    private static <E> QueryElement<ReactiveResult<E>> result(Return<? extends Result<E>> query) {
+        @SuppressWarnings("unchecked")
+        QueryElement<Result<E>> element = (QueryElement<Result<E>>) query;
+        return element.extend(new Function<Result<E>, ReactiveResult<E>>() {
+            @Override
+            public ReactiveResult<E> apply(Result<E> result) {
+                return new ReactiveResult<>(result);
+            }
+        });
+    }
+
+    private static <E> QueryElement<ReactiveScalar<E>> scalar(Return<? extends Scalar<E>> query) {
+        @SuppressWarnings("unchecked")
+        QueryElement<Scalar<E>> element = (QueryElement<Scalar<E>>) query;
+        return element.extend(new Function<Scalar<E>, ReactiveScalar<E>>() {
+            @Override
+            public ReactiveScalar<E> apply(Scalar<E> result) {
+                return new ReactiveScalar<>(result);
+            }
+        });
     }
 }

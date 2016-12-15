@@ -33,11 +33,11 @@ class GeneratedKeyResult extends BaseResult<Tuple> {
     private final ResultSet results;
     private final Set<? extends Expression<?>> selection;
 
-    protected GeneratedKeyResult(RuntimeConfiguration configuration,
-                                 Set<? extends Expression<?>> selection,
-                                 Connection connection,
-                                 ResultSet results,
-                                 Integer maxSize) {
+    GeneratedKeyResult(RuntimeConfiguration configuration,
+                       Set<? extends Expression<?>> selection,
+                       Connection connection,
+                       ResultSet results,
+                       Integer maxSize) {
         super(maxSize);
         this.results = results;
         this.connection = connection;

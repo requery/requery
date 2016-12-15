@@ -720,7 +720,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         Class<? extends S> removeType = (Class<? extends S>)
                                 referencedType.getClassType();
 
-                        Supplier<Scalar<Integer>> query = queryable.delete(removeType)
+                        Supplier<? extends Scalar<Integer>> query = queryable.delete(removeType)
                                 .where(tKey.equal(keyValue))
                                 .and(uKey.equal(otherValue));
                         int count = query.get().value();
@@ -806,7 +806,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
         }
 
-        Deletion<Scalar<Integer>> deletion = queryable.delete(entityClass);
+        Deletion<? extends Scalar<Integer>> deletion = queryable.delete(entityClass);
 
         for (Attribute<E, ?> attribute : whereAttributes) {
             if (attribute == versionAttribute) {
@@ -957,7 +957,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             // optimized case: delete from T where key in (keys...)
             if (ids.size() > 0) {
-                Deletion<Scalar<Integer>> deletion = queryable.delete(entityClass);
+                Deletion<? extends Scalar<Integer>> deletion = queryable.delete(entityClass);
                 for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
                     QueryAttribute<E, Object> id = Attributes.query(attribute);
                     deletion.where(id.in(ids));

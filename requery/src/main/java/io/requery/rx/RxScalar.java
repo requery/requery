@@ -14,15 +14,27 @@
  * limitations under the License.
  */
 
-package io.requery.proxy;
+package io.requery.rx;
 
-import io.requery.meta.Attribute;
-import io.requery.query.Result;
-import io.requery.util.function.Supplier;
+import io.requery.query.Scalar;
+import io.requery.query.ScalarDelegate;
+import rx.Single;
 
-public interface QueryInitializer<E, V> {
+import javax.annotation.CheckReturnValue;
 
-    <U> V initialize(EntityProxy<E> proxy,
-                     Attribute<E, V> attribute,
-                     Supplier<? extends Result<U>> query);
+public class RxScalar<E> extends ScalarDelegate<E> {
+
+    RxScalar(Scalar<E> delegate) {
+        super(delegate);
+    }
+
+    /**
+     * Converts this Scalar computation to a single {@link rx.Single}.
+     *
+     * @return {@link rx.Single} for the result of this query.
+     */
+    @CheckReturnValue
+    public rx.Single<E> toSingle() {
+        return Single.fromCallable(this);
+    }
 }

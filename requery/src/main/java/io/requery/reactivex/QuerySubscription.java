@@ -18,6 +18,7 @@ package io.requery.reactivex;
 
 import io.reactivex.internal.util.BackpressureHelper;
 import io.requery.query.BaseResult;
+import io.requery.query.Result;
 import io.requery.util.CloseableIterator;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -27,13 +28,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 class QuerySubscription<T> implements Subscription {
 
-    private final BaseResult<T> result;
+    private final Result<T> result;
     private final Subscriber<? super T> subscriber;
     private final AtomicBoolean canceled;
     private final AtomicLong emitted;
     private final AtomicLong requested;
 
-    QuerySubscription(BaseResult<T> result, Subscriber<? super T> subscriber) {
+    QuerySubscription(Result<T> result, Subscriber<? super T> subscriber) {
         this.result = result;
         this.subscriber = subscriber;
         canceled = new AtomicBoolean();

@@ -78,9 +78,9 @@ public class QueryElement<E> implements Selectable<E>,
     SetOperationElement,
     WhereElement {
 
-    private final EntityModel model;
-    private final QueryOperation<E> operator;
     private final QueryType queryType;
+    private final EntityModel model;
+    private QueryOperation<E> operator;
     private String aliasName;
     private boolean selectDistinct;
     private Set<WhereConditionElement<E>> where;
@@ -315,6 +315,12 @@ public class QueryElement<E> implements Selectable<E>,
     @Override
     public E get() {
         return operator.evaluate(parent == null ? this : parent);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <F extends E> QueryElement<F> extend(io.requery.util.function.Function<E, F> transform) {
+        operator = new ExtendQueryOperation<>(transform, operator);
+        return (QueryElement<F>) this;
     }
 
     @Override

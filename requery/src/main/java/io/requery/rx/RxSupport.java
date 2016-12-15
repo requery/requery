@@ -17,17 +17,10 @@
 package io.requery.rx;
 
 import io.requery.BlockingEntityStore;
-import io.requery.TransactionListenable;
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
-import io.requery.query.BaseResult;
-import io.requery.query.Result;
-import io.requery.query.Scalar;
 import io.requery.query.element.QueryElement;
-import io.requery.query.element.QueryWrapper;
 import rx.Observable;
-import rx.Scheduler;
-import rx.Single;
 import rx.functions.Func1;
 
 import java.util.Collections;
@@ -46,22 +39,13 @@ public final class RxSupport {
     }
 
     public static <S> SingleEntityStore<S> toReactiveStore(BlockingEntityStore<S> store) {
-        return toReactiveStore(store, null);
+        return new SingleEntityStoreFromBlocking<>(store);
     }
 
-    public static <S> SingleEntityStore<S> toReactiveStore(BlockingEntityStore<S> store,
-                                                           Scheduler subscribeOn) {
-        return new SingleEntityStoreFromBlocking<>(store, subscribeOn);
-    }
-
-    public static <T> Observable<Result<T>> toResultObservable(final Result<T> result) {
-        if (!(result instanceof TransactionListenable)) {
-            throw new UnsupportedOperationException();
-        }
-        TransactionListenable listenable = (TransactionListenable) result;
-        final QueryElement<?> element = ((QueryWrapper) result).unwrapQuery();
+    static <T> Observable<RxResult<T>> toResultObservable(final RxResult<T> result) {
+        final QueryElement<?> element = result.unwrapQuery();
         // ensure the transaction listener is added in the target data store
-        listenable.addTransactionListener(typeChanges);
+        result.addTransactionListener(typeChanges);
         return typeChanges.commitSubject()
             .filter(new Func1<Set<Type<?>>, Boolean>() {
                 @Override
@@ -69,9 +53,9 @@ public final class RxSupport {
                     return !Collections.disjoint(element.entityTypes(), types) ||
                         referencesType(element.entityTypes(), types);
                 }
-            }).map(new Func1<Set<Type<?>>, Result<T>>() {
+            }).map(new Func1<Set<Type<?>>, RxResult<T>>() {
                 @Override
-                public Result<T> call(Set<Type<?>> types) {
+                public RxResult<T> call(Set<Type<?>> types) {
                     return result;
                 }
             }).startWith(result);
@@ -99,13 +83,5 @@ public final class RxSupport {
             }
         }
         return false;
-    }
-
-    public static <E> Observable<E> toObservable(final BaseResult<E> result) {
-        return Observable.create(new OnSubscribeFromQuery<>(result));
-    }
-
-    public static <E> Single<E> toSingle(final Scalar<E> scalar) {
-        return Single.fromCallable(scalar);
     }
 }
