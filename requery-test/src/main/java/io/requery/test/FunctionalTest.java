@@ -108,6 +108,18 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testCopy() {
+        Address address = new Address();
+        address.setCity("San Francisco");
+        address.setState("CA");
+        address.setCountry("US");
+        Address copy = address.copy();
+        assertEquals(address.getCity(), copy.getCity());
+        assertEquals(address.getState(), copy.getState());
+        assertEquals(address.getCountry(), copy.getCountry());
+    }
+
+    @Test
     public void testInsert() {
         Person person = randomPerson();
         data.insert(person);

@@ -283,6 +283,24 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
         }
     }
 
+    public E copy() {
+        E copy = type.getFactory().get();
+        EntityProxy<E> proxy = type.getProxyProvider().apply(copy);
+        proxy.link(loader);
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
+            if (!attribute.isAssociation()) {
+                PropertyState state = getState(attribute);
+                if (state == PropertyState.LOADED || state == PropertyState.MODIFIED) {
+                    Object value = get(attribute, false);
+                    @SuppressWarnings("unchecked")
+                    Attribute<E, Object> a = (Attribute<E, Object>) attribute;
+                    proxy.set(a, value, state);
+                }
+            }
+        }
+        return copy;
+    }
+
     public Type<E> type() {
         return type;
     }

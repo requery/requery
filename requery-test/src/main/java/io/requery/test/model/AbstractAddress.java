@@ -9,7 +9,7 @@ import io.requery.Generated;
 import io.requery.Key;
 import io.requery.OneToOne;
 
-@Entity
+@Entity(copyable = true)
 public class AbstractAddress extends Coordinate {
 
     @Key @Generated

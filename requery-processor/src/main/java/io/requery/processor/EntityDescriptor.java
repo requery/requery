@@ -89,9 +89,14 @@ interface EntityDescriptor {
     PropertyNameStyle propertyNameStyle();
 
     /**
-     * @return true if the entity is cacheable
+     * @return true if the entity is cacheable, false otherwise
      */
     boolean isCacheable();
+
+    /**
+     * @return true if the entity is copyable, false otherwise
+     */
+    boolean isCopyable();
 
     /**
      * @return true if this an embedded entity type.

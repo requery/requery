@@ -368,6 +368,11 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
+    public boolean isCopyable() {
+        return annotationOf(Entity.class).map(Entity::copyable).orElse(false);
+    }
+
+    @Override
     public boolean isReadOnly() {
         return annotationOf(ReadOnly.class).isPresent();
     }
