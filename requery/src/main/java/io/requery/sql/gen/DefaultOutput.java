@@ -315,7 +315,9 @@ public class DefaultOutput implements Output {
             Object value = condition.getRightOperand();
             appendOperator(condition.getOperator());
 
-            if (value instanceof Collection) {
+            if (value instanceof Collection &&
+                    (condition.getOperator() == Operator.IN ||
+                     condition.getOperator() == Operator.NOT_IN)) {
                 Collection collection = (Collection) value;
                 qb.openParenthesis();
                 qb.commaSeparated(collection, new QueryBuilder.Appender() {

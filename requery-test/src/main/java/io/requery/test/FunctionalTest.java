@@ -120,6 +120,17 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testConverter() {
+        Phone phone = randomPhone();
+        phone.getExtensions().add(1);
+        phone.getExtensions().add(999);
+        data.insert(phone);
+        Phone result = data.select(Phone.class)
+                .where(Phone.EXTENSIONS.eq(phone.getExtensions())).get().first();
+        assertSame(phone, result);
+    }
+
+    @Test
     public void testInsert() {
         Person person = randomPerson();
         data.insert(person);
