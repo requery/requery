@@ -16,7 +16,6 @@
 
 package io.requery.sql
 
-import io.requery.Persistable
 import io.requery.TransactionIsolation
 import io.requery.kotlin.*
 import io.requery.meta.Attribute
@@ -36,7 +35,7 @@ import kotlin.reflect.KClass
  *
  * @author Nikhil Purushe
  */
-class KotlinEntityDataStore<T : Persistable>(configuration: Configuration) : BlockingEntityStore<T> {
+class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEntityStore<T> {
 
     private var data: EntityDataStore<T> = EntityDataStore(configuration)
     private var context : EntityContext<T> = data.context()

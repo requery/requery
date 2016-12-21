@@ -20,6 +20,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile 'junit:junit:4.12'
     testCompile 'com.h2database:h2:1.4.191'
+    testCompile "io.reactivex.rxjava2:rxjava:$rxjava2_version"
 }
 
 idea {
