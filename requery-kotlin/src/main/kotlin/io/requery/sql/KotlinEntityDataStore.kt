@@ -16,6 +16,7 @@
 
 package io.requery.sql
 
+import io.requery.RollbackException
 import io.requery.TransactionIsolation
 import io.requery.kotlin.*
 import io.requery.meta.Attribute
@@ -137,20 +138,24 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
 
     override fun <V> withTransaction(body: BlockingEntityStore<T>.() -> V): V {
         try {
-            data.transaction().begin()
-            return body()
-        } finally {
-            data.transaction().close()
+            val transaction = data.transaction().begin()
+            val result = body()
+            transaction.commit()
+            return result
+        } catch (e : Exception) {
+            throw RollbackException(e)
         }
     }
 
     override fun <V> withTransaction(isolation: TransactionIsolation,
                                      body: BlockingEntityStore<T>.() -> V): V {
         try {
-            data.transaction().begin(isolation)
-            return body()
-        } finally {
-            data.transaction().close()
+            val transaction = data.transaction().begin(isolation)
+            val result = body()
+            transaction.commit()
+            return result
+        } catch (e : Exception) {
+            throw RollbackException(e)
         }
     }
 
