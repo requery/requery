@@ -540,12 +540,11 @@ public class SchemaModifier {
         for (Attribute<T, ?> attribute : attributes) {
             if (attribute.isIndexed()) {
                 Set<String> names = new LinkedHashSet<>(attribute.getIndexNames());
-                if (names.isEmpty()) {
-                    // if no name set create a default one
-                    String indexName = attribute.getName() + "_index";
-                    names.add(indexName);
-                }
                 for(String indexName : names) {
+                    if (indexName.isEmpty()) {
+                        // if no name set create a default one
+                        indexName = attribute.getName() + "_index";
+                    }
                     Set<Attribute<?, ?>> indexColumns = indexes.get(indexName);
                     if (indexColumns == null) {
                         indexes.put(indexName, indexColumns = new LinkedHashSet<>());
