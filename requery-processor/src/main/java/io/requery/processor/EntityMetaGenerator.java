@@ -268,7 +268,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
             boolean isQueryable = attribute.cardinality() == null || attribute.isForeignKey();
             Class<?> attributeClass = isQueryable ? QueryAttribute.class : Attribute.class;
             attributeType = ClassName.get(attributeClass);
-            if (isQueryable && SourceLanguage.of(entity.element()) == SourceLanguage.KOTLIN) {
+            if (isQueryable) {
                 TypeElement delegateType = elements.getTypeElement(KOTLIN_ATTRIBUTE_DELEGATE);
                 if (delegateType != null) {
                     attributeType = ClassName.get(delegateType);

@@ -313,9 +313,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                 boolean castType = false;
 
                 // use wildcard generic collection type if necessary
-                if (SourceLanguage.of(entity.element()) == SourceLanguage.KOTLIN &&
-                    setTypeName instanceof ParameterizedTypeName) {
-
+                if (setTypeName instanceof ParameterizedTypeName) {
                     ParameterizedTypeName parameterizedName = (ParameterizedTypeName) setTypeName;
                     List<TypeName> arguments = parameterizedName.typeArguments;
                     List<TypeName> wildcards = new ArrayList<>();

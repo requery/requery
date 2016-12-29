@@ -64,7 +64,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     private final ProcessingEnvironment processingEnvironment;
     private final Map<Element, AttributeDescriptor> attributes;
     private final Map<Element, ListenerMethod> listeners;
-    private final SourceLanguage sourceLanguage;
     private final String modelName;
     private final QualifiedName qualifiedName;
 
@@ -73,7 +72,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         this.processingEnvironment = processingEnvironment;
         attributes = new LinkedHashMap<>();
         listeners = new LinkedHashMap<>();
-        sourceLanguage = SourceLanguage.of(typeElement);
         modelName = createModelName();
         qualifiedName = createQualifiedName();
     }
@@ -81,9 +79,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     @Override
     public Set<ElementValidator> process(ProcessingEnvironment processingEnvironment) {
         // create attributes for fields that have no annotations
-        if (element().getKind().isInterface() || isImmutable() ||
-            sourceLanguage == SourceLanguage.KOTLIN) {
-
+        if (element().getKind().isInterface() || isImmutable() || isUnimplementable()) {
             ElementFilter.methodsIn(element().getEnclosedElements()).stream()
                 .filter(this::isMethodProcessable)
                 .forEach(this::computeAttribute);
@@ -126,7 +122,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             validator.error("Entity annotation cannot be applied to an enum class");
         }
         if (attributes.values().isEmpty()) {
-            validator.error("Entity contains no attributes");
+            validator.warning("Entity contains no attributes");
         }
         if (!isReadOnly() && !isEmbedded() && attributes.values().size() == 1 &&
             attributes.values().iterator().next().isGenerated()) {
@@ -140,22 +136,23 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     private boolean isMethodProcessable(ExecutableElement element) {
         // if an immutable type with an implementation provided skip it
-        if (sourceLanguage == SourceLanguage.JAVA &&
-            element().getKind().isClass() && isImmutable() &&
+        if (!isUnimplementable() && element().getKind().isClass() && isImmutable() &&
             !element.getModifiers().contains(Modifier.ABSTRACT)) {
             return false;
         }
         String name = element.getSimpleName().toString();
         // skip kotlin data class methods with component1, component2.. names
-        if (sourceLanguage == SourceLanguage.KOTLIN && isUnimplementable() &&
+        if (isUnimplementable() &&
             name.startsWith("component") && name.length() > "component".length()) {
             return false;
         }
+
         TypeMirror type = element.getReturnType();
+        boolean isInterface = element().getKind().isInterface();
         // must be a getter style method with no args, can't return void or itself or its builder
         return type.getKind() != TypeKind.VOID &&
                element.getParameters().isEmpty() &&
-               (isImmutable() || !element.getModifiers().contains(Modifier.FINAL)) &&
+               (isImmutable() || isInterface || !element.getModifiers().contains(Modifier.FINAL)) &&
                (!isImmutable() || !type.equals(element().asType())) &&
                !type.equals(builderType().map(Element::asType).orElse(null)) &&
                !element.getModifiers().contains(Modifier.STATIC) &&
@@ -389,9 +386,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         return Stream.of("com.google.auto.value.AutoValue",
                          "auto.parcel.AutoParcel",
                          "org.immutables.value.Value.Immutable")
-            .filter(type -> Mirrors.findAnnotationMirror(element(), type).isPresent())
-            .findAny().isPresent() ||
-            (sourceLanguage == SourceLanguage.KOTLIN && isUnimplementable()) ||
+            .anyMatch(type -> Mirrors.findAnnotationMirror(element(), type).isPresent()) ||
+            isUnimplementable() ||
             annotationOf(Entity.class).map(Entity::immutable).orElse(false);
     }
 
@@ -479,7 +475,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         // didn't work likely because the parameter names are missing
         if (names.isEmpty()) {
             // for kotlin data classes add processable element field names in order
-            if (sourceLanguage == SourceLanguage.KOTLIN && isUnimplementable()) {
+            if (isUnimplementable()) {
                 ElementFilter.methodsIn(element().getEnclosedElements()).stream()
                         .filter(this::isMethodProcessable)
                         .forEach(getter ->
