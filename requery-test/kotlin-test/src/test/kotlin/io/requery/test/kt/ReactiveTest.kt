@@ -17,7 +17,6 @@
 package io.requery.test.kt
 
 import io.reactivex.Observable
-import io.requery.Persistable
 import io.requery.kotlin.eq
 import io.requery.reactivex.KotlinReactiveEntityStore
 import io.requery.sql.KotlinConfiguration
@@ -37,8 +36,8 @@ import java.util.concurrent.TimeUnit
 
 class ReactiveTest {
 
-    var instance : KotlinEntityDataStore<Persistable>? = null
-    val data : KotlinReactiveEntityStore<Persistable> get() = KotlinReactiveEntityStore(instance!!)
+    var instance : KotlinEntityDataStore<Any>? = null
+    val data : KotlinReactiveEntityStore<Any> get() = KotlinReactiveEntityStore(instance!!)
 
     internal fun randomPerson(): Person {
         return FunctionalTest.randomPerson()

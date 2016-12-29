@@ -16,7 +16,6 @@
 
 package io.requery.test.kt
 
-import io.requery.Persistable
 import io.requery.kotlin.*
 import io.requery.sql.*
 import org.h2.jdbcx.JdbcDataSource
@@ -31,8 +30,8 @@ import java.util.UUID
 
 class FunctionalTest {
 
-    var instance : KotlinEntityDataStore<Persistable>? = null
-    val data : KotlinEntityDataStore<Persistable> get() = instance!!
+    var instance : KotlinEntityDataStore<Any>? = null
+    val data : KotlinEntityDataStore<Any> get() = instance!!
 
     companion object {
         fun randomPerson(): Person {
