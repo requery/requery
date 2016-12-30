@@ -524,12 +524,18 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         // updates the entity using a query (not the query values are not specified but instead
         // mapped directly to avoid boxing)
         if (filterBindable == null) {
+            final List<Attribute<E, ?>> list = new ArrayList<>();
+            for (Attribute<E, ?> value : bindableAttributes) {
+                if (stateless ||
+                    ((proxy.getState(value) == PropertyState.MODIFIED) &&
+                    (!value.isAssociation() || value.isForeignKey() || value.isKey()))) {
+                    list.add(value);
+                }
+            }
             filterBindable = new Predicate<Attribute<E, ?>>() {
                 @Override
                 public boolean test(Attribute<E, ?> value) {
-                    return stateless ||
-                            ((proxy.getState(value) == PropertyState.MODIFIED) &&
-                            (!value.isAssociation() || value.isForeignKey() || value.isKey()));
+                    return list.contains(value);
                 }
             };
         }
