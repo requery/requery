@@ -18,10 +18,7 @@ package io.requery.converter;
 
 import io.requery.Converter;
 
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 
 /**
  * Converts from a {@link LocalTime} to a {@link java.sql.Time} for Java 8.
@@ -48,8 +45,7 @@ public class LocalTimeConverter implements Converter<LocalTime, java.sql.Time> {
         if (value == null) {
             return null;
         }
-        Instant instant = value.atDate(LocalDate.now()).atZone(ZoneId.systemDefault()).toInstant();
-        return new java.sql.Time(instant.toEpochMilli());
+        return java.sql.Time.valueOf(value);
     }
 
     @Override
