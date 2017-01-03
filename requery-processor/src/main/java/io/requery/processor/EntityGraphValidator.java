@@ -21,6 +21,7 @@ import io.requery.meta.Cardinality;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.util.Types;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -92,7 +93,15 @@ class EntityGraphValidator {
                 } else {
                     validator.warning("Couldn't find referenced element for " + attribute);
                 }
+            } else {
+                for (EntityDescriptor descriptor : graph.entities()) {
+                    Types types = processingEnvironment.getTypeUtils();
+                    if (types.isSubtype(descriptor.element().asType(), attribute.typeMirror())) {
+                        validator.error("Entity reference missing relationship annotation");
+                    }
+                }
             }
+
             // checked foreign key reference
             if (attribute.isForeignKey()) {
                 Optional<EntityDescriptor> referenced = graph.referencingEntity(attribute);
