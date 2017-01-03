@@ -38,6 +38,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -94,8 +95,8 @@ public class TimeConversionsTest {
         Event event = new Event();
         UUID id = UUID.randomUUID();
         LocalDateTime localDateTimeNow = LocalDateTime.now().withNano(0);
-        OffsetDateTime offsetDateTimeNow = OffsetDateTime.now().withNano(0);
-        ZonedDateTime zonedDateTimeNow = ZonedDateTime.now().withNano(0);
+        OffsetDateTime offsetDateTimeNow = OffsetDateTime.now(ZoneId.of("UTC")).withNano(0);
+        ZonedDateTime zonedDateTimeNow = ZonedDateTime.now(ZoneId.of("UTC")).withNano(0);
         event.setId(id);
         event.setLocalDateTime(localDateTimeNow);
         event.setOffsetDateTime(offsetDateTimeNow);
@@ -106,6 +107,6 @@ public class TimeConversionsTest {
         event = data.findByKey(Event.class, id);
         Assert.assertEquals(localDateTimeNow, event.getLocalDateTime());
         Assert.assertEquals(offsetDateTimeNow, event.getOffsetDateTime());
-        Assert.assertEquals(zonedDateTimeNow, event.getZonedDateTime());
+        Assert.assertEquals(zonedDateTimeNow.toInstant(), event.getZonedDateTime().toInstant());
     }
 }

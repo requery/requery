@@ -20,10 +20,12 @@ import io.requery.Converter;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 /**
- * Converts from a {@link OffsetDateTime} to a {@link java.sql.Timestamp} for Java 8.
+ * Converts from a {@link OffsetDateTime} to a {@link java.sql.Timestamp} for Java 8. Note that
+ * when converting between the time type and the database type all times will be converted to the
+ * UTC zone offset.
  */
 public class OffsetDateTimeConverter implements Converter<OffsetDateTime, java.sql.Timestamp> {
 
@@ -57,6 +59,6 @@ public class OffsetDateTimeConverter implements Converter<OffsetDateTime, java.s
         if (value == null) {
             return null;
         }
-        return OffsetDateTime.ofInstant(value.toInstant(), ZoneId.systemDefault());
+        return OffsetDateTime.ofInstant(value.toInstant(), ZoneOffset.UTC);
     }
 }

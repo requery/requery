@@ -20,11 +20,13 @@ import io.requery.Converter;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 /**
- * Converts from a {@link LocalDateTime} to a {@link java.sql.Timestamp} for Java 8.
+ * Converts from a {@link LocalDateTime} to a {@link java.sql.Timestamp} for Java 8. Note that
+ * when converting between the time type and the database type all times will be converted to the
+ * UTC zone offset.
  */
 public class ZonedDateTimeConverter implements Converter<ZonedDateTime, java.sql.Timestamp> {
 
@@ -58,7 +60,7 @@ public class ZonedDateTimeConverter implements Converter<ZonedDateTime, java.sql
         if (value == null) {
             return null;
         }
-        Instant instant = Instant.ofEpochMilli(value.getTime());
-        return ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+        Instant instant = value.toInstant();
+        return ZonedDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 }
