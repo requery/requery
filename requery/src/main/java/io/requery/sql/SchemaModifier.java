@@ -132,7 +132,7 @@ public class SchemaModifier {
                 String sql = tableCreateStatement(type, mode);
                 statementListeners.beforeExecuteUpdate(statement, sql, null);
                 statement.execute(sql);
-                statementListeners.afterExecuteUpdate(statement);
+                statementListeners.afterExecuteUpdate(statement, 0);
             }
             for (Type<?> type : sorted) {
                 createIndexes(connection, mode, type);
@@ -187,7 +187,7 @@ public class SchemaModifier {
                 String sql = qb.toString();
                 statementListeners.beforeExecuteUpdate(statement, sql, null);
                 statement.execute(sql);
-                statementListeners.afterExecuteUpdate(statement);
+                statementListeners.afterExecuteUpdate(statement, 0);
             } catch (SQLException e) {
                 if (platform.supportsIfExists()) {
                     throw e;
@@ -263,7 +263,7 @@ public class SchemaModifier {
             String sql = qb.toString();
             statementListeners.beforeExecuteUpdate(statement, sql, null);
             statement.execute(sql);
-            statementListeners.afterExecuteUpdate(statement);
+            statementListeners.afterExecuteUpdate(statement, 0);
         } catch (SQLException e) {
             throw new PersistenceException(e);
         }

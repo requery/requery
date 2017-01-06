@@ -89,8 +89,18 @@ public class LoggingListener implements StatementListener,
     }
 
     @Override
-    public void afterExecuteUpdate(Statement statement) {
-        Log.i(tag, "afterExecuteUpdate");
+    public void afterExecuteUpdate(Statement statement, int count) {
+        Log.i(tag, String.format("afterExecuteUpdate %d", count));
+    }
+
+    @Override
+    public void beforeExecuteBatchUpdate(Statement statement, String sql) {
+        Log.i(tag, String.format("beforeExecuteUpdate sql: %s", sql));
+    }
+
+    @Override
+    public void afterExecuteBatchUpdate(Statement statement, int[] count) {
+        Log.i(tag, "afterExecuteBatchUpdate");
     }
 
     @Override

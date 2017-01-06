@@ -88,7 +88,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                     StatementListener listener = configuration.getStatementListener();
                     listener.beforeExecuteUpdate(statement, sql, boundParameters);
                     int count = statement.executeUpdate();
-                    listener.afterExecuteUpdate(statement);
+                    listener.afterExecuteUpdate(statement, count);
                     MutableTuple tuple = new MutableTuple(1);
                     tuple.set(0, NamedExpression.ofInteger("count"), count);
                     try {
