@@ -343,14 +343,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             if (attribute.isAssociation()) {
                 // get the referenced value
-                Object value = proxy.get(attribute, false);
-                if (value != null) {
-                    Attribute<Object, Object> referenced =
-                        Attributes.get(attribute.getReferencedAttribute());
-                    Function<Object, EntityProxy<Object>> proxyProvider =
-                        referenced.getDeclaringType().getProxyProvider();
-                    value = proxyProvider.apply(value).get(referenced, false);
-                }
+                Object value = proxy.getKey(attribute);
                 mapping.write((Expression) attribute, statement, i + 1, value);
             } else {
                 if (attribute.getPrimitiveKind() != null) {
@@ -556,7 +549,12 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         if (attribute.getPrimitiveKind() != null) {
                             mapPrimitiveType(proxy, attribute, statement, index + 1);
                         } else {
-                            Object value = proxy.get(attribute, false);
+                            Object value;
+                            if (attribute.isKey() && attribute.isAssociation()) {
+                                value = proxy.getKey(attribute);
+                            } else {
+                                value = proxy.get(attribute, false);
+                            }
                             mapping.write((Expression) attribute, statement, index + 1, value);
                         }
                     }

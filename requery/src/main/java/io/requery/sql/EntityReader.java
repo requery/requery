@@ -220,7 +220,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                  PreparedStatement statement = connection.prepareStatement(sql)) {
                 int index = 1;
                 for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
-                    Object value = proxy.get(attribute, false);
+                    Object value = proxy.getKey(attribute);
                     if (value == null) {
                         throw new MissingKeyException(proxy);
                     }
