@@ -259,16 +259,16 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     public Object getKey(Attribute<E, ?> attribute) {
         if (attribute.isAssociation()) {
             Attribute referenced = attribute.getReferencedAttribute().get();
-            Object association = get(attribute);
+            Object association = get(attribute, false);
             if (association != null) {
                 Type<Object> type = referenced.getDeclaringType();
                 EntityProxy proxy = type.getProxyProvider().apply(association);
-                return proxy == null ? null : proxy.get(referenced);
+                return proxy == null ? null : proxy.get(referenced, false);
             } else {
                 return null;
             }
         }
-        return get(attribute);
+        return get(attribute, false);
     }
 
     /**
