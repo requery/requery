@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,6 +126,23 @@ class FunctionalTest {
         val list = result.get().toList()
         assertTrue(list.contains(person2))
         assertTrue(list.contains(person3))
+    }
+
+    @Test
+    fun testQueryJoinOrderBy() {
+        val person = randomPerson()
+        person.address = AddressEntity()
+        person.address.city = "San Francisco"
+        person.address.country = "US"
+        person.address.state = "CA"
+        data.insert(person)
+        // not a useful query just tests the sql output
+        val result = data.select(Address::class)
+                .join(Person::class).on(Person::address.eq(Person::id))
+                .where(Person::id.eq(person.id))
+                .orderBy(Address::city.desc())
+                .get()
+        assertTrue(result.toList().size > 0)
     }
 
     @After

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,6 +55,14 @@ inline infix fun <reified T : Any, R> KProperty1<T, R>.lt(value: R): Logical<out
 inline infix fun <reified T : Any, R> KProperty1<T, R>.gt(value: R): Logical<out Expression<R>, R> = findAttribute(this).gt(value)
 inline infix fun <reified T : Any, R> KProperty1<T, R>.lte(value: R): Logical<out Expression<R>, R> = findAttribute(this).lte(value)
 inline infix fun <reified T : Any, R> KProperty1<T, R>.gte(value: R): Logical<out Expression<R>, R> = findAttribute(this).gte(value)
+
+inline infix fun <reified T : Any, R, reified U : Any> KProperty1<T, R>.eq(value: KProperty1<U, R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).eq(findAttribute(value))
+inline infix fun <reified T : Any, R, reified U : Any> KProperty1<T, R>.ne(value: KProperty1<U, R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).ne(findAttribute(value))
+inline infix fun <reified T : Any, R, reified U : Any> KProperty1<T, R>.lt(value: KProperty1<U, R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).lt(findAttribute(value))
+inline infix fun <reified T : Any, R, reified U : Any> KProperty1<T, R>.gt(value: KProperty1<U, R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).gt(findAttribute(value))
+inline infix fun <reified T : Any, R, reified U : Any> KProperty1<T, R>.lte(value: KProperty1<U, R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).lte(findAttribute(value))
+inline infix fun <reified T : Any, R, reified U : Any> KProperty1<T, R>.gte(value: KProperty1<U, R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).gte(findAttribute(value))
+
 inline infix fun <reified T : Any, R> KProperty1<T, R>.eq(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).eq(value)
 inline infix fun <reified T : Any, R> KProperty1<T, R>.ne(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).ne(value)
 inline infix fun <reified T : Any, R> KProperty1<T, R>.lt(value: Expression<R>): Logical<out Expression<R>, out Expression<R>> = findAttribute(this).lt(value)

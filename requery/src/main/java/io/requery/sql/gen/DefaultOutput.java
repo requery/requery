@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import io.requery.query.function.Function;
 import io.requery.sql.BoundParameters;
 import io.requery.sql.QueryBuilder;
 import io.requery.sql.RuntimeConfiguration;
+import io.requery.util.function.Supplier;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -379,6 +380,8 @@ public class DefaultOutput implements Output {
         if (value instanceof QueryAttribute) {
             QueryAttribute a = (QueryAttribute) value;
             appendColumn(a);
+        } else if (value instanceof Supplier && ((Supplier)value).get() instanceof QueryAttribute) {
+            appendColumn((Expression<?>) ((Supplier)value).get());
         } else if (value instanceof NamedExpression) {
             NamedExpression namedExpression = (NamedExpression) value;
             qb.append(namedExpression.getName());
