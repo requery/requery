@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,6 +69,9 @@ class KotlinRxEntityStore<T : Any>(private var store: BlockingEntityStore<T>) : 
 
     override fun <E : T> delete(entity: E): Completable = Completable.fromCallable { store.delete(entity) }
     override fun <E : T> delete(entities: Iterable<E>): Completable = Completable.fromCallable { store.delete(entities) }
+
+    override fun raw(query: String, vararg parameters: Any): Result<Tuple> = store.raw(query, parameters)
+    override fun <E : T> raw(type: KClass<E>, query: String, vararg parameters: Any): Result<E> = store.raw(type, query, parameters)
 
     override fun <E : T, K> findByKey(type: KClass<E>, key: K): Single<E> = Single.fromCallable { store.findByKey(type, key) }
 

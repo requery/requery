@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,6 +135,10 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
     override fun <E : T> delete(entities: Iterable<E>): Void = data.delete(entities)
 
     override fun <E : T, K> findByKey(type: KClass<E>, key: K): E? = data.findByKey(type.java, key)
+
+    override fun raw(query: String, vararg parameters: Any): Result<Tuple> = data.raw(query, parameters)
+    override fun <E : T> raw(type: KClass<E>, query: String, vararg parameters: Any): Result<E> =
+            data.raw(type.java, query, parameters)
 
     override fun <V> withTransaction(body: BlockingEntityStore<T>.() -> V): V {
         try {

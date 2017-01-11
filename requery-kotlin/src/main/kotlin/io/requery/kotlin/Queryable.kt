@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,8 @@ interface Queryable<T : Any> {
     fun select(vararg expressions: Expression<*>): Selection<out Result<Tuple>>
     fun update(): Update<out Scalar<Int>>
     fun delete(): Deletion<out Scalar<Int>>
+    fun raw(query: String, vararg parameters: Any): Result<Tuple>
+    fun <E : T> raw(type: KClass<E>, query: String, vararg parameters: Any): Result<E>
 }
 
 // property selection support
