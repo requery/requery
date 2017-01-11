@@ -1,6 +1,21 @@
 Change Log
 ==========
 
+## 1.1.1
+
+- Support new KotlinReactiveEntityStore/KotlinRxEntityStore for RxJava 2.0 & RxJava 1.0
+- Support improved compile errors when an invalid relationship is defined
+- Support improved handling of entity associations marked with @Key
+- Support kotlin-kapt plugin for annotation processing
+- Support kotlin raw queries
+- Fix incorrect type in raw queries for integer values on Oracle
+- Fix Java 8 date time conversion for zoned times
+- Fix empty index name during table generation
+- Fix ClassCastException when using a custom converter that converted to a collection in a query
+- Fix NPE when using non relational attributes in a junction table
+- Fix Kotlin withTransaction rollback
+- Fix Kotlin join on condition incorrect sql generated
+
 ## 1.1.0
 
 - Support extendable query types. RxJava and RxJava 2.0 result conversion methods are now separated
