@@ -32,6 +32,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Locale;
 import java.util.Set;
 
@@ -147,6 +148,9 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                     for (int i = 0; i < columns; i++) {
                         String name = metadata.getColumnName(i + 1);
                         int sqlType = metadata.getColumnType(i + 1);
+                        if (sqlType == Types.NUMERIC) {
+                            sqlType = Types.INTEGER;
+                        }
                         Class type = mapping.typeOf(sqlType);
                         expressions[i] = NamedExpression.of(name, type);
                     }
