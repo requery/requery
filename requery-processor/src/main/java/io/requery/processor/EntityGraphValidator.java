@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,9 +94,10 @@ class EntityGraphValidator {
                     validator.warning("Couldn't find referenced element for " + attribute);
                 }
             } else {
+                Types types = processingEnvironment.getTypeUtils();
                 for (EntityDescriptor descriptor : graph.entities()) {
-                    Types types = processingEnvironment.getTypeUtils();
-                    if (types.isSubtype(descriptor.element().asType(), attribute.typeMirror())) {
+                    if (types.isSubtype(descriptor.element().asType(), attribute.typeMirror()) &&
+                        attribute.converterName() == null) {
                         validator.error("Entity reference missing relationship annotation");
                     }
                 }
