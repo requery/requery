@@ -141,24 +141,26 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
             data.raw(type.java, query, parameters)
 
     override fun <V> withTransaction(body: BlockingEntityStore<T>.() -> V): V {
+        val transaction = data.transaction().begin()
         try {
-            val transaction = data.transaction().begin()
             val result = body()
             transaction.commit()
             return result
         } catch (e : Exception) {
+            transaction.rollback()
             throw RollbackException(e)
         }
     }
 
     override fun <V> withTransaction(isolation: TransactionIsolation,
                                      body: BlockingEntityStore<T>.() -> V): V {
+        val transaction = data.transaction().begin(isolation)
         try {
-            val transaction = data.transaction().begin(isolation)
             val result = body()
             transaction.commit()
             return result
         } catch (e : Exception) {
+            transaction.rollback()
             throw RollbackException(e)
         }
     }

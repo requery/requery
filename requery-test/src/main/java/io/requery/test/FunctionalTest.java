@@ -18,7 +18,9 @@ package io.requery.test;
 
 import io.requery.Persistable;
 import io.requery.PersistenceException;
+import io.requery.RollbackException;
 import io.requery.Transaction;
+import io.requery.TransactionIsolation;
 import io.requery.meta.Attribute;
 import io.requery.proxy.CompositeKey;
 import io.requery.proxy.EntityProxy;
@@ -249,6 +251,26 @@ public abstract class FunctionalTest extends RandomData {
                         return "success";
                     }
                 })));
+    }
+
+    @Test
+    public void testInsertWithTransactionCallableRollback() {
+        boolean rolledBack = false;
+        try {
+            data.runInTransaction(new Callable<String>() {
+                @Override
+                public String call() {
+                    Person person = randomPerson();
+                    data.insert(person);
+                    assertTrue(person.getId() > 0);
+                    throw new RuntimeException("Exception!");
+                }
+            }, TransactionIsolation.SERIALIZABLE);
+        } catch (RollbackException e) {
+            rolledBack = true;
+            assertSame(0, data.select(Person.class).get().toList().size());
+        }
+        assertTrue(rolledBack);
     }
 
     @Test
