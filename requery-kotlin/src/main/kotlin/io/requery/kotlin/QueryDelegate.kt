@@ -118,6 +118,7 @@ class JoinOnDelegate<E : Any>(element : JoinOnElement<E>, query : QueryDelegate<
 class QueryDelegate<E : Any>(element : QueryElement<E>) :
         Selectable<E>,
         Selection<E>,
+        DistinctSelection<E>,
         Insertion<E>,
         Update<E>,
         Deletion<E>,
@@ -199,7 +200,7 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
 
     override fun distinct(): DistinctSelection<E> {
         element.distinct()
-        throw UnsupportedOperationException()
+        return this
     }
 
     override fun from(vararg types: KClass<out Any>): JoinWhereGroupByOrderBy<E> {
