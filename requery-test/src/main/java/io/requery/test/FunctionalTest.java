@@ -522,15 +522,13 @@ public abstract class FunctionalTest extends RandomData {
         Group group = new Group();
         group.setName("Test1");
         data.insert(group);
-        int version = 0;
-        assertTrue((version = group.getVersion()) > 0);
+        assertTrue(group.getVersion() > 0);
         group.setName("Test2");
         data.update(group);
-        assertTrue(group.getVersion() > version);
-        version = group.getVersion();
+        assertTrue(group.getVersion() > 0);
         group.setName("Test3");
         data.update(group);
-        assertTrue(group.getVersion() > version);
+        assertTrue(group.getVersion() > 0);
     }
 
     @Test
