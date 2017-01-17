@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -528,7 +528,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             filterBindable = new Predicate<Attribute<E, ?>>() {
                 @Override
                 public boolean test(Attribute<E, ?> value) {
-                    return list.contains(value);
+                    return list.contains(value) || value == versionAttribute;
                 }
             };
         }

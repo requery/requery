@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -515,6 +515,22 @@ public abstract class FunctionalTest extends RandomData {
         group2.setType(GroupType.PRIVATE);
         data.insert(group2);
         data.refresh(Arrays.asList(group, group2), Group.VERSION);
+    }
+
+    @Test
+    public void testVersionUpdate() {
+        Group group = new Group();
+        group.setName("Test1");
+        data.insert(group);
+        int version = 0;
+        assertTrue((version = group.getVersion()) > 0);
+        group.setName("Test2");
+        data.update(group);
+        assertTrue(group.getVersion() > version);
+        version = group.getVersion();
+        group.setName("Test3");
+        data.update(group);
+        assertTrue(group.getVersion() > version);
     }
 
     @Test
