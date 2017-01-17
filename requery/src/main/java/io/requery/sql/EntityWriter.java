@@ -528,7 +528,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             filterBindable = new Predicate<Attribute<E, ?>>() {
                 @Override
                 public boolean test(Attribute<E, ?> value) {
-                    return list.contains(value) || value == versionAttribute;
+                    return list.contains(value) ||
+                            (value == versionAttribute && !hasSystemVersionColumn());
                 }
             };
         }
