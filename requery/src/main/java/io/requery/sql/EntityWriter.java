@@ -519,9 +519,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (filterBindable == null) {
             final List<Attribute<E, ?>> list = new ArrayList<>();
             for (Attribute<E, ?> value : bindableAttributes) {
-                if (stateless ||
-                    ((proxy.getState(value) == PropertyState.MODIFIED) &&
-                    (!value.isAssociation() || value.isForeignKey() || value.isKey()))) {
+                if (stateless || (proxy.getState(value) == PropertyState.MODIFIED)) {
                     list.add(value);
                 }
             }
@@ -595,7 +593,12 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 addVersionCondition(query, version);
             }
             result = query.get().value();
-            proxy.link(context.read(entityClass));
+            EntityReader<E, S> reader = context.read(entityClass);
+            proxy.link(reader);
+
+            if (hasVersion && hasSystemVersionColumn()) {
+                reader.refresh(entity, proxy, versionAttribute);
+            }
             if (result > 0) {
                 updateAssociations(mode, entity, proxy, filterAssociations);
             }
