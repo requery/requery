@@ -51,6 +51,12 @@ public interface Type<T> extends Expression<T> {
     Class<?> getBaseType();
 
     /**
+     * @return true if a builder class is used to construct instances of the type when reading from
+     * a store or query. Generally used for immutable objects.
+     */
+    boolean isBuildable();
+
+    /**
      * @return true if instances of this type can be cached for reuse, false otherwise.
      */
     boolean isCacheable();
@@ -71,10 +77,9 @@ public interface Type<T> extends Expression<T> {
     boolean isStateless();
 
     /**
-     * @return true if a builder class is used to construct instances of the type when reading from
-     * a store or query. Generally used for immutable objects.
+     * @return true if the type should map to a view instead of a table.
      */
-    boolean isBuildable();
+    boolean isView();
 
     /**
      * @param <B> builder type

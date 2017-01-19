@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import io.requery.PropertyNameStyle;
 import io.requery.ReadOnly;
 import io.requery.Table;
 import io.requery.Transient;
+import io.requery.View;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -370,6 +371,17 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
+    public boolean isImmutable() {
+        // check known immutable type annotations then check the annotation value
+        return Stream.of("com.google.auto.value.AutoValue",
+                "auto.parcel.AutoParcel",
+                "org.immutables.value.Value.Immutable")
+                .anyMatch(type -> Mirrors.findAnnotationMirror(element(), type).isPresent()) ||
+                isUnimplementable() ||
+                annotationOf(Entity.class).map(Entity::immutable).orElse(false);
+    }
+
+    @Override
     public boolean isReadOnly() {
         return annotationOf(ReadOnly.class).isPresent();
     }
@@ -381,14 +393,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
-    public boolean isImmutable() {
-        // check known immutable type annotations then check the annotation value
-        return Stream.of("com.google.auto.value.AutoValue",
-                         "auto.parcel.AutoParcel",
-                         "org.immutables.value.Value.Immutable")
-            .anyMatch(type -> Mirrors.findAnnotationMirror(element(), type).isPresent()) ||
-            isUnimplementable() ||
-            annotationOf(Entity.class).map(Entity::immutable).orElse(false);
+    public boolean isView() {
+        return annotationOf(View.class).isPresent();
     }
 
     @Override

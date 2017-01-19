@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,7 +126,8 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 .add(".setCacheable($L)\n", entity.isCacheable())
                 .add(".setImmutable($L)\n", entity.isImmutable())
                 .add(".setReadOnly($L)\n", entity.isReadOnly())
-                .add(".setStateless($L)\n", entity.isStateless());
+                .add(".setStateless($L)\n", entity.isStateless())
+                .add(".setView($L)\n", entity.isView());
         String factoryName = entity.classFactoryName();
         if (!Names.isEmpty(factoryName)) {
             block.add(".setFactory(new $L())\n", ClassName.bestGuess(factoryName));

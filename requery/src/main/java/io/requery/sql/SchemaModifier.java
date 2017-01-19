@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -276,8 +276,12 @@ public class SchemaModifier {
         ArrayList<Type<?>> sorted = new ArrayList<>();
         while (!queue.isEmpty()) {
             Type<?> type = queue.poll();
-            Set<Type<?>> referencing = referencedTypesOf(type);
 
+            if (type.isView()) {
+                continue;
+            }
+
+            Set<Type<?>> referencing = referencedTypesOf(type);
             for (Type<?> referenced : referencing) {
                 Set<Type<?>> backReferences = referencedTypesOf(referenced);
                 if (backReferences.contains(type)) {
