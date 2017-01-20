@@ -333,12 +333,13 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public String tableName() {
-        return annotationOf(Table.class).map(Table::name).orElse(
-               annotationOf(javax.persistence.Table.class)
-                   .map(javax.persistence.Table::name).orElse(
-            element().getKind().isInterface() || isImmutable() ?
-                element().getSimpleName().toString() :
-                Names.removeClassPrefixes(element().getSimpleName())));
+        return annotationOf(Table.class).map(Table::name)
+                .orElse( annotationOf(javax.persistence.Table.class)
+                         .map(javax.persistence.Table::name)
+                .orElse( annotationOf(View.class).map(View::name)
+                .orElse( element().getKind().isInterface() || isImmutable() ?
+                    element().getSimpleName().toString() :
+                    Names.removeClassPrefixes(element().getSimpleName()))));
     }
 
     @Override
