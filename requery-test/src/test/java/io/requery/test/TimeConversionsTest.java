@@ -95,8 +95,8 @@ public class TimeConversionsTest {
         Event event = new Event();
         UUID id = UUID.randomUUID();
         LocalDateTime localDateTimeNow = LocalDateTime.now().withNano(0);
-        OffsetDateTime offsetDateTimeNow = OffsetDateTime.now(ZoneId.of("UTC")).withNano(0);
-        ZonedDateTime zonedDateTimeNow = ZonedDateTime.now(ZoneId.of("UTC")).withNano(0);
+        OffsetDateTime offsetDateTimeNow = OffsetDateTime.now(ZoneId.systemDefault()).withNano(0);
+        ZonedDateTime zonedDateTimeNow = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
         event.setId(id);
         event.setLocalDateTime(localDateTimeNow);
         event.setOffsetDateTime(offsetDateTimeNow);
