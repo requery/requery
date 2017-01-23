@@ -574,8 +574,6 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             if (referenced != null && !stateless) {
                 proxy.setState(attribute, PropertyState.LOADED);
                 cascadeWrite(mode, referenced, null);
-                // reset the state temporarily for the updateable filter
-                proxy.setState(attribute, PropertyState.MODIFIED);
             }
             query.set((Expression)attribute, null);
             count++;
