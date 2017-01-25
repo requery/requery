@@ -217,12 +217,14 @@ public class SchemaModifier {
                 qb.keyword(ALTER, TABLE)
                     .tableName(type.getName()).keyword(ADD);
                 createForeignKeyColumn(qb, attribute, true);
+				// TODO The above 1) should execute 2) should ONLY add constraint.
             } else {
                 // just for SQLite for now adding the column and key is done in 1 statement
                 qb = createQueryBuilder();
                 qb.keyword(ALTER, TABLE)
                     .tableName(type.getName()).keyword(ADD);
                 createForeignKeyColumn(qb, attribute, false);
+                executeSql(qb);
             }
         } else {
             qb.keyword(ADD, COLUMN);
