@@ -34,43 +34,144 @@ import java.util.Set;
 abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     QueryAttribute<T, V>, TypeDeclarable<T> {
 
-    String name;
-    String propertyName;
-    Initializer<T, V> initializer;
-    Class<V> classType;
-    PrimitiveKind primitiveKind;
-    Property<T, V> property;
     Property<?, V> builderProperty;
-    Property<T, PropertyState> propertyState;
-    boolean isLazy;
-    boolean isKey;
-    boolean isUnique;
-    boolean isGenerated;
-    boolean isNullable;
-    boolean isVersion;
-    boolean isForeignKey;
-    boolean isIndex;
-    Integer length;
-    String defaultValue;
-    Set<String> indexNames;
-    String collate;
     Cardinality cardinality;
-    ReferentialAction deleteAction;
-    ReferentialAction updateAction;
     Set<CascadeAction> cascadeActions;
+    Class<V> classType;
+    String collate;
     Converter<V, ?> converter;
     Type<T> declaringType;
-    Class<?> mapKeyClass;
+    String defaultValue;
+    String definition;
+    ReferentialAction deleteAction;
     Class<?> elementClass;
-    Class<?> referencedClass;
+    Set<String> indexNames;
+    Initializer<T, V> initializer;
+    boolean isForeignKey;
+    boolean isKey;
+    boolean isGenerated;
+    boolean isIndex;
+    boolean isLazy;
+    boolean isNullable;
+    boolean isUnique;
+    boolean isVersion;
+    Integer length;
+    Class<?> mapKeyClass;
     Supplier<Attribute> mappedAttribute;
-    Supplier<Attribute> referencedAttribute;
+    String name;
     Supplier<Attribute> orderByAttribute;
     Order orderByDirection;
+    PrimitiveKind primitiveKind;
+    Property<T, V> property;
+    String propertyName;
+    Property<T, PropertyState> propertyState;
+    Supplier<Attribute> referencedAttribute;
+    Class<?> referencedClass;
+    ReferentialAction updateAction;
+
+    @Override
+    public Property<?, V> getBuilderProperty() {
+        return builderProperty;
+    }
+
+    @Override
+    public Class<V> getClassType() {
+        return classType;
+    }
+
+    @Override
+    public Cardinality getCardinality() {
+        return cardinality;
+    }
+
+    @Override
+    public Set<CascadeAction> getCascadeActions() {
+        return cascadeActions == null ? Collections.<CascadeAction>emptySet() : cascadeActions;
+    }
+
+    @Override
+    public String getCollate() {
+        return collate;
+    }
+
+    @Override
+    public Converter<V, ?> getConverter() {
+        return converter;
+    }
+
+    @Override
+    public Type<T> getDeclaringType() {
+        return declaringType;
+    }
+
+    @Override
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    @Override
+    public String getDefinition() {
+        return definition;
+    }
+
+    @Override
+    public ReferentialAction getDeleteAction() {
+        return deleteAction;
+    }
+
+    @Override
+    public Class<?> getElementClass() {
+        return elementClass;
+    }
+
+    @Override
+    public ExpressionType getExpressionType() {
+        return ExpressionType.ATTRIBUTE;
+    }
+
+    @Override
+    public Set<String> getIndexNames() {
+        return indexNames;
+    }
 
     @Override
     public Initializer<T, V> getInitializer() {
         return initializer;
+    }
+
+    @Override
+    public Integer getLength() {
+        return converter != null ? converter.getPersistedSize() : length;
+    }
+
+    @Override
+    public Class<?> getMapKeyClass() {
+        return mapKeyClass;
+    }
+
+    @Override
+    public Supplier<Attribute> getMappedAttribute() {
+        return mappedAttribute;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public Supplier<Attribute> getOrderByAttribute() {
+        return orderByAttribute;
+    }
+
+    @Override
+    public Order getOrderByDirection() {
+        return orderByDirection;
+    }
+
+    @Override
+    public PrimitiveKind getPrimitiveKind() {
+        return primitiveKind;
     }
 
     @Override
@@ -89,108 +190,8 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     }
 
     @Override
-    public Property<?, V> getBuilderProperty() {
-        return builderProperty;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public Class<V> getClassType() {
-        return classType;
-    }
-
-    @Override
-    public PrimitiveKind getPrimitiveKind() {
-        return primitiveKind;
-    }
-
-    @Override
-    public ExpressionType getExpressionType() {
-        return ExpressionType.ATTRIBUTE;
-    }
-
-    @Override
-    public Type<T> getDeclaringType() {
-        return declaringType;
-    }
-
-    @Override
-    public boolean isLazy() {
-        return isLazy;
-    }
-
-    @Override
-    public Integer getLength() {
-        return converter != null ? converter.getPersistedSize() : length;
-    }
-
-    @Override
-    public boolean isAssociation() {
-        return cardinality != null;
-    }
-
-    @Override
-    public boolean isKey() {
-        return isKey;
-    }
-
-    @Override
-    public boolean isUnique() {
-        return isUnique;
-    }
-
-    @Override
-    public boolean isGenerated() {
-        return isGenerated;
-    }
-
-    @Override
-    public boolean isNullable() {
-        return isNullable;
-    }
-
-    @Override
-    public boolean isForeignKey() {
-        return isForeignKey;
-    }
-
-    @Override
-    public boolean isVersion() {
-        return isVersion;
-    }
-
-    @Override
-    public boolean isIndexed() {
-        return isIndex;
-    }
-
-    @Override
-    public String getDefaultValue() {
-        return defaultValue;
-    }
-
-    @Override
-    public Set<String> getIndexNames() {
-        return indexNames;
-    }
-
-    @Override
-    public String getCollate() {
-        return collate;
-    }
-
-    @Override
-    public Class<?> getMapKeyClass() {
-        return mapKeyClass;
-    }
-
-    @Override
-    public Class<?> getElementClass() {
-        return elementClass;
+    public Supplier<Attribute> getReferencedAttribute() {
+        return referencedAttribute;
     }
 
     @Override
@@ -199,48 +200,53 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     }
 
     @Override
-    public Cardinality getCardinality() {
-        return cardinality;
-    }
-
-    @Override
-    public ReferentialAction getDeleteAction() {
-        return deleteAction;
-    }
-
-    @Override
     public ReferentialAction getUpdateAction() {
         return updateAction;
     }
 
     @Override
-    public Set<CascadeAction> getCascadeActions() {
-        return cascadeActions == null ? Collections.<CascadeAction>emptySet() : cascadeActions;
+    public boolean isAssociation() {
+        return cardinality != null;
     }
 
     @Override
-    public Converter<V, ?> getConverter() {
-        return converter;
+    public boolean isForeignKey() {
+        return isForeignKey;
     }
 
     @Override
-    public Supplier<Attribute> getMappedAttribute() {
-        return mappedAttribute;
+    public boolean isGenerated() {
+        return isGenerated;
     }
 
     @Override
-    public Supplier<Attribute> getReferencedAttribute() {
-        return referencedAttribute;
+    public boolean isIndexed() {
+        return isIndex;
     }
 
     @Override
-    public Supplier<Attribute> getOrderByAttribute() {
-        return orderByAttribute;
+    public boolean isKey() {
+        return isKey;
     }
 
     @Override
-    public Order getOrderByDirection() {
-        return orderByDirection;
+    public boolean isLazy() {
+        return isLazy;
+    }
+
+    @Override
+    public boolean isNullable() {
+        return isNullable;
+    }
+
+    @Override
+    public boolean isUnique() {
+        return isUnique;
+    }
+
+    @Override
+    public boolean isVersion() {
+        return isVersion;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package io.requery.sql
 
-import io.requery.Persistable
+import io.requery.RollbackException
 import io.requery.TransactionIsolation
 import io.requery.kotlin.*
 import io.requery.meta.Attribute
@@ -36,7 +36,7 @@ import kotlin.reflect.KClass
  *
  * @author Nikhil Purushe
  */
-class KotlinEntityDataStore<T : Persistable>(configuration: Configuration) : BlockingEntityStore<T> {
+class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEntityStore<T> {
 
     private var data: EntityDataStore<T> = EntityDataStore(configuration)
     private var context : EntityContext<T> = data.context()
@@ -57,7 +57,7 @@ class KotlinEntityDataStore<T : Persistable>(configuration: Configuration) : Blo
     }
 
     override fun <E : T> select(vararg attributes: QueryableAttribute<E, *>): Selection<Result<E>> {
-        if (attributes.size == 0) {
+        if (attributes.isEmpty()) {
             throw IllegalArgumentException()
         }
         val classType = attributes[0].declaringType.classType
@@ -129,29 +129,39 @@ class KotlinEntityDataStore<T : Persistable>(configuration: Configuration) : Blo
 
     override fun <E : T> refresh(entities: Iterable<E>, vararg attributes: Attribute<*, *>): Iterable<E> =
             data.refresh(entities, *attributes)
-    override fun <E : T> refreshAll(entity: E): E = refreshAll(entity)
+    override fun <E : T> refreshAll(entity: E): E = data.refreshAll(entity)
 
     override fun <E : T> delete(entity: E): Void = data.delete(entity)
     override fun <E : T> delete(entities: Iterable<E>): Void = data.delete(entities)
 
-    override fun <E : T, K> findByKey(type: KClass<E>, key: K): E = data.findByKey(type.java, key)
+    override fun <E : T, K> findByKey(type: KClass<E>, key: K): E? = data.findByKey(type.java, key)
+
+    override fun raw(query: String, vararg parameters: Any): Result<Tuple> = data.raw(query, parameters)
+    override fun <E : T> raw(type: KClass<E>, query: String, vararg parameters: Any): Result<E> =
+            data.raw(type.java, query, parameters)
 
     override fun <V> withTransaction(body: BlockingEntityStore<T>.() -> V): V {
+        val transaction = data.transaction().begin()
         try {
-            data.transaction().begin()
-            return body()
-        } finally {
-            data.transaction().close()
+            val result = body()
+            transaction.commit()
+            return result
+        } catch (e : Exception) {
+            transaction.rollback()
+            throw RollbackException(e)
         }
     }
 
     override fun <V> withTransaction(isolation: TransactionIsolation,
                                      body: BlockingEntityStore<T>.() -> V): V {
+        val transaction = data.transaction().begin(isolation)
         try {
-            data.transaction().begin(isolation)
-            return body()
-        } finally {
-            data.transaction().close()
+            val result = body()
+            transaction.commit()
+            return result
+        } catch (e : Exception) {
+            transaction.rollback()
+            throw RollbackException(e)
         }
     }
 

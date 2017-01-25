@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,17 @@ package io.requery.converter;
 
 import io.requery.Converter;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 /**
- * Converts from a {@link OffsetDateTime} to a {@link java.sql.Timestamp} for Java 8.
+ * Converts from a {@link OffsetDateTime} to a {@link java.sql.Timestamp} for Java 8. Note that
+ * when converting between the time type and the database type all times will be converted to the
+ * System default zone offset.
  */
-public class OffsetDateTimeConverter implements Converter<OffsetDateTime, java.sql.Timestamp> {
+public class OffsetDateTimeConverter implements Converter<OffsetDateTime, Timestamp> {
 
     @Override
     public Class<OffsetDateTime> getMappedType() {
@@ -33,8 +36,8 @@ public class OffsetDateTimeConverter implements Converter<OffsetDateTime, java.s
     }
 
     @Override
-    public Class<java.sql.Timestamp> getPersistedType() {
-        return java.sql.Timestamp.class;
+    public Class<Timestamp> getPersistedType() {
+        return Timestamp.class;
     }
 
     @Override
@@ -43,20 +46,19 @@ public class OffsetDateTimeConverter implements Converter<OffsetDateTime, java.s
     }
 
     @Override
-    public java.sql.Timestamp convertToPersisted(OffsetDateTime value) {
+    public Timestamp convertToPersisted(OffsetDateTime value) {
         if (value == null) {
             return null;
         }
         Instant instant = value.toInstant();
-        return java.sql.Timestamp.from(instant);
+        return Timestamp.from(instant);
     }
 
     @Override
-    public OffsetDateTime convertToMapped(Class<? extends OffsetDateTime> type,
-                                          java.sql.Timestamp value) {
+    public OffsetDateTime convertToMapped(Class<? extends OffsetDateTime> type, Timestamp value) {
         if (value == null) {
             return null;
         }
-        return OffsetDateTime.ofInstant(value.toInstant(), ZoneId.systemDefault());
+        return OffsetDateTime.ofInstant(value.toInstant(), ZoneOffset.systemDefault());
     }
 }

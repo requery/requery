@@ -34,6 +34,7 @@ abstract class BaseType<T> implements Type<T> {
     boolean stateless;
     boolean readOnly;
     boolean immutable;
+    boolean isView;
     Set<Attribute<T, ?>> attributes;
     Set<QueryExpression<?>> expressions;
     Supplier<T> factory;
@@ -72,6 +73,11 @@ abstract class BaseType<T> implements Type<T> {
     }
 
     @Override
+    public boolean isBuildable() {
+        return builderFactory != null;
+    }
+
+    @Override
     public boolean isCacheable() {
         return cacheable;
     }
@@ -92,8 +98,8 @@ abstract class BaseType<T> implements Type<T> {
     }
 
     @Override
-    public boolean isBuildable() {
-        return builderFactory != null;
+    public boolean isView() {
+        return isView;
     }
 
     @Override

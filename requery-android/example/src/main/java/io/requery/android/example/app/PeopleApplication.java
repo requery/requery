@@ -21,15 +21,15 @@ import android.os.StrictMode;
 import io.requery.Persistable;
 import io.requery.android.example.app.model.Models;
 import io.requery.android.sqlite.DatabaseSource;
-import io.requery.rx.RxSupport;
-import io.requery.rx.SingleEntityStore;
+import io.requery.reactivex.ReactiveSupport;
+import io.requery.reactivex.ReactiveEntityStore;
 import io.requery.sql.Configuration;
 import io.requery.sql.EntityDataStore;
 import io.requery.sql.TableCreationMode;
 
 public class PeopleApplication extends Application {
 
-    private SingleEntityStore<Persistable> dataStore;
+    private ReactiveEntityStore<Persistable> dataStore;
 
     @Override
     public void onCreate() {
@@ -43,7 +43,7 @@ public class PeopleApplication extends Application {
      * Note if you're using Dagger you can make this part of your application level module returning
      * {@code @Provides @Singleton}.
      */
-    SingleEntityStore<Persistable> getData() {
+    ReactiveEntityStore<Persistable> getData() {
         if (dataStore == null) {
             // override onUpgrade to handle migrating to a new version
             DatabaseSource source = new DatabaseSource(this, Models.DEFAULT, 1);
@@ -52,7 +52,7 @@ public class PeopleApplication extends Application {
                 source.setTableCreationMode(TableCreationMode.DROP_CREATE);
             }
             Configuration configuration = source.getConfiguration();
-            dataStore = RxSupport.toReactiveStore(
+            dataStore = ReactiveSupport.toReactiveStore(
                 new EntityDataStore<Persistable>(configuration));
         }
         return dataStore;

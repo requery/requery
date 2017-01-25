@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,7 +132,7 @@ public class SchemaModifier {
                 String sql = tableCreateStatement(type, mode);
                 statementListeners.beforeExecuteUpdate(statement, sql, null);
                 statement.execute(sql);
-                statementListeners.afterExecuteUpdate(statement);
+                statementListeners.afterExecuteUpdate(statement, 0);
             }
             for (Type<?> type : sorted) {
                 createIndexes(connection, mode, type);
@@ -187,7 +187,7 @@ public class SchemaModifier {
                 String sql = qb.toString();
                 statementListeners.beforeExecuteUpdate(statement, sql, null);
                 statement.execute(sql);
-                statementListeners.afterExecuteUpdate(statement);
+                statementListeners.afterExecuteUpdate(statement, 0);
             } catch (SQLException e) {
                 if (platform.supportsIfExists()) {
                     throw e;
@@ -263,7 +263,7 @@ public class SchemaModifier {
             String sql = qb.toString();
             statementListeners.beforeExecuteUpdate(statement, sql, null);
             statement.execute(sql);
-            statementListeners.afterExecuteUpdate(statement);
+            statementListeners.afterExecuteUpdate(statement, 0);
         } catch (SQLException e) {
             throw new PersistenceException(e);
         }
@@ -276,8 +276,12 @@ public class SchemaModifier {
         ArrayList<Type<?>> sorted = new ArrayList<>();
         while (!queue.isEmpty()) {
             Type<?> type = queue.poll();
-            Set<Type<?>> referencing = referencedTypesOf(type);
 
+            if (type.isView()) {
+                continue;
+            }
+
+            Set<Type<?>> referencing = referencedTypesOf(type);
             for (Type<?> referenced : referencing) {
                 Set<Type<?>> backReferences = referencedTypesOf(referenced);
                 if (backReferences.contains(type)) {
@@ -467,8 +471,12 @@ public class SchemaModifier {
                 GenericMapping genericMapping = (GenericMapping) mapping;
                 converter = genericMapping.converterForType(attribute.getClassType());
             }
-            if (fieldType.hasLength() ||
-                (converter != null && converter.getPersistedSize() != null)) {
+            boolean hasLength = fieldType.hasLength() ||
+                    (converter != null && converter.getPersistedSize() != null);
+
+            if (attribute.getDefinition() != null && attribute.getDefinition().length() > 0) {
+                qb.append(attribute.getDefinition());
+            } else if (hasLength) {
 
                 Integer length = attribute.getLength();
                 if (length == null && converter != null) {
@@ -483,10 +491,11 @@ public class SchemaModifier {
                 qb.append(identifier)
                         .openParenthesis()
                         .append(length)
-                        .closeParenthesis().space();
+                        .closeParenthesis();
             } else {
-                qb.append(identifier).space();
+                qb.append(identifier);
             }
+            qb.space();
         }
 
         String suffix = fieldType.getIdentifierSuffix();
@@ -535,12 +544,11 @@ public class SchemaModifier {
         for (Attribute<T, ?> attribute : attributes) {
             if (attribute.isIndexed()) {
                 Set<String> names = new LinkedHashSet<>(attribute.getIndexNames());
-                if (names.isEmpty()) {
-                    // if no name set create a default one
-                    String indexName = attribute.getName() + "_index";
-                    names.add(indexName);
-                }
                 for(String indexName : names) {
+                    if (indexName.isEmpty()) {
+                        // if no name set create a default one
+                        indexName = attribute.getName() + "_index";
+                    }
                     Set<Attribute<?, ?>> indexColumns = indexes.get(indexName);
                     if (indexColumns == null) {
                         indexes.put(indexName, indexColumns = new LinkedHashSet<>());

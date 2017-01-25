@@ -64,22 +64,6 @@ public interface Scalar<E> extends Callable<E> {
     CompletableFuture<E> toCompletableFuture(Executor executor);
 
     /**
-     * Converts this Scalar computation to a single {@link rx.Single}.
-     *
-     * @return {@link rx.Single} for the result of this query.
-     */
-    @CheckReturnValue
-    rx.Single<E> toSingle();
-
-    /**
-     * Converts this Scalar computation to a single {@link io.reactivex.Single}.
-     *
-     * @return {@link io.reactivex.Single} for the result of this query.
-     */
-    @CheckReturnValue
-    io.reactivex.Single<E> single();
-
-    /**
      * @return {@link Supplier} for the result of this query.
      */
     @CheckReturnValue

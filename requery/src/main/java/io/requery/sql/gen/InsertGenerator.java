@@ -34,8 +34,12 @@ class InsertGenerator implements Generator<Map<Expression<?>, Object>> {
         QueryBuilder qb = output.builder();
         qb.keyword(INSERT, INTO);
         output.appendTables();
-        qb.openParenthesis()
-            .commaSeparated(values.entrySet(),
+
+        if (values.isEmpty()) {
+            qb.keyword(DEFAULT, VALUES);
+        } else {
+            qb.openParenthesis()
+                .commaSeparated(values.entrySet(),
                 new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
                     @Override
                     public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
@@ -54,22 +58,19 @@ class InsertGenerator implements Generator<Map<Expression<?>, Object>> {
                         }
                     }
                 })
-            .closeParenthesis()
-            .space();
+                .closeParenthesis()
+                .space();
 
-            if (!values.isEmpty()) {
-                qb.keyword(VALUES)
-                .openParenthesis()
-                .commaSeparated(values.entrySet(),
-                    new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
-                        @Override
-                        public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
-                            output.appendConditionValue(value.getKey(), value.getValue());
-                        }
-                    })
-                .closeParenthesis();
-            } else {
-                qb.keyword(DEFAULT, VALUES);
-            }
+            qb.keyword(VALUES)
+            .openParenthesis()
+            .commaSeparated(values.entrySet(),
+                new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
+                    @Override
+                    public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
+                        output.appendConditionValue(value.getKey(), value.getValue());
+                    }
+                })
+            .closeParenthesis();
+        }
     }
 }

@@ -1,6 +1,48 @@
 Change Log
 ==========
 
+## 1.1.1
+
+- Support new KotlinReactiveEntityStore/KotlinRxEntityStore for RxJava 2.0 & RxJava 1.0
+- Support improved compile errors when an invalid relationship is defined
+- Support improved handling of entity associations marked with @Key
+- Support kotlin-kapt plugin for annotation processing
+- Support kotlin raw queries
+- Fix incorrect type in raw queries for integer values on Oracle
+- Fix Java 8 date time conversion for zoned times
+- Fix empty index name during table generation
+- Fix ClassCastException when using a custom converter that converted to a collection in a query
+- Fix NPE when using non relational attributes in a junction table
+- Fix Kotlin withTransaction rollback
+- Fix Kotlin join on condition incorrect sql generated
+
+## 1.1.0
+
+- Support extendable query types. RxJava and RxJava 2.0 result conversion methods are now separated
+into different classes. This is a minor API change that should not effect most code.
+- Support [Reactor Core extensions](http://projectreactor.io)
+- Support custom column definitions for table generation
+- Support for @Entity(copyable) shallow copying via generated copy() method
+- Kotlin findByKey returns nullable value
+- Fix ClassNotFoundException referencing a RxJava 1.0 class when using RxJava 2.0
+- Fix OneToMany cascaded elements incorrectly updated instead of inserted
+- Fix stackoverflow in ManagedTransaction.begin()
+- Fix foreign key support using Android SQLCipher database
+- Fix multiple blob arguments in Android query expression
+- Fix some compilation issues using Android Jack compiler
+
+## 1.0.2
+
+- Support repeated @Embedded fields
+- Support RxJava 2.0 maybe operator
+- Fix null TypeElement when using Android Jack compiler
+- Fix parentheses in nested conditional expressions
+- Fix parameter name ordering for kotlin data classes
+- Fix reserved name field names generated from properties
+- Fix incorrect behavior of Rx runInTransaction
+- Fix stack overflow in Kotlin refreshAll
+- Fix OrderBy attribute name prefix not removed
+
 ## 1.0.1
 
 - Support multi-column unique indexes

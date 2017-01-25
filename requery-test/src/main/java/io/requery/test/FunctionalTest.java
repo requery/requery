@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ package io.requery.test;
 
 import io.requery.Persistable;
 import io.requery.PersistenceException;
+import io.requery.RollbackException;
 import io.requery.Transaction;
+import io.requery.TransactionIsolation;
 import io.requery.meta.Attribute;
 import io.requery.proxy.CompositeKey;
 import io.requery.proxy.EntityProxy;
@@ -105,6 +107,29 @@ public abstract class FunctionalTest extends RandomData {
         p2.setEmail("test@test.com");
         assertEquals(p1, p2);
         assertEquals(p1.hashCode(), p2.hashCode());
+    }
+
+    @Test
+    public void testCopy() {
+        Address address = new Address();
+        address.setCity("San Francisco");
+        address.setState("CA");
+        address.setCountry("US");
+        Address copy = address.copy();
+        assertEquals(address.getCity(), copy.getCity());
+        assertEquals(address.getState(), copy.getState());
+        assertEquals(address.getCountry(), copy.getCountry());
+    }
+
+    @Test
+    public void testConverter() {
+        Phone phone = randomPhone();
+        phone.getExtensions().add(1);
+        phone.getExtensions().add(999);
+        data.insert(phone);
+        Phone result = data.select(Phone.class)
+                .where(Phone.EXTENSIONS.eq(phone.getExtensions())).get().first();
+        assertSame(phone, result);
     }
 
     @Test
@@ -226,6 +251,26 @@ public abstract class FunctionalTest extends RandomData {
                         return "success";
                     }
                 })));
+    }
+
+    @Test
+    public void testInsertWithTransactionCallableRollback() {
+        boolean rolledBack = false;
+        try {
+            data.runInTransaction(new Callable<String>() {
+                @Override
+                public String call() {
+                    Person person = randomPerson();
+                    data.insert(person);
+                    assertTrue(person.getId() > 0);
+                    throw new RuntimeException("Exception!");
+                }
+            }, TransactionIsolation.SERIALIZABLE);
+        } catch (RollbackException e) {
+            rolledBack = true;
+            assertSame(0, data.select(Person.class).get().toList().size());
+        }
+        assertTrue(rolledBack);
     }
 
     @Test
@@ -470,6 +515,20 @@ public abstract class FunctionalTest extends RandomData {
         group2.setType(GroupType.PRIVATE);
         data.insert(group2);
         data.refresh(Arrays.asList(group, group2), Group.VERSION);
+    }
+
+    @Test
+    public void testVersionUpdate() {
+        Group group = new Group();
+        group.setName("Test1");
+        data.insert(group);
+        assertTrue(group.getVersion() > 0);
+        group.setName("Test2");
+        data.update(group);
+        assertTrue(group.getVersion() > 0);
+        group.setName("Test3");
+        data.update(group);
+        assertTrue(group.getVersion() > 0);
     }
 
     @Test
@@ -1019,7 +1078,7 @@ public abstract class FunctionalTest extends RandomData {
         data.insert(group);
         person.getGroups().add(group);
         data.update(person);
-        Return<Result<Tuple>> groupNames = data.select(Group.NAME)
+        Return<? extends Result<Tuple>> groupNames = data.select(Group.NAME)
                 .where(Group.NAME.equal(name));
         Person p = data.select(Person.class).where(Person.NAME.in(groupNames)).get().first();
         assertEquals(p.getName(), name);

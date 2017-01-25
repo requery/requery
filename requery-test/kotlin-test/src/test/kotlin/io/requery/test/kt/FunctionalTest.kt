@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package io.requery.test.kt
 
-import io.requery.Persistable
 import io.requery.kotlin.*
 import io.requery.sql.*
 import org.h2.jdbcx.JdbcDataSource
@@ -31,23 +30,25 @@ import java.util.UUID
 
 class FunctionalTest {
 
-    var instance : KotlinEntityDataStore<Persistable>? = null
-    val data : KotlinEntityDataStore<Persistable> get() = instance!!
+    var instance : KotlinEntityDataStore<Any>? = null
+    val data : KotlinEntityDataStore<Any> get() = instance!!
 
-    fun randomPerson(): Person {
-        val random = Random()
-        val person = PersonEntity()
-        val firstNames = arrayOf("Alice", "Bob", "Carol")
-        val lastNames = arrayOf("Smith", "Lee", "Jones")
-        person.name = (firstNames[random.nextInt(firstNames.size)] + " " +
-                lastNames[random.nextInt(lastNames.size)])
-        person.email = (person.name.replace(" ".toRegex(), "").toLowerCase() + "@example.com")
-        person.uuid = (UUID.randomUUID())
-        person.homepage = (URL("http://www.requery.io"))
-        val calendar = Calendar.getInstance()
-        calendar.set(1900 + random.nextInt(90), random.nextInt(12), random.nextInt(30))
-        person.birthday = calendar.time
-        return person
+    companion object {
+        fun randomPerson(): Person {
+            val random = Random()
+            val person = PersonEntity()
+            val firstNames = arrayOf("Alice", "Bob", "Carol")
+            val lastNames = arrayOf("Smith", "Lee", "Jones")
+            person.name = (firstNames[random.nextInt(firstNames.size)] + " " +
+                    lastNames[random.nextInt(lastNames.size)])
+            person.email = (person.name.replace(" ".toRegex(), "").toLowerCase() + "@example.com")
+            person.uuid = (UUID.randomUUID())
+            person.homepage = (URL("http://www.requery.io"))
+            val calendar = Calendar.getInstance()
+            calendar.set(1900 + random.nextInt(90), random.nextInt(12), random.nextInt(30))
+            person.birthday = calendar.time
+            return person
+        }
     }
 
     @Before
@@ -125,6 +126,23 @@ class FunctionalTest {
         val list = result.get().toList()
         assertTrue(list.contains(person2))
         assertTrue(list.contains(person3))
+    }
+
+    @Test
+    fun testQueryJoinOrderBy() {
+        val person = randomPerson()
+        person.address = AddressEntity()
+        person.address.city = "San Francisco"
+        person.address.country = "US"
+        person.address.state = "CA"
+        data.insert(person)
+        // not a useful query just tests the sql output
+        val result = data.select(Address::class)
+                .join(Person::class).on(Person::address.eq(Person::id))
+                .where(Person::id.eq(person.id))
+                .orderBy(Address::city.desc())
+                .get()
+        assertTrue(result.toList().size > 0)
     }
 
     @After

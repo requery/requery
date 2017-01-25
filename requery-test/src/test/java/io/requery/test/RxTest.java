@@ -20,6 +20,7 @@ import io.requery.Persistable;
 import io.requery.cache.EntityCacheBuilder;
 import io.requery.meta.EntityModel;
 import io.requery.query.Result;
+import io.requery.rx.RxResult;
 import io.requery.rx.RxSupport;
 import io.requery.rx.SingleEntityStore;
 import io.requery.sql.Configuration;
@@ -217,9 +218,9 @@ public class RxTest extends RandomData {
     public void testQuerySelfObservableMap() throws Exception {
         final AtomicInteger count = new AtomicInteger();
         Subscription subscription = data.select(Person.class).limit(2).get().toSelfObservable()
-            .flatMap(new Func1<Result<Person>, Observable<Person>>() {
+            .flatMap(new Func1<RxResult<Person>, Observable<Person>>() {
                 @Override
-                public Observable<Person> call(Result<Person> persons) {
+                public Observable<Person> call(RxResult<Person> persons) {
                     return persons.toObservable();
                 }
             }).subscribe(
@@ -307,7 +308,7 @@ public class RxTest extends RandomData {
                 return data.insert(phone);
             }
         }).toBlocking().value();
-        int count = person.getPhoneNumbers().toObservable().count().toBlocking().first();
+        int count = person.getPhoneNumbers().toList().size();
         assertEquals(1, count);
     }
 
@@ -317,7 +318,7 @@ public class RxTest extends RandomData {
         data.runInTransaction(
                 data.insert(person),
                 data.update(person),
-                data.delete(person)).subscribe(new Action1<Object>() {
+                data.delete(person)).toBlocking().forEach(new Action1<Object>() {
             @Override
             public void call(Object o) {
 
@@ -325,10 +326,11 @@ public class RxTest extends RandomData {
         });
         assertEquals(0, data.count(Person.class).get().value().intValue());
 
+        final Person person2 = randomPerson();
         data.runInTransaction(
-            data.insert(person)).subscribe(new Action1<Person>() {
+            data.insert(person2)).toBlocking().forEach(new Action1<Person>() {
             @Override
-            public void call(Person o) {
+            public void call(Person person) {
 
             }
         });

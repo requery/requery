@@ -16,7 +16,7 @@
 
 package io.requery.rx;
 
-import io.requery.query.BaseResult;
+import io.requery.query.Result;
 import io.requery.util.CloseableIterator;
 import rx.Observable;
 import rx.Producer;
@@ -38,9 +38,9 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class OnSubscribeFromQuery<T> implements Observable.OnSubscribe<T> {
 
-    private final BaseResult<T> result;
+    private final Result<T> result;
 
-    OnSubscribeFromQuery(BaseResult<T> result) {
+    OnSubscribeFromQuery(Result<T> result) {
         this.result = result;
     }
 

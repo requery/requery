@@ -75,6 +75,11 @@ public @interface Column {
     String collate() default "";
 
     /**
+     * @return optional table column definition used during table generation.
+     */
+    String definition() default "";
+
+    /**
      * @return optional foreign key constraints for this column.
      */
     ForeignKey[] foreignKey() default {};

@@ -38,9 +38,9 @@ import java.util.Set;
 public interface Attribute<T, V> {
 
     /**
-     * @return the type name, not this can be different from the member/field name.
+     * @return {@link Property} used to apply the attribute a builder instance for the type.
      */
-    String getName();
+    Property<?, V> getBuilderProperty();
 
     /**
      * @return the type of {@link Class} this attribute holds.
@@ -48,9 +48,84 @@ public interface Attribute<T, V> {
     Class<V> getClassType();
 
     /**
+     * @return the collation for the attribute, defaults to null
+     */
+    String getCollate();
+
+    /**
+     * @return For a {@link #isAssociation()} true attribute the type of relation being represented.
+     */
+    Cardinality getCardinality();
+
+    /**
+     * @return For an associative attribute the action to take when the association is modified.
+     */
+    Set<CascadeAction> getCascadeActions();
+
+    /**
+     * @return the converter instance used to convert the {@link #getClassType()} to a persisted value
+     * and vice versa.
+     */
+    Converter<V, ?> getConverter();
+
+    /**
      * @return The {@link Type} that contains this attribute.
      */
     Type<T> getDeclaringType();
+
+    /**
+     * @return the default value expression for the column. Used during the table generation phase.
+     */
+    String getDefaultValue();
+
+    /**
+     * @return optional table column definition {@link io.requery.Column#definition()}
+     */
+    String getDefinition();
+
+    /**
+     * @return For a {@link #isForeignKey()} attribute the action to take when the referenced entity
+     * is deleted, otherwise null.
+     */
+    ReferentialAction getDeleteAction();
+
+    /**
+     * @return For a collection type the class of element in the collection.
+     */
+    Class<?> getElementClass();
+
+    /**
+     * @return for an {@link #isIndexed()} true attribute the index name(s), defaults to empty
+     * (auto created).
+     */
+    Set<String> getIndexNames();
+
+    /**
+     * @return {@link Initializer} for defining the default value for the property representing the
+     * attribute.
+     */
+    Initializer<T, V> getInitializer();
+
+    /**
+     * @return for String types the max length of the field in the persistence store or null.
+     */
+    Integer getLength();
+
+    /**
+     * @return For a map type the class of the key.
+     */
+    Class<?> getMapKeyClass();
+
+    /**
+     * @return For a associative relationship the attribute that is the owning side of the
+     * relationship. Note returns a provider since attributes may have cyclic dependencies.
+     */
+    Supplier<Attribute> getMappedAttribute();
+
+    /**
+     * @return the type name, not this can be different from the member/field name.
+     */
+    String getName();
 
     /**
      * @return {@link PrimitiveKind} of this attribute if this attribute is representing a
@@ -60,10 +135,16 @@ public interface Attribute<T, V> {
     PrimitiveKind getPrimitiveKind();
 
     /**
-     * @return {@link Initializer} for defining the default value for the property representing the
-     * attribute.
+     * @return For a relationship with a multiple result query the attribute used to order the
+     * query.
      */
-    Initializer<T, V> getInitializer();
+    Supplier<Attribute> getOrderByAttribute();
+
+    /**
+     * @return If {@link #getOrderByAttribute()} is specified the order direction to use in the
+     * generated query.
+     */
+    Order getOrderByDirection();
 
     /**
      * @return {@link Property} representing access to the field of the entity.
@@ -81,101 +162,15 @@ public interface Attribute<T, V> {
     Property<T, PropertyState> getPropertyState();
 
     /**
-     * @return {@link Property} used to apply the attribute a builder instance for the type.
+     * @return For a foreign key relationship the attribute being referenced. Note returns a
+     * provider since attributes may have cyclic dependencies.
      */
-    Property<?, V> getBuilderProperty();
-
-    /**
-     * @return true if this attribute is lazily loaded, false otherwise.
-     */
-    boolean isLazy();
-
-    /**
-     * @return true if this attribute is a link to another entity.
-     */
-    boolean isAssociation();
-
-    /**
-     * @return true if this attribute is the identity for the type represented, false otherwise.
-     */
-    boolean isKey();
-
-    /**
-     * @return true if this attribute is unique for the given {@link Type}.
-     */
-    boolean isUnique();
-
-    /**
-     * @return true if this attribute is generated from the persistent store.
-     */
-    boolean isGenerated();
-
-    /**
-     * @return true if this attribute is not required to be present in the type, (nullable)
-     */
-    boolean isNullable();
-
-    /**
-     * @return true if this attribute represents a foreign key constraint.
-     */
-    boolean isForeignKey();
-
-    /**
-     * @return true if this attribute is to be used a locking field.
-     */
-    boolean isVersion();
-
-    /**
-     * @return true if this column is indexed.
-     */
-    boolean isIndexed();
-
-    /**
-     * @return the default value expression for the column. Used during the table generation phase.
-     */
-    String getDefaultValue();
-
-    /**
-     * @return for String types the max length of the field in the persistence store or null.
-     */
-    Integer getLength();
-
-    /**
-     * @return for an {@link #isIndexed()} true attribute the index name(s), defaults to empty
-     * (auto created).
-     */
-    Set<String> getIndexNames();
-
-    /**
-     * @return the collation for the attribute, defaults to null
-     */
-    String getCollate();
-
-    /**
-     * @return For a collection type the class of element in the collection.
-     */
-    Class<?> getElementClass();
-
-    /**
-     * @return For a map type the class of the key.
-     */
-    Class<?> getMapKeyClass();
+    Supplier<Attribute> getReferencedAttribute();
 
     /**
      * @return For a foreign key relationship the type being referenced.
      */
     Class<?> getReferencedClass();
-
-    /**
-     * @return For a {@link #isAssociation()} true attribute the type of relation being represented.
-     */
-    Cardinality getCardinality();
-
-    /**
-     * @return For a {@link #isForeignKey()} attribute the action to take when the referenced entity
-     * is deleted, otherwise null.
-     */
-    ReferentialAction getDeleteAction();
 
     /**
      * @return For a {@link #isForeignKey()} attribute the action to take when the referenced entity
@@ -184,37 +179,47 @@ public interface Attribute<T, V> {
     ReferentialAction getUpdateAction();
 
     /**
-     * @return For an associative attribute the action to take when the association is modified.
+     * @return true if this attribute is a link to another entity.
      */
-    Set<CascadeAction> getCascadeActions();
+    boolean isAssociation();
 
     /**
-     * @return the converter instance used to convert the {@link #getClassType()} to a persisted value
-     * and vice versa.
+     * @return true if this attribute represents a foreign key constraint.
      */
-    Converter<V, ?> getConverter();
+    boolean isForeignKey();
 
     /**
-     * @return For a associative relationship the attribute that is the owning side of the
-     * relationship. Note returns a provider since attributes may have cyclic dependencies.
+     * @return true if this attribute is generated from the persistent store.
      */
-    Supplier<Attribute> getMappedAttribute();
+    boolean isGenerated();
 
     /**
-     * @return For a foreign key relationship the attribute being referenced. Note returns a
-     * provider since attributes may have cyclic dependencies.
+     * @return true if this column is indexed.
      */
-    Supplier<Attribute> getReferencedAttribute();
+    boolean isIndexed();
 
     /**
-     * @return For a relationship with a multiple result query the attribute used to order the
-     * query.
+     * @return true if this attribute is the identity for the type represented, false otherwise.
      */
-    Supplier<Attribute> getOrderByAttribute();
+    boolean isKey();
 
     /**
-     * @return If {@link #getOrderByAttribute()} is specified the order direction to use in the
-     * generated query.
+     * @return true if this attribute is lazily loaded, false otherwise.
      */
-    Order getOrderByDirection();
+    boolean isLazy();
+
+    /**
+     * @return true if this attribute is not required to be present in the type, (nullable)
+     */
+    boolean isNullable();
+
+    /**
+     * @return true if this attribute is unique for the given {@link Type}.
+     */
+    boolean isUnique();
+
+    /**
+     * @return true if this attribute is to be used a locking field.
+     */
+    boolean isVersion();
 }

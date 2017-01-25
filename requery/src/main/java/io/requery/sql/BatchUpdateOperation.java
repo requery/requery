@@ -68,16 +68,16 @@ class BatchUpdateOperation<E> extends PreparedQueryOperation implements QueryOpe
                     if (batchInStatement) {
                         statement.addBatch();
                     } else {
-                        listener.beforeExecuteUpdate(statement, sql, null);
+                        listener.beforeExecuteBatchUpdate(statement, sql);
                         result[i] = statement.executeUpdate();
-                        listener.afterExecuteUpdate(statement);
+                        listener.afterExecuteBatchUpdate(statement, result);
                         readGeneratedKeys(i, statement);
                     }
                 }
                 if (batchInStatement) {
-                    listener.beforeExecuteUpdate(statement, sql, null);
+                    listener.beforeExecuteBatchUpdate(statement, sql);
                     result = statement.executeBatch();
-                    listener.afterExecuteUpdate(statement);
+                    listener.afterExecuteBatchUpdate(statement, result);
                     readGeneratedKeys(0, statement);
                 }
             }

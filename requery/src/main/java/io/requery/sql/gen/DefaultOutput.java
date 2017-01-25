@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import io.requery.query.function.Function;
 import io.requery.sql.BoundParameters;
 import io.requery.sql.QueryBuilder;
 import io.requery.sql.RuntimeConfiguration;
+import io.requery.util.function.Supplier;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -258,7 +259,7 @@ public class DefaultOutput implements Output {
         qb.keyword(CASE);
         for (Case.CaseCondition<?,?> condition : function.conditions()) {
             qb.keyword(WHEN);
-            appendOperation(condition.condition());
+            appendOperation(condition.condition(), 0);
             qb.keyword(THEN);
             // TODO just some databases need the value inline in a case statement
             if (condition.thenValue() instanceof CharSequence ||
@@ -307,7 +308,7 @@ public class DefaultOutput implements Output {
         }
     }
 
-    private void appendOperation(Condition condition) {
+    private void appendOperation(Condition condition, int depth) {
         Object leftOperand = condition.getLeftOperand();
         if (leftOperand instanceof Expression) {
             final Expression<?> expression = (Expression<?>) condition.getLeftOperand();
@@ -315,7 +316,9 @@ public class DefaultOutput implements Output {
             Object value = condition.getRightOperand();
             appendOperator(condition.getOperator());
 
-            if (value instanceof Collection) {
+            if (value instanceof Collection &&
+                    (condition.getOperator() == Operator.IN ||
+                     condition.getOperator() == Operator.NOT_IN)) {
                 Collection collection = (Collection) value;
                 qb.openParenthesis();
                 qb.commaSeparated(collection, new QueryBuilder.Appender() {
@@ -344,18 +347,24 @@ public class DefaultOutput implements Output {
                 appendQuery(wrapper);
                 qb.closeParenthesis().space();
             } else if (value instanceof Condition) {
-                appendOperation((Condition) value);
+                appendOperation((Condition) value, depth + 1);
             } else if (value != null) {
                 appendConditionValue(expression, value);
             }
         } else if(leftOperand instanceof Condition) {
-            appendOperation((Condition) leftOperand);
+            if (depth > 0) {
+                qb.openParenthesis();
+            }
+            appendOperation((Condition) leftOperand, depth + 1);
             appendOperator(condition.getOperator());
             Object value = condition.getRightOperand();
             if (value instanceof Condition) {
-                appendOperation((Condition) value);
+                appendOperation((Condition) value, depth + 1);
             } else {
                 throw new IllegalStateException();
+            }
+            if (depth > 0) {
+                qb.closeParenthesis().space();
             }
         } else {
             throw new IllegalStateException("unknown start expression type " + leftOperand);
@@ -371,6 +380,8 @@ public class DefaultOutput implements Output {
         if (value instanceof QueryAttribute) {
             QueryAttribute a = (QueryAttribute) value;
             appendColumn(a);
+        } else if (value instanceof Supplier && ((Supplier)value).get() instanceof QueryAttribute) {
+            appendColumn((Expression<?>) ((Supplier)value).get());
         } else if (value instanceof NamedExpression) {
             NamedExpression namedExpression = (NamedExpression) value;
             qb.append(namedExpression.getName());
@@ -404,14 +415,11 @@ public class DefaultOutput implements Output {
             }
         }
         Condition condition = element.getCondition();
-        boolean nested = false;
-        if (condition.getRightOperand() instanceof Condition) {
-            nested = true;
-        }
+        boolean nested = condition.getRightOperand() instanceof Condition;
         if (nested) {
             qb.openParenthesis();
         }
-        appendOperation(condition);
+        appendOperation(condition, 0);
         if (nested) {
             qb.closeParenthesis().space();
         }

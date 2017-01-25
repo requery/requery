@@ -19,8 +19,6 @@ package io.requery.query;
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
-import io.requery.reactivex.ReactiveSupport;
-import io.requery.rx.RxSupport;
 import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
 import io.requery.util.function.Consumer;
@@ -140,31 +138,6 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
     }
 
     @Override
-    public rx.Observable<E> toObservable() {
-        return RxSupport.toObservable(this);
-    }
-
-    @Override
-    public rx.Observable<Result<E>> toSelfObservable() {
-        return RxSupport.toResultObservable(this);
-    }
-
-    @Override
-    public io.reactivex.Flowable<E> flowable() {
-        return ReactiveSupport.toFlowable(this);
-    }
-
-    @Override
-    public io.reactivex.Observable<E> observable() {
-        return flowable().toObservable();
-    }
-
-    @Override
-    public io.reactivex.Observable<Result<E>> observableResult() {
-        return ReactiveSupport.toObservableResult(this);
-    }
-
-    @Override
     public void each(Consumer<? super E> action) {
         try (CloseableIterator<E> iterator = iterator()) {
             while (iterator.hasNext()) {
@@ -212,5 +185,4 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
             }
         }
     }
-
 }

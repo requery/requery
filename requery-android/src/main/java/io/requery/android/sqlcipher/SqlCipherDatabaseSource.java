@@ -114,7 +114,9 @@ public class SqlCipherDatabaseSource extends SQLiteOpenHelper implements
 
     @Override
     public void onConfigure(SQLiteDatabase db) {
-        //
+        if (!db.isReadOnly()) {
+            db.execSQL("PRAGMA foreign_keys = ON");
+        }
     }
 
     @Override

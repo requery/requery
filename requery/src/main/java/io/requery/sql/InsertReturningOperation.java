@@ -78,7 +78,7 @@ class InsertReturningOperation extends PreparedQueryOperation implements
             mapParameters(statement, parameters);
             listener.beforeExecuteUpdate(statement, sql, parameters);
             count = statement.executeUpdate();
-            listener.afterExecuteUpdate(statement);
+            listener.afterExecuteUpdate(statement, count);
             if (selection == null || selection.isEmpty()) {
                 connection.close();
                 MutableTuple tuple = new MutableTuple(1);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -79,12 +80,12 @@ class EntityMetaGenerator extends EntityPartGenerator {
         boolean metadataOnly = entity.isImmutable() || entity.isUnimplementable();
         TypeName targetName = metadataOnly? ClassName.get(entity.element()) : typeName;
 
+        List<QualifiedName> generatedEmbeddedTypes = new LinkedList<>();
         entity.attributes().values().stream()
             .filter(attribute -> !attribute.isTransient())
             .forEach(attribute -> {
 
-            String fieldName = Names.upperCaseUnderscore(
-                Names.removeMemberPrefixes(attribute.fieldName()));
+            String fieldName = upperCaseUnderscoreRemovePrefixes(attribute.fieldName());
 
             if (attribute.isForeignKey() && attribute.cardinality() != null) {
                 // generate a foreign key attribute for use in queries but not stored in the type
@@ -99,8 +100,13 @@ class EntityMetaGenerator extends EntityPartGenerator {
                     });
             }
             if (attribute.isEmbedded()) {
-                graph.embeddedDescriptorOf(attribute).ifPresent(embedded ->
-                    generateEmbedded(attribute, embedded, builder, targetName));
+                graph.embeddedDescriptorOf(attribute).ifPresent(embedded -> {
+                    generateEmbeddedAttributes(attribute, embedded, builder, targetName);
+                    if (!generatedEmbeddedTypes.contains(embedded.typeName())) {
+                        generatedEmbeddedTypes.add(embedded.typeName());
+                        generateEmbeddedEntity(embedded);
+                    }
+                });
             } else {
                 TypeMirror mirror = attribute.typeMirror();
                 builder.addField(
@@ -120,7 +126,8 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 .add(".setCacheable($L)\n", entity.isCacheable())
                 .add(".setImmutable($L)\n", entity.isImmutable())
                 .add(".setReadOnly($L)\n", entity.isReadOnly())
-                .add(".setStateless($L)\n", entity.isStateless());
+                .add(".setStateless($L)\n", entity.isStateless())
+                .add(".setView($L)\n", entity.isView());
         String factoryName = entity.classFactoryName();
         if (!Names.isEmpty(factoryName)) {
             block.add(".setFactory(new $L())\n", ClassName.bestGuess(factoryName));
@@ -209,19 +216,21 @@ class EntityMetaGenerator extends EntityPartGenerator {
                         .build());
     }
 
-    private void generateEmbedded(AttributeDescriptor parent,
-                                  EntityDescriptor embedded,
-                                  TypeSpec.Builder builder,
-                                  TypeName targetName) {
+    private void generateEmbeddedAttributes(AttributeDescriptor parent,
+                                            EntityDescriptor embedded,
+                                            TypeSpec.Builder builder,
+                                            TypeName targetName) {
         // generate the embedded attributes into this type
         embedded.attributes().values().forEach(attribute -> {
-            String fieldName = Names.upperCaseUnderscore(
-                Names.removeMemberPrefixes(attribute.fieldName()));
+            String fieldName = Names.upperCaseUnderscore(embeddedAttributeName(parent, attribute));
             TypeMirror mirror = attribute.typeMirror();
             builder.addField(
                 generateAttribute(attribute, parent, targetName, fieldName, mirror, false));
             attributeNames.add(fieldName);
         });
+    }
+
+    private void generateEmbeddedEntity(EntityDescriptor embedded) {
         // generate an embedded implementation for this (the parent) entity
         try {
             new EntityGenerator(processingEnv, graph, embedded, entity).generate();
@@ -260,7 +269,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
             boolean isQueryable = attribute.cardinality() == null || attribute.isForeignKey();
             Class<?> attributeClass = isQueryable ? QueryAttribute.class : Attribute.class;
             attributeType = ClassName.get(attributeClass);
-            if (isQueryable && SourceLanguage.of(entity.element()) == SourceLanguage.KOTLIN) {
+            if (isQueryable) {
                 TypeElement delegateType = elements.getTypeElement(KOTLIN_ATTRIBUTE_DELEGATE);
                 if (delegateType != null) {
                     attributeType = ClassName.get(delegateType);
@@ -271,6 +280,10 @@ class EntityMetaGenerator extends EntityPartGenerator {
         }
 
         CodeBlock.Builder builder = CodeBlock.builder();
+        String attributeName = attribute.name();
+        if (parent != null && parent.isEmbedded()) {
+            attributeName = embeddedAttributeName(parent, attribute);
+        }
 
         if (attribute.isIterable()) {
             typeMirror = tryFirstTypeArgument(typeMirror);
@@ -281,7 +294,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 attribute.builderClass(), targetName, typeName, name);
 
             builder.add("\nnew $T($S, $T.class, $T.class)\n",
-                builderName, attribute.name(), ClassName.get(collection), name);
+                builderName, attributeName, ClassName.get(collection), name);
 
         } else if (attribute.isMap() && attribute.cardinality() != null) {
             List<TypeMirror> parameters = Mirrors.listGenericTypeArguments(typeMirror);
@@ -295,7 +308,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 attribute.builderClass(), targetName, typeName, keyName, valueName);
 
             builder.add("\nnew $T($S, $T.class, $T.class, $T.class)\n", builderName,
-                attribute.name(), ClassName.get(valueElement), keyName, valueName);
+                attributeName, ClassName.get(valueElement), keyName, valueName);
         } else {
             ParameterizedTypeName builderName = parameterizedTypeName(
                 attribute.builderClass(), targetName, typeName);
@@ -312,7 +325,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
             } else {
                 statement ="\nnew $T($S, $T.class)\n";
             }
-            builder.add(statement, builderName, attribute.name(), classType);
+            builder.add(statement, builderName, attributeName, classType);
         }
         if (!expression) {
             generateProperties(attribute, parent, typeMirror, targetName, typeName, builder);
@@ -334,6 +347,9 @@ class EntityMetaGenerator extends EntityPartGenerator {
         if (attribute.columnLength() != null) {
             builder.add(".setLength($L)\n", attribute.columnLength());
         }
+        if (!Names.isEmpty(attribute.definition())) {
+            builder.add(".setDefinition($S)\n", attribute.definition());
+        }
         if (attribute.isVersion()) {
             builder.add(".setVersion($L)\n", attribute.isVersion());
         }
@@ -352,8 +368,8 @@ class EntityMetaGenerator extends EntityPartGenerator {
 
                 graph.referencingAttribute(attribute, referenced).ifPresent(
                     referencedAttribute -> {
-                        String name = Names.upperCaseUnderscore(
-                                Names.removeMemberPrefixes(referencedAttribute.fieldName()));
+                        String name =
+                                upperCaseUnderscoreRemovePrefixes(referencedAttribute.fieldName());
                         TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                             ClassName.get(Attribute.class),
                             CodeBlock.builder().addStatement("return $T.$L",
@@ -407,8 +423,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 }
                 if (mappings.size() == 1) {
                     AttributeDescriptor mapped = mappings.iterator().next();
-                    String staticMemberName = Names.upperCaseUnderscore(
-                            Names.removeMemberPrefixes(mapped.fieldName()));
+                    String staticMemberName = upperCaseUnderscoreRemovePrefixes(mapped.fieldName());
 
                     TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                         ClassName.get(Attribute.class),
@@ -422,7 +437,8 @@ class EntityMetaGenerator extends EntityPartGenerator {
                         .filter(entry -> entry.name().equals(attribute.orderBy()))
                         .findFirst().ifPresent(orderBy -> {
 
-                        String staticMemberName = Names.upperCaseUnderscore(orderBy.fieldName());
+                        String staticMemberName =
+                                upperCaseUnderscoreRemovePrefixes(orderBy.fieldName());
                         TypeSpec provider = CodeGeneration.createAnonymousSupplier(
                             ClassName.get(Attribute.class),
                             CodeBlock.builder().addStatement("return $T.$L",
@@ -612,5 +628,9 @@ class EntityMetaGenerator extends EntityPartGenerator {
             }
         }
         return Property.class;
+    }
+
+    private static String upperCaseUnderscoreRemovePrefixes(String name) {
+        return Names.upperCaseUnderscore(Names.removeMemberPrefixes(name));
     }
 }

@@ -80,8 +80,18 @@ class LoggingListener<T> implements EntityStateListener<T>, StatementListener {
     }
 
     @Override
-    public void afterExecuteUpdate(Statement statement) {
-        log.log(level, "afterExecuteUpdate");
+    public void afterExecuteUpdate(Statement statement, int count) {
+        log.log(level, "afterExecuteUpdate {0}", new Object[] {count});
+    }
+
+    @Override
+    public void beforeExecuteBatchUpdate(Statement statement, String sql) {
+        log.log(level, "beforeExecuteUpdate {0} sql:\n{1})", new Object[]{statement, sql });
+    }
+
+    @Override
+    public void afterExecuteBatchUpdate(Statement statement, int[] count) {
+        log.log(level, "afterExecuteBatchUpdate");
     }
 
     @Override

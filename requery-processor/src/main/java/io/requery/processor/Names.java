@@ -16,6 +16,8 @@
 
 package io.requery.processor;
 
+import javax.lang.model.SourceVersion;
+
 /**
  * Naming utility class.
  *
@@ -103,5 +105,9 @@ final class Names {
             return typeName.replaceFirst("Base", "");
         }
         return typeName;
+    }
+
+    public static String checkReservedName(CharSequence name, CharSequence fallback) {
+        return SourceVersion.isName(name) ? name.toString() : fallback.toString();
     }
 }

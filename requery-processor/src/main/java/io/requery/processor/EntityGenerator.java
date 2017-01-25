@@ -16,6 +16,7 @@
 
 package io.requery.processor;
 
+
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -28,6 +29,7 @@ import com.squareup.javapoet.WildcardTypeName;
 import io.requery.Entity;
 import io.requery.Persistable;
 import io.requery.PropertyNameStyle;
+import io.requery.meta.Attribute;
 import io.requery.proxy.EntityProxy;
 import io.requery.proxy.PreInsertListener;
 import io.requery.proxy.PropertyState;
@@ -52,6 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * Generates a java class file from an abstract class marked with the {@link Entity} annotation.
@@ -113,6 +116,9 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                 generateHashCode(builder);
                 generateToString(builder);
             }
+            if (entity.isCopyable()) {
+                generateCopy(builder);
+            }
         } else {
             // private constructor
             builder.addMethod(MethodSpec.constructorBuilder()
@@ -136,6 +142,19 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                         .builder(stateType, propertyStateFieldName(attribute), visibility)
                         .build());
             });
+        }
+        if (entity.isEmbedded() && !(entity.isImmutable() || entity.isUnimplementable())) {
+            entity.attributes().values().stream()
+                    .filter(attribute -> !attribute.isTransient())
+                    .forEach(attribute -> {
+                        ParameterizedTypeName attributeType = ParameterizedTypeName.get(
+                                ClassName.get(Attribute.class), nameResolver.typeNameOf(parent),
+                                resolveAttributeType(attribute));
+                        builder.addField(FieldSpec
+                                .builder(attributeType, attributeFieldName(attribute),
+                                        Modifier.PRIVATE, Modifier.FINAL)
+                                .build());
+                    });
         }
         // only generate for interfaces or if the entity is immutable but has no builder
         boolean generateMembers = typeElement.getKind().isInterface() ||
@@ -253,7 +272,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             String getterName = attribute.getterName();
             String fieldName = Names.upperCaseUnderscore(Names.removeMemberPrefixes(attributeName));
             if (entity.isEmbedded()) {
-                fieldName = nameResolver.typeNameOf(parent) + "." + fieldName;
+                fieldName = attributeFieldName(attribute);
             }
             // getter
             MethodSpec.Builder getter = MethodSpec.methodBuilder(getterName)
@@ -294,9 +313,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                 boolean castType = false;
 
                 // use wildcard generic collection type if necessary
-                if (SourceLanguage.of(entity.element()) == SourceLanguage.KOTLIN &&
-                    setTypeName instanceof ParameterizedTypeName) {
-
+                if (setTypeName instanceof ParameterizedTypeName) {
                     ParameterizedTypeName parameterizedName = (ParameterizedTypeName) setTypeName;
                     List<TypeName> arguments = parameterizedName.typeArguments;
                     List<TypeName> wildcards = new ArrayList<>();
@@ -351,6 +368,17 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         if (entity.isEmbedded()) {
             constructor.addParameter(ParameterSpec.builder(proxyName, "proxy").build());
             constructor.addStatement("this.$L = proxy", PROXY_NAME);
+            entity.attributes().values().stream()
+                    .filter(attribute -> !attribute.isTransient())
+                    .forEach(attribute -> {
+                        ParameterizedTypeName attributeType = ParameterizedTypeName.get(
+                                ClassName.get(Attribute.class), nameResolver.typeNameOf(parent),
+                                resolveAttributeType(attribute));
+                        constructor.addParameter(ParameterSpec
+                                .builder(attributeType, attribute.name()).build());
+                        constructor.addStatement("this.$L = $L",
+                                attributeFieldName(attribute), attribute.name());
+                    });
         }
         generateListeners(constructor);
         // initialize the generated embedded entities
@@ -358,8 +386,10 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             .filter(AttributeDescriptor::isEmbedded)
             .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded -> {
                 ClassName embeddedName = nameResolver.embeddedTypeNameOf(embedded, entity);
-                constructor.addStatement("$L = new $T($L)",
-                    attribute.fieldName(), embeddedName, PROXY_NAME);
+                String format = embedded.attributes().values().stream().map(attr ->
+                        Names.upperCaseUnderscore(embeddedAttributeName(attribute, attr)))
+                        .collect(Collectors.joining(", ", "$L = new $T($L, ", ")"));
+                constructor.addStatement(format, attribute.fieldName(), embeddedName, PROXY_NAME);
             }));
         builder.addMethod(constructor.build());
     }
@@ -391,6 +421,16 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     .returns(String.class)
                     .addStatement("return $L.toString()", PROXY_NAME);
             builder.addMethod(equals.build());
+        }
+    }
+
+    private void generateCopy(TypeSpec.Builder builder) {
+        if (!Mirrors.overridesMethod(types, typeElement, "copy")) {
+            MethodSpec.Builder copy = MethodSpec.methodBuilder("copy")
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(typeName)
+                    .addStatement("return $L.copy()", PROXY_NAME);
+            builder.addMethod(copy.build());
         }
     }
 

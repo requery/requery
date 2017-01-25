@@ -52,7 +52,7 @@ abstract class EntityUpdateOperation extends UpdateOperation {
                         bindParameters(statement);
                         listener.beforeExecuteUpdate(statement, sql, null);
                         result = statement.executeUpdate();
-                        listener.afterExecuteUpdate(statement);
+                        listener.afterExecuteUpdate(statement, result);
                         readGeneratedKeys(0, statement);
                     }
                 } catch (SQLException e) {

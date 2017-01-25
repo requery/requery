@@ -46,9 +46,23 @@ class CompositeStatementListener implements StatementListener {
     }
 
     @Override
-    public void afterExecuteUpdate(Statement statement) {
+    public void afterExecuteUpdate(Statement statement, int count) {
         for (StatementListener interceptor : listeners) {
-            interceptor.afterExecuteUpdate(statement);
+            interceptor.afterExecuteUpdate(statement, count);
+        }
+    }
+
+    @Override
+    public void beforeExecuteBatchUpdate(Statement statement, String sql) {
+        for (StatementListener interceptor : listeners) {
+            interceptor.beforeExecuteBatchUpdate(statement, sql);
+        }
+    }
+
+    @Override
+    public void afterExecuteBatchUpdate(Statement statement, int[] count) {
+        for (StatementListener interceptor : listeners) {
+            interceptor.afterExecuteBatchUpdate(statement, count);
         }
     }
 

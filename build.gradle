@@ -3,11 +3,12 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
 buildscript {
-    ext.android_buildtools_version = '24.0.2'
+    ext.android_buildtools_version = '25.0.0'
     ext.jpa_version = '2.1.1'
-    ext.kotlin_version = '1.0.4'
-    ext.rxjava_version = '1.2.0'
-    ext.rxjava2_version = '2.0.0-RC5'
+    ext.kotlin_version = '1.0.6'
+    ext.rxjava_version = '1.2.5'
+    ext.rxjava2_version = '2.0.4'
+    ext.reactor_version = '3.0.3.RELEASE'
     repositories {
         jcenter()
     }
@@ -33,7 +34,7 @@ idea {
 }
 
 group = 'io.requery'
-version = '1.0.1'
+version = '1.1.1'
 description = 'A light but powerful object mapper and SQL generator for Java/Android'
 
 Properties properties = new Properties()

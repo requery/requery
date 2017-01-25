@@ -1,11 +1,11 @@
 package io.requery.android.example.app
 
+import io.reactivex.Observable
 import io.requery.Persistable
 import io.requery.android.example.app.model.AddressEntity
 import io.requery.android.example.app.model.Person
 import io.requery.android.example.app.model.PersonEntity
 import io.requery.sql.KotlinEntityDataStore
-import rx.Observable
 import java.util.*
 import java.util.concurrent.Callable
 

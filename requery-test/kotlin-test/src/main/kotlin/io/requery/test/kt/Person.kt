@@ -6,7 +6,7 @@ import java.util.Date
 import java.util.UUID
 
 @Entity(model = "kt")
-interface Person : Persistable {
+interface Person {
 
     @get:Key
     @get:Generated

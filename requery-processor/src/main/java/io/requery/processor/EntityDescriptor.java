@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,9 +89,14 @@ interface EntityDescriptor {
     PropertyNameStyle propertyNameStyle();
 
     /**
-     * @return true if the entity is cacheable
+     * @return true if the entity is cacheable, false otherwise
      */
     boolean isCacheable();
+
+    /**
+     * @return true if the entity is copyable, false otherwise
+     */
+    boolean isCopyable();
 
     /**
      * @return true if this an embedded entity type.
@@ -120,6 +125,11 @@ interface EntityDescriptor {
      * from being extended/implemented.
      */
     boolean isUnimplementable();
+
+    /**
+     * @return true if the annotated type maps to a view instead of a table
+     */
+    boolean isView();
 
     /**
      * @return {@link TypeElement} of the builder class that can build instances of the entity if

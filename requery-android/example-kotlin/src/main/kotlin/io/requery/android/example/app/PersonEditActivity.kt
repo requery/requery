@@ -5,11 +5,11 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.requery.Persistable
 import io.requery.android.example.app.model.*
 import io.requery.sql.KotlinEntityDataStore
-import rx.Observable
-import rx.android.schedulers.AndroidSchedulers
 
 /**
  * Simple activity allowing you to edit a Person entity using data binding.

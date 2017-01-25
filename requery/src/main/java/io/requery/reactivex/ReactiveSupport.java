@@ -16,19 +16,13 @@
 
 package io.requery.reactivex;
 
-import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.requery.BlockingEntityStore;
-import io.requery.TransactionListenable;
 import io.requery.meta.Type;
-import io.requery.query.BaseResult;
-import io.requery.query.Result;
+import io.requery.meta.Types;
 import io.requery.query.element.QueryElement;
-import io.requery.query.element.QueryWrapper;
-import io.requery.rx.RxSupport;
-import org.reactivestreams.Subscriber;
 
 import java.util.Collections;
 import java.util.Set;
@@ -47,35 +41,22 @@ public final class ReactiveSupport {
         return new WrappedEntityStore<>(store);
     }
 
-    public static <T> Observable<Result<T>> toObservableResult(final Result<T> result) {
-        if (!(result instanceof TransactionListenable)) {
-            throw new UnsupportedOperationException();
-        }
-        TransactionListenable listenable = (TransactionListenable) result;
-        final QueryElement<?> element = ((QueryWrapper) result).unwrapQuery();
+    static <T> Observable<ReactiveResult<T>> toObservableResult(final ReactiveResult<T> result) {
+        final QueryElement<?> element = result.unwrapQuery();
         // ensure the transaction listener is added in the target data store
-        listenable.addTransactionListener(typeChanges);
+        result.addTransactionListener(typeChanges);
         return typeChanges.commitSubject()
             .filter(new Predicate<Set<Type<?>>>() {
                 @Override
                 public boolean test(Set<Type<?>> types) {
                     return !Collections.disjoint(element.entityTypes(), types) ||
-                           RxSupport.referencesType(element.entityTypes(), types);
+                           Types.referencesType(element.entityTypes(), types);
                 }
-            }).map(new Function<Set<Type<?>>, Result<T>>() {
+            }).map(new Function<Set<Type<?>>, ReactiveResult<T>>() {
                 @Override
-                public Result<T> apply(Set<Type<?>> types) {
+                public ReactiveResult<T> apply(Set<Type<?>> types) {
                     return result;
                 }
             }).startWith(result);
-    }
-
-    public static <E> Flowable<E> toFlowable(final BaseResult<E> result) {
-        return new Flowable<E>() {
-            @Override
-            protected void subscribeActual(Subscriber<? super E> s) {
-                s.onSubscribe(new QuerySubscription<>(result, s));
-            }
-        };
     }
 }

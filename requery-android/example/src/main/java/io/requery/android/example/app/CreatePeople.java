@@ -16,12 +16,12 @@
 
 package io.requery.android.example.app;
 
+import io.reactivex.Observable;
 import io.requery.Persistable;
 import io.requery.android.example.app.model.AddressEntity;
 import io.requery.android.example.app.model.Person;
 import io.requery.android.example.app.model.PersonEntity;
-import io.requery.rx.SingleEntityStore;
-import rx.Observable;
+import io.requery.reactivex.ReactiveEntityStore;
 
 import java.util.Comparator;
 import java.util.Random;
@@ -32,9 +32,9 @@ import java.util.concurrent.Callable;
 
 class CreatePeople implements Callable<Observable<Iterable<Person>>> {
 
-    private final SingleEntityStore<Persistable> data;
+    private final ReactiveEntityStore<Persistable> data;
 
-    CreatePeople(SingleEntityStore<Persistable> data) {
+    CreatePeople(ReactiveEntityStore<Persistable> data) {
         this.data = data;
     }
 

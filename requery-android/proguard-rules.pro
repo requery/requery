@@ -10,6 +10,7 @@
 -dontwarn io.requery.cache.**
 -dontwarn io.requery.rx.**
 -dontwarn io.requery.reactivex.**
+-dontwarn io.requery.reactor.**
 -dontwarn io.requery.query.**
 -dontwarn io.requery.android.sqlcipher.**
 -dontwarn io.requery.android.sqlitex.**

@@ -4,7 +4,7 @@ import io.requery.*
 
 @Entity(model = "kt")
 @Table(name = "Groups")
-interface Group : Persistable {
+interface Group {
 
     @get:Key
     @get:Generated
