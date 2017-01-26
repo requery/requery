@@ -205,8 +205,7 @@ public class SchemaModifier {
     public <T> void addColumn(Attribute<T, ?> attribute) {
         Type<T> type = attribute.getDeclaringType();
         QueryBuilder qb = createQueryBuilder();
-        qb.keyword(ALTER, TABLE)
-            .tableName(type.getName());
+        qb.keyword(ALTER, TABLE).tableName(type.getName());
         if (attribute.isForeignKey()) {
             if (platform.supportsAddingConstraint()) {
                 // create the column first then the constraint
@@ -227,8 +226,8 @@ public class SchemaModifier {
         } else {
             qb.keyword(ADD, COLUMN);
             createColumn(qb, attribute);
-            executeSql(qb);
         }
+        executeSql(qb);
     }
 
     /**
