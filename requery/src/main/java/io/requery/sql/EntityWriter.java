@@ -941,7 +941,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             final List<Object> ids = new LinkedList<>();
             while (iterator.hasNext() && ids.size() < batchSize) {
                 E entity = iterator.next();
-                EntityProxy<E> proxy = proxyProvider.apply(entity);
+                EntityProxy<E> proxy = context.proxyOf(entity, true);
                 if (versionAttribute != null || keyCount > 1) {
                     // not optimized if version column has to be checked, or multiple primary keys
                     // TODO could use JDBC batching

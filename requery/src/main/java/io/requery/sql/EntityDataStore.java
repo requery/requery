@@ -352,7 +352,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         if (iterator.hasNext()) {
             try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
                 E entity = iterator.next();
-                EntityProxy<E> proxy = context.proxyOf(entity, false);
+                EntityProxy<E> proxy = context.proxyOf(entity, true);
                 EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
                 writer.delete(entities);
                 transaction.commit();
