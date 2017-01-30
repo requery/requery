@@ -457,6 +457,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
         } else {
             if (context.getPlatform().supportsUpsert()) {
+                context.getStateListener().preUpdate(entity, proxy);
                 for (Attribute<E, ?> attribute : associativeAttributes) {
                     cascadeKeyReference(Cascade.UPSERT, proxy, attribute);
                 }
@@ -477,6 +478,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 if (cacheable) {
                     cache.put(entityClass, proxy.key(), entity);
                 }
+                context.getStateListener().postUpdate(entity, proxy);
             } else {
                 // not a real upsert, but can be ok for embedded databases
                 if (update(entity, proxy, Cascade.UPSERT, null, null) == 0) {
