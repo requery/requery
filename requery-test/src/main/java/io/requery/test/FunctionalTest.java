@@ -32,6 +32,7 @@ import io.requery.query.Tuple;
 import io.requery.query.function.Case;
 import io.requery.query.function.Coalesce;
 import io.requery.query.function.Count;
+import io.requery.query.function.Upper;
 import io.requery.sql.EntityDataStore;
 import io.requery.test.model.Address;
 import io.requery.test.model.Group;
@@ -1048,6 +1049,24 @@ public abstract class FunctionalTest extends RandomData {
             Integer i = query.first().get(0);
             assertTrue(i.equals(4));
         }
+    }
+
+    @Test
+    public void testQueryOrderByFunction() {
+        Person person = randomPerson();
+        person.setName("BOBB");
+        data.insert(person);
+        person = randomPerson();
+        person.setName("BobA");
+        data.insert(person);
+        person = randomPerson();
+        person.setName("bobC");
+        data.insert(person);
+        List<Tuple> list = data.select(Person.NAME)
+                .orderBy(Upper.upper(Person.NAME).desc()).get().toList();
+        assertTrue(list.get(0).get(0).equals("bobC"));
+        assertTrue(list.get(1).get(0).equals("BOBB"));
+        assertTrue(list.get(2).get(0).equals("BobA"));
     }
 
     @Test
