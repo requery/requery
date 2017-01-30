@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Map;
 
@@ -253,7 +254,16 @@ public class CursorResultSet extends NonUpdateableResultSet implements ResultSet
         if(cursor.isNull(columnIndex - 1)) {
             return null;
         }
-        return new Date(cursor.getLong(columnIndex - 1));
+        if (cursor.getType(columnIndex - 1) == Cursor.FIELD_TYPE_INTEGER) {
+            return new Date(cursor.getLong(columnIndex - 1));
+        } else {
+            try {
+                String value = cursor.getString(columnIndex - 1);
+                return new Date(BasePreparedStatement.ISO8601_FORMAT.parse(value).getTime());
+            } catch (ParseException e) {
+                throw new SQLException(e);
+            }
+        }
     }
 
     @Override
