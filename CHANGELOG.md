@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+## 1.1.2
+
+- Support @View annotation for mapping entities to table views
+- Fix runInTransaction rollback behavior
+- Fix add column not added to foreign key during table upgrade
+- Fix function expression in order by column caused incorrect sql generation
+- Fix rx observableResult not triggered for multiple entity delete
+- Fix OptimisticLockException when updating an entity with a @Version column
+- Fix Kotlin select distinct query
+- Fix Android incompatible date types, now stored as ISO 8601
+- Fix update listener not invoked for some upsert calls
+
 ## 1.1.1
 
 - Support new KotlinReactiveEntityStore/KotlinRxEntityStore for RxJava 2.0 & RxJava 1.0
