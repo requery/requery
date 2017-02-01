@@ -16,7 +16,6 @@
 
 package io.requery.test.kt
 
-import io.reactivex.Observable
 import io.requery.kotlin.eq
 import io.requery.reactivex.KotlinReactiveEntityStore
 import io.requery.sql.KotlinConfiguration
@@ -25,19 +24,14 @@ import io.requery.sql.SchemaModifier
 import io.requery.sql.TableCreationMode
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.After
-import org.junit.Assert
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import java.sql.SQLException
-import java.util.*
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class ReactiveTest {
 
-    var instance : KotlinEntityDataStore<Any>? = null
-    val data : KotlinReactiveEntityStore<Any> get() = KotlinReactiveEntityStore(instance!!)
+    var instance: KotlinEntityDataStore<Any>? = null
+    val data: KotlinReactiveEntityStore<Any> get() = KotlinReactiveEntityStore(instance!!)
 
     internal fun randomPerson(): Person {
         return FunctionalTest.randomPerson()
@@ -70,65 +64,86 @@ class ReactiveTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testInsert() {
         val person = randomPerson()
-        val latch = CountDownLatch(1)
-        data.insert(person).subscribe { person ->
-            assertTrue(person.id > 0)
-            val cached = data.select(Person::class)
-                    .where(Person::id.eq(person.id)).get().first()
-            assertSame(cached, person)
-            latch.countDown()
-        }
-        latch.await()
+        data.insert(person)
+                .test()
+                .assertValue { it.id > 0 }
+                .assertNoErrors()
+                .assertComplete()
+
+        data.select(Person::class)
+                .where(Person::id.eq(person.id))
+                .get()
+                .maybe()
+                .test()
+                .assertValue(person)
+                .assertComplete()
     }
 
     @Test
-    @Throws(Exception::class)
     fun testDelete() {
         val person = randomPerson()
-        data.insert(person).blockingGet()
-        data.delete(person).blockingGet()
-        val cached = data.select(Person::class)
-                .where(Person::id.eq(person.id)).get().firstOrNull()
-        assertNull(cached)
+
+        data.insert(person)
+                .test()
+                .assertComplete()
+
+        data.delete(person)
+                .test()
+                .assertNoErrors()
+                .assertComplete()
+
+        data.select(Person::class)
+                .where(Person::id.eq(person.id))
+                .get()
+                .maybe()
+                .test()
+                .assertComplete()
+                .assertNoValues()
     }
 
     @Test
-    @Throws(Exception::class)
     fun testInsertCount() {
         val person = randomPerson()
-        Observable.just(person)
-                .concatMap { person -> data.insert(person).toObservable() }
-        val p = data.insert(person).blockingGet()
-        assertTrue(p.id > 0)
-        val count = data.count(Person::class).get().single().blockingGet()
-        assertEquals(1, count.toLong())
+        data.insert(person)
+                .test()
+                .assertValue { it.id > 0 }
+                .assertComplete()
+
+        data.count(Person::class)
+                .get()
+                .single()
+                .test()
+                .assertValue(1)
+                .assertComplete()
     }
 
     @Test
-    @Throws(Exception::class)
     fun testQueryEmpty() {
-        val latch = CountDownLatch(1)
-        data.select(Person::class).get().observable()
-                .subscribe({ Assert.fail() }, { Assert.fail() }) { latch.countDown() }
-        if (!latch.await(1, TimeUnit.SECONDS)) {
-            Assert.fail()
-        }
+        data.select(Person::class)
+                .get()
+                .maybe()
+                .test()
+                .assertComplete()
+                .assertNoValues()
     }
 
     @Test
-    @Throws(Exception::class)
     fun testQueryObservable() {
         for (i in 0..29) {
             val person = randomPerson()
-            data.insert(person).blockingGet()
+            data.insert(person)
+                    .test()
+                    .assertComplete()
         }
-        val people = ArrayList<Person>()
-        data.select(Person::class).limit(50).get()
+
+        data.select(Person::class)
+                .limit(50)
+                .get()
                 .observable()
-                .subscribe { person -> people.add(person) }
-        assertEquals(30, people.size.toLong())
+                .toList()
+                .test()
+                .assertValue { it.size == 30 }
     }
 }
