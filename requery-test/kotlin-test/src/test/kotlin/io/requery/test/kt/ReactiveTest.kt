@@ -64,6 +64,20 @@ class ReactiveTest {
     }
 
     @Test
+    fun testGet() {
+        val person = randomPerson()
+        val personId = instance!!.insert(person).id
+
+        data.select(Person::class)
+                .where(Person::id.eq(personId))
+                .get()
+                .maybe()
+                .test()
+                .assertValue(person)
+                .assertComplete()
+    }
+
+    @Test
     fun testInsert() {
         val person = randomPerson()
         data.insert(person)
