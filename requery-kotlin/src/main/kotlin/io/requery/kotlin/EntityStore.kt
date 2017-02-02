@@ -38,8 +38,8 @@ interface EntityStore<T : Any, out R> : Queryable<T>, AutoCloseable {
     fun <E : T> refresh(entity: E, vararg attributes: Attribute<*, *>): R
     fun <E : T> refresh(entities: Iterable<E>, vararg attributes: Attribute<*, *>): R
     fun <E : T> refreshAll(entity: E): R
-    infix fun <E : T> delete(entity: E): R
-    infix fun <E : T> delete(entities: Iterable<E>): R
+    infix fun <E : T> delete(entity: E): R?
+    infix fun <E : T> delete(entities: Iterable<E>): R?
     fun <E : T, K> findByKey(type: KClass<E>, key: K): R?
     fun toBlocking(): BlockingEntityStore<T>
 }
@@ -58,8 +58,8 @@ interface BlockingEntityStore<T : Any> : EntityStore<T, Any> {
     override fun <E : T> refresh(entity: E, vararg attributes: Attribute<*, *>): E
     override fun <E : T> refresh(entities: Iterable<E>, vararg attributes: Attribute<*, *>): Iterable<E>
     override fun <E : T> refreshAll(entity: E): E
-    override fun <E : T> delete(entity: E): Void
-    override fun <E : T> delete(entities: Iterable<E>): Void
+    override fun <E : T> delete(entity: E): Void?
+    override fun <E : T> delete(entities: Iterable<E>): Void?
     override fun <E : T, K> findByKey(type: KClass<E>, key: K): E?
 
     fun <V> withTransaction(body: BlockingEntityStore<T>.() -> V): V

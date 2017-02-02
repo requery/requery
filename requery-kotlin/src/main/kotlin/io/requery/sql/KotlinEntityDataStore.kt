@@ -131,8 +131,8 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
             data.refresh(entities, *attributes)
     override fun <E : T> refreshAll(entity: E): E = data.refreshAll(entity)
 
-    override fun <E : T> delete(entity: E): Void = data.delete(entity)
-    override fun <E : T> delete(entities: Iterable<E>): Void = data.delete(entities)
+    override fun <E : T> delete(entity: E): Void? = data.delete(entity)
+    override fun <E : T> delete(entities: Iterable<E>): Void? = data.delete(entities)
 
     override fun <E : T, K> findByKey(type: KClass<E>, key: K): E? = data.findByKey(type.java, key)
 
