@@ -39,9 +39,6 @@ dependencies {
     testCompile 'org.hsqldb:hsqldb:2.3.4'
     testCompile 'org.ehcache:ehcache:3.1.1'
     testCompile 'javax.cache:cache-api:1.0.0'
-    compile "com.fasterxml.jackson.core:jackson-core:$jackson_version"
-    compile "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
-    compile "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
     compile 'junit:junit:4.12'
 }
 
