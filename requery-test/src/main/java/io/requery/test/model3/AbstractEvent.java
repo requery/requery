@@ -17,6 +17,7 @@
 package io.requery.test.model3;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.requery.Entity;
 import io.requery.Key;
 import io.requery.ManyToMany;
@@ -28,14 +29,18 @@ import java.util.UUID;
 @Entity(model = "model3")
 public class AbstractEvent {
 
+    @JsonProperty("_id")
     @Key
     protected UUID id;
 
+    @JsonProperty("_name")
     protected String name;
 
+    @JsonProperty("_place")
     @ManyToOne
     protected Place place;
 
+    @JsonProperty("_tags")
     @ManyToMany
     protected Set<Tag> tags;
 }
