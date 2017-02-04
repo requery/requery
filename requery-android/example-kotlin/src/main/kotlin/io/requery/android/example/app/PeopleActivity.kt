@@ -19,7 +19,7 @@ import io.requery.android.example.app.model.Person
 import io.requery.android.example.app.model.PersonEntity
 import io.requery.kotlin.lower
 import io.requery.query.Result
-import io.requery.sql.KotlinEntityDataStore
+import io.requery.reactivex.KotlinReactiveEntityStore
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -30,7 +30,7 @@ import java.util.concurrent.Executors
  */
 class PeopleActivity : AppCompatActivity() {
 
-    private lateinit var data: KotlinEntityDataStore<Persistable>
+    private lateinit var data: KotlinReactiveEntityStore<Persistable>
     private lateinit var executor: ExecutorService
     private lateinit var adapter: PersonAdapter
 

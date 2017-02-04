@@ -9,14 +9,14 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.requery.Persistable
 import io.requery.android.example.app.model.*
-import io.requery.sql.KotlinEntityDataStore
+import io.requery.reactivex.KotlinReactiveEntityStore
 
 /**
  * Simple activity allowing you to edit a Person entity using data binding.
  */
 class PersonEditActivity : AppCompatActivity() {
 
-    private lateinit var data: KotlinEntityDataStore<Persistable>
+    private lateinit var data: KotlinReactiveEntityStore<Persistable>
     private lateinit var person: Person
 
     companion object {
@@ -35,10 +35,9 @@ class PersonEditActivity : AppCompatActivity() {
             person = PersonEntity() // creating a new person
             setPerson(person)
         } else {
-            Observable.fromCallable {
-                data.findByKey(PersonEntity::class, personId)
-            } .subscribeOn(AndroidSchedulers.mainThread())
-              .subscribe { person -> setPerson(person) }
+            data.findByKey(PersonEntity::class, personId)
+                    .subscribeOn(AndroidSchedulers.mainThread())
+                    .subscribe { person -> setPerson(person) }
         }
     }
 

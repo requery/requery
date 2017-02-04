@@ -5,11 +5,11 @@ import io.requery.Persistable
 import io.requery.android.example.app.model.AddressEntity
 import io.requery.android.example.app.model.Person
 import io.requery.android.example.app.model.PersonEntity
-import io.requery.sql.KotlinEntityDataStore
+import io.requery.reactivex.KotlinReactiveEntityStore
 import java.util.*
 import java.util.concurrent.Callable
 
-class CreatePeople(val data: KotlinEntityDataStore<Persistable>) : Callable<Observable<Iterable<Person>>> {
+class CreatePeople(val data: KotlinReactiveEntityStore<Persistable>) : Callable<Observable<Iterable<Person>>> {
 
     override fun call(): Observable<Iterable<Person>> {
         val firstNames = arrayOf("Alice", "Bob", "Carol", "Chloe", "Dan", "Emily", "Emma", "Eric",
@@ -41,6 +41,6 @@ class CreatePeople(val data: KotlinEntityDataStore<Persistable>) : Callable<Obse
             person.address = address
             people.add(person)
         }
-        return Observable.fromCallable { data.insert(people) }
+        return data.insert(people).toObservable()
     }
 }
