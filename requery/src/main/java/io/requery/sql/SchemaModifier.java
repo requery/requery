@@ -427,7 +427,7 @@ public class SchemaModifier {
             qb.keyword(ON, DELETE);
             appendReferentialAction(qb, attribute.getDeleteAction());
         }
-        if (referencedAttribute != null &&
+        if (platform.supportsOnUpdateCascade() && referencedAttribute != null &&
             !referencedAttribute.isGenerated() && attribute.getUpdateAction() != null) {
             qb.keyword(ON, UPDATE);
             appendReferentialAction(qb, attribute.getUpdateAction());
