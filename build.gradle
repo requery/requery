@@ -8,7 +8,7 @@ buildscript {
     ext.jpa_version = '2.1.1'
     ext.kotlin_version = '1.0.6'
     ext.rxjava_version = '1.2.5'
-    ext.rxjava2_version = '2.0.4'
+    ext.rxjava2_version = '2.0.5'
     ext.reactor_version = '3.0.3.RELEASE'
     repositories {
         jcenter()
