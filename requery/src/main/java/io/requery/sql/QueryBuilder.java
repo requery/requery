@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -218,10 +218,10 @@ public class QueryBuilder implements CharSequence {
         });
     }
 
-    public <E> QueryBuilder commaSeparatedAttributes(Iterable<Attribute<E, ?>> values) {
-        return commaSeparated(values, new QueryBuilder.Appender<Attribute<E, ?>>() {
+    public QueryBuilder commaSeparatedAttributes(Iterable<? extends Attribute<?, ?>> values) {
+        return commaSeparated(values, new QueryBuilder.Appender<Attribute<?, ?>>() {
             @Override
-            public void append(QueryBuilder qb, Attribute<E, ?> value) {
+            public void append(QueryBuilder qb, Attribute<?, ?> value) {
                 qb.attribute(value);
             }
         });

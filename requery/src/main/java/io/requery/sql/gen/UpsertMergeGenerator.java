@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import io.requery.sql.QueryBuilder;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static io.requery.sql.Keyword.*;
 
@@ -60,7 +61,11 @@ public class UpsertMergeGenerator implements Generator<Map<Expression<?>, Object
             qb.keyword(ON)
             .openParenthesis();
         int count = 0;
-        for (Attribute<?, ?> attribute : type.getKeyAttributes()) {
+        Set<? extends Attribute<?, ?>> attributes = type.getKeyAttributes();
+        if (attributes.isEmpty()) {
+            attributes = type.getAttributes();
+        }
+        for (Attribute<?, ?> attribute : attributes) {
             if (count > 0) {
                 qb.keyword(Keyword.AND);
             }

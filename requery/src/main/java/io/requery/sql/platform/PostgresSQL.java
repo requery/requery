@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.QueryBuilder;
 import io.requery.sql.VersionColumnDefinition;
-import io.requery.sql.gen.LimitGenerator;
 import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.LimitGenerator;
 import io.requery.sql.gen.Output;
 import io.requery.sql.type.VarCharType;
 
@@ -192,7 +192,7 @@ public class PostgresSQL extends Generic {
                 .closeParenthesis().space()
                 .keyword(ON, CONFLICT)
                 .openParenthesis()
-                .attribute(type.getSingleKeyAttribute())
+                .commaSeparatedAttributes(type.getKeyAttributes())
                 .closeParenthesis().space()
                 .keyword(DO, UPDATE, SET)
                 .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {

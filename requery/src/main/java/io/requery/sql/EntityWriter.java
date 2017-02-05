@@ -118,11 +118,13 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         this.keyAttribute = type.getSingleKeyAttribute();
         this.keyCount = type.getKeyAttributes().size();
         Collection<Attribute<E, ?>> keys = type.getKeyAttributes();
-        generatedColumnNames = new String[keys.size()];
-        int i = 0;
-        for (Attribute attribute : keys) {
-            generatedColumnNames[i++] = attribute.getName();
+        ArrayList<String> generatedKeyNames = new ArrayList<>();
+        for (Attribute<E, ?> attribute : keys) {
+            if (attribute.isGenerated()) {
+                generatedKeyNames.add(attribute.getName());
+            }
         }
+        generatedColumnNames = generatedKeyNames.toArray(new String[generatedKeyNames.size()]);
         entityClass = type.getClassType();
         proxyProvider = type.getProxyProvider();
         cacheable = !type.getKeyAttributes().isEmpty() && type.isCacheable();
@@ -585,8 +587,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             if (keyAttribute != null) {
                 query.where(Attributes.query(keyAttribute).equal("?"));
             } else {
-                for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
-                    query.where(Attributes.query(attribute).equal("?"));
+                for (Attribute<E, ?> attribute : whereAttributes) {
+                    if (attribute != versionAttribute) {
+                        query.where(Attributes.query(attribute).equal("?"));
+                    }
                 }
             }
             if (hasVersion) {
