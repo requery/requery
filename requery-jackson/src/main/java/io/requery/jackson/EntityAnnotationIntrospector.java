@@ -70,30 +70,32 @@ class EntityAnnotationIntrospector extends AnnotationIntrospector {
     public ObjectIdInfo findObjectIdInfo(Annotated annotated) {
         Class<?> rawClass = annotated.getType().getRawClass();
         for (Type<?> type : model.getTypes()) {
-            if (type.getClassType() == rawClass) {
+            if (type.getClassType() == rawClass && type.getSingleKeyAttribute() != null) {
                 Attribute<?, ?> attribute = type.getSingleKeyAttribute();
-                if (attribute != null) {
-                    String name = attribute.getPropertyName();
-                    if (useTableNames) {
-                        name = attribute.getName();
-                    }
+                String name = attribute.getPropertyName();
+                if (useTableNames) {
+                    name = attribute.getName();
+                }
 
-                    // if the name is overridden use that
+                // if the name is overridden use that
+                Class<?> superClass = rawClass.getSuperclass();
+                while (superClass != Object.class && superClass != null) {
                     try {
-                        Class<?> superClass = rawClass.getSuperclass();
                         Field field = superClass.getDeclaredField(attribute.getPropertyName());
                         JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
                         if (jsonProperty != null) {
                             name = jsonProperty.value();
+                            break;
                         }
                     } catch (NoSuchFieldException e) {
                         e.printStackTrace();
                     }
-
-                    return new ObjectIdInfo(new PropertyName(name), rawClass,
-                            ObjectIdGenerators.PropertyGenerator.class,
-                            EntityStoreResolver.class);
+                    superClass = superClass.getSuperclass();
                 }
+
+                return new ObjectIdInfo(new PropertyName(name), rawClass,
+                        ObjectIdGenerators.PropertyGenerator.class,
+                        EntityStoreResolver.class);
             }
         }
         return super.findObjectIdInfo(annotated);
