@@ -50,6 +50,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -425,13 +426,19 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             } catch (MirroredTypeException typeException) {
                 mirror = typeException.getTypeMirror();
             }
-            if (mirror != null) {
+            if (mirror != null && mirror.getKind() != TypeKind.VOID) {
                 return Optional.of(mirror);
             }
         }
+        if (builderFactoryMethod().isPresent()) {
+            return Optional.of(builderFactoryMethod().get().getReturnType());
+        }
         return ElementFilter.typesIn(element().getEnclosedElements()).stream()
-            .filter(element -> element.getSimpleName().toString().contains("Builder"))
-            .findFirst().map(Element::asType);
+                .filter(element -> element.getSimpleName().toString().contains("Builder"))
+                .map(Element::asType)
+                .filter(Objects::nonNull)
+                .filter(type -> type.getKind() != TypeKind.VOID)
+                .findFirst();
     }
 
     @Override

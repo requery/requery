@@ -180,52 +180,58 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                         .build());
                 }
             }
-        } else if (entity.isImmutable()) {
-            TypeName builderName = typeName;
-            if (entity.builderType().isPresent()) {
-                // work around missing package prefix of a generated builder type
-                String name = entity.builderType().get().toString();
-                if (name.startsWith("<any?>.")) {
-                    String packageName = entity.typeName().packageName();
-                    builderName = ClassName.get(packageName, name.substring("<any?>.".length()));
-                } else {
-                    builderName = TypeName.get(entity.builderType().get());
-                }
-            }
-            // if void try to guess the builder type
-            if (builderName == TypeName.VOID && entity.builderFactoryMethod().isPresent()) {
-                builderName = ClassName.get(entity.typeName().packageName(),
-                        entity.builderFactoryMethod().get().getReturnType().toString());
-            }
-            builder.addField(initializeBuilder(entity, builderName, "builder"));
+        }
+
+        if (entity.isImmutable()) {
+            generateBuilder(builder, entity, "builder");
 
             entity.attributes().values().stream()
                 .filter(AttributeDescriptor::isEmbedded)
                 .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded ->
                     embedded.builderType().ifPresent(type -> {
-                        TypeName embedName = TypeName.get(type);
                         String fieldName = attribute.fieldName() + "Builder";
-                        builder.addField(initializeBuilder(embedded, embedName, fieldName));
+                        generateBuilder(builder, embedded, fieldName);
                     })));
         }
     }
 
-    private FieldSpec initializeBuilder(EntityDescriptor entity, TypeName name, String fieldName) {
-        FieldSpec.Builder builder = FieldSpec.builder(name, fieldName, Modifier.PROTECTED);
+    private void generateBuilder(TypeSpec.Builder builder, EntityDescriptor entity, String fieldName) {
+        final String packageName = entity.typeName().packageName();
         if (entity.builderFactoryMethod().isPresent()) {
-            TypeName baseName = TypeName.get(entity.element().asType());
-            builder.initializer("$T.$L()", baseName, entity.builderFactoryMethod()
-                            .map(method -> method.getSimpleName().toString()).orElse(""));
-        } else {
-            if (ImmutableAnnotationKind.IMMUTABLE.isPresent(entity.element())) {
-                // just a best guess as this class may not be generated yet, maybe can check the
-                // annotation style ourselves
-                String simpleName = "Immutable" + entity.element().getSimpleName().toString();
-                ClassName type = ClassName.get(entity.typeName().packageName(), simpleName);
-                builder.initializer("$T.builder()", type);
+            String returnType = entity.builderFactoryMethod().get().getReturnType().toString();
+            TypeName fieldType = ClassName.get(packageName, returnType);
+            TypeName factoryType = TypeName.get(entity.element().asType());
+            String methodName = entity.builderFactoryMethod()
+                    .map(method -> method.getSimpleName().toString())
+                    .orElse("");
+            builder.addField(initializeBuilder(fieldName, fieldType, factoryType, methodName));
+        } else if (ImmutableAnnotationKind.IMMUTABLE.isPresent(entity.element())) {
+            // just a best guess as this class may not be generated yet, maybe can check the
+            // annotation style ourselves
+            String simpleName = "Immutable" + entity.element().getSimpleName().toString();
+            TypeName fieldType = ClassName.get(packageName, simpleName + ".Builder");
+            TypeName factoryType = ClassName.get(packageName, simpleName);
+            builder.addField(initializeBuilder(fieldName, fieldType, factoryType, "builder"));
+        } else if (entity.builderType().isPresent()) {
+            // work around missing package prefix of a generated builder type
+            String name = entity.builderType().get().toString();
+            TypeName builderName;
+            if (name.startsWith("<any?>.")) {
+                builderName = ClassName.get(packageName, name.substring("<any?>.".length()));
             } else {
-                builder.initializer("new $T()", name);
+                builderName = TypeName.get(entity.builderType().get());
             }
+            builder.addField(initializeBuilder(fieldName, builderName, builderName, null));
+        }
+    }
+
+    private FieldSpec initializeBuilder(String fieldName, TypeName fieldType,
+                                        TypeName builderType, String methodName) {
+        FieldSpec.Builder builder = FieldSpec.builder(fieldType, fieldName, Modifier.PROTECTED);
+        if (methodName != null) {
+            builder.initializer("$T.$L()", builderType, methodName);
+        } else {
+            builder.initializer("new $T()", builderType);
         }
         return builder.build();
     }
