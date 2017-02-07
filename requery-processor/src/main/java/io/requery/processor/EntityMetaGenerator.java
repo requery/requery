@@ -50,6 +50,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
@@ -550,22 +551,26 @@ class EntityMetaGenerator extends EntityPartGenerator {
             block.add(".setPropertyState($L)\n", stateType.build());
         }
 
+        if (!entity.isImmutable()) {
+            return;
+        }
         // if immutable add setter for the builder
-        if (entity.isImmutable()) {
-            String propertyName = attribute.fieldName();
-            TypeName builderName = typeName;
-            useSetter = false;
-            String parameterSuffix = null;
-            Optional<TypeElement> builderType = entity.builderType();
-            if (builderType.isPresent()) {
-                parameterSuffix = ".builder";
-                if (parent != null) {
-                    parameterSuffix = "." + parent.fieldName() + "Builder";
-                }
-                propertyName = attribute.setterName();
-                useSetter = true;
+        String propertyName = attribute.fieldName();
+        TypeName builderName = typeName;
+        useSetter = false;
+        String parameterSuffix = null;
+        Optional<TypeMirror> builderType = entity.builderType();
+        if (builderType.isPresent()) {
+            parameterSuffix = ".builder";
+            if (parent != null) {
+                parameterSuffix = "." + parent.fieldName() + "Builder";
+            }
+            propertyName = attribute.setterName();
+            useSetter = true;
+            TypeElement element = elements.getTypeElement(builderType.toString());
+            if (element != null) {
                 for (ExecutableElement method :
-                    ElementFilter.methodsIn(builderType.get().getEnclosedElements())) {
+                        ElementFilter.methodsIn(element.getEnclosedElements())) {
                     List<? extends VariableElement> parameters = method.getParameters();
                     String name = Names.removeMethodPrefixes(method.getSimpleName());
                     // probable setter for this attribute
@@ -577,28 +582,41 @@ class EntityMetaGenerator extends EntityPartGenerator {
                         break;
                     }
                 }
+            } else {
+                // special handling for immutables.org types
+                // (note the below only handles the defaults)  builder setter names not
+                // prefixed, prefix boolean types with is
+                if (ImmutableAnnotationKind.IMMUTABLE.isPresent(entity.element())) {
+                    propertyName = attribute.fieldName();
+                    String getterName = attribute.getterName().replaceFirst("get", "");
+                    if (attribute.typeMirror().getKind() == TypeKind.BOOLEAN) {
+                        propertyName = "is" + Names.upperCaseFirst(propertyName);
+                    } else if (Names.isAllUpper(getterName)) {
+                        propertyName = Names.lowerCaseFirst(getterName);
+                    }
+                }
             }
-            propertyType = propertyName(propertyClass, builderName, attributeName);
-            TypeSpec.Builder builderProperty = TypeSpec.anonymousClassBuilder("")
-                .addSuperinterface(propertyType);
-
-            new GeneratedProperty(propertyName, builderName, attributeName)
-                    .setWriteOnly(true)
-                    .setUseMethod(useSetter)
-                    .setAccessSuffix(parameterSuffix)
-                    .build(builderProperty);
-            if (propertyClass != Property.class) {
-                TypeName primitiveType = TypeName.get(attribute.typeMirror());
-                String name = Names.upperCaseFirst(attribute.typeMirror().toString());
-                new GeneratedProperty(propertyName, builderName, primitiveType)
-                    .setMethodSuffix(name)
-                    .setAccessSuffix(parameterSuffix)
-                    .setUseMethod(useSetter)
-                    .setWriteOnly(true)
-                    .build(builderProperty);
-            }
-            block.add(".setBuilderProperty($L)\n", builderProperty.build());
         }
+        propertyType = propertyName(propertyClass, builderName, attributeName);
+        TypeSpec.Builder builderProperty = TypeSpec.anonymousClassBuilder("")
+            .addSuperinterface(propertyType);
+
+        new GeneratedProperty(propertyName, builderName, attributeName)
+                .setWriteOnly(true)
+                .setUseMethod(useSetter)
+                .setAccessSuffix(parameterSuffix)
+                .build(builderProperty);
+        if (propertyClass != Property.class) {
+            TypeName primitiveType = TypeName.get(attribute.typeMirror());
+            String name = Names.upperCaseFirst(attribute.typeMirror().toString());
+            new GeneratedProperty(propertyName, builderName, primitiveType)
+                .setMethodSuffix(name)
+                .setAccessSuffix(parameterSuffix)
+                .setUseMethod(useSetter)
+                .setWriteOnly(true)
+                .build(builderProperty);
+        }
+        block.add(".setBuilderProperty($L)\n", builderProperty.build());
     }
 
     private static ParameterizedTypeName propertyName(Class type, TypeName targetName,

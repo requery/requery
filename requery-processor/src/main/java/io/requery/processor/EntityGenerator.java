@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 
 package io.requery.processor;
-
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
@@ -182,18 +181,32 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                 }
             }
         } else if (entity.isImmutable()) {
-            TypeName builderName = entity.builderType().map(
-                    element -> TypeName.get(element.asType())).orElse(typeName);
+            TypeName builderName = typeName;
+            if (entity.builderType().isPresent()) {
+                // work around missing package prefix of a generated builder type
+                String name = entity.builderType().get().toString();
+                if (name.startsWith("<any?>.")) {
+                    String packageName = entity.typeName().packageName();
+                    builderName = ClassName.get(packageName, name.substring("<any?>.".length()));
+                } else {
+                    builderName = TypeName.get(entity.builderType().get());
+                }
+            }
+            // if void try to guess the builder type
+            if (builderName == TypeName.VOID && entity.builderFactoryMethod().isPresent()) {
+                builderName = ClassName.get(entity.typeName().packageName(),
+                        entity.builderFactoryMethod().get().getReturnType().toString());
+            }
             builder.addField(initializeBuilder(entity, builderName, "builder"));
 
             entity.attributes().values().stream()
                 .filter(AttributeDescriptor::isEmbedded)
                 .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded ->
-                        embedded.builderType().ifPresent(type -> {
-                    TypeName embedName = TypeName.get(type.asType());
-                    String fieldName = attribute.fieldName() + "Builder";
-                    builder.addField(initializeBuilder(embedded, embedName, fieldName));
-                })));
+                    embedded.builderType().ifPresent(type -> {
+                        TypeName embedName = TypeName.get(type);
+                        String fieldName = attribute.fieldName() + "Builder";
+                        builder.addField(initializeBuilder(embedded, embedName, fieldName));
+                    })));
         }
     }
 
@@ -204,7 +217,15 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             builder.initializer("$T.$L()", baseName, entity.builderFactoryMethod()
                             .map(method -> method.getSimpleName().toString()).orElse(""));
         } else {
-            builder.initializer("new $T()", name);
+            if (ImmutableAnnotationKind.IMMUTABLE.isPresent(entity.element())) {
+                // just a best guess as this class may not be generated yet, maybe can check the
+                // annotation style ourselves
+                String simpleName = "Immutable" + entity.element().getSimpleName().toString();
+                ClassName type = ClassName.get(entity.typeName().packageName(), simpleName);
+                builder.initializer("$T.builder()", type);
+            } else {
+                builder.initializer("new $T()", name);
+            }
         }
         return builder.build();
     }

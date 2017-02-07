@@ -139,7 +139,10 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         // if an immutable type with an implementation provided skip it
         if (!isUnimplementable() && element().getKind().isClass() && isImmutable() &&
             !element.getModifiers().contains(Modifier.ABSTRACT)) {
-            return false;
+            if (!ImmutableAnnotationKind.of(element()).isPresent() ||
+                !ImmutableAnnotationKind.of(element()).get().hasAnyMemberAnnotation(element)) {
+                return false;
+            }
         }
         String name = element.getSimpleName().toString();
         // skip kotlin data class methods with component1, component2.. names
@@ -155,7 +158,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                element.getParameters().isEmpty() &&
                (isImmutable() || isInterface || !element.getModifiers().contains(Modifier.FINAL)) &&
                (!isImmutable() || !type.equals(element().asType())) &&
-               !type.equals(builderType().map(Element::asType).orElse(null)) &&
+               !type.equals(builderType().orElse(null)) &&
                !element.getModifiers().contains(Modifier.STATIC) &&
                !element.getModifiers().contains(Modifier.DEFAULT) &&
                !Mirrors.findAnnotationMirror(element(), Transient.class).isPresent() &&
@@ -218,7 +221,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             from.attributes().entrySet()) {
             // add this attribute if an attribute with the same name is not already existing
             AttributeDescriptor newAttribute = entry.getValue();
-            if (!attributes.values().stream().anyMatch(
+            if (attributes.values().stream().noneMatch(
                 attribute -> attribute.name().equals(newAttribute.name()))) {
                 attributes.put(entry.getKey(), newAttribute);
             }
@@ -227,7 +230,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             .filter(entry -> entry.getValue() instanceof ListenerMethod)
             .forEach(entry -> {
                 ListenerMethod method = (ListenerMethod) entry.getValue();
-                if (!listeners.values().stream().anyMatch(
+                if (listeners.values().stream().noneMatch(
                     listener -> listener.element().getSimpleName()
                         .equals(method.element().getSimpleName()))) {
                     listeners.put(entry.getKey(), method);
@@ -374,11 +377,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     @Override
     public boolean isImmutable() {
         // check known immutable type annotations then check the annotation value
-        return Stream.of("com.google.auto.value.AutoValue",
-                "auto.parcel.AutoParcel",
-                "org.immutables.value.Value.Immutable")
-                .anyMatch(type -> Mirrors.findAnnotationMirror(element(), type).isPresent()) ||
-                isUnimplementable() ||
+        return ImmutableAnnotationKind.of(element()).isPresent() || isUnimplementable() ||
                 annotationOf(Entity.class).map(Entity::immutable).orElse(false);
     }
 
@@ -412,24 +411,27 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
-    public Optional<TypeElement> builderType() {
+    public Optional<TypeMirror> builderType() {
         Optional<Entity> entityAnnotation = annotationOf(Entity.class);
         if (entityAnnotation.isPresent()) {
             Entity entity = entityAnnotation.get();
+            Elements elements = processingEnvironment.getElementUtils();
+            TypeMirror mirror = null;
             try {
-                entity.builder(); // easiest way to get the class TypeMirror
-            } catch (MirroredTypeException typeException) {
-                TypeMirror mirror = typeException.getTypeMirror();
-                Elements elements = processingEnvironment.getElementUtils();
-                TypeElement element = elements.getTypeElement(mirror.toString());
-                if (element != null) {
-                    return Optional.of(element);
+                Class<?> builderClass = entity.builder(); // easiest way to get the class TypeMirror
+                if (builderClass != void.class) {
+                    mirror = elements.getTypeElement(builderClass.getName()).asType();
                 }
+            } catch (MirroredTypeException typeException) {
+                mirror = typeException.getTypeMirror();
+            }
+            if (mirror != null) {
+                return Optional.of(mirror);
             }
         }
         return ElementFilter.typesIn(element().getEnclosedElements()).stream()
-            .filter(element -> element.getSimpleName().toString().equals("Builder"))
-            .findFirst();
+            .filter(element -> element.getSimpleName().toString().contains("Builder"))
+            .findFirst().map(Element::asType);
     }
 
     @Override

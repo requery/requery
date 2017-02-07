@@ -21,6 +21,7 @@ import io.requery.PropertyNameStyle;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -132,10 +133,10 @@ interface EntityDescriptor {
     boolean isView();
 
     /**
-     * @return {@link TypeElement} of the builder class that can build instances of the entity if
-     * the type is {@link #isImmutable()}
+     * @return {@link javax.lang.model.type.TypeMirror} of the builder class that can build
+     * instances of the entity if the type is {@link #isImmutable()}
      */
-    Optional<TypeElement> builderType();
+    Optional<TypeMirror> builderType();
 
     /**
      * @return {@link ExecutableElement} of the builder type that can create builder instances for
