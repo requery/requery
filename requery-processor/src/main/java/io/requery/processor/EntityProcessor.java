@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,8 +63,8 @@ public final class EntityProcessor extends AbstractProcessor {
     static final String GENERATE_JPA = "generate.jpa";
 
     private Map<String, EntityGraph> graphs;
-    private Map<TypeElement, EntityType> superTypes;
-    private Map<TypeElement, EntityType> embeddedTypes;
+    private Map<TypeElement, EntityElement> superTypes;
+    private Map<TypeElement, EntityElement> embeddedTypes;
     private Set<String> generatedModelPackages;
 
     @Override
@@ -84,7 +84,7 @@ public final class EntityProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         // types to generate in this round
-        Map<TypeElement, EntityType> entities = new HashMap<>();
+        Map<TypeElement, EntityElement> entities = new HashMap<>();
         SourceLanguage.map(processingEnv);
         Types types = processingEnv.getTypeUtils();
 
@@ -98,7 +98,7 @@ public final class EntityProcessor extends AbstractProcessor {
         for (TypeElement annotation : annotationElements) {
             for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
                 typeElementOf(element).ifPresent(typeElement -> {
-                    EntityType entity = null;
+                    EntityElement entity = null;
                     if (isEntity(typeElement)) {
                         // create or get the entity for the annotation
                         entity = computeType(entities, typeElement);
@@ -122,7 +122,7 @@ public final class EntityProcessor extends AbstractProcessor {
         Set<ElementValidator> validators = new LinkedHashSet<>();
         Elements elements = processingEnv.getElementUtils();
 
-        for (EntityType entity : entities.values()) {
+        for (EntityElement entity : entities.values()) {
             // add the annotated elements from the super type (if any)
             if (entity.element().getKind() == ElementKind.INTERFACE) {
                 List<? extends TypeMirror> interfaces = entity.element().getInterfaces();
@@ -147,7 +147,7 @@ public final class EntityProcessor extends AbstractProcessor {
             Set<ElementValidator> results = entity.process(processingEnv);
             validators.addAll(results);
         }
-        for (EntityType entity : embeddedTypes.values()) {
+        for (EntityElement entity : embeddedTypes.values()) {
             Set<ElementValidator> results = entity.process(processingEnv);
             validators.addAll(results);
         }
@@ -212,8 +212,8 @@ public final class EntityProcessor extends AbstractProcessor {
         return false;
     }
 
-    private void mergeSuperType(EntityType entity, TypeElement superElement) {
-        EntityType superType = superTypes.get(superElement);
+    private void mergeSuperType(EntityElement entity, TypeElement superElement) {
+        EntityElement superType = superTypes.get(superElement);
         if (superType == null && isSuperclass(superElement)) {
             superType = computeType(superTypes, superElement);
         }
@@ -223,8 +223,9 @@ public final class EntityProcessor extends AbstractProcessor {
         }
     }
 
-    private EntityType computeType(Map<TypeElement, EntityType> map, TypeElement element) {
-        return map.computeIfAbsent(element, key -> new EntityType(processingEnv, key));
+    private EntityElement computeType(Map<TypeElement, EntityElement> map, TypeElement element) {
+        return map.computeIfAbsent(element,
+                key -> new EntityElementDelegate(new EntityType(processingEnv, key)));
     }
 
     private boolean isEntity(TypeElement element) {

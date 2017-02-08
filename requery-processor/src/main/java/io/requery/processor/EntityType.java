@@ -61,21 +61,17 @@ import java.util.stream.Stream;
  *
  * @author Nikhil Purushe
  */
-class EntityType extends BaseProcessableElement<TypeElement> implements EntityDescriptor {
+class EntityType extends BaseProcessableElement<TypeElement> implements EntityElement {
 
     private final ProcessingEnvironment processingEnvironment;
     private final Map<Element, AttributeDescriptor> attributes;
     private final Map<Element, ListenerMethod> listeners;
-    private final String modelName;
-    private final QualifiedName qualifiedName;
 
     EntityType(ProcessingEnvironment processingEnvironment, TypeElement typeElement) {
         super(typeElement);
         this.processingEnvironment = processingEnvironment;
         attributes = new LinkedHashMap<>();
         listeners = new LinkedHashMap<>();
-        modelName = createModelName();
-        qualifiedName = createQualifiedName();
     }
 
     @Override
@@ -166,7 +162,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                !name.equals("toString") && !name.equals("hashCode");
     }
 
-    void addAnnotationElement(TypeElement annotationElement, Element annotatedElement) {
+    @Override
+    public void addAnnotationElement(TypeElement annotationElement, Element annotatedElement) {
         String qualifiedName = annotationElement.getQualifiedName().toString();
         Class<? extends Annotation> type;
         try {
@@ -217,7 +214,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             attributes.computeIfAbsent(element, key -> new AttributeMember(element, this)));
     }
 
-    void merge(EntityType from) {
+    @Override
+    public void merge(EntityDescriptor from) {
         for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
             from.attributes().entrySet()) {
             // add this attribute if an attribute with the same name is not already existing
@@ -252,17 +250,28 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         }
     }
 
-    private String createModelName() {
+    @Override
+    public Map<Element, ? extends AttributeDescriptor> attributes() {
+        return attributes;
+    }
+
+    @Override
+    public Map<Element, ? extends ListenerDescriptor> listeners() {
+        return listeners;
+    }
+
+    @Override
+    public String modelName() {
         // it's important that the AnnotationMirror is used here since the model name needs to be
         // known before process() is called
         if (Mirrors.findAnnotationMirror(element(), Entity.class).isPresent()) {
             return Mirrors.findAnnotationMirror(element(), Entity.class)
-                .flatMap(mirror -> Mirrors.findAnnotationValue(mirror, "model"))
-                .map(value -> value.getValue().toString())
-                .filter(name -> !Names.isEmpty(name))
-                .orElse("default");
+                    .flatMap(mirror -> Mirrors.findAnnotationValue(mirror, "model"))
+                    .map(value -> value.getValue().toString())
+                    .filter(name -> !Names.isEmpty(name))
+                    .orElse("default");
         } else if (Mirrors.findAnnotationMirror(element(),
-            javax.persistence.Entity.class).isPresent()) {
+                javax.persistence.Entity.class).isPresent()) {
             Elements elements = processingEnvironment.getElementUtils();
             Name packageName = elements.getPackageOf(element()).getQualifiedName();
             String[] parts = packageName.toString().split("\\.");
@@ -271,8 +280,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         return "";
     }
 
-    private QualifiedName createQualifiedName() {
-
+    @Override
+    public QualifiedName typeName() {
         String entityName = Stream.of(
             Mirrors.findAnnotationMirror(element(), Entity.class),
             Mirrors.findAnnotationMirror(element(), javax.persistence.Entity.class))
@@ -306,26 +315,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             }
         }
         return new QualifiedName(packageName, entityName);
-    }
-
-    @Override
-    public Map<Element, ? extends AttributeDescriptor> attributes() {
-        return attributes;
-    }
-
-    @Override
-    public Map<Element, ? extends ListenerDescriptor> listeners() {
-        return listeners;
-    }
-
-    @Override
-    public String modelName() {
-        return modelName;
-    }
-
-    @Override
-    public QualifiedName typeName() {
-        return qualifiedName;
     }
 
     @Override
