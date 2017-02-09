@@ -676,7 +676,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 }
                 break;
             case MANY_TO_MANY:
-                Class referencedClass = attribute.getReferencedClass();
+                final Class referencedClass = attribute.getReferencedClass();
                 if (referencedClass == null) {
                     throw new IllegalStateException("Invalid referenced class in " + attribute);
                 }
@@ -684,11 +684,14 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 QueryAttribute<S, Object> tKey = null;
                 QueryAttribute<S, Object> uKey = null;
                 for (Attribute a : referencedType.getAttributes()) {
-                    if (entityClass.isAssignableFrom(a.getReferencedClass())) {
-                        tKey = Attributes.query(a);
-                    } else if (attribute.getElementClass().isAssignableFrom(
-                            a.getReferencedClass())) {
-                        uKey = Attributes.query(a);
+                    Class<?> referenced = a.getReferencedClass();
+                    if (referenced != null) {
+                        if (entityClass.isAssignableFrom(referenced)) {
+                            tKey = Attributes.query(a);
+                        } else if (attribute.getElementClass() != null &&
+                                   attribute.getElementClass().isAssignableFrom(referenced)) {
+                            uKey = Attributes.query(a);
+                        }
                     }
                 }
                 Objects.requireNotNull(tKey);
