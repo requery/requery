@@ -34,6 +34,7 @@ final class ImmutableType<T> extends BaseType<T> {
         this.factory = builder.getFactory();
         this.proxyProvider = builder.getProxyProvider();
         this.tableCreateAttributes = builder.getTableCreateAttributes();
+        this.tableUniqueIndexes = builder.getTableUniqueIndexes();
         this.builderFactory = builder.getBuilderFactory();
         this.buildFunction = builder.getBuildFunction();
 
