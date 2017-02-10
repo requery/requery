@@ -215,13 +215,13 @@ public class SchemaModifier {
                 qb = createQueryBuilder();
                 qb.keyword(ALTER, TABLE)
                     .tableName(type.getName()).keyword(ADD);
-                createForeignKeyColumn(qb, attribute, false);
+                createForeignKeyColumn(qb, attribute, false, false);
             } else {
                 // just for SQLite for now adding the column and key is done in 1 statement
                 qb = createQueryBuilder();
                 qb.keyword(ALTER, TABLE)
                     .tableName(type.getName()).keyword(ADD);
-                createForeignKeyColumn(qb, attribute, false);
+                createForeignKeyColumn(qb, attribute, false, true);
             }
         } else {
             qb.keyword(ADD, COLUMN);
@@ -361,7 +361,7 @@ public class SchemaModifier {
                 if (index > 0) {
                     qb.comma();
                 }
-                createForeignKeyColumn(qb, attribute, true);
+                createForeignKeyColumn(qb, attribute, true, false);
                 index++;
             }
         }
@@ -386,7 +386,7 @@ public class SchemaModifier {
     }
 
     private void createForeignKeyColumn(QueryBuilder qb, Attribute<?,?> attribute,
-                                        boolean forCreateStatement) {
+                                        boolean forCreateStatement, boolean forceInline) {
 
         Type<?> referenced = model.typeOf(attribute.getReferencedClass() != null ?
             attribute.getReferencedClass() : attribute.getClassType());
@@ -398,7 +398,7 @@ public class SchemaModifier {
             referencedAttribute = referenced.getKeyAttributes().iterator().next();
         }
 
-        if (!platform.supportsInlineForeignKeyReference() && forCreateStatement) {
+        if (!forceInline && (!platform.supportsInlineForeignKeyReference() || !forCreateStatement)) {
             qb.keyword(FOREIGN, KEY)
                 .openParenthesis()
                 .attribute(attribute)
