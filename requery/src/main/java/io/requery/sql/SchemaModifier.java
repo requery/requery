@@ -215,7 +215,7 @@ public class SchemaModifier {
                 qb = createQueryBuilder();
                 qb.keyword(ALTER, TABLE)
                     .tableName(type.getName()).keyword(ADD);
-                createForeignKeyColumn(qb, attribute, true);
+                createForeignKeyColumn(qb, attribute, false);
             } else {
                 // just for SQLite for now adding the column and key is done in 1 statement
                 qb = createQueryBuilder();
