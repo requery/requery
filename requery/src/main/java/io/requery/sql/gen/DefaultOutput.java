@@ -385,6 +385,8 @@ public class DefaultOutput implements Output {
         } else if (value instanceof NamedExpression) {
             NamedExpression namedExpression = (NamedExpression) value;
             qb.append(namedExpression.getName());
+        } else if (value instanceof Function) {
+            appendFunction((Function) value);
         } else {
             if (parameterize) {
                 if (parameters != null) {
