@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,14 @@ package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
 import io.requery.query.Expression;
+import io.requery.query.function.Function;
+import io.requery.query.function.Random;
 import io.requery.sql.AutoIncrementColumnDefinition;
 import io.requery.sql.GeneratedColumnDefinition;
+import io.requery.sql.Mapping;
 import io.requery.sql.QueryBuilder;
-import io.requery.sql.gen.LimitGenerator;
 import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.LimitGenerator;
 import io.requery.sql.gen.Output;
 
 import java.util.Map;
@@ -44,6 +47,11 @@ public class MySQL extends Generic {
 
     public MySQL() {
         autoIncrementColumn = new AutoIncrementColumnDefinition();
+    }
+
+    @Override
+    public void addMappings(Mapping mapping) {
+        mapping.aliasFunction(new Function.Name("rand"), Random.class);
     }
 
     @Override

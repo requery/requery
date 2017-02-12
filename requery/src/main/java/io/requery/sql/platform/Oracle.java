@@ -18,6 +18,9 @@ package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
 import io.requery.query.Expression;
+import io.requery.query.function.Function;
+import io.requery.query.function.Now;
+import io.requery.query.function.Random;
 import io.requery.sql.BaseType;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.IdentityColumnDefinition;
@@ -55,6 +58,8 @@ public class Oracle extends Generic {
         mapping.replaceType(Types.BINARY, new RawType(Types.BINARY));
         mapping.replaceType(Types.VARBINARY, new RawType(Types.VARBINARY));
         mapping.replaceType(Types.BOOLEAN, new NumericBooleanType());
+        mapping.aliasFunction(new Function.Name("dbms_random.value", true), Random.class);
+        mapping.aliasFunction(new Function.Name("current_date", true), Now.class);
     }
 
     @Override

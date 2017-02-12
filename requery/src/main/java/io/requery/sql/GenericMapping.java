@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import io.requery.converter.ZonedDateTimeConverter;
 import io.requery.meta.Attribute;
 import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
+import io.requery.query.function.Function;
 import io.requery.sql.type.BigIntType;
 import io.requery.sql.type.BinaryType;
 import io.requery.sql.type.BlobType;
@@ -82,6 +83,7 @@ public class GenericMapping implements Mapping {
     private final ClassMap<FieldType> fixedTypes;
     private final ClassMap<Converter<?, ?>> converters;
     private final Map<Attribute, FieldType> resolvedTypes;
+    private final ClassMap<Function.Name> functionTypes;
     private PrimitiveIntType primitiveIntType;
     private PrimitiveLongType primitiveLongType;
     private PrimitiveShortType primitiveShortType;
@@ -125,6 +127,7 @@ public class GenericMapping implements Mapping {
 
         fixedTypes = new ClassMap<>();
         fixedTypes.put(byte[].class, new BinaryType());
+        functionTypes = new ClassMap<>();
         converters = new ClassMap<>();
         resolvedTypes = new IdentityHashMap<>();
         Set<Converter> converters = new HashSet<>();
@@ -146,6 +149,12 @@ public class GenericMapping implements Mapping {
                 this.converters.put(mapped, converter);
             }
         }
+    }
+
+    @Override
+    public Mapping aliasFunction(Function.Name name, Class<? extends Function> function) {
+        functionTypes.put(function, name);
+        return this;
     }
 
     @Override
@@ -227,6 +236,12 @@ public class GenericMapping implements Mapping {
         fieldType = getSubstitutedType(type);
         resolvedTypes.put(attribute, fieldType);
         return fieldType;
+    }
+
+    @Override
+    public Function.Name mapFunctionName(Function<?> function) {
+        Function.Name name = functionTypes.get(function.getClass());
+        return name != null ? name : function.getFunctionName();
     }
 
     @Override

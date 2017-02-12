@@ -53,6 +53,7 @@ import static io.requery.sql.Keyword.*;
  */
 public class DefaultOutput implements Output {
 
+    private final RuntimeConfiguration configuration;
     private final QueryElement<?> query;
     private final Aliases inheritedAliases;
     private final boolean parameterize;
@@ -63,17 +64,18 @@ public class DefaultOutput implements Output {
     private boolean autoAlias;
 
     public DefaultOutput(RuntimeConfiguration configuration, QueryElement<?> query) {
-        this(configuration.getStatementGenerator(), query,
-            new QueryBuilder(configuration.getQueryBuilderOptions()), null, true);
+        this(configuration, query,
+                new QueryBuilder(configuration.getQueryBuilderOptions()), null, true);
     }
 
-    public DefaultOutput(StatementGenerator statementGenerator, QueryElement<?> query,
+    public DefaultOutput(RuntimeConfiguration configuration, QueryElement<?> query,
                          QueryBuilder qb, Aliases inherited, boolean parameterize) {
+        this.configuration = configuration;
         this.query = query;
         this.qb = qb;
         this.inheritedAliases = inherited;
         this.parameterize = parameterize;
-        this.statementGenerator = statementGenerator;
+        this.statementGenerator = configuration.getStatementGenerator();
         this.parameters = parameterize? new BoundParameters() : null;
     }
 
@@ -222,8 +224,11 @@ public class DefaultOutput implements Output {
         if (function instanceof Case) {
             appendCaseFunction((Case) function);
         } else {
-            String name = function.getName();
-            qb.append(name);
+            Function.Name name = configuration.getMapping().mapFunctionName(function);
+            qb.append(name.getName());
+            if (function.arguments().length == 0 && name.isConstant()) {
+                return;
+            }
             qb.openParenthesis();
             int index = 0;
             for (Object arg : function.arguments()) {
@@ -481,8 +486,7 @@ public class DefaultOutput implements Output {
     @Override
     public void appendQuery(QueryWrapper<?> wrapper) {
         QueryElement<?> query = wrapper.unwrapQuery();
-        DefaultOutput generator =
-            new DefaultOutput(statementGenerator, query, qb, aliases, parameterize);
+        DefaultOutput generator = new DefaultOutput(configuration, query, qb, aliases, parameterize);
         generator.toSql();
         if (parameters != null) {
             parameters.addAll(generator.parameters());

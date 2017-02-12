@@ -690,7 +690,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         @Override
         public StatementGenerator getStatementGenerator() {
             if (statementGenerator == null) {
-                statementGenerator = StatementGenerator.create(getPlatform());
+                statementGenerator = new StatementGenerator(getPlatform());
             }
             return statementGenerator;
         }

@@ -54,7 +54,6 @@ public class Generic implements Platform {
 
     @Override
     public void addMappings(Mapping mapping) {
-
     }
 
     @Override

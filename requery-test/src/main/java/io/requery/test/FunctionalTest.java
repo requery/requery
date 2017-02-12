@@ -32,6 +32,8 @@ import io.requery.query.Tuple;
 import io.requery.query.function.Case;
 import io.requery.query.function.Coalesce;
 import io.requery.query.function.Count;
+import io.requery.query.function.Now;
+import io.requery.query.function.Random;
 import io.requery.query.function.Upper;
 import io.requery.sql.EntityDataStore;
 import io.requery.test.model.Address;
@@ -794,6 +796,30 @@ public abstract class FunctionalTest extends RandomData {
         assertEquals("A", list.get(0).getName());
         assertEquals("B", list.get(1).getName());
         assertEquals("C", list.get(2).getName());
+    }
+
+    @Test
+    public void testQueryFunctionNow() {
+        Person person = randomPerson();
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DATE, 1);
+        person.setBirthday(calendar.getTime());
+        data.insert(person);
+        try (Result<Person> query = data.select(Person.class)
+                .where(Person.BIRTHDAY.gt(Now.now(Date.class))).get()) {
+            assertEquals(1, query.toList().size());
+        }
+    }
+
+    @Test
+    public void testQueryFunctionRandom() {
+        for (int i = 0; i < 10; i++) {
+            Person person = randomPerson();
+            data.insert(person);
+        }
+        try (Result<Person> query = data.select(Person.class).orderBy(new Random()).get()) {
+            assertEquals(10, query.toList().size());
+        }
     }
 
     @Test

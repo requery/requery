@@ -24,12 +24,12 @@ import io.requery.util.Objects;
 
 public abstract class Function<V> extends FieldExpression<V> {
 
-    private final String name;
+    private final Name name;
     private final Class<V> type;
     private String alias;
 
     public Function(String name, Class<V> type) {
-        this.name = name;
+        this.name = new Name(name);
         this.type = type;
     }
 
@@ -56,6 +56,10 @@ public abstract class Function<V> extends FieldExpression<V> {
 
     @Override
     public String getName() {
+        return name.toString();
+    }
+
+    public Name getFunctionName() {
         return name;
     }
 
@@ -92,6 +96,33 @@ public abstract class Function<V> extends FieldExpression<V> {
     @Override
     public int hashCode() {
         return Objects.hash(getName(), getClassType(), getAlias(), arguments());
+    }
+
+    public static class Name {
+        private final String name;
+        private final boolean isConstant;
+
+        public Name(String name) {
+            this(name, false);
+        }
+
+        public Name(String name, boolean isConstant) {
+            this.name = name;
+            this.isConstant = isConstant;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public boolean isConstant() {
+            return isConstant;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
     private static class ArgumentExpression<X> implements Expression<X> {
