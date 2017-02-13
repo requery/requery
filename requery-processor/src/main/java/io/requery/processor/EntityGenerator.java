@@ -214,13 +214,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             builder.addField(initializeBuilder(fieldName, fieldType, factoryType, "builder"));
         } else if (entity.builderType().isPresent()) {
             // work around missing package prefix of a generated builder type
-            String name = entity.builderType().get().toString();
-            TypeName builderName;
-            if (name.startsWith("<any?>.")) {
-                builderName = ClassName.get(packageName, name.substring("<any?>.".length()));
-            } else {
-                builderName = TypeName.get(entity.builderType().get());
-            }
+            TypeName builderName = guessAnyTypeName(packageName, entity.builderType().get());
             builder.addField(initializeBuilder(fieldName, builderName, builderName, null));
         }
     }

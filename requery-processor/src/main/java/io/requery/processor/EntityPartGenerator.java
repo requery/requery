@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,6 +89,15 @@ abstract class EntityPartGenerator {
             return TypeName.get(types.boxedClass((PrimitiveType) typeMirror).asType());
         }
         return TypeName.get(typeMirror);
+    }
+
+    TypeName guessAnyTypeName(String packageName, TypeMirror mirror) {
+        String name = mirror.toString();
+        if (name.startsWith("<any?>.")) {
+            return ClassName.get(packageName, name.substring("<any?>.".length()));
+        } else {
+            return TypeName.get(mirror);
+        }
     }
 
     ParameterizedTypeName parameterizedCollectionName(TypeMirror typeMirror) {

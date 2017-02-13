@@ -469,7 +469,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
         if (descriptor.isPresent()) {
             Optional<TypeMirror> mirror = descriptor.get().type();
             if (mirror.isPresent()) {
-                typeName = TypeName.get(mirror.get());
+                typeName = guessAnyTypeName(entity.typeName().packageName(), mirror.get());
             } else {
                 // generate a special type for the junction table (with attributes)
                 graph.referencingEntity(attribute).ifPresent(referencing -> {
@@ -490,7 +490,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
             if (descriptor.isPresent()) {
                 Optional<TypeMirror> mirror = descriptor.get().type();
                 if (mirror.isPresent()) {
-                    typeName = TypeName.get(mirror.get());
+                    typeName = guessAnyTypeName(entity.typeName().packageName(), mirror.get());
                 } else {
                     typeName = nameResolver.joinEntityName(descriptor.get(), referenced, entity);
                 }
