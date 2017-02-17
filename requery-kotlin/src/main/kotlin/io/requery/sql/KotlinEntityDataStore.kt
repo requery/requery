@@ -76,13 +76,18 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
     }
 
     override fun <E : T> insert(type: KClass<E>): Insertion<Result<Tuple>> {
-        val entityType = context.model.typeOf<E>(type.java)
-        val selection = LinkedHashSet<Expression<*>>()
-        entityType.keyAttributes.forEach { attribute -> selection.add(attribute as Expression<*>) }
+        val selection = data.keyExpressions(type.java)
         val operation = InsertReturningOperation(context, selection)
         val query = QueryDelegate<Result<Tuple>>(QueryType.INSERT, model, operation)
         query.from(type)
         return query
+    }
+
+    override fun <E : T> insert(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): InsertInto<out Result<Tuple>> {
+        val selection = data.keyExpressions(type.java)
+        val operation = InsertReturningOperation(context, selection)
+        val query = QueryDelegate<Result<Tuple>>(QueryType.INSERT, model, operation)
+        return query.insertColumns(attributes)
     }
 
     override fun <E : T> update(type: KClass<E>): Update<Scalar<Int>> =

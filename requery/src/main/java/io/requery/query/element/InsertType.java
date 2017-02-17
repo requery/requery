@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package io.requery.query;
+package io.requery.query.element;
 
-public interface Insertion<R> extends Return<R> {
-    <V> Insertion<R> value(Expression<V> expression, V value);
+public enum InsertType {
+    VALUES,
+    SELECT
 }

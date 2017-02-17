@@ -241,6 +241,20 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testInsertIntoSelectQuery() {
+        Group group = new Group();
+        group.setName("Bob");
+        group.setDescription("Bob's group");
+        data.insert(group);
+        int count = data.insert(Person.class, Person.NAME, Person.DESCRIPTION)
+                .query(data.select(Group.NAME, Group.DESCRIPTION)).get().first().count();
+        assertEquals(1, count);
+        Person p = data.select(Person.class).get().first();
+        assertEquals("Bob", p.getName());
+        assertEquals("Bob's group", p.getDescription());
+    }
+
+    @Test
     public void testInsertWithTransactionCallable() {
         assertTrue("success".equals(
                 data.runInTransaction(new Callable<String>() {

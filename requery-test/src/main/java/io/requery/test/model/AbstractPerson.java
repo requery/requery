@@ -42,6 +42,7 @@ public class AbstractPerson implements Serializable {
     @Index(value = {"name_email_index", "email_index"})
     protected String email;
     protected Date birthday;
+    protected String description;
     @Nullable
     protected int age;
 

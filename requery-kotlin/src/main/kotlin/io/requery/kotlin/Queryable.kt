@@ -32,6 +32,7 @@ interface Queryable<T : Any> {
     infix fun <E : T> select(type: KClass<E>): Selection<out Result<E>>
     fun <E : T> select(vararg attributes: QueryableAttribute<E, *>): Selection<out Result<E>>
     infix fun <E : T> insert(type: KClass<E>): Insertion<out Result<Tuple>>
+    fun <E : T> insert(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): InsertInto<out Result<Tuple>>
     infix fun <E : T> update(type: KClass<E>): Update<out Scalar<Int>>
     infix fun <E : T> delete(type: KClass<E>): Deletion<out Scalar<Int>>
     infix fun <E : T> count(type: KClass<E>): Selection<out Scalar<Int>>

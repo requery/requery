@@ -34,6 +34,7 @@ import io.requery.proxy.CompositeKey;
 import io.requery.proxy.EntityProxy;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
+import io.requery.query.InsertInto;
 import io.requery.query.Insertion;
 import io.requery.query.Result;
 import io.requery.query.Scalar;
@@ -464,13 +465,27 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     @Override
     public <E extends T> Insertion<? extends Result<Tuple>> insert(Class<E> type) {
         checkClosed();
-        Type<E> entityType = context.getModel().typeOf(type);
-        Set<Expression<?>> keySelection = new LinkedHashSet<>();
-        for (Attribute<E, ?> attribute : entityType.getKeyAttributes()) {
-            keySelection.add((Expression<?>) attribute);
-        }
+        Set<Expression<?>> keySelection = keyExpressions(type);
         InsertReturningOperation operation = new InsertReturningOperation(context, keySelection);
         return new QueryElement<>(INSERT, entityModel, operation).from(type);
+    }
+
+    @Override
+    public <E extends T> InsertInto<? extends Result<Tuple>>
+    insert(Class<E> type, QueryAttribute<?, ?>... attributes) {
+        checkClosed();
+        Set<Expression<?>> keySelection = keyExpressions(type);
+        InsertReturningOperation operation = new InsertReturningOperation(context, keySelection);
+        return new QueryElement<>(INSERT, entityModel, operation).insertColumns(attributes);
+    }
+
+    Set<Expression<?>> keyExpressions(Class<? extends T> type) {
+        Type<?> entityType = context.getModel().typeOf(type);
+        Set<Expression<?>> keySelection = new LinkedHashSet<>();
+        for (Attribute<?, ?> attribute : entityType.getKeyAttributes()) {
+            keySelection.add((Expression<?>) attribute);
+        }
+        return keySelection;
     }
 
     @Override

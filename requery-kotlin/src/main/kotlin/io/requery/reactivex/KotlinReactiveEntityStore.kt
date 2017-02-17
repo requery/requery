@@ -21,6 +21,7 @@ import io.reactivex.Maybe
 import io.reactivex.Single
 import io.requery.kotlin.*
 import io.requery.kotlin.Deletion
+import io.requery.kotlin.InsertInto
 import io.requery.kotlin.Insertion
 import io.requery.kotlin.Selection
 import io.requery.kotlin.Update
@@ -42,6 +43,7 @@ class KotlinReactiveEntityStore<T : Any>(private var store: BlockingEntityStore<
     override fun select(vararg expressions: Expression<*>): Selection<ReactiveResult<Tuple>> = result(store.select(*expressions))
 
     override fun <E : T> insert(type: KClass<E>): Insertion<ReactiveResult<Tuple>> = result(store.insert(type))
+    override fun <E : T> insert(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): InsertInto<out Result<Tuple>> = result(store.insert(type, *attributes))
     override fun update(): Update<ReactiveScalar<Int>> = scalar(store.update())
     override fun <E : T> update(type: KClass<E>): Update<ReactiveScalar<Int>> = scalar(store.update(type))
 

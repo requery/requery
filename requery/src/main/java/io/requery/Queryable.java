@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package io.requery;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
+import io.requery.query.InsertInto;
 import io.requery.query.Insertion;
 import io.requery.query.Result;
 import io.requery.query.Return;
@@ -79,6 +80,20 @@ public interface Queryable<T> {
      */
     @CheckReturnValue
     <E extends T> Insertion<? extends Result<Tuple>> insert(Class<E> type);
+
+    /**
+     * Initiates an insert operation for a type. After completing the expression call
+     * {@link Return#get()} to perform the operation. If the type has no generated key values the
+     * result is a tuple containing a single element with the number of rows affected by the
+     * operation. Otherwise if the type has generated keys those keys are returned as the result.
+     *
+     * @param type of entity
+     * @param attributes attributes to insert (optional)
+     * @return next query step
+     */
+    @CheckReturnValue
+    <E extends T> InsertInto<? extends Result<Tuple>>
+    insert(Class<E> type, QueryAttribute<?, ?>... attributes);
 
     /**
      * Initiates an update query for a type. After completing the expression call

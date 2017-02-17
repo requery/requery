@@ -36,7 +36,7 @@ import static io.requery.sql.Keyword.TRUNCATE;
 public final class StatementGenerator implements Generator<QueryElement<?>> {
 
     private Generator<SelectionElement> select;
-    private Generator<Map<Expression<?>, Object>> insert;
+    private Generator<QueryElement<?>> insert;
     private Generator<Map<Expression<?>, Object>> update;
     private Generator<Map<Expression<?>, Object>> upsert;
     private Generator<WhereElement> where;
@@ -66,7 +66,7 @@ public final class StatementGenerator implements Generator<QueryElement<?>> {
                 select.write(output, query);
                 break;
             case INSERT:
-                insert.write(output, query.updateValues());
+                insert.write(output, query);
                 break;
             case UPDATE:
                 update.write(output, checkEmpty(query.updateValues()));

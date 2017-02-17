@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
+import io.requery.query.InsertInto;
 import io.requery.query.Insertion;
 import io.requery.query.Result;
 import io.requery.query.Scalar;
@@ -277,6 +278,11 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     @Override
     public <E extends T> Insertion<? extends Result<Tuple>> insert(Class<E> type) {
         return delegate.insert(type);
+    }
+
+    @Override
+    public <E extends T> InsertInto<? extends Result<Tuple>> insert(Class<E> type, QueryAttribute<?, ?>... attributes) {
+        return delegate.insert(type, attributes);
     }
 
     @Override

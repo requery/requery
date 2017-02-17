@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package io.requery.reactivex;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
+import io.requery.query.InsertInto;
 import io.requery.query.Insertion;
 import io.requery.query.Selection;
 import io.requery.query.Tuple;
@@ -39,6 +40,9 @@ public interface ReactiveQueryable<T> {
 
     @CheckReturnValue
     <E extends T> Insertion<ReactiveResult<Tuple>> insert(Class<E> type);
+
+    @CheckReturnValue
+    <E extends T> InsertInto<ReactiveResult<Tuple>> insert(Class<E> type, QueryAttribute<?, ?>... attributes);
 
     @CheckReturnValue
     <E extends T> Update<ReactiveScalar<Integer>> update(Class<E> type);

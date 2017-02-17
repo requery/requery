@@ -74,7 +74,7 @@ interface DistinctSelection<E> :
         From<E>, Join<E>, Where<E>, SetOperation<Selectable<E>>, GroupBy<SetHavingOrderByLimit<E>>,
         OrderBy<Limit<E>>, Return<E>
 
-interface Exists<Q> {
+interface Exists<out Q> {
     infix fun exists(query: Return<*>): Q
     infix fun notExists(query: Return<*>): Q
 }
@@ -98,6 +98,10 @@ interface HavingAndOr<E> : AndOr<HavingAndOr<E>>, OrderByLimit<E>
 
 interface Insertion<E> : Return<E> {
     fun <V> value(expression: Expression<V>, value: V): Insertion<E>
+}
+
+interface InsertInto<Q> : Return<Q> {
+    operator infix fun invoke(query: Return<*>): Return<Q>
 }
 
 interface Join<E> {
@@ -173,7 +177,7 @@ interface Update<E> :
 
 inline fun <reified T : Persistable, reified E : T, V> Update<E>
         .set(property: KProperty1<T, V>, value: V): Update<E> {
-    return set(findAttribute(property), value);
+    return set(findAttribute(property), value)
 }
 
 interface Where<E> : SetGroupByOrderByLimit<E>, Return<E> {

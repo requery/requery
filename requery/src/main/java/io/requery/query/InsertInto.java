@@ -16,6 +16,6 @@
 
 package io.requery.query;
 
-public interface Insertion<R> extends Return<R> {
-    <V> Insertion<R> value(Expression<V> expression, V value);
+public interface InsertInto<R> extends Return<R> {
+    Return<R> query(Return<?> query);
 }

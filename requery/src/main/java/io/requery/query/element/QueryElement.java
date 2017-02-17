@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
 import io.requery.query.HavingAndOr;
 import io.requery.query.Insertion;
+import io.requery.query.InsertInto;
 import io.requery.query.JoinOn;
 import io.requery.query.JoinWhereGroupByOrderBy;
 import io.requery.query.Limit;
@@ -62,6 +63,7 @@ public class QueryElement<E> implements Selectable<E>,
     Selection<E>,
     DistinctSelection<E>,
     Insertion<E>,
+        InsertInto<E>,
     Deletion<E>,
     Update<E>,
     JoinWhereGroupByOrderBy<E>,
@@ -94,10 +96,12 @@ public class QueryElement<E> implements Selectable<E>,
     private QueryElement<E> parent;
     private ExistsElement<?> whereSubQuery;
     private QueryElement<E> setQuery;
+    private QueryElement<?> subQuery;
     private SetOperator setOperator;
     private Integer limit;
     private Integer offset;
     private Set<Type<?>> types;
+    private InsertType insertType;
 
     public QueryElement(QueryType queryType, EntityModel model, QueryOperation<E> operator) {
         this.queryType = Objects.requireNotNull(queryType);
@@ -113,6 +117,14 @@ public class QueryElement<E> implements Selectable<E>,
 
     public QueryType queryType() {
         return queryType;
+    }
+
+    public InsertType insertType() {
+        return insertType;
+    }
+
+    public QueryElement<?> subQuery() {
+        return subQuery;
     }
 
     @Override
@@ -463,6 +475,25 @@ public class QueryElement<E> implements Selectable<E>,
             updates = new LinkedHashMap<>();
         }
         updates.put(expression, value);
+        insertType = InsertType.VALUES;
+        return this;
+    }
+
+    public InsertInto<E> insertColumns(Expression[] expressions) {
+        if (updates == null) {
+            updates = new LinkedHashMap<>();
+        }
+        for (Expression expression : expressions) {
+            updates.put(expression, null);
+        }
+        insertType = InsertType.SELECT;
+        return this;
+    }
+
+    @Override
+    public QueryElement<E> query(Return<?> query) {
+        subQuery = (QueryElement<?>) query;
+        insertType = InsertType.SELECT;
         return this;
     }
 

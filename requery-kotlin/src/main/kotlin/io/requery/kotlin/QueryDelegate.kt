@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,6 +120,7 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
         Selection<E>,
         DistinctSelection<E>,
         Insertion<E>,
+        InsertInto<E>,
         Update<E>,
         Deletion<E>,
         JoinWhereGroupByOrderBy<E>,
@@ -257,5 +258,15 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
     fun <F : E> extend(transform: io.requery.util.function.Function<E, F>): QueryDelegate<F> {
         element.extend(transform)
         return this as QueryDelegate<F>
+    }
+
+    override fun invoke(query: Return<*>): Return<E> {
+        element.query(query)
+        return this
+    }
+
+    fun insertColumns(expressions: Array<out QueryableAttribute<*,*>>): InsertInto<E> {
+        element.insertColumns(expressions)
+        return this
     }
 }

@@ -18,6 +18,7 @@ package io.requery.rx
 
 import io.requery.kotlin.*
 import io.requery.kotlin.Deletion
+import io.requery.kotlin.InsertInto
 import io.requery.kotlin.Insertion
 import io.requery.kotlin.Selection
 import io.requery.kotlin.Update
@@ -41,6 +42,7 @@ class KotlinRxEntityStore<T : Any>(private var store: BlockingEntityStore<T>) : 
     override fun select(vararg expressions: Expression<*>): Selection<RxResult<Tuple>> = result(store.select(*expressions))
 
     override fun <E : T> insert(type: KClass<E>): Insertion<RxResult<Tuple>> = result(store.insert(type))
+    override fun <E : T> insert(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): InsertInto<out Result<Tuple>> = result(store.insert(type, *attributes))
     override fun update(): Update<RxScalar<Int>> = scalar(store.update())
     override fun <E : T> update(type: KClass<E>): Update<RxScalar<Int>> = scalar(store.update(type))
 
