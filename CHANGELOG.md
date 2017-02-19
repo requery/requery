@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+## 1.2.0
+
+- Support Jackson serialization with a new Jackson serialization module (requery-jackson)
+- Support insert into select query
+- Support additional query functions
+- Support improved for Immutable.org types
+- Fix unique constraints not applied during table generation
+- Fix closing connection/statement if an exception is thrown during prepare
+- Fix ClassCastException when using a function in a where expression
+- Fix NPE when a junction table contains a non-associative attribute
+- Fix unsupported on update clause generated when using an Oracle database 
+- Fix Kotlin EntityStore delete should return a nullable type
+
 ## 1.1.2
 
 - Support @View annotation for mapping entities to table views
