@@ -16,11 +16,10 @@
 
 package io.requery.sql;
 
-import io.requery.PersistenceException;
 import io.requery.query.Expression;
+import io.requery.query.MutableTuple;
 import io.requery.query.NamedExpression;
 import io.requery.query.Result;
-import io.requery.query.MutableTuple;
 import io.requery.query.Tuple;
 import io.requery.query.element.InsertType;
 import io.requery.query.element.QueryElement;
@@ -73,10 +72,10 @@ class InsertReturningOperation extends PreparedQueryOperation implements
         String sql = generator.toSql();
         BoundParameters parameters = generator.parameters();
         int count;
+        PreparedStatement statement = null;
         try {
             Connection connection = configuration.getConnection();
             StatementListener listener = configuration.getStatementListener();
-            PreparedStatement statement;
             if (query.insertType() == InsertType.SELECT) {
                 statement = connection.prepareStatement(sql, Statement.NO_GENERATED_KEYS);
             } else {
@@ -95,8 +94,8 @@ class InsertReturningOperation extends PreparedQueryOperation implements
                 ResultSet results = statement.getGeneratedKeys();
                 return new GeneratedKeyResult(configuration, selection, connection, results, count);
             }
-        } catch (SQLException e) {
-            throw new PersistenceException(e);
+        } catch (Exception e) {
+            throw StatementExecutionException.closing(statement, e, sql);
         }
     }
 }

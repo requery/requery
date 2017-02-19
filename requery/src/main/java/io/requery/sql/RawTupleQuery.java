@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,9 +71,10 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
 
     @Override
     public Result<Tuple> get() {
+        PreparedStatement statement = null;
         try {
             Connection connection = configuration.getConnection();
-            PreparedStatement statement = prepare(sql, connection);
+            statement = prepare(sql, connection);
             mapParameters(statement, boundParameters);
             switch (queryType) {
                 case SELECT:
@@ -102,8 +103,8 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                     }
                     return new SingleResult<Tuple>(tuple);
             }
-        } catch (SQLException e) {
-            throw new StatementExecutionException(e, sql);
+        } catch (Exception e) {
+            throw StatementExecutionException.closing(statement, e, sql);
         }
     }
 
