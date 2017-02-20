@@ -28,7 +28,7 @@ enum ImmutableAnnotationKind {
     IMMUTABLE("org.immutables.value.Value.Immutable") {
         @Override
         Set<String> getMemberAnnotations() {
-            return Collections.singleton(getAnnotationName() + ".Default");
+            return Collections.singleton("org.immutables.value.Value.Default");
         }
     };
 
