@@ -316,7 +316,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 for (Attribute a : junctionType.getAttributes()) {
                     Class referenceType = a.getReferencedClass();
                     if (referenceType != null) {
-                        if (type.getClassType().isAssignableFrom(referenceType)) {
+                        if (tKey == null && type.getClassType().isAssignableFrom(referenceType)) {
                             tKey = Attributes.query(a);
                         } else if (uType.isAssignableFrom(referenceType)) {
                             uKey = Attributes.query(a);

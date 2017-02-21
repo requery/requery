@@ -295,7 +295,7 @@ public class DefaultOutput implements Output {
         }
         if (join.tableName() != null) {
             if (autoAlias) {
-                aliases.append(qb, join.tableName());
+                aliases.appendJoin(qb, join.tableName());
             } else {
                 qb.tableName(join.tableName());
             }
@@ -508,6 +508,16 @@ public class DefaultOutput implements Output {
                 index++;
             }
             return alias;
+        }
+
+        void appendJoin(QueryBuilder qb, String table) {
+            String key = table.replaceAll("\"", "");
+            // TODO could be a problem depending on join orders
+            if (aliases.containsKey(key)) {
+                aliases.remove(key);
+            }
+            String alias = alias(key);
+            qb.tableName(table).value(alias);
         }
 
         void append(QueryBuilder qb, String table) {

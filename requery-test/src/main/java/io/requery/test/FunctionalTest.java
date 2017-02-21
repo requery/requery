@@ -749,6 +749,22 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testInsertManyToManySelfReferencing() {
+        Person person = randomPerson();
+        data.insert(person);
+        List<Person> added = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            Person p = randomPerson();
+            person.getFriends().add(p);
+            added.add(p);
+        }
+        data.update(person);
+        assertTrue(added.containsAll(person.getFriends()));
+        int count = data.count(Person.class).get().value();
+        assertEquals(11, count);
+    }
+
+    @Test
     public void testIterateInsertMany() {
         Person person = randomPerson();
         assertTrue(person.getGroups().toList().isEmpty());

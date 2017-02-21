@@ -686,7 +686,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 for (Attribute a : referencedType.getAttributes()) {
                     Class<?> referenced = a.getReferencedClass();
                     if (referenced != null) {
-                        if (entityClass.isAssignableFrom(referenced)) {
+                        if (tKey == null && entityClass.isAssignableFrom(referenced)) {
                             tKey = Attributes.query(a);
                         } else if (attribute.getElementClass() != null &&
                                    attribute.getElementClass().isAssignableFrom(referenced)) {
