@@ -87,8 +87,7 @@ class EntityAnnotationIntrospector extends AnnotationIntrospector {
                             name = jsonProperty.value();
                             break;
                         }
-                    } catch (NoSuchFieldException e) {
-                        e.printStackTrace();
+                    } catch (NoSuchFieldException ignored) {
                     }
                     superClass = superClass.getSuperclass();
                 }
