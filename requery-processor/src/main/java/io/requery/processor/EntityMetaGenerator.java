@@ -567,16 +567,20 @@ class EntityMetaGenerator extends EntityPartGenerator {
             }
             propertyName = attribute.setterName();
             useSetter = true;
-            TypeElement element = elements.getTypeElement(builderType.toString());
+            TypeElement element = elements.getTypeElement(builderType.get().toString());
             if (element != null) {
                 for (ExecutableElement method :
                         ElementFilter.methodsIn(element.getEnclosedElements())) {
+
                     List<? extends VariableElement> parameters = method.getParameters();
                     String name = Names.removeMethodPrefixes(method.getSimpleName());
                     // probable setter for this attribute
                     // (some builders have with<Property> setters so strip that
-                    if ((name.startsWith("with") && name.length() > 4 &&
-                        Character.isUpperCase(name.charAt(4))) ||
+                    if ((Names.matchesSetter("with", name)) ||
+                        name.equalsIgnoreCase(attribute.fieldName()) && parameters.size() == 1) {
+                        propertyName = method.getSimpleName().toString();
+                        break;
+                    } else if (Names.matchesSetter("set", name) ||
                         name.equalsIgnoreCase(attribute.fieldName()) && parameters.size() == 1) {
                         propertyName = method.getSimpleName().toString();
                         break;
