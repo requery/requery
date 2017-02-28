@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,8 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
      *
      * @param entities to insert
      * @param <E>      entity type
-     * @return the operation result.
+     * @return the operation result containing the entities inserted. in most cases this will be
+     * original {@link Iterable} instance given to the method.
      */
     <E extends T> R insert(Iterable<E> entities);
 
@@ -84,7 +85,7 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
      * @param keyClass key class
      * @param <K>      key type
      * @param <E>      entity type
-     * @return the operation result.
+     * @return the operation result containing the generated keys for the insert.
      */
     <K, E extends T> R insert(Iterable<E> entities, Class<K> keyClass);
 
@@ -106,7 +107,8 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
      *
      * @param entities to update
      * @param <E>      entity type
-     * @return the operation result.
+     * @return the operation result containing the entities updated, in most cases this will be
+     * original {@link Iterable} instance given to the method.
      */
     <E extends T> R update(Iterable<E> entities);
 
@@ -136,7 +138,8 @@ public interface EntityStore<T, R> extends Queryable<T>, AutoCloseable {
      *
      * @param entities to update
      * @param <E>      entity type
-     * @return the operation result.
+     * @return the operation result containing the entities upserted, in most cases this will be
+     * original {@link Iterable} instance given to the method.
      */
     <E extends T> R upsert(Iterable<E> entities);
 
