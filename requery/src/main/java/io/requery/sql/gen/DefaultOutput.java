@@ -19,13 +19,12 @@ package io.requery.sql.gen;
 import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Aliasable;
-import io.requery.query.AliasedExpression;
+import io.requery.query.RowExpression;
 import io.requery.query.Condition;
 import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
 import io.requery.query.NamedExpression;
 import io.requery.query.Operator;
-import io.requery.query.OrderingExpression;
 import io.requery.query.element.JoinConditionElement;
 import io.requery.query.element.JoinOnElement;
 import io.requery.query.element.LogicalElement;
@@ -101,29 +100,20 @@ public class DefaultOutput implements Output {
     @Override
     public void appendTables() {
         Set<Expression<?>> from = query.fromExpressions();
-        if (from.size() == 1) {
-            Expression first = from.iterator().next();
-            if (first instanceof QueryWrapper) {
-                appendFromExpression(first);
-            } else {
-                if (autoAlias) {
-                    aliases.append(qb, first.getName());
+        qb.commaSeparated(from, new QueryBuilder.Appender<Expression<?>>() {
+            @Override
+            public void append(QueryBuilder qb, Expression<?> value) {
+                if (value instanceof QueryWrapper) {
+                    appendFromExpression(value);
                 } else {
-                    qb.tableName(first.getName());
+                    if (autoAlias) {
+                        aliases.append(qb, value.getName());
+                    } else {
+                        qb.tableName(value.getName());
+                    }
                 }
             }
-        } else if (from.size() > 1) {
-            qb.openParenthesis();
-            int index = 0;
-            for (Expression expression : from) {
-                if (index > 0) {
-                    qb.comma();
-                }
-                appendFromExpression(expression);
-                index++;
-            }
-            qb.closeParenthesis();
-        }
+        });
         appendJoins();
     }
 
@@ -153,12 +143,8 @@ public class DefaultOutput implements Output {
     }
 
     private static Expression<?> unwrapExpression(Expression<?> expression) {
-        if (expression.getExpressionType() == ExpressionType.ALIAS) {
-            AliasedExpression aliased = (AliasedExpression) expression;
-            return aliased.getInnerExpression();
-        } else if (expression.getExpressionType() == ExpressionType.ORDERING) {
-            OrderingExpression ordering = (OrderingExpression) expression;
-            return ordering.getInnerExpression();
+        if (expression.getInnerExpression() != null) {
+            return expression.getInnerExpression();
         }
         return expression;
     }
@@ -177,7 +163,8 @@ public class DefaultOutput implements Output {
         String alias = findAlias(expression);
         if (expression instanceof Function) {
             appendFunction((Function) expression);
-        } else if (autoAlias && alias == null) {
+        } else if (autoAlias && alias == null &&
+                expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
             aliases.prefix(qb, expression);
         } else {
             if(alias == null || alias.length() == 0) {
@@ -215,7 +202,19 @@ public class DefaultOutput implements Output {
                 qb.attribute(attribute);
                 break;
             default:
-                qb.append(expression.getName()).space();
+                if (expression instanceof RowExpression) {
+                    RowExpression collection = (RowExpression) expression;
+                    qb.openParenthesis();
+                    qb.commaSeparated(collection.getExpressions(), new QueryBuilder.Appender<Expression<?>>() {
+                        @Override
+                        public void append(QueryBuilder qb, Expression<?> value) {
+                            appendColumnForSelect(value);
+                        }
+                    });
+                    qb.closeParenthesis().space();
+                } else {
+                    qb.append(expression.getName()).space();
+                }
                 break;
         }
     }
@@ -383,8 +382,7 @@ public class DefaultOutput implements Output {
 
     private void appendConditionValue(Expression expression, Object value, boolean parameterize) {
         if (value instanceof QueryAttribute) {
-            QueryAttribute a = (QueryAttribute) value;
-            appendColumn(a);
+            appendColumn((Expression<?>) value);
         } else if (value instanceof Supplier && ((Supplier)value).get() instanceof QueryAttribute) {
             appendColumn((Expression<?>) ((Supplier)value).get());
         } else if (value instanceof NamedExpression) {
@@ -392,6 +390,11 @@ public class DefaultOutput implements Output {
             qb.append(namedExpression.getName());
         } else if (value instanceof Function) {
             appendFunction((Function) value);
+        } else if (value instanceof Collection &&
+                expression.getExpressionType() == ExpressionType.ROW) {
+            qb.openParenthesis();
+            qb.commaSeparated((Collection) value);
+            qb.closeParenthesis();
         } else {
             if (parameterize) {
                 if (parameters != null) {

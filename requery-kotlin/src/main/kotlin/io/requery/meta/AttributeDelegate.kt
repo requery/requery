@@ -49,6 +49,7 @@ class AttributeDelegate<T, V>(attribute : QueryAttribute<T, V>) :
     override fun getExpressionType(): ExpressionType = attribute.expressionType
     override fun getClassType(): Class<V> = attribute.classType
     override fun getDeclaringType(): Type<T> = attribute.declaringType
+    override fun getInnerExpression(): Expression<V>? { return null }
 
     override fun setDeclaringType(type: Type<T>) {
         if (attribute is BaseAttribute) {
@@ -147,8 +148,8 @@ abstract class BaseExpression<V> protected constructor() :
         }
         override fun getOrder(): Order = order
         override fun getNullOrder(): OrderingExpression.NullOrder? = nullOrder
-        override fun getName(): String = expression.getName()
-        override fun getClassType(): Class<X> = expression.getClassType()
+        override fun getName(): String = expression.name
+        override fun getClassType(): Class<X> = expression.classType
         override fun getExpressionType(): ExpressionType = ExpressionType.ORDERING
         override fun getInnerExpression(): Expression<X> = expression
     }

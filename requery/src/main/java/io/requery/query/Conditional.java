@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -230,6 +230,15 @@ public interface Conditional<Q, V> {
     Q in(Collection<V> values);
 
     /**
+     * Applies the in condition, checking if the condition is applicable to the values in the given
+     * elements.
+     *
+     * @param values to compare (non null)
+     * @return next query step
+     */
+    Q in(V first, Object ...values);
+
+    /**
      * Applies the not in condition, checking if the condition is not applicable to the values in
      * the collection.
      *
@@ -237,6 +246,14 @@ public interface Conditional<Q, V> {
      * @return next query step
      */
     Q notIn(Collection<V> values);
+
+    /**
+     * Applies the not in condition, checking if the condition is not applicable to the given values.
+     *
+     * @param values to compare (non null)
+     * @return next query step
+     */
+    Q notIn(V first, Object ...values);
 
     /**
      * Applies the equal condition

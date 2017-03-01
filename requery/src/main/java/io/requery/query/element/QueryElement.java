@@ -63,7 +63,7 @@ public class QueryElement<E> implements Selectable<E>,
     Selection<E>,
     DistinctSelection<E>,
     Insertion<E>,
-        InsertInto<E>,
+    InsertInto<E>,
     Deletion<E>,
     Update<E>,
     JoinWhereGroupByOrderBy<E>,
@@ -258,6 +258,11 @@ public class QueryElement<E> implements Selectable<E>,
     @Override
     public ExpressionType getExpressionType() {
         return ExpressionType.QUERY;
+    }
+
+    @Override
+    public Expression<QueryElement> getInnerExpression() {
+        return null;
     }
 
     @Override

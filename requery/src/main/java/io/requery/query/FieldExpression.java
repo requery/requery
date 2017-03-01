@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import io.requery.query.function.Trim;
 import io.requery.query.function.Upper;
 import io.requery.util.Objects;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -55,6 +56,11 @@ public abstract class FieldExpression<V> implements
 
     @Override
     public abstract Class<V> getClassType();
+
+    @Override
+    public Expression<V> getInnerExpression() {
+        return null;
+    }
 
     @Override
     public Expression<V> as(String alias) {
@@ -292,10 +298,32 @@ public abstract class FieldExpression<V> implements
         return new ExpressionCondition<>(this, Operator.IN, values);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public LogicalCondition<? extends Expression<V>, ?> in(V first, Object... values) {
+        Collection<V> collection = new ArrayList<>(1 + values.length);
+        collection.add(first);
+        for (Object o : values) {
+            collection.add((V)o);
+        }
+        return in(collection);
+    }
+
     @Override
     public LogicalCondition<? extends Expression<V>, Collection<V>> notIn(Collection<V> values) {
         Objects.requireNotNull(values);
         return new ExpressionCondition<>(this, Operator.NOT_IN, values);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public LogicalCondition<? extends Expression<V>, ?> notIn(V first, Object... values) {
+        Collection<V> collection = new ArrayList<>(1 + values.length);
+        collection.add(first);
+        for (Object o : values) {
+            collection.add((V)o);
+        }
+        return notIn(collection);
     }
 
     @Override
