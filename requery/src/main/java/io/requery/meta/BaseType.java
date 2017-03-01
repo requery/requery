@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package io.requery.meta;
 
 import io.requery.proxy.EntityProxy;
+import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
 import io.requery.util.Objects;
 import io.requery.util.function.Function;
@@ -29,6 +30,7 @@ abstract class BaseType<T> implements Type<T> {
 
     Class<T> type;
     Class<? super T> baseType;
+    Type<?> superType;
     String name;
     boolean cacheable;
     boolean stateless;
@@ -70,6 +72,11 @@ abstract class BaseType<T> implements Type<T> {
     @Override
     public ExpressionType getExpressionType() {
         return ExpressionType.NAME;
+    }
+
+    @Override
+    public Expression<T> getInnerExpression() {
+        return null;
     }
 
     @Override
