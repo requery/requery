@@ -852,7 +852,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             Object value = proxy.get(attribute, false);
             proxy.set(attribute, null, PropertyState.LOADED);
             if (value != null) {
-                if (attribute.isForeignKey() &&
+                if (delete && attribute.isForeignKey() &&
                     attribute.getDeleteAction() == ReferentialAction.CASCADE) {
                     cascade = true;
                 }

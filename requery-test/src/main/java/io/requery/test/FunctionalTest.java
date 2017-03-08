@@ -622,6 +622,23 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testDeleteOneToManyResult() {
+        Person person = randomPerson();
+        data.insert(person);
+        Phone phone1 = randomPhone();
+        Phone phone2 = randomPhone();
+        phone1.setOwner(person);
+        phone2.setOwner(person);
+        data.insert(phone1);
+        data.insert(phone2);
+        data.refresh(person);
+        assertEquals(2, person.getPhoneNumbers().toList().size());
+        data.delete(person.getPhoneNumbers());
+        Phone cached = data.findByKey(Phone.class, phone1.getId());
+        assertNull(cached);
+    }
+
+    @Test
     public void testInsertOneToMany() {
         Person person = randomPerson();
         data.insert(person);

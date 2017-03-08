@@ -349,6 +349,12 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
     @Override
     public <E extends T> Void delete(Iterable<E> entities) {
+        if (entities instanceof Result) {
+            // work around for sqlite since the read cursor can't be open during the transaction
+            @SuppressWarnings("unchecked")
+            Result<E> result = (Result<E>) entities;
+            entities = result.toList();
+        }
         Iterator<E> iterator = entities.iterator();
         if (iterator.hasNext()) {
             try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
