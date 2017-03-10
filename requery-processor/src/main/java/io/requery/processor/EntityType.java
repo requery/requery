@@ -216,15 +216,14 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
 
     @Override
     public void merge(EntityDescriptor from) {
-        for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
-            from.attributes().entrySet()) {
+        from.attributes().entrySet().forEach(entry -> {
             // add this attribute if an attribute with the same name is not already existing
-            AttributeDescriptor newAttribute = entry.getValue();
             if (attributes.values().stream().noneMatch(
-                attribute -> attribute.name().equals(newAttribute.name()))) {
-                attributes.put(entry.getKey(), newAttribute);
+                    attribute -> attribute.name().equals(entry.getValue().name()))) {
+                Element element = entry.getValue().element();
+                attributes.put(entry.getKey(), new AttributeMember(element, this));
             }
-        }
+        });
         from.listeners().entrySet().stream()
             .filter(entry -> entry.getValue() instanceof ListenerMethod)
             .forEach(entry -> {
