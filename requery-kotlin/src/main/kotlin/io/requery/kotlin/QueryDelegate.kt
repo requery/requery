@@ -26,7 +26,7 @@ import java.util.*
 import kotlin.reflect.KClass
 
 class ExistsDelegate<E : Any>(element: ExistsElement<E>, query : QueryDelegate<E>)
-: Exists<SetGroupByOrderByLimit<E>> {
+: Exists<SetGroupByOrderByLimit<E>>, QueryWrapper<E> by query {
 
     private val element: ExistsElement<E> = element
     private val query : QueryDelegate<E> = query
@@ -43,7 +43,7 @@ class ExistsDelegate<E : Any>(element: ExistsElement<E>, query : QueryDelegate<E
 }
 
 class HavingDelegate<E : Any>(element: HavingConditionElement<E>, query
-: QueryDelegate<E>) : HavingAndOr<E> {
+: QueryDelegate<E>) : HavingAndOr<E>, QueryWrapper<E> by query {
 
     private var element : HavingConditionElement<E> = element
     private var query : QueryDelegate<E> = query
@@ -80,7 +80,7 @@ class HavingDelegate<E : Any>(element: HavingConditionElement<E>, query
 }
 
 class WhereDelegate<E : Any>(element: WhereConditionElement<E>, query : QueryDelegate<E>)
-: WhereAndOr<E>, SetGroupByOrderByLimit<E> by query {
+: WhereAndOr<E>, SetGroupByOrderByLimit<E> by query, QueryWrapper<E> by query {
 
     private var element : WhereConditionElement<E> = element
     private var query : QueryDelegate<E> = query
@@ -93,7 +93,7 @@ class WhereDelegate<E : Any>(element: WhereConditionElement<E>, query : QueryDel
 }
 
 class JoinDelegate<E : Any>(element : JoinConditionElement<E>, query: QueryDelegate<E>)
-: JoinAndOr<E>, JoinWhereGroupByOrderBy<E> by query {
+: JoinAndOr<E>, JoinWhereGroupByOrderBy<E> by query, QueryWrapper<E> by query {
 
     private var element : JoinConditionElement<E> = element
     private var query : QueryDelegate<E> = query
@@ -105,7 +105,8 @@ class JoinDelegate<E : Any>(element : JoinConditionElement<E>, query: QueryDeleg
             JoinDelegate(element.or(condition) as JoinConditionElement<E>, query)
 }
 
-class JoinOnDelegate<E : Any>(element : JoinOnElement<E>, query : QueryDelegate<E>) : JoinOn<E> {
+class JoinOnDelegate<E : Any>(element : JoinOnElement<E>, query : QueryDelegate<E>)
+: JoinOn<E>, QueryWrapper<E> by query {
     private var query : QueryDelegate<E> = query
     private var element : JoinOnElement<E> = element
 
