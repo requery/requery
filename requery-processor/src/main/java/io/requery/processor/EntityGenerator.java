@@ -34,13 +34,7 @@ import io.requery.proxy.PreInsertListener;
 import io.requery.proxy.PropertyState;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
@@ -157,7 +151,11 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         }
         // only generate for interfaces or if the entity is immutable but has no builder
         boolean generateMembers = typeElement.getKind().isInterface() ||
-            (entity.isImmutable() && !entity.builderType().isPresent());
+            !entity.builderType().isPresent();
+        Set<String> existingFieldNames = entity.attributes().keySet().stream()
+            .filter(it -> it.getKind() == ElementKind.FIELD)
+            .map(it -> it.getSimpleName().toString())
+            .collect(Collectors.toSet());
         if (generateMembers) {
             for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
                 entity.attributes().entrySet()) {
@@ -175,9 +173,11 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     } else {
                         fieldName = nameResolver.tryGeneratedTypeName(typeMirror);
                     }
-                    builder.addField(FieldSpec
-                        .builder(fieldName, attribute.fieldName(), visibility)
-                        .build());
+                    if (!existingFieldNames.contains(attribute.fieldName())) {
+                      builder.addField(FieldSpec
+                          .builder(fieldName, attribute.fieldName(), visibility)
+                          .build());
+                    }
                 }
             }
         }
