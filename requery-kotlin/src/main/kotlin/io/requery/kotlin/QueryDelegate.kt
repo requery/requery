@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,20 @@
 
 package io.requery.kotlin
 
-import io.requery.Persistable
 import io.requery.meta.EntityModel
 import io.requery.query.Condition
 import io.requery.query.Expression
 import io.requery.query.Return
 import io.requery.query.element.*
 import io.requery.util.function.Supplier
-import java.util.ArrayList
+import java.util.*
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
 
 class ExistsDelegate<E : Any>(element: ExistsElement<E>, query : QueryDelegate<E>)
 : Exists<SetGroupByOrderByLimit<E>> {
 
-    private val element: ExistsElement<E> = element;
-    private val query : QueryDelegate<E> = query;
+    private val element: ExistsElement<E> = element
+    private val query : QueryDelegate<E> = query
 
     override fun exists(query: Return<*>): SetGroupByOrderByLimit<E> {
         element.exists(query)
@@ -47,8 +45,8 @@ class ExistsDelegate<E : Any>(element: ExistsElement<E>, query : QueryDelegate<E
 class HavingDelegate<E : Any>(element: HavingConditionElement<E>, query
 : QueryDelegate<E>) : HavingAndOr<E> {
 
-    private var element : HavingConditionElement<E> = element;
-    private var query : QueryDelegate<E> = query;
+    private var element : HavingConditionElement<E> = element
+    private var query : QueryDelegate<E> = query
 
     override fun limit(limit: Int): Offset<E> {
         query.limit(limit)
@@ -84,8 +82,8 @@ class HavingDelegate<E : Any>(element: HavingConditionElement<E>, query
 class WhereDelegate<E : Any>(element: WhereConditionElement<E>, query : QueryDelegate<E>)
 : WhereAndOr<E>, SetGroupByOrderByLimit<E> by query {
 
-    private var element : WhereConditionElement<E> = element;
-    private var query : QueryDelegate<E> = query;
+    private var element : WhereConditionElement<E> = element
+    private var query : QueryDelegate<E> = query
 
     override fun <V> and(condition: Condition<V, *>): WhereAndOr<E> =
             WhereDelegate(element.and(condition) as WhereConditionElement<E>, query)
@@ -97,8 +95,8 @@ class WhereDelegate<E : Any>(element: WhereConditionElement<E>, query : QueryDel
 class JoinDelegate<E : Any>(element : JoinConditionElement<E>, query: QueryDelegate<E>)
 : JoinAndOr<E>, JoinWhereGroupByOrderBy<E> by query {
 
-    private var element : JoinConditionElement<E> = element;
-    private var query : QueryDelegate<E> = query;
+    private var element : JoinConditionElement<E> = element
+    private var query : QueryDelegate<E> = query
 
     override fun <V> and(condition: Condition<V, *>): JoinAndOr<E> =
             JoinDelegate(element.and(condition) as JoinConditionElement<E>, query)
@@ -108,11 +106,11 @@ class JoinDelegate<E : Any>(element : JoinConditionElement<E>, query: QueryDeleg
 }
 
 class JoinOnDelegate<E : Any>(element : JoinOnElement<E>, query : QueryDelegate<E>) : JoinOn<E> {
-    private var query : QueryDelegate<E> = query;
-    private var element : JoinOnElement<E> = element;
+    private var query : QueryDelegate<E> = query
+    private var element : JoinOnElement<E> = element
 
     override fun <V> on(field: Condition<V, *>): JoinAndOr<E> {
-        val join = element.on(field) as JoinConditionElement<E>;
+        val join = element.on(field) as JoinConditionElement<E>
         return JoinDelegate(join, query)
     }
 }
@@ -120,7 +118,9 @@ class JoinOnDelegate<E : Any>(element : JoinOnElement<E>, query : QueryDelegate<
 class QueryDelegate<E : Any>(element : QueryElement<E>) :
         Selectable<E>,
         Selection<E>,
+        DistinctSelection<E>,
         Insertion<E>,
+        InsertInto<E>,
         Update<E>,
         Deletion<E>,
         JoinWhereGroupByOrderBy<E>,
@@ -129,7 +129,7 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
         OrderByLimit<E>,
         Offset<E> {
 
-    private var element : QueryElement<E> = element;
+    private var element : QueryElement<E> = element
 
     constructor(type : QueryType, model : EntityModel, operation : QueryOperation<E>)
     : this(QueryElement(type, model, operation))
@@ -139,7 +139,7 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
         return this
     }
 
-    override fun union(): Selectable<E> = QueryDelegate(element.union() as QueryElement<E>);
+    override fun union(): Selectable<E> = QueryDelegate(element.union() as QueryElement<E>)
 
     override fun unionAll(): Selectable<E> = QueryDelegate(element.unionAll() as QueryElement<E>)
 
@@ -147,13 +147,13 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
 
     override fun except(): Selectable<E> = QueryDelegate(element.except() as QueryElement<E>)
 
-    override fun join(type: KClass<Any>): JoinOn<E> =
+    override fun join(type: KClass<out Any>): JoinOn<E> =
             JoinOnDelegate(element.join(type.java) as JoinOnElement<E>, this)
 
-    override fun leftJoin(type: KClass<Any>): JoinOn<E> =
+    override fun leftJoin(type: KClass<out Any>): JoinOn<E> =
             JoinOnDelegate(element.leftJoin(type.java) as JoinOnElement<E>, this)
 
-    override fun rightJoin(type: KClass<Any>): JoinOn<E> =
+    override fun rightJoin(type: KClass<out Any>): JoinOn<E> =
             JoinOnDelegate(element.rightJoin(type.java) as JoinOnElement<E>, this)
 
     override fun <J> join(query: Return<J>): JoinOn<E> =
@@ -201,24 +201,24 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
 
     override fun distinct(): DistinctSelection<E> {
         element.distinct()
-        throw UnsupportedOperationException()
+        return this
     }
 
     override fun from(vararg types: KClass<out Any>): JoinWhereGroupByOrderBy<E> {
-        val javaClasses = Array<Class<*>?>(types.size, {i -> types[i].java });
-        element.from(*javaClasses);
+        val javaClasses = Array<Class<*>?>(types.size, {i -> types[i].java })
+        element.from(*javaClasses)
         return this
     }
 
     override fun from(vararg types: Class<out Any>): JoinWhereGroupByOrderBy<E> {
-        element.from(*types);
+        element.from(*types)
         return this
     }
 
     override fun from(vararg subqueries: Supplier<*>): JoinWhereGroupByOrderBy<E> {
-        val list = ArrayList<QueryDelegate<*>>();
+        val list = ArrayList<QueryDelegate<*>>()
         subqueries.forEach { it -> run {
-            val element = it.get();
+            val element = it.get()
             if (it is QueryDelegate) {
                 list.add(element as QueryDelegate<*>)
             }
@@ -236,21 +236,37 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
     override fun offset(offset: Int): Return<E> = element.offset(offset)
 
     override fun <V> value(expression: Expression<V>, value: V): Insertion<E> {
-        element.value(expression, value);
-        return this;
+        element.value(expression, value)
+        return this
     }
 
     override fun <V> set(expression: Expression<V>, value: V): Update<E> {
         element.set(expression, value)
-        return this;
+        return this
     }
 
     override fun equals(other: Any?): Boolean {
         if (other is QueryDelegate<*>) {
-            return other.element.equals(element);
+            return other.element.equals(element)
         }
         return false
     }
 
     override fun hashCode(): Int = element.hashCode()
+
+    @Suppress("UNCHECKED_CAST")
+    fun <F : E> extend(transform: io.requery.util.function.Function<E, F>): QueryDelegate<F> {
+        element.extend(transform)
+        return this as QueryDelegate<F>
+    }
+
+    override fun invoke(query: Return<*>): Return<E> {
+        element.query(query)
+        return this
+    }
+
+    fun insertColumns(expressions: Array<out QueryableAttribute<*,*>>): InsertInto<E> {
+        element.insertColumns(expressions)
+        return this
+    }
 }

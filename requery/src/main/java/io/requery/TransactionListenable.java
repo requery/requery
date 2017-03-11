@@ -16,10 +16,8 @@
 
 package io.requery;
 
-/**
- * Exception thrown when attempting to perform an operation on a {@link Entity} object that must be
- * attached first.
- */
-public class DetachedException extends PersistenceException {
+import io.requery.util.function.Supplier;
 
+public interface TransactionListenable {
+    void addTransactionListener(Supplier<TransactionListener> supplier);
 }

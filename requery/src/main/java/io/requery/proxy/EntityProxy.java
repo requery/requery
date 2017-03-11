@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -242,17 +242,35 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     public Object key() {
         if (regenerateKey || key == null) {
             if (type.getSingleKeyAttribute() != null) {
-                key = get(type.getSingleKeyAttribute()); // typical case one key attribute
+                key = getKey(type.getSingleKeyAttribute()); // typical case one key attribute
             } else if (type.getKeyAttributes().size() > 1) {
                 LinkedHashMap<Attribute<E, ?>, Object> keys =
                     new LinkedHashMap<>(type.getKeyAttributes().size());
                 for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
-                    keys.put(attribute, get(attribute));
+                    keys.put(attribute, getKey(attribute));
                 }
                 key = new CompositeKey<>(keys);
+            } else {
+                key = this;
             }
         }
         return key;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Object getKey(Attribute<E, ?> attribute) {
+        if (attribute.isAssociation()) {
+            Attribute referenced = attribute.getReferencedAttribute().get();
+            Object association = get(attribute, false);
+            if (association != null) {
+                Type<Object> type = referenced.getDeclaringType();
+                EntityProxy proxy = type.getProxyProvider().apply(association);
+                return proxy == null ? null : proxy.get(referenced, false);
+            } else {
+                return null;
+            }
+        }
+        return get(attribute, false);
     }
 
     /**
@@ -281,6 +299,24 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
         synchronized (syncObject()) {
             this.loader = null;
         }
+    }
+
+    public E copy() {
+        E copy = type.getFactory().get();
+        EntityProxy<E> proxy = type.getProxyProvider().apply(copy);
+        proxy.link(loader);
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
+            if (!attribute.isAssociation()) {
+                PropertyState state = getState(attribute);
+                if (state == PropertyState.LOADED || state == PropertyState.MODIFIED) {
+                    Object value = get(attribute, false);
+                    @SuppressWarnings("unchecked")
+                    Attribute<E, Object> a = (Attribute<E, Object>) attribute;
+                    proxy.set(a, value, state);
+                }
+            }
+        }
+        return copy;
     }
 
     public Type<E> type() {

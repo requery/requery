@@ -73,6 +73,11 @@ public class TypeBuilder<T> extends BaseType<T> {
         return this;
     }
 
+    public TypeBuilder<T> setView(boolean isView) {
+        this.isView = isView;
+        return this;
+    }
+
     public TypeBuilder<T> setFactory(Supplier<T> factory) {
         this.factory = factory;
         return this;
@@ -95,6 +100,11 @@ public class TypeBuilder<T> extends BaseType<T> {
 
     public TypeBuilder<T> setTableCreateAttributes(String[] attributes) {
         this.tableCreateAttributes = attributes;
+        return this;
+    }
+
+    public TypeBuilder<T> setTableUniqueIndexes(String[] indexes) {
+        this.tableUniqueIndexes = indexes;
         return this;
     }
 

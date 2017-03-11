@@ -3,7 +3,7 @@ package io.requery.test.kt
 import io.requery.*
 
 @Entity(model = "kt")
-interface Address : Persistable {
+interface Address {
 
     companion object {
         const val CONSTANT = "value"
@@ -26,4 +26,7 @@ interface Address : Persistable {
 
     @get:OneToOne(mappedBy = "address")
     val person: Person
+
+    @get:Transient
+    var description: String
 }

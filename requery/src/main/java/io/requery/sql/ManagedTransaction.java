@@ -127,9 +127,8 @@ class ManagedTransaction implements EntityTransaction, ConnectionProvider, Synch
     public Transaction begin(TransactionIsolation isolation) {
         if (isolation != null) {
             throw new TransactionException("isolation can't be specified in managed mode");
-        } else {
-            return begin(null);
         }
+        return begin();
     }
 
     @Override

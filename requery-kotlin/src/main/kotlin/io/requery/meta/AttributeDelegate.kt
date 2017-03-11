@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,10 @@
 
 package io.requery.meta
 
-import io.requery.kotlin.*
 import io.requery.kotlin.Aliasable
 import io.requery.kotlin.Conditional
 import io.requery.kotlin.Logical
-import io.requery.meta.Attribute
-import io.requery.meta.QueryAttribute
-import io.requery.meta.Type
-import io.requery.meta.TypeDeclarable
+import io.requery.kotlin.QueryableAttribute
 import io.requery.query.*
 import io.requery.query.function.*
 import io.requery.query.function.Function
@@ -44,20 +40,22 @@ class AttributeDelegate<T, V>(attribute : QueryAttribute<T, V>) :
 
     // captures types for use with property extensions
     companion object {
-        val types : MutableSet<Type<*>> = LinkedHashSet();
+        val types : MutableSet<Type<*>> = LinkedHashSet()
     }
 
-    private val attribute : QueryAttribute<T, V> = attribute;
-    private var type: Type<T>? = null;
+    private val attribute : QueryAttribute<T, V> = attribute
 
     override fun getName(): String = attribute.name
     override fun getExpressionType(): ExpressionType = attribute.expressionType
     override fun getClassType(): Class<V> = attribute.classType
-    override fun getDeclaringType(): Type<T>? = type
+    override fun getDeclaringType(): Type<T> = attribute.declaringType
+    override fun getInnerExpression(): Expression<V>? { return null }
 
     override fun setDeclaringType(type: Type<T>) {
-        this.type = type;
-        types.add(type);
+        if (attribute is BaseAttribute) {
+            attribute.declaringType = type
+        }
+        types.add(type)
     }
 
     override fun get(): QueryAttribute<T, V> = attribute
@@ -150,8 +148,9 @@ abstract class BaseExpression<V> protected constructor() :
         }
         override fun getOrder(): Order = order
         override fun getNullOrder(): OrderingExpression.NullOrder? = nullOrder
-        override fun getName(): String = expression.getName()
-        override fun getClassType(): Class<X> = expression.getClassType()
+        override fun getName(): String = expression.name
+        override fun getClassType(): Class<X> = expression.classType
         override fun getExpressionType(): ExpressionType = ExpressionType.ORDERING
+        override fun getInnerExpression(): Expression<X> = expression
     }
 }

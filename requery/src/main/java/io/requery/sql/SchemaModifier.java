@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -131,13 +132,10 @@ public class SchemaModifier {
                 String sql = tableCreateStatement(type, mode);
                 statementListeners.beforeExecuteUpdate(statement, sql, null);
                 statement.execute(sql);
-                statementListeners.afterExecuteUpdate(statement);
+                statementListeners.afterExecuteUpdate(statement, 0);
             }
-            if (mode == TableCreationMode.CREATE ||
-                mode == TableCreationMode.CREATE_NOT_EXISTS) {
-                for (Type<?> type : sorted) {
-                    createIndexes(connection, mode, type);
-                }
+            for (Type<?> type : sorted) {
+                createIndexes(connection, mode, type);
             }
             connection.commit();
         } catch (SQLException e) {
@@ -146,7 +144,7 @@ public class SchemaModifier {
     }
 
     /**
-     * Convience method to generated the create table statements as a string.
+     * Convenience method to generated the create table statements as a string.
      *
      * @param mode table creation mode
      * @return DDL string
@@ -189,7 +187,7 @@ public class SchemaModifier {
                 String sql = qb.toString();
                 statementListeners.beforeExecuteUpdate(statement, sql, null);
                 statement.execute(sql);
-                statementListeners.afterExecuteUpdate(statement);
+                statementListeners.afterExecuteUpdate(statement, 0);
             } catch (SQLException e) {
                 if (platform.supportsIfExists()) {
                     throw e;
@@ -207,8 +205,7 @@ public class SchemaModifier {
     public <T> void addColumn(Attribute<T, ?> attribute) {
         Type<T> type = attribute.getDeclaringType();
         QueryBuilder qb = createQueryBuilder();
-        qb.keyword(ALTER, TABLE)
-            .tableName(type.getName());
+        qb.keyword(ALTER, TABLE).tableName(type.getName());
         if (attribute.isForeignKey()) {
             if (platform.supportsAddingConstraint()) {
                 // create the column first then the constraint
@@ -218,19 +215,19 @@ public class SchemaModifier {
                 qb = createQueryBuilder();
                 qb.keyword(ALTER, TABLE)
                     .tableName(type.getName()).keyword(ADD);
-                createForeignKeyColumn(qb, attribute, true);
+                createForeignKeyColumn(qb, attribute, false, false);
             } else {
                 // just for SQLite for now adding the column and key is done in 1 statement
                 qb = createQueryBuilder();
                 qb.keyword(ALTER, TABLE)
                     .tableName(type.getName()).keyword(ADD);
-                createForeignKeyColumn(qb, attribute, false);
+                createForeignKeyColumn(qb, attribute, false, true);
             }
         } else {
             qb.keyword(ADD, COLUMN);
             createColumn(qb, attribute);
-            executeSql(qb);
         }
+        executeSql(qb);
     }
 
     /**
@@ -265,7 +262,7 @@ public class SchemaModifier {
             String sql = qb.toString();
             statementListeners.beforeExecuteUpdate(statement, sql, null);
             statement.execute(sql);
-            statementListeners.afterExecuteUpdate(statement);
+            statementListeners.afterExecuteUpdate(statement, 0);
         } catch (SQLException e) {
             throw new PersistenceException(e);
         }
@@ -278,8 +275,12 @@ public class SchemaModifier {
         ArrayList<Type<?>> sorted = new ArrayList<>();
         while (!queue.isEmpty()) {
             Type<?> type = queue.poll();
-            Set<Type<?>> referencing = referencedTypesOf(type);
 
+            if (type.isView()) {
+                continue;
+            }
+
+            Set<Type<?>> referencing = referencedTypesOf(type);
             for (Type<?> referenced : referencing) {
                 Set<Type<?>> backReferences = referencedTypesOf(referenced);
                 if (backReferences.contains(type)) {
@@ -360,7 +361,7 @@ public class SchemaModifier {
                 if (index > 0) {
                     qb.comma();
                 }
-                createForeignKeyColumn(qb, attribute, true);
+                createForeignKeyColumn(qb, attribute, true, false);
                 index++;
             }
         }
@@ -385,7 +386,7 @@ public class SchemaModifier {
     }
 
     private void createForeignKeyColumn(QueryBuilder qb, Attribute<?,?> attribute,
-                                        boolean forCreateStatement) {
+                                        boolean forCreateStatement, boolean forceInline) {
 
         Type<?> referenced = model.typeOf(attribute.getReferencedClass() != null ?
             attribute.getReferencedClass() : attribute.getClassType());
@@ -397,7 +398,7 @@ public class SchemaModifier {
             referencedAttribute = referenced.getKeyAttributes().iterator().next();
         }
 
-        if (!platform.supportsInlineForeignKeyReference() && forCreateStatement) {
+        if (!forceInline && (!platform.supportsInlineForeignKeyReference() || !forCreateStatement)) {
             qb.keyword(FOREIGN, KEY)
                 .openParenthesis()
                 .attribute(attribute)
@@ -426,7 +427,7 @@ public class SchemaModifier {
             qb.keyword(ON, DELETE);
             appendReferentialAction(qb, attribute.getDeleteAction());
         }
-        if (referencedAttribute != null &&
+        if (platform.supportsOnUpdateCascade() && referencedAttribute != null &&
             !referencedAttribute.isGenerated() && attribute.getUpdateAction() != null) {
             qb.keyword(ON, UPDATE);
             appendReferentialAction(qb, attribute.getUpdateAction());
@@ -469,8 +470,12 @@ public class SchemaModifier {
                 GenericMapping genericMapping = (GenericMapping) mapping;
                 converter = genericMapping.converterForType(attribute.getClassType());
             }
-            if (fieldType.hasLength() ||
-                (converter != null && converter.getPersistedSize() != null)) {
+            boolean hasLength = fieldType.hasLength() ||
+                    (converter != null && converter.getPersistedSize() != null);
+
+            if (attribute.getDefinition() != null && attribute.getDefinition().length() > 0) {
+                qb.append(attribute.getDefinition());
+            } else if (hasLength) {
 
                 Integer length = attribute.getLength();
                 if (length == null && converter != null) {
@@ -485,10 +490,11 @@ public class SchemaModifier {
                 qb.append(identifier)
                         .openParenthesis()
                         .append(length)
-                        .closeParenthesis().space();
+                        .closeParenthesis();
             } else {
-                qb.append(identifier).space();
+                qb.append(identifier);
             }
+            qb.space();
         }
 
         String suffix = fieldType.getIdentifierSuffix();
@@ -537,12 +543,11 @@ public class SchemaModifier {
         for (Attribute<T, ?> attribute : attributes) {
             if (attribute.isIndexed()) {
                 Set<String> names = new LinkedHashSet<>(attribute.getIndexNames());
-                if (names.isEmpty()) {
-                    // if no name set create a default one
-                    String indexName = attribute.getName() + "_index";
-                    names.add(indexName);
-                }
                 for(String indexName : names) {
+                    if (indexName.isEmpty()) {
+                        // if no name set create a default one
+                        indexName = attribute.getName() + "_index";
+                    }
                     Set<Attribute<?, ?>> indexColumns = indexes.get(indexName);
                     if (indexColumns == null) {
                         indexes.put(indexName, indexColumns = new LinkedHashSet<>());
@@ -563,7 +568,9 @@ public class SchemaModifier {
                              Set<Attribute<?,?>> attributes,
                              Type<?> type, TableCreationMode mode) {
         qb.keyword(CREATE);
-        if (attributes.size() >= 1 && attributes.iterator().next().isUnique()) {
+        if ((attributes.size() >= 1 && attributes.iterator().next().isUnique()) ||
+            (type.getTableUniqueIndexes() != null &&
+             Arrays.asList(type.getTableUniqueIndexes()).contains(indexName))) {
             qb.keyword(UNIQUE);
         }
         qb.keyword(INDEX);

@@ -65,14 +65,18 @@ public class SerializableEntityCache implements EntityCache {
     }
 
     private <T> Class getKeyClass(Type<T> type) {
-        Set<Attribute<T, ?>> ids = type.getKeyAttributes();
+        Set<Attribute<T, ?>> keys = type.getKeyAttributes();
         Class keyClass;
-        if (ids.isEmpty()) {
+        if (keys.isEmpty()) {
             // use hash code
             return Integer.class;
         }
-        if (ids.size() == 1) {
-            keyClass = ids.iterator().next().getClassType();
+        if (keys.size() == 1) {
+            Attribute<?, ?> attribute = keys.iterator().next();
+            if (attribute.isAssociation()) {
+                attribute = attribute.getReferencedAttribute().get();
+            }
+            keyClass = attribute.getClassType();
             if (keyClass.isPrimitive()) {
                 if (keyClass == int.class) {
                     keyClass = Integer.class;

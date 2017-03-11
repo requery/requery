@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,6 +67,12 @@ public interface Platform {
      * {@link java.sql.Statement#getGeneratedKeys}.
      */
     boolean supportsGeneratedKeysInBatchUpdate();
+
+    /**
+     * @return true if the platform supports the 'on update cascade' clause in a constraint,
+     * false otherwise
+     */
+    boolean supportsOnUpdateCascade();
 
     /**
      * @return true if the platform supports an upsert (insert or update) operation either via

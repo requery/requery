@@ -20,12 +20,11 @@ import io.requery.proxy.CollectionChanges;
 import io.requery.util.CloseableIterator;
 import io.requery.util.CollectionObserver;
 import io.requery.util.CompositeIterator;
-import io.requery.util.function.Consumer;
 import io.requery.util.FilteringIterator;
 import io.requery.util.ObservableCollection;
+import io.requery.util.function.Consumer;
 import io.requery.util.function.Predicate;
 import io.requery.util.function.Supplier;
-import rx.Observable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -103,6 +102,11 @@ public class ModifiableResult<E> implements MutableResult<E>, ObservableCollecti
     }
 
     @Override
+    public CloseableIterator<E> iterator(int skip, int take) {
+        return iterator();
+    }
+
+    @Override
     public void close() {
         if (result != null) {
             result.close();
@@ -172,15 +176,5 @@ public class ModifiableResult<E> implements MutableResult<E>, ObservableCollecti
             return result.toMap(key, map);
         }
         return map;
-    }
-
-    @Override
-    public rx.Observable<E> toObservable() {
-        return result == null ? rx.Observable.<E>empty() : result.toObservable();
-    }
-
-    @Override
-    public Observable<Result<E>> toSelfObservable() {
-        return result == null ? rx.Observable.<Result<E>>empty() : result.toSelfObservable();
     }
 }

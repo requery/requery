@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,14 @@
 
 package io.requery.sql;
 
-import io.requery.PersistenceException;
+import io.requery.TransactionListenable;
 import io.requery.TransactionListener;
 import io.requery.meta.Attribute;
 import io.requery.query.BaseResult;
 import io.requery.query.Expression;
 import io.requery.query.element.QueryElement;
-import io.requery.rx.ObservableResult;
+import io.requery.query.element.QueryWrapper;
 import io.requery.sql.gen.DefaultOutput;
-import io.requery.util.CloseableIterable;
 import io.requery.util.CloseableIterator;
 import io.requery.util.function.Supplier;
 
@@ -40,7 +39,7 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, CloseableIterable<E> {
+class SelectResult<E> extends BaseResult<E> implements TransactionListenable, QueryWrapper {
 
     private final QueryElement<?> query;
     private final RuntimeConfiguration configuration;
@@ -49,10 +48,7 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
     private final Integer limit;
     private final int resultSetType;
     private final int resultSetConcurrency;
-    private final boolean keepStatement;
     private String sql;
-    private Statement statement;
-    private Connection connection;
     private boolean closeConnection;
 
     SelectResult(RuntimeConfiguration configuration,
@@ -64,15 +60,11 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
         selection = query.getSelection();
         limit = query.getLimit();
         closeConnection = true;
-        keepStatement = false;
         resultSetType = ResultSet.TYPE_FORWARD_ONLY;
         resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
     }
 
     private Statement createStatement(boolean prepared) throws SQLException {
-        if (keepStatement && statement != null) {
-            return statement;
-        }
         Connection connection = configuration.getConnection();
         closeConnection = !(connection instanceof UncloseableConnection);
         Statement statement;
@@ -80,10 +72,6 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
             statement = connection.createStatement(resultSetType, resultSetConcurrency);
         } else {
             statement = connection.prepareStatement(sql, resultSetType, resultSetConcurrency);
-        }
-        if (keepStatement) {
-            this.statement = statement;
-            this.connection = connection;
         }
         return statement;
     }
@@ -100,10 +88,11 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
 
     @Override
     public CloseableIterator<E> iterator(int skip, int take) {
+        Statement statement = null;
         try {
             // connection held by the iterator if statement not reused
             BoundParameters parameters = createQuery(skip, take);
-            Statement statement = createStatement(!parameters.isEmpty());
+            statement = createStatement(!parameters.isEmpty());
             statement.setFetchSize(limit == null ? 0 : limit);
 
             StatementListener listener = configuration.getStatementListener();
@@ -137,36 +126,16 @@ class SelectResult<E> extends BaseResult<E> implements ObservableResult<E>, Clos
             }
             listener.afterExecuteQuery(statement);
 
-            return new ResultSetIterator<>(
-                reader, results, selection, !keepStatement, closeConnection);
-        } catch (SQLException e) {
-            throw new PersistenceException(e);
+            return new ResultSetIterator<>(reader, results, selection, true, closeConnection);
+        } catch (Exception e) {
+            throw StatementExecutionException.closing(statement, e, sql);
         }
     }
 
     @Override
-    public void close() {
-        super.close();
-        if (keepStatement) {
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (SQLException ignored) {
-                }
-            }
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException ignored) {
-                }
-            }
-        }
-    }
-
-    @Override
-    public void addTransactionListener(Supplier<TransactionListener> transactionListener) {
-        if (transactionListener != null) {
-            configuration.getTransactionListenerFactories().add(transactionListener);
+    public void addTransactionListener(Supplier<TransactionListener> supplier) {
+        if (supplier != null) {
+            configuration.getTransactionListenerFactories().add(supplier);
         }
     }
 

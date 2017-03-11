@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package io.requery.sql.gen;
 import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Aliasable;
-import io.requery.query.AliasedExpression;
+import io.requery.query.RowExpression;
 import io.requery.query.Condition;
 import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
@@ -36,6 +36,7 @@ import io.requery.query.function.Function;
 import io.requery.sql.BoundParameters;
 import io.requery.sql.QueryBuilder;
 import io.requery.sql.RuntimeConfiguration;
+import io.requery.util.function.Supplier;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,6 +52,7 @@ import static io.requery.sql.Keyword.*;
  */
 public class DefaultOutput implements Output {
 
+    private final RuntimeConfiguration configuration;
     private final QueryElement<?> query;
     private final Aliases inheritedAliases;
     private final boolean parameterize;
@@ -61,17 +63,18 @@ public class DefaultOutput implements Output {
     private boolean autoAlias;
 
     public DefaultOutput(RuntimeConfiguration configuration, QueryElement<?> query) {
-        this(configuration.getStatementGenerator(), query,
-            new QueryBuilder(configuration.getQueryBuilderOptions()), null, true);
+        this(configuration, query,
+                new QueryBuilder(configuration.getQueryBuilderOptions()), null, true);
     }
 
-    public DefaultOutput(StatementGenerator statementGenerator, QueryElement<?> query,
+    public DefaultOutput(RuntimeConfiguration configuration, QueryElement<?> query,
                          QueryBuilder qb, Aliases inherited, boolean parameterize) {
+        this.configuration = configuration;
         this.query = query;
         this.qb = qb;
         this.inheritedAliases = inherited;
         this.parameterize = parameterize;
-        this.statementGenerator = statementGenerator;
+        this.statementGenerator = configuration.getStatementGenerator();
         this.parameters = parameterize? new BoundParameters() : null;
     }
 
@@ -97,29 +100,20 @@ public class DefaultOutput implements Output {
     @Override
     public void appendTables() {
         Set<Expression<?>> from = query.fromExpressions();
-        if (from.size() == 1) {
-            Expression first = from.iterator().next();
-            if (first instanceof QueryWrapper) {
-                appendFromExpression(first);
-            } else {
-                if (autoAlias) {
-                    aliases.append(qb, first.getName());
+        qb.commaSeparated(from, new QueryBuilder.Appender<Expression<?>>() {
+            @Override
+            public void append(QueryBuilder qb, Expression<?> value) {
+                if (value instanceof QueryWrapper) {
+                    appendFromExpression(value);
                 } else {
-                    qb.tableName(first.getName());
+                    if (autoAlias) {
+                        aliases.append(qb, value.getName());
+                    } else {
+                        qb.tableName(value.getName());
+                    }
                 }
             }
-        } else if (from.size() > 1) {
-            qb.openParenthesis();
-            int index = 0;
-            for (Expression expression : from) {
-                if (index > 0) {
-                    qb.comma();
-                }
-                appendFromExpression(expression);
-                index++;
-            }
-            qb.closeParenthesis();
-        }
+        });
         appendJoins();
     }
 
@@ -149,9 +143,8 @@ public class DefaultOutput implements Output {
     }
 
     private static Expression<?> unwrapExpression(Expression<?> expression) {
-        if (expression.getExpressionType() == ExpressionType.ALIAS) {
-            AliasedExpression aliased = (AliasedExpression) expression;
-            return aliased.innerExpression();
+        if (expression.getInnerExpression() != null) {
+            return expression.getInnerExpression();
         }
         return expression;
     }
@@ -170,8 +163,9 @@ public class DefaultOutput implements Output {
         String alias = findAlias(expression);
         if (expression instanceof Function) {
             appendFunction((Function) expression);
-        } else if (autoAlias && expression instanceof Attribute && alias == null) {
-            aliases.prefix(qb, (Attribute) expression);
+        } else if (autoAlias && alias == null &&
+                expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
+            aliases.prefix(qb, expression);
         } else {
             if(alias == null || alias.length() == 0) {
                 appendColumnExpression(expression);
@@ -208,7 +202,19 @@ public class DefaultOutput implements Output {
                 qb.attribute(attribute);
                 break;
             default:
-                qb.append(expression.getName()).space();
+                if (expression instanceof RowExpression) {
+                    RowExpression collection = (RowExpression) expression;
+                    qb.openParenthesis();
+                    qb.commaSeparated(collection.getExpressions(), new QueryBuilder.Appender<Expression<?>>() {
+                        @Override
+                        public void append(QueryBuilder qb, Expression<?> value) {
+                            appendColumnForSelect(value);
+                        }
+                    });
+                    qb.closeParenthesis().space();
+                } else {
+                    qb.append(expression.getName()).space();
+                }
                 break;
         }
     }
@@ -217,8 +223,11 @@ public class DefaultOutput implements Output {
         if (function instanceof Case) {
             appendCaseFunction((Case) function);
         } else {
-            String name = function.getName();
-            qb.append(name);
+            Function.Name name = configuration.getMapping().mapFunctionName(function);
+            qb.append(name.getName());
+            if (function.arguments().length == 0 && name.isConstant()) {
+                return;
+            }
             qb.openParenthesis();
             int index = 0;
             for (Object arg : function.arguments()) {
@@ -254,7 +263,7 @@ public class DefaultOutput implements Output {
         qb.keyword(CASE);
         for (Case.CaseCondition<?,?> condition : function.conditions()) {
             qb.keyword(WHEN);
-            appendOperation(condition.condition());
+            appendOperation(condition.condition(), 0);
             qb.keyword(THEN);
             // TODO just some databases need the value inline in a case statement
             if (condition.thenValue() instanceof CharSequence ||
@@ -285,7 +294,7 @@ public class DefaultOutput implements Output {
         }
         if (join.tableName() != null) {
             if (autoAlias) {
-                aliases.append(qb, join.tableName());
+                aliases.appendJoin(qb, join.tableName());
             } else {
                 qb.tableName(join.tableName());
             }
@@ -303,7 +312,7 @@ public class DefaultOutput implements Output {
         }
     }
 
-    private void appendOperation(Condition condition) {
+    private void appendOperation(Condition condition, int depth) {
         Object leftOperand = condition.getLeftOperand();
         if (leftOperand instanceof Expression) {
             final Expression<?> expression = (Expression<?>) condition.getLeftOperand();
@@ -311,7 +320,9 @@ public class DefaultOutput implements Output {
             Object value = condition.getRightOperand();
             appendOperator(condition.getOperator());
 
-            if (value instanceof Collection) {
+            if (value instanceof Collection &&
+                    (condition.getOperator() == Operator.IN ||
+                     condition.getOperator() == Operator.NOT_IN)) {
                 Collection collection = (Collection) value;
                 qb.openParenthesis();
                 qb.commaSeparated(collection, new QueryBuilder.Appender() {
@@ -340,18 +351,24 @@ public class DefaultOutput implements Output {
                 appendQuery(wrapper);
                 qb.closeParenthesis().space();
             } else if (value instanceof Condition) {
-                appendOperation((Condition) value);
+                appendOperation((Condition) value, depth + 1);
             } else if (value != null) {
                 appendConditionValue(expression, value);
             }
         } else if(leftOperand instanceof Condition) {
-            appendOperation((Condition) leftOperand);
+            if (depth > 0) {
+                qb.openParenthesis();
+            }
+            appendOperation((Condition) leftOperand, depth + 1);
             appendOperator(condition.getOperator());
             Object value = condition.getRightOperand();
             if (value instanceof Condition) {
-                appendOperation((Condition) value);
+                appendOperation((Condition) value, depth + 1);
             } else {
                 throw new IllegalStateException();
+            }
+            if (depth > 0) {
+                qb.closeParenthesis().space();
             }
         } else {
             throw new IllegalStateException("unknown start expression type " + leftOperand);
@@ -365,11 +382,19 @@ public class DefaultOutput implements Output {
 
     private void appendConditionValue(Expression expression, Object value, boolean parameterize) {
         if (value instanceof QueryAttribute) {
-            QueryAttribute a = (QueryAttribute) value;
-            appendColumn(a);
+            appendColumn((Expression<?>) value);
+        } else if (value instanceof Supplier && ((Supplier)value).get() instanceof QueryAttribute) {
+            appendColumn((Expression<?>) ((Supplier)value).get());
         } else if (value instanceof NamedExpression) {
             NamedExpression namedExpression = (NamedExpression) value;
             qb.append(namedExpression.getName());
+        } else if (value instanceof Function) {
+            appendFunction((Function) value);
+        } else if (value instanceof Collection &&
+                expression.getExpressionType() == ExpressionType.ROW) {
+            qb.openParenthesis();
+            qb.commaSeparated((Collection) value);
+            qb.closeParenthesis();
         } else {
             if (parameterize) {
                 if (parameters != null) {
@@ -400,14 +425,11 @@ public class DefaultOutput implements Output {
             }
         }
         Condition condition = element.getCondition();
-        boolean nested = false;
-        if (condition.getRightOperand() instanceof Condition) {
-            nested = true;
-        }
+        boolean nested = condition.getRightOperand() instanceof Condition;
         if (nested) {
             qb.openParenthesis();
         }
-        appendOperation(condition);
+        appendOperation(condition, 0);
         if (nested) {
             qb.closeParenthesis().space();
         }
@@ -467,8 +489,7 @@ public class DefaultOutput implements Output {
     @Override
     public void appendQuery(QueryWrapper<?> wrapper) {
         QueryElement<?> query = wrapper.unwrapQuery();
-        DefaultOutput generator =
-            new DefaultOutput(statementGenerator, query, qb, aliases, parameterize);
+        DefaultOutput generator = new DefaultOutput(configuration, query, qb, aliases, parameterize);
         generator.toSql();
         if (parameters != null) {
             parameters.addAll(generator.parameters());
@@ -490,6 +511,16 @@ public class DefaultOutput implements Output {
                 index++;
             }
             return alias;
+        }
+
+        void appendJoin(QueryBuilder qb, String table) {
+            String key = table.replaceAll("\"", "");
+            // TODO could be a problem depending on join orders
+            if (aliases.containsKey(key)) {
+                aliases.remove(key);
+            }
+            String alias = alias(key);
+            qb.tableName(table).value(alias);
         }
 
         void append(QueryBuilder qb, String table) {

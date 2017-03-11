@@ -220,7 +220,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                  PreparedStatement statement = connection.prepareStatement(sql)) {
                 int index = 1;
                 for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
-                    Object value = proxy.get(attribute, false);
+                    Object value = proxy.getKey(attribute);
                     if (value == null) {
                         throw new MissingKeyException(proxy);
                     }
@@ -255,7 +255,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     }
 
     private <V> void refreshAssociation(EntityProxy<E> proxy, Attribute<E, V> attribute) {
-        Supplier<Result<S>> query = associativeQuery(proxy, attribute);
+        Supplier<? extends Result<S>> query = associativeQuery(proxy, attribute);
         switch (attribute.getCardinality()) {
             case ONE_TO_ONE:
             case MANY_TO_ONE:
@@ -277,8 +277,8 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         }
     }
 
-    private <Q extends S> Supplier<Result<Q>> associativeQuery(EntityProxy<E> proxy,
-                                                               Attribute<E, ?> attribute) {
+    private <Q extends S> Supplier<? extends Result<Q>>
+    associativeQuery(EntityProxy<E> proxy, Attribute<E, ?> attribute) {
         switch (attribute.getCardinality()) {
             case ONE_TO_ONE:
             case ONE_TO_MANY:
@@ -314,10 +314,13 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 QueryAttribute<Q, Object> uKey = null;
                 Type<?> junctionType = context.getModel().typeOf(attribute.getReferencedClass());
                 for (Attribute a : junctionType.getAttributes()) {
-                    if (type.getClassType().isAssignableFrom(a.getReferencedClass())) {
-                        tKey = Attributes.query(a);
-                    } else if (uType.isAssignableFrom(a.getReferencedClass())) {
-                        uKey = Attributes.query(a);
+                    Class referenceType = a.getReferencedClass();
+                    if (referenceType != null) {
+                        if (tKey == null && type.getClassType().isAssignableFrom(referenceType)) {
+                            tKey = Attributes.query(a);
+                        } else if (uType.isAssignableFrom(referenceType)) {
+                            uKey = Attributes.query(a);
+                        }
                     }
                 }
                 Objects.requireNotNull(tKey);
@@ -339,8 +342,8 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         }
     }
 
-    private <Q extends S> Supplier<Result<Q>> order(WhereAndOr<Result<Q>> query,
-                                                    Supplier<Attribute> supplier) {
+    private <Q extends S> Supplier<? extends Result<Q>>
+    order(WhereAndOr<? extends Result<Q>> query, Supplier<Attribute> supplier) {
         if (supplier != null) {
             Attribute attribute = supplier.get();
             if (attribute.getOrderByDirection() != null && attribute instanceof Functional) {
@@ -416,7 +419,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 ResultReader<E> resultReader = newResultReader(selectAttributes);
 
                 SelectOperation<E> select = new SelectOperation<>(context, resultReader);
-                QueryElement<Result<E>> query =
+                QueryElement<? extends Result<E>> query =
                     new QueryElement<>(QueryType.SELECT, context.getModel(), select);
 
                 try (Result<E> result = query.select(selection).where(condition).get()) {
@@ -432,7 +435,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                                 Object value = tuple.get(expression);
                                 if (expression instanceof AliasedExpression) {
                                     AliasedExpression aliased = (AliasedExpression) expression;
-                                    expression = aliased.innerExpression();
+                                    expression = aliased.getInnerExpression();
                                 }
                                 Attribute<E, Object> attribute =
                                     Attributes.query((Attribute) expression);

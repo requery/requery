@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import static io.requery.sql.Keyword.TRUNCATE;
 public final class StatementGenerator implements Generator<QueryElement<?>> {
 
     private Generator<SelectionElement> select;
-    private Generator<Map<Expression<?>, Object>> insert;
+    private Generator<QueryElement<?>> insert;
     private Generator<Map<Expression<?>, Object>> update;
     private Generator<Map<Expression<?>, Object>> upsert;
     private Generator<WhereElement> where;
@@ -45,7 +45,7 @@ public final class StatementGenerator implements Generator<QueryElement<?>> {
     private Generator<LimitedElement> limit;
     private Generator<SetOperationElement> setOperation;
 
-    private StatementGenerator(Platform platform) {
+    public StatementGenerator(Platform platform) {
         // TODO eventually all parts will be overridable
         select = new SelectGenerator();
         insert = new InsertGenerator();
@@ -58,10 +58,6 @@ public final class StatementGenerator implements Generator<QueryElement<?>> {
         setOperation = new SetOperatorGenerator();
     }
 
-    public static StatementGenerator create(Platform platform) {
-        return new StatementGenerator(platform);
-    }
-
     @Override
     public void write(Output output, QueryElement<?> query) {
         QueryBuilder qb = output.builder();
@@ -70,7 +66,7 @@ public final class StatementGenerator implements Generator<QueryElement<?>> {
                 select.write(output, query);
                 break;
             case INSERT:
-                insert.write(output, checkEmpty(query.updateValues()));
+                insert.write(output, query);
                 break;
             case UPDATE:
                 update.write(output, checkEmpty(query.updateValues()));

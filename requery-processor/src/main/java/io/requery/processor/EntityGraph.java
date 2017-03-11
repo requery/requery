@@ -104,24 +104,24 @@ class EntityGraph {
                 .filter(TypeKind::isPrimitive)
                 .filter(kind -> kind.toString().toLowerCase().equals(attribute.referencedType()))
                 .findFirst();
-            if (primitiveType.isPresent()) {
-                // attribute is basic foreign key and not referring to an entity
-                return Optional.empty();
-            } else {
+            if (!primitiveType.isPresent()) {
                 QualifiedName referencedType = new QualifiedName(attribute.referencedType());
                 return entityByName(referencedType);
-            }
+            } // else attribute is basic foreign key and not referring to an entity
         } else {
             TypeMirror referencedType = attribute.typeMirror();
             if (attribute.isIterable()) {
                 referencedType = collectionElementType(referencedType);
             }
             TypeElement referencedElement = (TypeElement) types.asElement(referencedType);
-            String referencedName = referencedElement.getSimpleName().toString();
-            return entities.values().stream()
-                .filter(entity -> match(entity, referencedName))
-                .findFirst();
+            if (referencedElement != null) {
+                String referencedName = referencedElement.getSimpleName().toString();
+                return entities.values().stream()
+                        .filter(entity -> match(entity, referencedName))
+                        .findFirst();
+            }
         }
+        return Optional.empty();
     }
 
     private static boolean match(EntityDescriptor entity, String referenceName) {

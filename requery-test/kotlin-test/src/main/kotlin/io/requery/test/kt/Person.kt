@@ -6,7 +6,7 @@ import java.util.Date
 import java.util.UUID
 
 @Entity(model = "kt")
-interface Person : Persistable {
+interface Person {
 
     @get:Key
     @get:Generated
@@ -21,7 +21,7 @@ interface Person : Persistable {
     var address: Address
 
     @get:ManyToMany(mappedBy = "members")
-    val groups: Set<Group>
+    var groups: Set<Group>
 
     var about: String
 

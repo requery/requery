@@ -65,6 +65,12 @@ public @interface Entity {
     boolean cacheable() default true;
 
     /**
+     * @return true if the entity should be trivially copyable. In which case the annotation
+     * processor will generate a copy() method returning a shallow copy of the given object.
+     */
+    boolean copyable() default false;
+
+    /**
      * @return false if they class being annotated as entity is not extendable and the annotation
      * processor should not generate a type extending or implementing it but instead generate only
      * the attribute meta information. Defaults to true unless this annotation is placed on a class

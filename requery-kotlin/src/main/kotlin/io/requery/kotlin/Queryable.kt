@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package io.requery.kotlin
 
-import io.requery.Persistable
 import io.requery.meta.Attribute
 import io.requery.query.*
 import java.util.*
@@ -30,28 +29,31 @@ import kotlin.reflect.KProperty1
  */
 interface Queryable<T : Any> {
 
-    infix fun <E : T> select(type: KClass<E>): Selection<Result<E>>
-    fun <E : T> select(vararg attributes: QueryableAttribute<E, *>): Selection<Result<E>>
-    infix fun <E : T> insert(type: KClass<E>): Insertion<Result<Tuple>>
-    infix fun <E : T> update(type: KClass<E>): Update<Scalar<Int>>
-    infix fun <E : T> delete(type: KClass<E>): Deletion<Scalar<Int>>
-    infix fun <E : T> count(type: KClass<E>): Selection<Scalar<Int>>
-    fun count(vararg attributes: QueryableAttribute<T, *>): Selection<Scalar<Int>>
-    fun select(vararg expressions: Expression<*>): Selection<Result<Tuple>>
-    fun update(): Update<Scalar<Int>>
-    fun delete(): Deletion<Scalar<Int>>
+    infix fun <E : T> select(type: KClass<E>): Selection<out Result<E>>
+    fun <E : T> select(vararg attributes: QueryableAttribute<E, *>): Selection<out Result<E>>
+    infix fun <E : T> insert(type: KClass<E>): Insertion<out Result<Tuple>>
+    fun <E : T> insert(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): InsertInto<out Result<Tuple>>
+    infix fun <E : T> update(type: KClass<E>): Update<out Scalar<Int>>
+    infix fun <E : T> delete(type: KClass<E>): Deletion<out Scalar<Int>>
+    infix fun <E : T> count(type: KClass<E>): Selection<out Scalar<Int>>
+    fun count(vararg attributes: QueryableAttribute<T, *>): Selection<out Scalar<Int>>
+    fun select(vararg expressions: Expression<*>): Selection<out Result<Tuple>>
+    fun update(): Update<out Scalar<Int>>
+    fun delete(): Deletion<out Scalar<Int>>
+    fun raw(query: String, vararg parameters: Any): Result<Tuple>
+    fun <E : T> raw(type: KClass<E>, query: String, vararg parameters: Any): Result<E>
 }
 
 // property selection support
-inline fun <T : Persistable, reified E : T> Queryable<T>
-        .select(vararg properties: KProperty1<E, *>): Selection<Result<E>> {
+inline fun <T : Any, reified E : T> Queryable<T>
+        .select(vararg properties: KProperty1<E, *>): Selection<out Result<E>> {
     val attributes: MutableSet<QueryableAttribute<E, *>> = LinkedHashSet()
     properties.forEach { property -> attributes.add(findAttribute(property)) }
     return select(*attributes.toTypedArray())
 }
 
-inline operator fun <T : Persistable, reified E : T> Queryable<T>
-        .get(vararg properties: KProperty1<E, *>): Selection<Result<E>> {
+inline operator fun <T : Any, reified E : T> Queryable<T>
+        .get(vararg properties: KProperty1<E, *>): Selection<out Result<E>> {
     val attributes: MutableSet<QueryableAttribute<E, *>> = LinkedHashSet()
     properties.forEach { property -> attributes.add(findAttribute(property)) }
     return select(*attributes.toTypedArray())
@@ -61,5 +63,4 @@ interface QueryableAttribute<T, V> : Attribute<T, V>,
         Expression<V>,
         Functional<V>,
         Aliasable<Expression<V>>,
-        Conditional<Logical<out Expression<V>, *>, V> {
-}
+        Conditional<Logical<out Expression<V>, *>, V>

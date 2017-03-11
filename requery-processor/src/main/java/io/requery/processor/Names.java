@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package io.requery.processor;
+
+import javax.lang.model.SourceVersion;
 
 /**
  * Naming utility class.
@@ -103,5 +105,15 @@ final class Names {
             return typeName.replaceFirst("Base", "");
         }
         return typeName;
+    }
+
+    public static String checkReservedName(CharSequence name, CharSequence fallback) {
+        return SourceVersion.isName(name) ? name.toString() : fallback.toString();
+    }
+
+    static boolean matchesSetter(String prefix, String name) {
+        return name.startsWith(prefix) &&
+               name.length() > prefix.length() &&
+               Character.isUpperCase(name.charAt(prefix.length()));
     }
 }

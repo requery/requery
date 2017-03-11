@@ -61,7 +61,7 @@ class UpdateOperation extends PreparedQueryOperation implements QueryOperation<S
                         mapParameters(statement, parameters);
                         listener.beforeExecuteUpdate(statement, sql, parameters);
                         result = statement.executeUpdate();
-                        listener.afterExecuteUpdate(statement);
+                        listener.afterExecuteUpdate(statement, result);
                         readGeneratedKeys(0, statement);
                     }
                     scope.commit();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package io.requery.processor;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -23,9 +24,11 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
 import io.requery.Entity;
 import io.requery.Persistable;
 import io.requery.PropertyNameStyle;
+import io.requery.meta.Attribute;
 import io.requery.proxy.EntityProxy;
 import io.requery.proxy.PreInsertListener;
 import io.requery.proxy.PropertyState;
@@ -36,9 +39,11 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -48,6 +53,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * Generates a java class file from an abstract class marked with the {@link Entity} annotation.
@@ -63,18 +69,18 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
     private final Set<TypeGenerationExtension> typeExtensions;
     private final Set<PropertyGenerationExtension> memberExtensions;
 
-    EntityGenerator(ProcessingEnvironment processingEnvironment,
+    EntityGenerator(ProcessingEnvironment processingEnv,
                     EntityGraph graph,
                     EntityDescriptor entity,
                     EntityDescriptor parent) {
-        super(processingEnvironment, graph, entity);
+        super(processingEnv, graph, entity);
         this.parent = parent;
         typeExtensions = new HashSet<>();
         memberExtensions = new HashSet<>();
         // android extensions
         typeExtensions.add(new AndroidParcelableExtension(types));
         AndroidObservableExtension observable =
-            new AndroidObservableExtension(entity, processingEnvironment);
+            new AndroidObservableExtension(entity, processingEnv);
         typeExtensions.add(observable);
         memberExtensions.add(observable);
     }
@@ -109,6 +115,9 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                 generateHashCode(builder);
                 generateToString(builder);
             }
+            if (entity.isCopyable()) {
+                generateCopy(builder);
+            }
         } else {
             // private constructor
             builder.addMethod(MethodSpec.constructorBuilder()
@@ -132,6 +141,19 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                         .builder(stateType, propertyStateFieldName(attribute), visibility)
                         .build());
             });
+        }
+        if (entity.isEmbedded() && !(entity.isImmutable() || entity.isUnimplementable())) {
+            entity.attributes().values().stream()
+                    .filter(attribute -> !attribute.isTransient())
+                    .forEach(attribute -> {
+                        ParameterizedTypeName attributeType = ParameterizedTypeName.get(
+                                ClassName.get(Attribute.class), nameResolver.typeNameOf(parent),
+                                resolveAttributeType(attribute));
+                        builder.addField(FieldSpec
+                                .builder(attributeType, attributeFieldName(attribute),
+                                        Modifier.PRIVATE, Modifier.FINAL)
+                                .build());
+                    });
         }
         // only generate for interfaces or if the entity is immutable but has no builder
         boolean generateMembers = typeElement.getKind().isInterface() ||
@@ -158,30 +180,52 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                         .build());
                 }
             }
-        } else if (entity.isImmutable()) {
-            TypeName builderName = entity.builderType().map(
-                    element -> TypeName.get(element.asType())).orElse(typeName);
-            builder.addField(initializeBuilder(entity, builderName, "builder"));
+        }
+
+        if (entity.isImmutable()) {
+            generateBuilder(builder, entity, "builder");
 
             entity.attributes().values().stream()
                 .filter(AttributeDescriptor::isEmbedded)
                 .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded ->
-                        embedded.builderType().ifPresent(type -> {
-                    TypeName embedName = TypeName.get(type.asType());
-                    String fieldName = attribute.fieldName() + "Builder";
-                    builder.addField(initializeBuilder(embedded, embedName, fieldName));
-                })));
+                    embedded.builderType().ifPresent(type -> {
+                        String fieldName = attribute.fieldName() + "Builder";
+                        generateBuilder(builder, embedded, fieldName);
+                    })));
         }
     }
 
-    private FieldSpec initializeBuilder(EntityDescriptor entity, TypeName name, String fieldName) {
-        FieldSpec.Builder builder = FieldSpec.builder(name, fieldName, Modifier.PROTECTED);
+    private void generateBuilder(TypeSpec.Builder builder, EntityDescriptor entity, String fieldName) {
+        final String packageName = entity.typeName().packageName();
         if (entity.builderFactoryMethod().isPresent()) {
-            TypeName baseName = TypeName.get(entity.element().asType());
-            builder.initializer("$T.$L()", baseName, entity.builderFactoryMethod()
-                            .map(method -> method.getSimpleName().toString()).orElse(""));
+            String returnType = entity.builderFactoryMethod().get().getReturnType().toString();
+            TypeName fieldType = ClassName.get(packageName, returnType);
+            TypeName factoryType = TypeName.get(entity.element().asType());
+            String methodName = entity.builderFactoryMethod()
+                    .map(method -> method.getSimpleName().toString())
+                    .orElse("");
+            builder.addField(initializeBuilder(fieldName, fieldType, factoryType, methodName));
+        } else if (ImmutableAnnotationKind.IMMUTABLE.isPresent(entity.element())) {
+            // just a best guess as this class may not be generated yet, maybe can check the
+            // annotation style ourselves
+            String simpleName = "Immutable" + entity.element().getSimpleName().toString();
+            TypeName fieldType = ClassName.get(packageName, simpleName + ".Builder");
+            TypeName factoryType = ClassName.get(packageName, simpleName);
+            builder.addField(initializeBuilder(fieldName, fieldType, factoryType, "builder"));
+        } else if (entity.builderType().isPresent()) {
+            // work around missing package prefix of a generated builder type
+            TypeName builderName = guessAnyTypeName(packageName, entity.builderType().get());
+            builder.addField(initializeBuilder(fieldName, builderName, builderName, null));
+        }
+    }
+
+    private FieldSpec initializeBuilder(String fieldName, TypeName fieldType,
+                                        TypeName builderType, String methodName) {
+        FieldSpec.Builder builder = FieldSpec.builder(fieldType, fieldName, Modifier.PROTECTED);
+        if (methodName != null) {
+            builder.initializer("$T.$L()", builderType, methodName);
         } else {
-            builder.initializer("new $T()", name);
+            builder.initializer("new $T()", builderType);
         }
         return builder.build();
     }
@@ -249,7 +293,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             String getterName = attribute.getterName();
             String fieldName = Names.upperCaseUnderscore(Names.removeMemberPrefixes(attributeName));
             if (entity.isEmbedded()) {
-                fieldName = nameResolver.typeNameOf(parent) + "." + fieldName;
+                fieldName = attributeFieldName(attribute);
             }
             // getter
             MethodSpec.Builder getter = MethodSpec.methodBuilder(getterName)
@@ -285,14 +329,49 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                 readOnly = false;
             }
             if (!readOnly) {
+
+                TypeName setTypeName = unboxedTypeName;
+                boolean castType = false;
+
+                // use wildcard generic collection type if necessary
+                if (setTypeName instanceof ParameterizedTypeName) {
+                    ParameterizedTypeName parameterizedName = (ParameterizedTypeName) setTypeName;
+                    List<TypeName> arguments = parameterizedName.typeArguments;
+                    List<TypeName> wildcards = new ArrayList<>();
+                    for (TypeName argument : arguments) {
+                        if (!(argument instanceof WildcardTypeName)) {
+                            Elements elements = processingEnv.getElementUtils();
+                            TypeElement element = elements.getTypeElement(argument.toString());
+                            if (element != null && element.getKind() == ElementKind.INTERFACE) {
+                                wildcards.add(WildcardTypeName.subtypeOf(argument));
+                            } else {
+                                wildcards.add(argument);
+                            }
+                        } else {
+                            wildcards.add(argument);
+                        }
+                    }
+                    TypeName[] array = new TypeName[wildcards.size()];
+                    setTypeName = ParameterizedTypeName.get(parameterizedName.rawType,
+                            wildcards.toArray(array));
+                    castType = true;
+                }
+
                 String paramName = Names.lowerCaseFirst(Names.removeMemberPrefixes(attributeName));
                 MethodSpec.Builder setter = MethodSpec.methodBuilder(setterName)
                         .addModifiers(Modifier.PUBLIC)
-                        .addParameter(unboxedTypeName, paramName);
+                        .addParameter(setTypeName, paramName);
                 if (useField) {
                     setter.addStatement("this.$L = $L", attributeName, paramName);
                 } else {
-                    setter.addStatement("$L.set($L, $L)", PROXY_NAME, fieldName, paramName);
+                    if (castType) {
+                        setter.addAnnotation(AnnotationSpec.builder(SuppressWarnings.class)
+                                .addMember("value", "$S", "unchecked").build());
+                        setter.addStatement("$L.set($L, ($T)$L)",
+                                PROXY_NAME, fieldName, unboxedTypeName, paramName);
+                    } else {
+                        setter.addStatement("$L.set($L, $L)", PROXY_NAME, fieldName, paramName);
+                    }
                 }
                 memberExtensions.forEach(extension -> extension.addToSetter(attribute, setter));
 
@@ -310,6 +389,17 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         if (entity.isEmbedded()) {
             constructor.addParameter(ParameterSpec.builder(proxyName, "proxy").build());
             constructor.addStatement("this.$L = proxy", PROXY_NAME);
+            entity.attributes().values().stream()
+                    .filter(attribute -> !attribute.isTransient())
+                    .forEach(attribute -> {
+                        ParameterizedTypeName attributeType = ParameterizedTypeName.get(
+                                ClassName.get(Attribute.class), nameResolver.typeNameOf(parent),
+                                resolveAttributeType(attribute));
+                        constructor.addParameter(ParameterSpec
+                                .builder(attributeType, attribute.name()).build());
+                        constructor.addStatement("this.$L = $L",
+                                attributeFieldName(attribute), attribute.name());
+                    });
         }
         generateListeners(constructor);
         // initialize the generated embedded entities
@@ -317,8 +407,10 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             .filter(AttributeDescriptor::isEmbedded)
             .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded -> {
                 ClassName embeddedName = nameResolver.embeddedTypeNameOf(embedded, entity);
-                constructor.addStatement("$L = new $T($L)",
-                    attribute.fieldName(), embeddedName, PROXY_NAME);
+                String format = embedded.attributes().values().stream().map(attr ->
+                        Names.upperCaseUnderscore(embeddedAttributeName(attribute, attr)))
+                        .collect(Collectors.joining(", ", "$L = new $T($L, ", ")"));
+                constructor.addStatement(format, attribute.fieldName(), embeddedName, PROXY_NAME);
             }));
         builder.addMethod(constructor.build());
     }
@@ -350,6 +442,16 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     .returns(String.class)
                     .addStatement("return $L.toString()", PROXY_NAME);
             builder.addMethod(equals.build());
+        }
+    }
+
+    private void generateCopy(TypeSpec.Builder builder) {
+        if (!Mirrors.overridesMethod(types, typeElement, "copy")) {
+            MethodSpec.Builder copy = MethodSpec.methodBuilder("copy")
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(typeName)
+                    .addStatement("return $L.copy()", PROXY_NAME);
+            builder.addMethod(copy.build());
         }
     }
 

@@ -1,4 +1,5 @@
 /build
+/libs
 /test-libs
 /src/generated
 /src/test/resources/local

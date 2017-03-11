@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package io.requery.meta;
 
 import io.requery.proxy.EntityProxy;
+import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
 import io.requery.util.Objects;
 import io.requery.util.function.Function;
@@ -29,17 +30,20 @@ abstract class BaseType<T> implements Type<T> {
 
     Class<T> type;
     Class<? super T> baseType;
+    Type<?> superType;
     String name;
     boolean cacheable;
     boolean stateless;
     boolean readOnly;
     boolean immutable;
+    boolean isView;
     Set<Attribute<T, ?>> attributes;
     Set<QueryExpression<?>> expressions;
     Supplier<T> factory;
     Function<T, EntityProxy<T>> proxyProvider;
     Set<Class<?>> referencedTypes;
     String[] tableCreateAttributes;
+    String[] tableUniqueIndexes;
     Supplier<?> builderFactory;
     Function<?, T> buildFunction;
     Set<Attribute<T, ?>> keyAttributes;
@@ -71,6 +75,16 @@ abstract class BaseType<T> implements Type<T> {
     }
 
     @Override
+    public Expression<T> getInnerExpression() {
+        return null;
+    }
+
+    @Override
+    public boolean isBuildable() {
+        return builderFactory != null;
+    }
+
+    @Override
     public boolean isCacheable() {
         return cacheable;
     }
@@ -91,8 +105,8 @@ abstract class BaseType<T> implements Type<T> {
     }
 
     @Override
-    public boolean isBuildable() {
-        return builderFactory != null;
+    public boolean isView() {
+        return isView;
     }
 
     @Override
@@ -137,6 +151,11 @@ abstract class BaseType<T> implements Type<T> {
     @Override
     public String[] getTableCreateAttributes() {
         return tableCreateAttributes;
+    }
+
+    @Override
+    public String[] getTableUniqueIndexes() {
+        return tableUniqueIndexes;
     }
 
     @Override

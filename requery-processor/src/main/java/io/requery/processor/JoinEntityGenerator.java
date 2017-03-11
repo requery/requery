@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,13 +93,15 @@ class JoinEntityGenerator implements SourceGenerator {
         Map<AssociativeReference, EntityDescriptor> map = new LinkedHashMap<>();
         if (references.isEmpty()) {
             // generate with defaults
-            for (EntityDescriptor type : entities) {
-                AssociativeReference reference = new AssociativeReference(
-                    type.tableName() + "Id",
-                    type.element(),
-                    null,
-                    ReferentialAction.CASCADE,
-                    ReferentialAction.CASCADE );
+            for (int i = 0; i < entities.length; i++) {
+                EntityDescriptor type = entities[i];
+                String column = type.tableName() + "Id";
+                if (from == to) { // if self referencing add a number to the column name
+                    column += (i + 1);
+                }
+                AssociativeReference reference = new AssociativeReference(column,
+                        type.element(), null,
+                        ReferentialAction.CASCADE,  ReferentialAction.CASCADE );
                 references.add(reference);
                 map.put(reference, type);
             }

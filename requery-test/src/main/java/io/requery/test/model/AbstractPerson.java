@@ -1,12 +1,12 @@
 package io.requery.test.model;
 
-
 import io.requery.CascadeAction;
 import io.requery.Column;
 import io.requery.Entity;
 import io.requery.ForeignKey;
 import io.requery.Generated;
 import io.requery.Index;
+import io.requery.JunctionTable;
 import io.requery.Key;
 import io.requery.Lazy;
 import io.requery.ManyToMany;
@@ -42,6 +42,7 @@ public class AbstractPerson implements Serializable {
     @Index(value = {"name_email_index", "email_index"})
     protected String email;
     protected Date birthday;
+    protected String description;
     @Nullable
     protected int age;
 
@@ -64,6 +65,10 @@ public class AbstractPerson implements Serializable {
 
     @ManyToMany(mappedBy = "owners")
     protected MutableResult<Group> ownedGroups;
+
+    @ManyToMany(mappedBy = "id")
+    @JunctionTable
+    protected Set<Person> friends;
 
     @Lazy
     protected String about;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,16 @@ import io.requery.ReferentialAction;
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
 import io.requery.query.Expression;
+import io.requery.query.function.Function;
+import io.requery.query.function.Now;
 import io.requery.sql.AutoIncrementColumnDefinition;
 import io.requery.sql.BasicType;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.Keyword;
 import io.requery.sql.Mapping;
 import io.requery.sql.QueryBuilder;
-import io.requery.sql.gen.LimitGenerator;
 import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.LimitGenerator;
 import io.requery.sql.gen.Output;
 import io.requery.sql.type.PrimitiveLongType;
 
@@ -48,6 +50,14 @@ public class SQLite extends Generic {
 
     public SQLite() {
         autoIncrementColumn = new AutoIncrementColumnDefinition("autoincrement");
+    }
+
+    @Override
+    public void addMappings(Mapping mapping) {
+        super.addMappings(mapping);
+        mapping.putType(long.class, new LongType(long.class));
+        mapping.putType(Long.class, new LongType(Long.class));
+        mapping.aliasFunction(new Function.Name("date('now')", true), Now.class);
     }
 
     @Override
@@ -78,13 +88,6 @@ public class SQLite extends Generic {
     @Override
     public boolean supportsUpsert() {
         return false;
-    }
-
-    @Override
-    public void addMappings(Mapping mapping) {
-        super.addMappings(mapping);
-        mapping.putType(long.class, new LongType(long.class));
-        mapping.putType(Long.class, new LongType(Long.class));
     }
 
     // in SQLite BIGINT can be treated as just an integer, this handles the case when an long is

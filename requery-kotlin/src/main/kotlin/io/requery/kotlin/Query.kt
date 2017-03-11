@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import kotlin.reflect.KProperty1
 
 operator fun <R> Return<R>.invoke() = get()
 
-interface Conditional<Q, V> {
+interface Conditional<out Q, V> {
 
     infix fun eq(value: V): Q
     infix fun ne(value: V): Q
@@ -53,12 +53,12 @@ interface Conditional<Q, V> {
 
 interface Logical<L, R> : Condition<L, R>, AndOr<Logical<*, *>>
 
-interface Aliasable<T> {
+interface Aliasable<out T> {
     infix fun `as`(alias: String): T
     val alias: String
 }
 
-interface AndOr<Q> {
+interface AndOr<out Q> {
     infix fun <V> and(condition: Condition<V, *>): Q
     infix fun <V> or(condition: Condition<V, *>): Q
 }
@@ -66,7 +66,7 @@ interface AndOr<Q> {
 interface Deletion<E> :
         From<E>, Join<E>, Where<E>, GroupBy<SetHavingOrderByLimit<E>>, OrderBy<Limit<E>>, Return<E>
 
-interface Distinct<Q> {
+interface Distinct<out Q> {
     fun distinct(): Q
 }
 
@@ -74,7 +74,7 @@ interface DistinctSelection<E> :
         From<E>, Join<E>, Where<E>, SetOperation<Selectable<E>>, GroupBy<SetHavingOrderByLimit<E>>,
         OrderBy<Limit<E>>, Return<E>
 
-interface Exists<Q> {
+interface Exists<out Q> {
     infix fun exists(query: Return<*>): Q
     infix fun notExists(query: Return<*>): Q
 }
@@ -85,7 +85,7 @@ interface From<E> : Return<E> {
     fun from(vararg queries: Supplier<*>): JoinWhereGroupByOrderBy<E>
 }
 
-interface GroupBy<Q> {
+interface GroupBy<out Q> {
     fun groupBy(vararg expressions: Expression<*>): Q
     infix fun <V> groupBy(expression: Expression<V>): Q
 }
@@ -100,10 +100,14 @@ interface Insertion<E> : Return<E> {
     fun <V> value(expression: Expression<V>, value: V): Insertion<E>
 }
 
+interface InsertInto<Q> : Return<Q> {
+    operator infix fun invoke(query: Return<*>): Return<Q>
+}
+
 interface Join<E> {
-    infix fun join(type: KClass<Any>): JoinOn<E>
-    infix fun leftJoin(type: KClass<Any>): JoinOn<E>
-    infix fun rightJoin(type: KClass<Any>): JoinOn<E>
+    infix fun join(type: KClass<out Any>): JoinOn<E>
+    infix fun leftJoin(type: KClass<out Any>): JoinOn<E>
+    infix fun rightJoin(type: KClass<out Any>): JoinOn<E>
     infix fun <J> join(query: Return<J>): JoinOn<E>
     infix fun <J> leftJoin(query: Return<J>): JoinOn<E>
     infix fun <J> rightJoin(query: Return<J>): JoinOn<E>
@@ -126,7 +130,7 @@ interface Offset<E> : Return<E> {
     infix fun offset(offset: Int): Return<E>
 }
 
-interface OrderBy<Q> {
+interface OrderBy<out Q> {
     infix fun <V> orderBy(expression: Expression<V>): Q
     fun orderBy(vararg expressions: Expression<*>): Q
 }
@@ -173,7 +177,7 @@ interface Update<E> :
 
 inline fun <reified T : Persistable, reified E : T, V> Update<E>
         .set(property: KProperty1<T, V>, value: V): Update<E> {
-    return set(findAttribute(property), value);
+    return set(findAttribute(property), value)
 }
 
 interface Where<E> : SetGroupByOrderByLimit<E>, Return<E> {

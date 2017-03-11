@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import io.requery.Factory;
 import io.requery.PropertyNameStyle;
 import io.requery.ReadOnly;
 import io.requery.Table;
+import io.requery.Transient;
+import io.requery.View;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -40,6 +42,7 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.persistence.Cacheable;
 import javax.persistence.Embeddable;
+import javax.persistence.Index;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -47,8 +50,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -56,31 +61,23 @@ import java.util.stream.Stream;
  *
  * @author Nikhil Purushe
  */
-class EntityType extends BaseProcessableElement<TypeElement> implements EntityDescriptor {
+class EntityType extends BaseProcessableElement<TypeElement> implements EntityElement {
 
     private final ProcessingEnvironment processingEnvironment;
     private final Map<Element, AttributeDescriptor> attributes;
     private final Map<Element, ListenerMethod> listeners;
-    private final SourceLanguage sourceLanguage;
-    private final String modelName;
-    private final QualifiedName qualifiedName;
 
     EntityType(ProcessingEnvironment processingEnvironment, TypeElement typeElement) {
         super(typeElement);
         this.processingEnvironment = processingEnvironment;
         attributes = new LinkedHashMap<>();
         listeners = new LinkedHashMap<>();
-        sourceLanguage = SourceLanguage.of(typeElement);
-        modelName = createModelName();
-        qualifiedName = createQualifiedName();
     }
 
     @Override
     public Set<ElementValidator> process(ProcessingEnvironment processingEnvironment) {
         // create attributes for fields that have no annotations
-        if (element().getKind().isInterface() || isImmutable() ||
-            sourceLanguage == SourceLanguage.KOTLIN) {
-
+        if (element().getKind().isInterface() || isImmutable() || isUnimplementable()) {
             ElementFilter.methodsIn(element().getEnclosedElements()).stream()
                 .filter(this::isMethodProcessable)
                 .forEach(this::computeAttribute);
@@ -123,7 +120,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             validator.error("Entity annotation cannot be applied to an enum class");
         }
         if (attributes.values().isEmpty()) {
-            validator.error("Entity contains no attributes");
+            validator.warning("Entity contains no attributes");
         }
         if (!isReadOnly() && !isEmbedded() && attributes.values().size() == 1 &&
             attributes.values().iterator().next().isGenerated()) {
@@ -137,29 +134,36 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     private boolean isMethodProcessable(ExecutableElement element) {
         // if an immutable type with an implementation provided skip it
-        if (sourceLanguage == SourceLanguage.JAVA &&
-            element().getKind().isClass() && isImmutable() &&
+        if (!isUnimplementable() && element().getKind().isClass() && isImmutable() &&
             !element.getModifiers().contains(Modifier.ABSTRACT)) {
-            return false;
+            if (!ImmutableAnnotationKind.of(element()).isPresent() ||
+                !ImmutableAnnotationKind.of(element()).get().hasAnyMemberAnnotation(element)) {
+                return false;
+            }
         }
         String name = element.getSimpleName().toString();
         // skip kotlin data class methods with component1, component2.. names
-        if (sourceLanguage == SourceLanguage.KOTLIN && isUnimplementable() &&
+        if (isUnimplementable() &&
             name.startsWith("component") && name.length() > "component".length()) {
             return false;
         }
+
         TypeMirror type = element.getReturnType();
+        boolean isInterface = element().getKind().isInterface();
         // must be a getter style method with no args, can't return void or itself or its builder
         return type.getKind() != TypeKind.VOID &&
                element.getParameters().isEmpty() &&
-               (isImmutable() || !element.getModifiers().contains(Modifier.FINAL)) &&
+               (isImmutable() || isInterface || !element.getModifiers().contains(Modifier.FINAL)) &&
                (!isImmutable() || !type.equals(element().asType())) &&
-               !type.equals(builderType().map(Element::asType).orElse(null)) &&
+               !type.equals(builderType().orElse(null)) &&
                !element.getModifiers().contains(Modifier.STATIC) &&
+               !element.getModifiers().contains(Modifier.DEFAULT) &&
+               !Mirrors.findAnnotationMirror(element(), Transient.class).isPresent() &&
                !name.equals("toString") && !name.equals("hashCode");
     }
 
-    void addAnnotationElement(TypeElement annotationElement, Element annotatedElement) {
+    @Override
+    public void addAnnotationElement(TypeElement annotationElement, Element annotatedElement) {
         String qualifiedName = annotationElement.getQualifiedName().toString();
         Class<? extends Annotation> type;
         try {
@@ -210,21 +214,21 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
             attributes.computeIfAbsent(element, key -> new AttributeMember(element, this)));
     }
 
-    void merge(EntityType from) {
-        for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
-            from.attributes().entrySet()) {
+    @Override
+    public void merge(EntityDescriptor from) {
+        from.attributes().entrySet().forEach(entry -> {
             // add this attribute if an attribute with the same name is not already existing
-            AttributeDescriptor newAttribute = entry.getValue();
-            if (!attributes.values().stream().anyMatch(
-                attribute -> attribute.name().equals(newAttribute.name()))) {
-                attributes.put(entry.getKey(), newAttribute);
+            if (attributes.values().stream().noneMatch(
+                    attribute -> attribute.name().equals(entry.getValue().name()))) {
+                Element element = entry.getValue().element();
+                attributes.put(entry.getKey(), new AttributeMember(element, this));
             }
-        }
+        });
         from.listeners().entrySet().stream()
             .filter(entry -> entry.getValue() instanceof ListenerMethod)
             .forEach(entry -> {
                 ListenerMethod method = (ListenerMethod) entry.getValue();
-                if (!listeners.values().stream().anyMatch(
+                if (listeners.values().stream().noneMatch(
                     listener -> listener.element().getSimpleName()
                         .equals(method.element().getSimpleName()))) {
                     listeners.put(entry.getKey(), method);
@@ -232,7 +236,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         });
     }
 
-    boolean generatesAdditionalTypes() {
+    @Override
+    public boolean generatesAdditionalTypes() {
         return attributes.values().stream()
             .anyMatch(member -> member.associativeEntity().isPresent());
     }
@@ -244,17 +249,28 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         }
     }
 
-    private String createModelName() {
+    @Override
+    public Map<Element, ? extends AttributeDescriptor> attributes() {
+        return attributes;
+    }
+
+    @Override
+    public Map<Element, ? extends ListenerDescriptor> listeners() {
+        return listeners;
+    }
+
+    @Override
+    public String modelName() {
         // it's important that the AnnotationMirror is used here since the model name needs to be
         // known before process() is called
         if (Mirrors.findAnnotationMirror(element(), Entity.class).isPresent()) {
             return Mirrors.findAnnotationMirror(element(), Entity.class)
-                .flatMap(mirror -> Mirrors.findAnnotationValue(mirror, "model"))
-                .map(value -> value.getValue().toString())
-                .filter(name -> !Names.isEmpty(name))
-                .orElse("default");
+                    .flatMap(mirror -> Mirrors.findAnnotationValue(mirror, "model"))
+                    .map(value -> value.getValue().toString())
+                    .filter(name -> !Names.isEmpty(name))
+                    .orElse("default");
         } else if (Mirrors.findAnnotationMirror(element(),
-            javax.persistence.Entity.class).isPresent()) {
+                javax.persistence.Entity.class).isPresent()) {
             Elements elements = processingEnvironment.getElementUtils();
             Name packageName = elements.getPackageOf(element()).getQualifiedName();
             String[] parts = packageName.toString().split("\\.");
@@ -263,8 +279,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
         return "";
     }
 
-    private QualifiedName createQualifiedName() {
-
+    @Override
+    public QualifiedName typeName() {
         String entityName = Stream.of(
             Mirrors.findAnnotationMirror(element(), Entity.class),
             Mirrors.findAnnotationMirror(element(), javax.persistence.Entity.class))
@@ -301,26 +317,6 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
-    public Map<Element, ? extends AttributeDescriptor> attributes() {
-        return attributes;
-    }
-
-    @Override
-    public Map<Element, ? extends ListenerDescriptor> listeners() {
-        return listeners;
-    }
-
-    @Override
-    public String modelName() {
-        return modelName;
-    }
-
-    @Override
-    public QualifiedName typeName() {
-        return qualifiedName;
-    }
-
-    @Override
     public PropertyNameStyle propertyNameStyle() {
         return annotationOf(Entity.class)
             .map(Entity::propertyNameStyle)
@@ -329,12 +325,13 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
 
     @Override
     public String tableName() {
-        return annotationOf(Table.class).map(Table::name).orElse(
-               annotationOf(javax.persistence.Table.class)
-                   .map(javax.persistence.Table::name).orElse(
-            element().getKind().isInterface() || isImmutable() ?
-                element().getSimpleName().toString() :
-                Names.removeClassPrefixes(element().getSimpleName())));
+        return annotationOf(Table.class).map(Table::name)
+                .orElse( annotationOf(javax.persistence.Table.class)
+                         .map(javax.persistence.Table::name)
+                .orElse( annotationOf(View.class).map(View::name)
+                .orElse( element().getKind().isInterface() || isImmutable() ?
+                    element().getSimpleName().toString() :
+                    Names.removeClassPrefixes(element().getSimpleName()))));
     }
 
     @Override
@@ -343,9 +340,34 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
+    public String[] tableUniqueIndexes() {
+        if (annotationOf(javax.persistence.Table.class).isPresent()) {
+            Index[] indexes = annotationOf(javax.persistence.Table.class)
+                    .map(javax.persistence.Table::indexes)
+                    .orElse(new Index[0]);
+            Set<String> names = Stream.of(indexes).filter(Index::unique)
+                    .map(Index::name).collect(Collectors.toSet());
+            return names.toArray(new String[names.size()]);
+        }
+        return annotationOf(Table.class).map(Table::uniqueIndexes).orElse(new String[]{});
+    }
+
+    @Override
     public boolean isCacheable() {
         return annotationOf(Entity.class).map(Entity::cacheable)
             .orElse( annotationOf(Cacheable.class).map(Cacheable::value).orElse(true));
+    }
+
+    @Override
+    public boolean isCopyable() {
+        return annotationOf(Entity.class).map(Entity::copyable).orElse(false);
+    }
+
+    @Override
+    public boolean isImmutable() {
+        // check known immutable type annotations then check the annotation value
+        return ImmutableAnnotationKind.of(element()).isPresent() || isUnimplementable() ||
+                annotationOf(Entity.class).map(Entity::immutable).orElse(false);
     }
 
     @Override
@@ -360,15 +382,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
-    public boolean isImmutable() {
-        // check known immutable type annotations then check the annotation value
-        return Stream.of("com.google.auto.value.AutoValue",
-                         "auto.parcel.AutoParcel",
-                         "org.immutables.value.Value.Immutable")
-            .filter(type -> Mirrors.findAnnotationMirror(element(), type).isPresent())
-            .findAny().isPresent() ||
-            (sourceLanguage == SourceLanguage.KOTLIN && isUnimplementable()) ||
-            annotationOf(Entity.class).map(Entity::immutable).orElse(false);
+    public boolean isView() {
+        return annotationOf(View.class).isPresent();
     }
 
     @Override
@@ -385,24 +400,33 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
     }
 
     @Override
-    public Optional<TypeElement> builderType() {
+    public Optional<TypeMirror> builderType() {
         Optional<Entity> entityAnnotation = annotationOf(Entity.class);
         if (entityAnnotation.isPresent()) {
             Entity entity = entityAnnotation.get();
+            Elements elements = processingEnvironment.getElementUtils();
+            TypeMirror mirror = null;
             try {
-                entity.builder(); // easiest way to get the class TypeMirror
-            } catch (MirroredTypeException typeException) {
-                TypeMirror mirror = typeException.getTypeMirror();
-                Elements elements = processingEnvironment.getElementUtils();
-                TypeElement element = elements.getTypeElement(mirror.toString());
-                if (element != null) {
-                    return Optional.of(element);
+                Class<?> builderClass = entity.builder(); // easiest way to get the class TypeMirror
+                if (builderClass != void.class) {
+                    mirror = elements.getTypeElement(builderClass.getName()).asType();
                 }
+            } catch (MirroredTypeException typeException) {
+                mirror = typeException.getTypeMirror();
+            }
+            if (mirror != null && mirror.getKind() != TypeKind.VOID) {
+                return Optional.of(mirror);
             }
         }
+        if (builderFactoryMethod().isPresent()) {
+            return Optional.of(builderFactoryMethod().get().getReturnType());
+        }
         return ElementFilter.typesIn(element().getEnclosedElements()).stream()
-            .filter(element -> element.getSimpleName().toString().equals("Builder"))
-            .findFirst();
+                .filter(element -> element.getSimpleName().toString().contains("Builder"))
+                .map(Element::asType)
+                .filter(Objects::nonNull)
+                .filter(type -> type.getKind() != TypeKind.VOID)
+                .findFirst();
     }
 
     @Override
@@ -451,10 +475,22 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityDe
                 map.remove(matched);
             }
         }
+
+        // didn't work likely because the parameter names are missing
         if (names.isEmpty()) {
-            // didn't work likely because the parameter names are missing
-            for (Map.Entry<Element, AttributeDescriptor> entry : map.entrySet()) {
-                names.add(0, entry.getValue().fieldName());
+            // for kotlin data classes add processable element field names in order
+            if (isUnimplementable()) {
+                ElementFilter.methodsIn(element().getEnclosedElements()).stream()
+                        .filter(this::isMethodProcessable)
+                        .forEach(getter ->
+                                names.addAll(map.entrySet().stream()
+                                        .filter(entry -> entry.getKey().equals(getter))
+                                        .map(entry -> entry.getValue().fieldName())
+                                        .collect(Collectors.toList())));
+            } else {
+                for (Map.Entry<Element, AttributeDescriptor> entry : map.entrySet()) {
+                    names.add(0, entry.getValue().fieldName());
+                }
             }
         }
         return names;

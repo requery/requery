@@ -16,12 +16,30 @@
 
 package io.requery.rx;
 
-import io.requery.TransactionListener;
-import io.requery.query.Result;
-import io.requery.query.element.QueryWrapper;
-import io.requery.util.function.Supplier;
+import io.requery.query.Scalar;
+import io.requery.query.ScalarDelegate;
+import rx.Single;
 
-public interface ObservableResult<E> extends Result<E>, QueryWrapper {
+import javax.annotation.CheckReturnValue;
 
-    void addTransactionListener(Supplier<TransactionListener> transactionListener);
+/**
+ * {@link Scalar} type with RxJava conversion methods.
+ *
+ * @param <E> element type
+ */
+public class RxScalar<E> extends ScalarDelegate<E> {
+
+    RxScalar(Scalar<E> delegate) {
+        super(delegate);
+    }
+
+    /**
+     * Converts this Scalar computation to a single {@link rx.Single}.
+     *
+     * @return {@link rx.Single} for the result of this query.
+     */
+    @CheckReturnValue
+    public rx.Single<E> toSingle() {
+        return Single.fromCallable(this);
+    }
 }

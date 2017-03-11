@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,14 +146,7 @@ class ConnectionTransaction implements EntityTransaction, ConnectionProvider {
         } catch (SQLException e) {
             throw new TransactionException(e);
         } finally {
-            try {
-                connection.setAutoCommit(true);
-                // restore default isolation level
-                if (previousIsolationLevel != -1) {
-                    connection.setTransactionIsolation(previousIsolationLevel);
-                }
-            } catch (SQLException ignored) {
-            }
+            resetConnection();
             close();
         }
     }
@@ -172,10 +165,7 @@ class ConnectionTransaction implements EntityTransaction, ConnectionProvider {
         } catch (SQLException e) {
             throw new TransactionException(e);
         } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException ignored) {
-            }
+            resetConnection();
         }
     }
 
@@ -196,5 +186,18 @@ class ConnectionTransaction implements EntityTransaction, ConnectionProvider {
     @Override
     public void addToTransaction(Collection<Type<?>> types) {
         entities.types().addAll(types);
+    }
+
+    private void resetConnection() {
+        if (supportsTransaction) {
+            try {
+                connection.setAutoCommit(true);
+                // restore default isolation level
+                if (previousIsolationLevel != -1) {
+                    connection.setTransactionIsolation(previousIsolationLevel);
+                }
+            } catch (SQLException ignored) {
+            }
+        }
     }
 }

@@ -16,7 +16,6 @@
 
 package io.requery.android.example.app.model;
 
-
 import android.databinding.Bindable;
 import android.databinding.Observable;
 import android.os.Parcelable;

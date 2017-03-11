@@ -47,6 +47,107 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
         this.primitiveKind = PrimitiveKind.fromClass(classType);
     }
 
+    public <B> AttributeBuilder<T, V> setBuilderProperty(Property<B, V> property) {
+        this.builderProperty = property;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setCardinality(Cardinality cardinality) {
+        this.cardinality = cardinality;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setCascadeAction(CascadeAction ...actions) {
+        this.cascadeActions = EnumSet.copyOf(Arrays.asList(actions));
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setCollate(String collate) {
+        this.collate = collate;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setConverter(Converter<V, ?> converter) {
+        this.converter = converter;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setDefaultValue(String value) {
+        this.defaultValue = value;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setDefinition(String definition) {
+        this.definition = definition;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setDeleteAction(ReferentialAction action) {
+        this.deleteAction = action;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setForeignKey(boolean foreignKey) {
+        this.isForeignKey = foreignKey;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setGenerated(boolean generated) {
+        this.isGenerated = generated;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setIndexed(boolean indexed) {
+        this.isIndex = indexed;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setIndexNames(String... names) {
+        this.indexNames = new LinkedHashSet<>();
+        Collections.addAll(indexNames, names);
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setInitializer(Initializer<T, V> initializer) {
+        this.initializer = initializer;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setKey(boolean key) {
+        this.isKey = key;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setLazy(boolean lazy) {
+        this.isLazy = lazy;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setLength(Integer length) {
+        this.length = length;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setMappedAttribute(Supplier<Attribute> attribute) {
+        this.mappedAttribute = attribute;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setNullable(boolean nullable) {
+        this.isNullable = nullable;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setOrderByAttribute(Supplier<Attribute> attribute) {
+        this.orderByAttribute = attribute;
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setOrderByDirection(Order order) {
+        this.orderByDirection = order;
+        return this;
+    }
+
     public AttributeBuilder<T, V> setProperty(Property<T, V> property) {
         this.property = property;
         return this;
@@ -62,99 +163,8 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
         return this;
     }
 
-    public <B> AttributeBuilder<T, V> setBuilderProperty(Property<B, V> property) {
-        this.builderProperty = property;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setInitializer(Initializer<T, V> initializer) {
-        this.initializer = initializer;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setLazy(boolean lazy) {
-        this.isLazy = lazy;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setLength(Integer length) {
-        this.length = length;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setKey(boolean key) {
-        this.isKey = key;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setUnique(boolean unique) {
-        this.isUnique = unique;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setGenerated(boolean generated) {
-        this.isGenerated = generated;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setNullable(boolean nullable) {
-        this.isNullable = nullable;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setForeignKey(boolean foreignKey) {
-        this.isForeignKey = foreignKey;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setVersion(boolean version) {
-        this.isVersion = version;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setDefaultValue(String value) {
-        this.defaultValue = value;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setIndexed(boolean indexed) {
-        this.isIndex = indexed;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setCollate(String collate) {
-        this.collate = collate;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setIndexNames(String... names) {
-        this.indexNames = new LinkedHashSet<>();
-        Collections.addAll(indexNames, names);
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setCardinality(Cardinality cardinality) {
-        this.cardinality = cardinality;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setDeleteAction(ReferentialAction action) {
-        this.deleteAction = action;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setUpdateAction(ReferentialAction action) {
-        this.updateAction = action;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setCascadeAction(CascadeAction ...actions) {
-        this.cascadeActions = EnumSet.copyOf(Arrays.asList(actions));
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setConverter(Converter<V, ?> converter) {
-        this.converter = converter;
+    public AttributeBuilder<T, V> setReferencedAttribute(Supplier<Attribute> attribute) {
+        this.referencedAttribute = attribute;
         return this;
     }
 
@@ -163,23 +173,18 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
         return this;
     }
 
-    public AttributeBuilder<T, V> setMappedAttribute(Supplier<Attribute> attribute) {
-        this.mappedAttribute = attribute;
+    public AttributeBuilder<T, V> setUnique(boolean unique) {
+        this.isUnique = unique;
         return this;
     }
 
-    public AttributeBuilder<T, V> setReferencedAttribute(Supplier<Attribute> attribute) {
-        this.referencedAttribute = attribute;
+    public AttributeBuilder<T, V> setUpdateAction(ReferentialAction action) {
+        this.updateAction = action;
         return this;
     }
 
-    public AttributeBuilder<T, V> setOrderByAttribute(Supplier<Attribute> attribute) {
-        this.orderByAttribute = attribute;
-        return this;
-    }
-
-    public AttributeBuilder<T, V> setOrderByDirection(Order order) {
-        this.orderByDirection = order;
+    public AttributeBuilder<T, V> setVersion(boolean version) {
+        this.isVersion = version;
         return this;
     }
 

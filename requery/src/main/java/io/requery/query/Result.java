@@ -47,6 +47,15 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
     CloseableIterator<E> iterator();
 
     /**
+     * Creates a {@link AutoCloseable} {@link java.util.Iterator} over a window of the elements
+     * in this result.
+     * @param skip number of elements to skip over
+     * @param take number of elements to receive
+     * @return iterator over the given window.
+     */
+    CloseableIterator<E> iterator(int skip, int take);
+
+    /**
      * Close this result and any resources it holds.
      */
     @Override
@@ -57,26 +66,6 @@ public interface Result<E> extends CloseableIterable<E>, AutoCloseable {
      */
     @CheckReturnValue
     Stream<E> stream();
-
-    /**
-     * Converts the result stream to a {@link rx.Observable}. When the observable terminates this
-     * result instance will be closed.
-     *
-     * @return observable stream of the results of this query.
-     */
-    @CheckReturnValue
-    rx.Observable<E> toObservable();
-
-    /**
-     * Creates an observable that emits this result initially and then again whenever commits that
-     * may affect the query result are made from within the same {@link io.requery.EntityStore}
-     * from where this instance originated.
-     *
-     * @return observable instance of this result that is triggered whenever changes that may
-     * affect the query are made.
-     */
-    @CheckReturnValue
-    rx.Observable<Result<E>> toSelfObservable();
 
     /**
      * Fill the given collection with all elements from this result set.

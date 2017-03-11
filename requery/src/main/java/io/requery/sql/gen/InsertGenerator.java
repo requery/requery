@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,23 +18,34 @@ package io.requery.sql.gen;
 
 import io.requery.meta.Attribute;
 import io.requery.query.Expression;
+import io.requery.query.element.InsertType;
+import io.requery.query.element.QueryElement;
 import io.requery.sql.QueryBuilder;
 
 import java.util.Map;
 
+import static io.requery.sql.Keyword.DEFAULT;
 import static io.requery.sql.Keyword.INSERT;
 import static io.requery.sql.Keyword.INTO;
 import static io.requery.sql.Keyword.VALUES;
 
-class InsertGenerator implements Generator<Map<Expression<?>, Object>> {
+class InsertGenerator implements Generator<QueryElement<?>> {
 
     @Override
-    public void write(final Output output, Map<Expression<?>, Object> values) {
+    public void write(final Output output, QueryElement<?> query) {
+        Map<Expression<?>, Object> values = query.updateValues();
+        InsertType insertType = query.insertType();
         QueryBuilder qb = output.builder();
         qb.keyword(INSERT, INTO);
         output.appendTables();
-        qb.openParenthesis()
-            .commaSeparated(values.entrySet(),
+
+        if (values.isEmpty()) {
+            if (insertType == InsertType.VALUES) {
+                qb.keyword(DEFAULT, VALUES);
+            }
+        } else {
+            qb.openParenthesis()
+                .commaSeparated(values.entrySet(),
                 new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
                     @Override
                     public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
@@ -53,17 +64,23 @@ class InsertGenerator implements Generator<Map<Expression<?>, Object>> {
                         }
                     }
                 })
-            .closeParenthesis()
-            .space()
-            .keyword(VALUES)
-            .openParenthesis()
-            .commaSeparated(values.entrySet(),
-                new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
-                    @Override
-                    public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
-                        output.appendConditionValue(value.getKey(), value.getValue());
-                    }
-                })
-            .closeParenthesis();
+                .closeParenthesis()
+                .space();
+
+            if (insertType == InsertType.VALUES) {
+                qb.keyword(VALUES)
+                    .openParenthesis()
+                    .commaSeparated(values.entrySet(),
+                        new QueryBuilder.Appender<Map.Entry<Expression<?>, Object>>() {
+                            @Override
+                            public void append(QueryBuilder qb, Map.Entry<Expression<?>, Object> value) {
+                                output.appendConditionValue(value.getKey(), value.getValue());
+                            }
+                        })
+                    .closeParenthesis();
+            } else {
+                output.appendQuery(query.subQuery());
+            }
+        }
     }
 }

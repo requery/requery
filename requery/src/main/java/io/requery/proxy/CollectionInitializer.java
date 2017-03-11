@@ -38,8 +38,9 @@ public class CollectionInitializer<E, V> implements Initializer<E, V>,
     }
 
     @Override
-    public <U> V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute,
-                            Supplier<Result<U>> query) {
+    public <U> V initialize(EntityProxy<E> proxy,
+                            Attribute<E, V> attribute,
+                            Supplier<? extends Result<U>> query) {
         Class<?> type = attribute.getClassType();
         CollectionChanges<E, U> changes = new CollectionChanges<>(proxy, attribute);
         Result<U> result = query == null ? null : query.get();

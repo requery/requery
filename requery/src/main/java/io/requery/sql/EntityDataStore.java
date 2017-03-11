@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import io.requery.proxy.CompositeKey;
 import io.requery.proxy.EntityProxy;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
+import io.requery.query.InsertInto;
 import io.requery.query.Insertion;
 import io.requery.query.Result;
 import io.requery.query.Scalar;
@@ -99,7 +100,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     private StatementGenerator statementGenerator;
     private boolean metadataChecked;
     private boolean supportsBatchUpdates;
-    private DataContext context;
+    private final DataContext context;
 
     /**
      * Creates a new {@link EntityDataStore} with the given {@link DataSource} and
@@ -196,9 +197,13 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
                 EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
-                GeneratedKeys<E> key = writer.insert(entity, proxy, keyClass != null);
+                GeneratedKeys<E> key = null;
+                if (keyClass != null) {
+                    key = new GeneratedKeys<>(proxy.type().isImmutable() ? null : proxy);
+                }
+                writer.insert(entity, proxy, key);
                 transaction.commit();
-                if (key != null && key.size() > 0 && keyClass != null) {
+                if (key != null && key.size() > 0) {
                     return keyClass.cast(key.get(0));
                 }
             }
@@ -221,12 +226,10 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                 EntityProxy<E> proxy = context.proxyOf(entity, true);
                 EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
                 GeneratedKeys<E> keys = writer.batchInsert(entities, keyClass != null);
-                if (keys != null) {
-                    @SuppressWarnings("unchecked")
-                    Iterable<K> result = (Iterable<K>) keys;
-                    return result;
-                }
                 transaction.commit();
+                @SuppressWarnings("unchecked")
+                Iterable<K> result = (Iterable<K>) keys;
+                return result;
             }
         }
         return null;
@@ -238,6 +241,20 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             EntityProxy<E> proxy = context.proxyOf(entity, true);
             synchronized (proxy.syncObject()) {
                 context.write(proxy.type().getClassType()).update(entity, proxy);
+                transaction.commit();
+                return entity;
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <E extends T> E update(E entity, Attribute<?, ?>... attributes) {
+        try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
+            EntityProxy<E> proxy = context.proxyOf(entity, true);
+            synchronized (proxy.syncObject()) {
+                context.write(proxy.type().getClassType())
+                        .update(entity, proxy, (Attribute<E, ?>[]) attributes);
                 transaction.commit();
                 return entity;
             }
@@ -332,13 +349,19 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
 
     @Override
     public <E extends T> Void delete(Iterable<E> entities) {
+        if (entities instanceof Result) {
+            // work around for sqlite since the read cursor can't be open during the transaction
+            @SuppressWarnings("unchecked")
+            Result<E> result = (Result<E>) entities;
+            entities = result.toList();
+        }
         Iterator<E> iterator = entities.iterator();
         if (iterator.hasNext()) {
             try (TransactionScope transaction = new TransactionScope(transactionProvider)) {
                 E entity = iterator.next();
-                EntityProxy<E> proxy = context.proxyOf(entity, false);
+                EntityProxy<E> proxy = context.proxyOf(entity, true);
                 EntityWriter<E, T> writer = context.write(proxy.type().getClassType());
-                writer.batchDelete(entities);
+                writer.delete(entities);
                 transaction.commit();
             }
         }
@@ -358,7 +381,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         if (keys.isEmpty()) {
             throw new MissingKeyException();
         }
-        Selection<Result<E>> selection = select(type);
+        Selection<? extends Result<E>> selection = select(type);
         if (keys.size() == 1) {
             QueryAttribute<E, Object> attribute = Attributes.query(keys.iterator().next());
             selection.where(attribute.equal(key));
@@ -394,34 +417,34 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Expression<?>... expressions) {
+    public Selection<? extends Result<Tuple>> select(Expression<?>... expressions) {
         TupleResultReader reader = new TupleResultReader(context);
         SelectOperation<Tuple> select = new SelectOperation<>(context, reader);
         return new QueryElement<>(SELECT, entityModel, select).select(expressions);
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Set<? extends Expression<?>> expressions) {
+    public Selection<? extends Result<Tuple>> select(Set<? extends Expression<?>> expressions) {
         TupleResultReader reader = new TupleResultReader(context);
         SelectOperation<Tuple> select = new SelectOperation<>(context, reader);
         return new QueryElement<>(SELECT, entityModel, select).select(expressions);
     }
 
     @Override
-    public Update<Scalar<Integer>> update() {
+    public Update<? extends Scalar<Integer>> update() {
         checkClosed();
         return new QueryElement<>(UPDATE, entityModel, updateOperation);
     }
 
     @Override
-    public Deletion<Scalar<Integer>> delete() {
+    public Deletion<? extends Scalar<Integer>> delete() {
         checkClosed();
         return new QueryElement<>(DELETE, entityModel, updateOperation);
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(Class<E> type,
-                                                     QueryAttribute<?, ?>... attributes) {
+    public <E extends T> Selection<? extends Result<E>>
+    select(Class<E> type, QueryAttribute<?, ?>... attributes) {
         checkClosed();
         EntityReader<E, T> reader = context.read(type);
         Set<Expression<?>> selection;
@@ -434,43 +457,57 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             resultReader = reader.newResultReader(attributes);
         }
         SelectOperation<E> select = new SelectOperation<>(context, resultReader);
-        QueryElement<Result<E>> query = new QueryElement<>(SELECT, entityModel, select);
+        QueryElement<? extends Result<E>> query = new QueryElement<>(SELECT, entityModel, select);
         return query.select(selection).from(type);
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(
-                        Class<E> type, Set<? extends QueryAttribute<E, ?>> attributes) {
+    public <E extends T> Selection<? extends Result<E>>
+    select(Class<E> type, Set<? extends QueryAttribute<E, ?>> attributes) {
         QueryAttribute<?, ?>[] array = attributes.toArray(new QueryAttribute[attributes.size()]);
         return select(type, array);
     }
 
     @Override
-    public <E extends T> Insertion<Result<Tuple>> insert(Class<E> type) {
+    public <E extends T> Insertion<? extends Result<Tuple>> insert(Class<E> type) {
         checkClosed();
-        Type<E> entityType = context.getModel().typeOf(type);
-        Set<Expression<?>> keySelection = new LinkedHashSet<>();
-        for (Attribute<E, ?> attribute : entityType.getKeyAttributes()) {
-            keySelection.add((Expression<?>) attribute);
-        }
+        Set<Expression<?>> keySelection = keyExpressions(type);
         InsertReturningOperation operation = new InsertReturningOperation(context, keySelection);
         return new QueryElement<>(INSERT, entityModel, operation).from(type);
     }
 
     @Override
-    public <E extends T> Update<Scalar<Integer>> update(Class<E> type) {
+    public <E extends T> InsertInto<? extends Result<Tuple>>
+    insert(Class<E> type, QueryAttribute<?, ?>... attributes) {
+        checkClosed();
+        Set<Expression<?>> keySelection = keyExpressions(type);
+        InsertReturningOperation operation = new InsertReturningOperation(context, keySelection);
+        return new QueryElement<>(INSERT, entityModel, operation).insertColumns(attributes);
+    }
+
+    Set<Expression<?>> keyExpressions(Class<? extends T> type) {
+        Type<?> entityType = context.getModel().typeOf(type);
+        Set<Expression<?>> keySelection = new LinkedHashSet<>();
+        for (Attribute<?, ?> attribute : entityType.getKeyAttributes()) {
+            keySelection.add((Expression<?>) attribute);
+        }
+        return keySelection;
+    }
+
+    @Override
+    public <E extends T> Update<? extends Scalar<Integer>> update(Class<E> type) {
         checkClosed();
         return new QueryElement<>(UPDATE, entityModel, updateOperation).from(type);
     }
 
     @Override
-    public <E extends T> Deletion<Scalar<Integer>> delete(Class<E> type) {
+    public <E extends T> Deletion<? extends Scalar<Integer>> delete(Class<E> type) {
         checkClosed();
         return new QueryElement<>(DELETE, entityModel, updateOperation).from(type);
     }
 
     @Override
-    public <E extends T> Selection<Scalar<Integer>> count(Class<E> type) {
+    public <E extends T> Selection<? extends Scalar<Integer>> count(Class<E> type) {
         checkClosed();
         Objects.requireNotNull(type);
         return new QueryElement<>(SELECT, entityModel, countOperation)
@@ -478,7 +515,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
-    public Selection<Scalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
+    public Selection<? extends Scalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
         checkClosed();
         return new QueryElement<>(SELECT, entityModel, countOperation)
             .select(Count.count(attributes));
@@ -510,6 +547,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             transaction.commit();
             return result;
         } catch (Exception e) {
+            transaction.rollback();
             throw new RollbackException(e);
         }
     }
@@ -673,7 +711,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         @Override
         public StatementGenerator getStatementGenerator() {
             if (statementGenerator == null) {
-                statementGenerator = StatementGenerator.create(getPlatform());
+                statementGenerator = new StatementGenerator(getPlatform());
             }
             return statementGenerator;
         }

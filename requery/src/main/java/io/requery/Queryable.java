@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package io.requery;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
+import io.requery.query.InsertInto;
 import io.requery.query.Insertion;
 import io.requery.query.Result;
 import io.requery.query.Return;
@@ -51,7 +52,8 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    <E extends T> Selection<Result<E>> select(Class<E> type, QueryAttribute<?, ?>... attributes);
+    <E extends T> Selection<? extends Result<E>>
+    select(Class<E> type, QueryAttribute<?, ?>... attributes);
 
     /**
      * Initiates a query against a set of expression values return a specific entity type in a
@@ -63,8 +65,8 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    <E extends T> Selection<Result<E>> select(Class<E> type,
-                                              Set<? extends QueryAttribute<E, ?>> attributes);
+    <E extends T> Selection<? extends Result<E>>
+    select(Class<E> type, Set<? extends QueryAttribute<E, ?>> attributes);
 
     /**
      * Initiates an insert operation for a type. After completing the expression call
@@ -77,7 +79,21 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    <E extends T> Insertion<Result<Tuple>> insert(Class<E> type);
+    <E extends T> Insertion<? extends Result<Tuple>> insert(Class<E> type);
+
+    /**
+     * Initiates an insert operation for a type. After completing the expression call
+     * {@link Return#get()} to perform the operation. If the type has no generated key values the
+     * result is a tuple containing a single element with the number of rows affected by the
+     * operation. Otherwise if the type has generated keys those keys are returned as the result.
+     *
+     * @param type of entity
+     * @param attributes attributes to insert (optional)
+     * @return next query step
+     */
+    @CheckReturnValue
+    <E extends T> InsertInto<? extends Result<Tuple>>
+    insert(Class<E> type, QueryAttribute<?, ?>... attributes);
 
     /**
      * Initiates an update query for a type. After completing the expression call
@@ -90,7 +106,7 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    <E extends T> Update<Scalar<Integer>> update(Class<E> type);
+    <E extends T> Update<? extends Scalar<Integer>> update(Class<E> type);
 
     /**
      * Initiates an delete query for a type. After completing the expression call
@@ -103,7 +119,7 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    <E extends T> Deletion<Scalar<Integer>> delete(Class<E> type);
+    <E extends T> Deletion<? extends Scalar<Integer>> delete(Class<E> type);
 
     /**
      * Initiates a query to count the number of entities of a given type.
@@ -113,7 +129,7 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    <E extends T> Selection<Scalar<Integer>> count(Class<E> type);
+    <E extends T> Selection<? extends Scalar<Integer>> count(Class<E> type);
 
     /**
      * Initiates a query to count a given selection.
@@ -122,7 +138,7 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    Selection<Scalar<Integer>> count(QueryAttribute<?, ?>... attributes);
+    Selection<? extends Scalar<Integer>> count(QueryAttribute<?, ?>... attributes);
 
     /**
      * Initiates a query against a set of expression values.
@@ -131,7 +147,7 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    Selection<Result<Tuple>> select(Expression<?>... expressions);
+    Selection<? extends Result<Tuple>> select(Expression<?>... expressions);
 
     /**
      * Initiates a query against a set of expression values.
@@ -140,7 +156,7 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    Selection<Result<Tuple>> select(Set<? extends Expression<?>> expressions);
+    Selection<? extends Result<Tuple>> select(Set<? extends Expression<?>> expressions);
 
     /**
      * Initiates an update query against this data store. After completing the expression call
@@ -151,7 +167,7 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    Update<Scalar<Integer>> update();
+    Update<? extends Scalar<Integer>> update();
 
     /**
      * Initiates a delete query against this data store. After completing the expression call
@@ -162,7 +178,7 @@ public interface Queryable<T> {
      * @return next query step
      */
     @CheckReturnValue
-    Deletion<Scalar<Integer>> delete();
+    Deletion<? extends Scalar<Integer>> delete();
 
     /**
      * Executes a raw query against the data store.

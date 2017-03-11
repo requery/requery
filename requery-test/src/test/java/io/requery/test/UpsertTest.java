@@ -41,12 +41,14 @@ import javax.sql.CommonDataSource;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
@@ -85,6 +87,25 @@ public class UpsertTest {
         tables.createTables(TableCreationMode.DROP_CREATE);
         System.out.println(tables.createTablesString(TableCreationMode.DROP_CREATE));
         data = new EntityDataStore<>(configuration);
+    }
+
+    @Test
+    public void testInsertOneToManyInsert() {
+        Event event = new Event();
+        UUID id = UUID.randomUUID();
+        event.setId(id);
+        event.setName("test");
+        Tag t1 = new Tag();
+        t1.setId(UUID.randomUUID());
+        Tag t2 = new Tag();
+        t2.setId(UUID.randomUUID());
+        event.getTags().add(t1);
+        event.getTags().add(t2);
+        data.insert(event);
+        HashSet<Tag> set = new HashSet<>(event.getTags());
+        assertEquals(2, set.size());
+        assertTrue(set.containsAll(Arrays.asList(t1, t2)));
+        assertSame(2, data.select(Tag.class).get().toList().size());
     }
 
     @Test

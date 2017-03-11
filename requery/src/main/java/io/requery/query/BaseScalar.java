@@ -16,7 +16,6 @@
 
 package io.requery.query;
 
-import io.requery.rx.RxSupport;
 import io.requery.util.function.Consumer;
 import io.requery.util.function.Supplier;
 
@@ -36,7 +35,7 @@ public abstract class BaseScalar<E> implements Scalar<E> {
     private boolean computed;
     private E value;
 
-    public BaseScalar(Executor executor) {
+    protected BaseScalar(Executor executor) {
         this.executor = executor; // can be null
     }
 
@@ -49,6 +48,11 @@ public abstract class BaseScalar<E> implements Scalar<E> {
             value = evaluate();
         }
         return value;
+    }
+
+    @Override
+    public E call() throws Exception {
+        return value();
     }
 
     @Override
@@ -73,11 +77,6 @@ public abstract class BaseScalar<E> implements Scalar<E> {
         return executor == null ?
             CompletableFuture.supplyAsync(supplier) :
             CompletableFuture.supplyAsync(supplier, executor);
-    }
-
-    @Override
-    public rx.Single<E> toSingle() {
-        return RxSupport.toSingle(this);
     }
 
     @Override

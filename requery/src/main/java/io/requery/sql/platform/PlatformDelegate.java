@@ -73,6 +73,11 @@ public class PlatformDelegate implements Platform {
     }
 
     @Override
+    public boolean supportsOnUpdateCascade() {
+        return platform.supportsOnUpdateCascade();
+    }
+
+    @Override
     public boolean supportsUpsert() {
         return platform.supportsUpsert();
     }

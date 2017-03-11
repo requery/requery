@@ -1,6 +1,101 @@
 Change Log
 ==========
 
+## 1.2.0
+
+- Support Jackson serialization with a new Jackson serialization module (requery-jackson)
+- Support insert into select query
+- Support additional query functions
+- Support improved for Immutable.org types
+- Fix unique constraints not applied during table generation
+- Fix closing connection/statement if an exception is thrown during prepare
+- Fix ClassCastException when using a function in a where expression
+- Fix NPE when a junction table contains a non-associative attribute
+- Fix unsupported on update clause generated when using an Oracle database 
+- Fix Kotlin EntityStore delete should return a nullable type
+
+## 1.1.2
+
+- Support @View annotation for mapping entities to table views
+- Fix runInTransaction rollback behavior
+- Fix add column not added to foreign key during table upgrade
+- Fix function expression in order by column caused incorrect sql generation
+- Fix rx observableResult not triggered for multiple entity delete
+- Fix OptimisticLockException when updating an entity with a @Version column
+- Fix Kotlin select distinct query
+- Fix Android incompatible date types, now stored as ISO 8601
+- Fix update listener not invoked for some upsert calls
+
+## 1.1.1
+
+- Support new KotlinReactiveEntityStore/KotlinRxEntityStore for RxJava 2.0 & RxJava 1.0
+- Support improved compile errors when an invalid relationship is defined
+- Support improved handling of entity associations marked with @Key
+- Support kotlin-kapt plugin for annotation processing
+- Support kotlin raw queries
+- Fix incorrect type in raw queries for integer values on Oracle
+- Fix Java 8 date time conversion for zoned times
+- Fix empty index name during table generation
+- Fix ClassCastException when using a custom converter that converted to a collection in a query
+- Fix NPE when using non relational attributes in a junction table
+- Fix Kotlin withTransaction rollback
+- Fix Kotlin join on condition incorrect sql generated
+
+## 1.1.0
+
+- Support extendable query types. RxJava and RxJava 2.0 result conversion methods are now separated
+into different classes. This is a minor API change that should not effect most code.
+- Support [Reactor Core extensions](http://projectreactor.io)
+- Support custom column definitions for table generation
+- Support for @Entity(copyable) shallow copying via generated copy() method
+- Kotlin findByKey returns nullable value
+- Fix ClassNotFoundException referencing a RxJava 1.0 class when using RxJava 2.0
+- Fix OneToMany cascaded elements incorrectly updated instead of inserted
+- Fix stackoverflow in ManagedTransaction.begin()
+- Fix foreign key support using Android SQLCipher database
+- Fix multiple blob arguments in Android query expression
+- Fix some compilation issues using Android Jack compiler
+
+## 1.0.2
+
+- Support repeated @Embedded fields
+- Support RxJava 2.0 maybe operator
+- Fix null TypeElement when using Android Jack compiler
+- Fix parentheses in nested conditional expressions
+- Fix parameter name ordering for kotlin data classes
+- Fix reserved name field names generated from properties
+- Fix incorrect behavior of Rx runInTransaction
+- Fix stack overflow in Kotlin refreshAll
+- Fix OrderBy attribute name prefix not removed
+
+## 1.0.1
+
+- Support multi-column unique indexes
+- Support delete on entities with no key
+- Fix EntityStore.insert method returning generated keys transaction not committed
+- Fix Android proguard rules for RxJava 2.0
+- Fix Android sqlite blob query arguments not working
+- Fix Android onCreateMapping invocation for SqlitexDatabaseSource
+- Fix Kotlin type variance parameter on join queries
+- Fix m prefixed member name not removed in generated setMappedAttribute
+
+## 1.0.0
+
+- Support for RxJava 2.0
+- Support update on specific attributes
+- Support insert with default values
+- Support Kotlin 1.0.4
+- Fix Android mapping support for BigDecimal
+- Fix cascading Many-to-Many inserts
+
+## 1.0.0-rc4
+
+- Fix compilation of certain queries under Java 8
+- Fix Android Uri converter not applied
+- Fix multiple model definitions inside the same java package
+- Fix member prefixes in Attribute static field names not removed
+- Fix Kotlin attribute missing declared type definitions
+
 ## 1.0.0-rc3
 
 - Support embeddable AutoValue types

@@ -20,14 +20,16 @@ public interface OrderingExpression<V> extends Expression<V> {
 
     Order getOrder();
 
+    enum NullOrder {
+        FIRST,
+        LAST
+    }
+
     NullOrder getNullOrder();
 
     OrderingExpression<V> nullsFirst();
 
     OrderingExpression<V> nullsLast();
 
-    enum NullOrder {
-        FIRST,
-        LAST
-    }
+    Expression<V> getInnerExpression();
 }

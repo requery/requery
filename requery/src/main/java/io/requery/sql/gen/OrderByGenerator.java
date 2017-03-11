@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,9 +44,9 @@ public class OrderByGenerator implements Generator<OrderByElement> {
             int i = 0;
             int size = orderBy.size();
             for (Expression<?> order : orderBy) {
-                output.appendColumn(order);
                 if (order.getExpressionType() == ExpressionType.ORDERING) {
                     OrderingExpression ordering = (OrderingExpression) order;
+                    output.appendColumn(ordering.getInnerExpression());
                     qb.keyword(ordering.getOrder() == Order.ASC ? ASC : DESC);
                     if(ordering.getNullOrder() != null) {
                         qb.keyword(NULLS);
@@ -59,6 +59,8 @@ public class OrderByGenerator implements Generator<OrderByElement> {
                                 break;
                         }
                     }
+                } else {
+                    output.appendColumn(order);
                 }
                 if (i < size - 1) {
                     qb.append(",");

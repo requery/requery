@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import io.requery.query.Expression;
 import io.requery.query.element.LimitedElement;
 import io.requery.query.element.OrderByElement;
 import io.requery.query.element.QueryElement;
+import io.requery.query.function.Function;
+import io.requery.query.function.Now;
 import io.requery.sql.BaseType;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.Keyword;
@@ -53,6 +55,13 @@ public class SQLServer extends Generic {
     }
 
     @Override
+    public void addMappings(Mapping mapping) {
+        super.addMappings(mapping);
+        mapping.replaceType(Types.BOOLEAN, new BitBooleanType());
+        mapping.aliasFunction(new Function.Name("getutcdate"), Now.class);
+    }
+
+    @Override
     public boolean supportsIfExists() {
         return false;
     }
@@ -75,12 +84,6 @@ public class SQLServer extends Generic {
     @Override
     public Generator<OrderByElement> orderByGenerator() {
         return new OrderByWithLimitGenerator();
-    }
-
-    @Override
-    public void addMappings(Mapping mapping) {
-        super.addMappings(mapping);
-        mapping.replaceType(Types.BOOLEAN, new BitBooleanType());
     }
 
     private static class MergeGenerator extends UpsertMergeGenerator {

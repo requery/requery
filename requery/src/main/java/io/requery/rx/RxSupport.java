@@ -17,16 +17,10 @@
 package io.requery.rx;
 
 import io.requery.BlockingEntityStore;
-import io.requery.meta.Attribute;
 import io.requery.meta.Type;
-import io.requery.query.BaseResult;
-import io.requery.query.Result;
-import io.requery.query.Scalar;
+import io.requery.meta.Types;
 import io.requery.query.element.QueryElement;
-import io.requery.util.function.Supplier;
 import rx.Observable;
-import rx.Scheduler;
-import rx.Single;
 import rx.functions.Func1;
 
 import java.util.Collections;
@@ -45,74 +39,25 @@ public final class RxSupport {
     }
 
     public static <S> SingleEntityStore<S> toReactiveStore(BlockingEntityStore<S> store) {
-        return toReactiveStore(store, null);
+        return new SingleEntityStoreFromBlocking<>(store);
     }
 
-    public static <S> SingleEntityStore<S> toReactiveStore(BlockingEntityStore<S> store,
-                                                           Scheduler subscribeOn) {
-        return new SingleEntityStoreFromBlocking<>(store, subscribeOn);
-    }
-
-    public static <T> Observable<Result<T>> toResultObservable(final Result<T> result) {
-        if (!(result instanceof ObservableResult)) {
-            throw new UnsupportedOperationException();
-        }
-        ObservableResult observableResult = (ObservableResult) result;
-        final QueryElement<?> element = observableResult.unwrapQuery();
+    static <T> Observable<RxResult<T>> toResultObservable(final RxResult<T> result) {
+        final QueryElement<?> element = result.unwrapQuery();
         // ensure the transaction listener is added in the target data store
-        observableResult.addTransactionListener(typeChanges);
+        result.addTransactionListener(typeChanges);
         return typeChanges.commitSubject()
             .filter(new Func1<Set<Type<?>>, Boolean>() {
                 @Override
                 public Boolean call(Set<Type<?>> types) {
                     return !Collections.disjoint(element.entityTypes(), types) ||
-                        referencesType(element.entityTypes(), types);
+                        Types.referencesType(element.entityTypes(), types);
                 }
-            }).map(new Func1<Set<Type<?>>, Result<T>>() {
+            }).map(new Func1<Set<Type<?>>, RxResult<T>>() {
                 @Override
-                public Result<T> call(Set<Type<?>> types) {
+                public RxResult<T> call(Set<Type<?>> types) {
                     return result;
                 }
             }).startWith(result);
-    }
-
-    private static boolean referencesType(Set<Type<?>> source, Set<Type<?>> changed) {
-        for (Type<?> type : source) {
-            for (Attribute<?, ?> attribute : type.getAttributes()) {
-                // find if any referencing types that maybe affected by changes to the type
-                if (attribute.isAssociation()) {
-                    Attribute referenced = null;
-                    if (attribute.getReferencedAttribute() != null) {
-                        referenced = attribute.getReferencedAttribute().get();
-                    }
-                    if (attribute.getMappedAttribute() != null) {
-                        referenced = attribute.getMappedAttribute().get();
-                    }
-                    if (referenced != null) {
-                        Type<?> declared = referenced.getDeclaringType();
-                        if (changed.contains(declared)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    public static <E> Observable<E> toObservable(final BaseResult<E> result) {
-        return Observable.create(new OnSubscribeFromQuery<>(result));
-    }
-
-    public static <E> Single<E> toSingle(final Scalar<E> scalar) {
-        return Single.create(new SingleOnSubscribeFromSupplier<>(scalar.toSupplier()));
-    }
-
-    static <E> Single<E> toSingle(Supplier<E> supplier, Scheduler subscribeOn) {
-        Single<E> single = Single.create(new SingleOnSubscribeFromSupplier<>(supplier));
-        if (subscribeOn != null) {
-            return single.subscribeOn(subscribeOn);
-        }
-        return single;
     }
 }

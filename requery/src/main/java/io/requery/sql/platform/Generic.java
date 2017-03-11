@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,6 @@ public class Generic implements Platform {
 
     @Override
     public void addMappings(Mapping mapping) {
-
     }
 
     @Override
@@ -79,6 +78,11 @@ public class Generic implements Platform {
 
     @Override
     public boolean supportsGeneratedColumnsInPrepareStatement() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsOnUpdateCascade() {
         return true;
     }
 

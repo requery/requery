@@ -120,6 +120,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private String referencedTable;
     private String mappedBy;
     private String defaultValue;
+    private String definition;
     private String collate;
     private String orderByColumn;
     private Order orderByDirection;
@@ -191,24 +192,30 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             }
         }
         if (isIterable) {
-            validators.add(validateCollectionType(processingEnvironment));
+            ElementValidator validator = validateCollectionType(processingEnvironment);
+            if (validator != null) {
+                validators.add(validator);
+            }
         }
     }
 
     private ElementValidator validateCollectionType(ProcessingEnvironment processingEnvironment) {
         Types types = processingEnvironment.getTypeUtils();
         TypeElement collectionElement = (TypeElement) types.asElement(typeMirror());
-        ElementValidator validator = new ElementValidator(collectionElement, processingEnvironment);
-        if (Mirrors.isInstance(types, collectionElement, List.class)) {
-            builderClass = ListAttributeBuilder.class;
-        } else if (Mirrors.isInstance(types, collectionElement, Set.class)) {
-            builderClass = SetAttributeBuilder.class;
-        } else if (Mirrors.isInstance(types, collectionElement, Iterable.class)) {
-            builderClass = ResultAttributeBuilder.class;
-        } else {
-            validator.error("Invalid collection type, must be Set, List or Iterable");
+        if (collectionElement != null) {
+            ElementValidator validator = new ElementValidator(collectionElement, processingEnvironment);
+            if (Mirrors.isInstance(types, collectionElement, List.class)) {
+                builderClass = ListAttributeBuilder.class;
+            } else if (Mirrors.isInstance(types, collectionElement, Set.class)) {
+                builderClass = SetAttributeBuilder.class;
+            } else if (Mirrors.isInstance(types, collectionElement, Iterable.class)) {
+                builderClass = ResultAttributeBuilder.class;
+            } else {
+                validator.error("Invalid collection type, must be Set, List or Iterable");
+            }
+            return validator;
         }
-        return validator;
+        return null;
     }
 
     private void processFieldAccessAnnotations(ElementValidator validator) {
@@ -285,6 +292,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             isNullable = column.nullable();
             defaultValue = column.value();
             collate = column.collate();
+            definition = column.definition();
             if (column.length() > 0) {
                 length = column.length();
             }
@@ -344,6 +352,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             isNullable = persistenceColumn.nullable();
             length = persistenceColumn.length();
             isReadOnly = !persistenceColumn.updatable();
+            definition = persistenceColumn.columnDefinition();
         });
 
         annotationOf(Enumerated.class).ifPresent(enumerated -> {
@@ -543,13 +552,14 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             return element().getSimpleName().toString();
         } else if (element().getKind() == ElementKind.METHOD) {
             ExecutableElement methodElement = (ExecutableElement) element();
-            String name = methodElement.getSimpleName().toString();
-            name = Names.removeMethodPrefixes(name);
+            String originalName = methodElement.getSimpleName().toString();
+            String name = Names.removeMethodPrefixes(originalName);
             if (Names.isAllUpper(name)) {
-                return name.toLowerCase(Locale.ROOT);
+                name = name.toLowerCase(Locale.ROOT);
             } else {
-                return Names.lowerCaseFirst(name);
+                name = Names.lowerCaseFirst(name);
             }
+            return Names.checkReservedName(name, originalName);
         } else {
             throw new IllegalStateException();
         }
@@ -617,6 +627,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         // for a method strip any accessor prefix such as get/is
         if (element().getKind() == ElementKind.METHOD) {
             ExecutableElement executableElement = (ExecutableElement) element();
+            String originalName = elementName;
             AccessorNamePrefix prefix = AccessorNamePrefix.fromElement(executableElement);
             switch (prefix) {
                 case GET:
@@ -626,7 +637,9 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                     elementName = elementName.replaceFirst("is", "");
                     break;
             }
-            return Names.isAllUpper(elementName) ? elementName : Names.lowerCaseFirst(elementName);
+            elementName = Names.isAllUpper(elementName) ?
+                    elementName : Names.lowerCaseFirst(elementName);
+            return Names.checkReservedName(elementName, originalName);
         }
         return elementName;
     }
@@ -654,6 +667,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     @Override
     public String defaultValue() {
         return defaultValue;
+    }
+
+    @Override
+    public String definition() {
+        return definition;
     }
 
     @Override

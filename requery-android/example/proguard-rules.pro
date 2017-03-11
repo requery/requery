@@ -2,3 +2,4 @@
 }
 -dontwarn rx.internal.**
 -dontwarn android.support.**
+

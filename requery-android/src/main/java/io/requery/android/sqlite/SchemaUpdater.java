@@ -57,6 +57,9 @@ public class SchemaUpdater {
         // check for missing columns
         List<Attribute> missingAttributes = new ArrayList<>();
         for (Type<?> type : configuration.getModel().getTypes()) {
+            if (type.isView()) {
+                continue;
+            }
             String tableName = type.getName();
             Cursor cursor = queryFunction.apply("PRAGMA table_info(" + tableName + ")");
             Map<String, Attribute> map = new LinkedHashMap<>();

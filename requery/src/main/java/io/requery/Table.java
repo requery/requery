@@ -44,4 +44,10 @@ public @interface Table {
      * @return name of the table the object should be mapped to, defaults to the entity class name.
      */
     String name() default "";
+
+    /**
+     * Defines the index names on the table that are uniquely constrained.
+     * @return index names in the table that are unique
+     */
+    String[] uniqueIndexes() default {};
 }

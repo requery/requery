@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Locale;
 import java.util.Set;
 
@@ -70,9 +71,10 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
 
     @Override
     public Result<Tuple> get() {
+        PreparedStatement statement = null;
         try {
             Connection connection = configuration.getConnection();
-            PreparedStatement statement = prepare(sql, connection);
+            statement = prepare(sql, connection);
             mapParameters(statement, boundParameters);
             switch (queryType) {
                 case SELECT:
@@ -88,7 +90,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                     StatementListener listener = configuration.getStatementListener();
                     listener.beforeExecuteUpdate(statement, sql, boundParameters);
                     int count = statement.executeUpdate();
-                    listener.afterExecuteUpdate(statement);
+                    listener.afterExecuteUpdate(statement, count);
                     MutableTuple tuple = new MutableTuple(1);
                     tuple.set(0, NamedExpression.ofInteger("count"), count);
                     try {
@@ -101,8 +103,8 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                     }
                     return new SingleResult<Tuple>(tuple);
             }
-        } catch (SQLException e) {
-            throw new StatementExecutionException(e, sql);
+        } catch (Exception e) {
+            throw StatementExecutionException.closing(statement, e, sql);
         }
     }
 
@@ -147,6 +149,9 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                     for (int i = 0; i < columns; i++) {
                         String name = metadata.getColumnName(i + 1);
                         int sqlType = metadata.getColumnType(i + 1);
+                        if (sqlType == Types.NUMERIC) {
+                            sqlType = Types.INTEGER;
+                        }
                         Class type = mapping.typeOf(sqlType);
                         expressions[i] = NamedExpression.of(name, type);
                     }

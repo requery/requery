@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,11 +59,45 @@ abstract class EntityPartGenerator {
         return "$" + attribute.fieldName() + "_state";
     }
 
+    static String attributeFieldName(AttributeDescriptor attribute) {
+        return "$" + attribute.fieldName();
+    }
+
+    static String embeddedAttributeName(AttributeDescriptor parent,
+                                        AttributeDescriptor embedded) {
+        return Names.removeMemberPrefixes(parent.fieldName())
+                + "_"+ Names.removeMemberPrefixes(embedded.name());
+    }
+
+    TypeName resolveAttributeType(AttributeDescriptor attribute) {
+        TypeName typeName;
+        if (attribute.isIterable()) {
+            typeName = parameterizedCollectionName(attribute.typeMirror());
+        } else if (attribute.isOptional()) {
+            typeName = TypeName.get(tryFirstTypeArgument(attribute.typeMirror()));
+        } else {
+            typeName = nameResolver.generatedTypeNameOf(attribute.typeMirror()).orElse(null);
+        }
+        if (typeName == null) {
+            typeName = boxedTypeName(attribute.typeMirror());
+        }
+        return typeName;
+    }
+
     TypeName boxedTypeName(TypeMirror typeMirror) {
         if (typeMirror.getKind().isPrimitive()) {
             return TypeName.get(types.boxedClass((PrimitiveType) typeMirror).asType());
         }
         return TypeName.get(typeMirror);
+    }
+
+    TypeName guessAnyTypeName(String packageName, TypeMirror mirror) {
+        String name = mirror.toString();
+        if (name.startsWith("<any?>.")) {
+            return ClassName.get(packageName, name.substring("<any?>.".length()));
+        } else {
+            return TypeName.get(mirror);
+        }
     }
 
     ParameterizedTypeName parameterizedCollectionName(TypeMirror typeMirror) {

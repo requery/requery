@@ -56,6 +56,10 @@ public interface CompletionStageEntityStore<T> extends EntityStore<T, Completion
 
     @Override
     @CheckReturnValue
+    <E extends T> CompletionStage<E> update(E entity, Attribute<?, ?>... attributes);
+
+    @Override
+    @CheckReturnValue
     <E extends T> CompletionStage<Iterable<E>> update(Iterable<E> entities);
 
     @Override

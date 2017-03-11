@@ -57,7 +57,7 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
 
     private final Platform platform;
     private final EntityModel model;
-    private final Mapping mapping;
+    private Mapping mapping;
     private SQLiteDatabase db;
     private Configuration configuration;
     private boolean loggingEnabled;
@@ -76,7 +76,6 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
             throw new IllegalArgumentException("null model");
         }
         this.platform = new SQLite();
-        this.mapping = onCreateMapping(platform);
         this.model = model;
         this.mode = TableCreationMode.CREATE_NOT_EXISTS;
     }
@@ -115,6 +114,12 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
 
     @Override
     public Configuration getConfiguration() {
+        if (mapping == null) {
+            mapping = onCreateMapping(platform);
+        }
+        if (mapping == null) {
+            throw new IllegalStateException();
+        }
         if (configuration == null) {
             ConfigurationBuilder builder = new ConfigurationBuilder(this, model)
                 .setMapping(mapping)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import io.requery.sql.gen.LimitGenerator;
 import io.requery.sql.gen.Output;
 
 import java.util.Map;
+import java.util.Set;
 
 import static io.requery.sql.Keyword.FROM;
 import static io.requery.sql.Keyword.INTO;
@@ -66,6 +67,10 @@ public class H2 extends Generic {
         public void write(final Output output, final Map<Expression<?>, Object> values) {
             QueryBuilder qb = output.builder();
             Type<?> type = ((Attribute) values.keySet().iterator().next()).getDeclaringType();
+            Set<? extends Attribute<?, ?>> attributes = type.getKeyAttributes();
+            if (attributes.isEmpty()) {
+                attributes = type.getAttributes();
+            }
             qb.keyword(MERGE).keyword(INTO)
                 .tableNames(values.keySet())
                 .openParenthesis()
@@ -73,7 +78,7 @@ public class H2 extends Generic {
                 .closeParenthesis().space()
                 .keyword(KEY)
                 .openParenthesis()
-                .commaSeparatedAttributes(type.getKeyAttributes())
+                .commaSeparatedAttributes(attributes)
                 .closeParenthesis().space()
                 .keyword(SELECT)
                 .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {

@@ -34,7 +34,7 @@ public class AbstractPhone implements Serializable {
 
     @Column
     @Convert(IntegerListConverter.class)
-    protected ArrayList<Integer> extensions;
+    protected ArrayList<Integer> extensions = new ArrayList<>();
 
     @ManyToOne
     protected Person owner;
