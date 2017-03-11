@@ -127,12 +127,15 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
         SetGroupByOrderByLimit<E>,
         SetHavingOrderByLimit<E>,
         OrderByLimit<E>,
-        Offset<E> {
+        Offset<E>,
+        QueryWrapper<E> {
 
     private var element : QueryElement<E> = element
 
     constructor(type : QueryType, model : EntityModel, operation : QueryOperation<E>)
     : this(QueryElement(type, model, operation))
+
+    override fun unwrapQuery(): QueryElement<E> = element
 
     override fun select(vararg attributes: Expression<*>): Selection<E> {
         element.select(*attributes)
