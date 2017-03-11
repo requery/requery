@@ -25,12 +25,15 @@ import io.requery.sql.EntityDataStore;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.H2;
-import io.requery.test.modeljpa.Group;
-import io.requery.test.modeljpa.GroupEntity;
-import io.requery.test.modeljpa.GroupType;
-import io.requery.test.modeljpa.Models;
-import io.requery.test.modeljpa.Person;
-import io.requery.test.modeljpa.PersonEntity;
+import io.requery.test.jpa.AddressEntity;
+import io.requery.test.jpa.AddressType;
+import io.requery.test.jpa.Group;
+import io.requery.test.jpa.GroupEntity;
+import io.requery.test.jpa.GroupType;
+import io.requery.test.jpa.Models;
+import io.requery.test.jpa.Person;
+import io.requery.test.jpa.PersonEntity;
+import io.requery.test.jpa.PhoneEntity;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +62,7 @@ public class JPAModelTest {
 
     protected EntityDataStore<Serializable> data;
 
-    static PersonEntity randomPerson() {
+    private static PersonEntity randomPerson() {
         Random random = new Random();
         PersonEntity person = new PersonEntity();
         String[] firstNames = new String[]{"Alice", "Bob", "Carol"};
@@ -83,7 +86,7 @@ public class JPAModelTest {
     @Before
     public void setup() throws SQLException {
         CommonDataSource dataSource = DatabaseType.getDataSource(new H2());
-        EntityModel model = Models.MODELJPA;
+        EntityModel model = Models.JPA;
 
         CachingProvider provider = Caching.getCachingProvider();
         CacheManager cacheManager = provider.getCacheManager();
@@ -150,6 +153,16 @@ public class JPAModelTest {
     }
 
     @Test
+    public void testInsertOneToMany() {
+        PersonEntity person = randomPerson();
+        PhoneEntity phone = new PhoneEntity();
+        phone.setPhoneNumber("+1800123456");
+        phone.setOwner(person);
+        person.getPhoneNumbers().add(phone);
+        data.insert(person);
+    }
+
+    @Test
     public void testSingleQueryExecute() {
         data.insert(randomPerson());
         Result<Person> result = data.select(Person.class).get();
@@ -168,5 +181,19 @@ public class JPAModelTest {
         group.setDescription("text");
         data.insert(group);
         assertEquals("text", group.getDescription().get());
+    }
+
+    @Test
+    public void testInsertEmbedded() {
+        PersonEntity person = randomPerson();
+        AddressEntity address = new AddressEntity();
+        address.setLine1("Market St");
+        address.setCity("San Francisco");
+        address.setState("California");
+        address.getCoordinate().setLatitude(37.7749f);
+        address.getCoordinate().setLongitude(122.4194f);
+        address.setType(AddressType.HOME);
+        person.setAddress(address);
+        data.insert(person);
     }
 }

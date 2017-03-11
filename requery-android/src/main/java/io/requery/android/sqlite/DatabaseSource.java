@@ -22,6 +22,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import io.requery.android.DefaultMapping;
 import io.requery.android.LoggingListener;
@@ -52,11 +53,12 @@ import java.sql.SQLNonTransientConnectionException;
  *
  * @author Nikhil Purushe
  */
+@SuppressWarnings("WeakerAccess")
 public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider<SQLiteDatabase> {
 
     private final Platform platform;
     private final EntityModel model;
-    private final Mapping mapping;
+    private Mapping mapping;
     private SQLiteDatabase db;
     private Configuration configuration;
     private boolean configured;
@@ -82,7 +84,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
      * @param name    database filename
      * @param version the schema version
      */
-    public DatabaseSource(Context context, EntityModel model, String name, int version) {
+    public DatabaseSource(Context context, EntityModel model, @Nullable String name, int version) {
         this(context, model, name, null, version);
     }
 
@@ -97,18 +99,33 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
      */
     public DatabaseSource(Context context,
                           EntityModel model,
-                          String name,
-                          SQLiteDatabase.CursorFactory factory,
+                          @Nullable String name,
+                          @Nullable SQLiteDatabase.CursorFactory factory,
                           int version) {
+        this(context, model, name, factory, version, new SQLite());
+    }
+
+    /**
+     * Creates a new {@link DatabaseSource} instance.
+     *
+     * @param context context
+     * @param model   the entity model
+     * @param name    database filename
+     * @param factory optional {@link android.database.sqlite.SQLiteDatabase.CursorFactory}
+     * @param version the schema version
+     * @param platform platform instance
+     */
+    public DatabaseSource(Context context,
+                          EntityModel model,
+                          @Nullable String name,
+                          @Nullable SQLiteDatabase.CursorFactory factory,
+                          int version,
+                          SQLite platform) {
         super(context, name, factory, version);
         if (model == null) {
             throw new IllegalArgumentException("null model");
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            setWriteAheadLoggingEnabled(true);
-        }
-        this.platform = new SQLite();
-        this.mapping = onCreateMapping(platform);
+        this.platform = platform;
         this.model = model;
         this.mode = TableCreationMode.CREATE_NOT_EXISTS;
     }
@@ -124,8 +141,8 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
     }
 
     private static String getDefaultDatabaseName(Context context, EntityModel model) {
-        return TextUtils.isEmpty(model.name()) ?
-                context.getPackageName() : model.name();
+        return TextUtils.isEmpty(model.getName()) ?
+                context.getPackageName() : model.getName();
     }
 
     /**
@@ -161,6 +178,12 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
 
     @Override
     public Configuration getConfiguration() {
+        if (mapping == null) {
+            mapping = onCreateMapping(platform);
+        }
+        if (mapping == null) {
+            throw new IllegalStateException();
+        }
         if (configuration == null) {
             ConfigurationBuilder builder = new ConfigurationBuilder(this, model)
                 .setMapping(mapping)

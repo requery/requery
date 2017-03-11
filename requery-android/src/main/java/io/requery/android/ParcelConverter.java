@@ -22,18 +22,20 @@ import io.requery.Converter;
 
 /**
  * Base {@link Converter} for persisting {@link Parcelable} Android objects. For example if you
- * wanted to store a {@link android.location.Location} as a SQLite BLOB you would extend this class
+ * wanted to store a custom parcelable as a SQLite BLOB you would extend this class
  * as follows:
  * <pre><code>
- * public class LocationConverter<Location> extends ParcelConverter<Location> {
+ * public class MyParcelableConverter<MyParcelable> extends ParcelConverter<MyParcelable> {
  *
- *    public LocationConverter() {
- *        super(Location.class, Location.CREATOR);
+ *    public MyParcelableConverter() {
+ *        super(MyParcelable.class, MyParcelable.CREATOR);
  *    }
  * }
  * </code></pre>
  * <p>
- * and specify the class in the {@link Converter} annotation on the field to persist.
+ * and specify the class in the {@link Converter} annotation on the field to persist. Note be
+ * careful when using with Android Parcelable classes as the internal format of the object may
+ * change between versions.
  *
  * @author Nikhil Purushe
  */
@@ -51,17 +53,17 @@ public class ParcelConverter<T extends Parcelable> implements Converter<T, byte[
     }
 
     @Override
-    public Class<T> mappedType() {
+    public Class<T> getMappedType() {
         return type;
     }
 
     @Override
-    public Class<byte[]> persistedType() {
+    public Class<byte[]> getPersistedType() {
         return byte[].class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 

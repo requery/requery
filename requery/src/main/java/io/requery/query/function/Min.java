@@ -23,7 +23,7 @@ public class Min<V> extends Function<V> {
     private final Expression<V> expression;
 
     private Min(Expression<V> expression) {
-        super("min", expression.classType());
+        super("min", expression.getClassType());
         this.expression = expression;
     }
 

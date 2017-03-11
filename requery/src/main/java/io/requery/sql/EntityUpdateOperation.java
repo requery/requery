@@ -16,12 +16,10 @@
 
 package io.requery.sql;
 
-import io.requery.meta.Attribute;
+import io.requery.query.BaseScalar;
 import io.requery.query.Scalar;
-import io.requery.query.SuppliedScalar;
 import io.requery.query.element.QueryElement;
-import io.requery.util.function.Predicate;
-import io.requery.util.function.Supplier;
+import io.requery.sql.gen.DefaultOutput;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,43 +28,31 @@ import java.sql.SQLException;
 /**
  * Extends {@link UpdateOperation} specifically for binding to an entity, skipping the query
  * parameters to avoid boxing overhead.
- *
- * @param <E> entity type
  */
-class EntityUpdateOperation<E> extends UpdateOperation {
+abstract class EntityUpdateOperation extends UpdateOperation {
 
-    private final E element;
-    private final ParameterBinder<E> parameterBinder;
-    private final Predicate<Attribute<E, ?>> filter;
-
-    EntityUpdateOperation(RuntimeConfiguration configuration,
-                          E element,
-                          ParameterBinder<E> parameterBinder,
-                          Predicate<Attribute<E, ?>> filter,
-                          GeneratedResultReader resultReader) {
+    EntityUpdateOperation(RuntimeConfiguration configuration, GeneratedResultReader resultReader) {
         super(configuration, resultReader);
-        this.element = element;
-        this.filter = filter;
-        this.parameterBinder = parameterBinder;
     }
 
     @Override
-    public Scalar<Integer> execute(final QueryElement<Scalar<Integer>> query) {
-        return new SuppliedScalar<>(new Supplier<Integer>() {
+    public Scalar<Integer> evaluate(final QueryElement<Scalar<Integer>> query) {
+        return new BaseScalar<Integer>(configuration.getWriteExecutor()) {
             @Override
-            public Integer get() {
+            public Integer evaluate() {
                 // doesn't use the query params, just maps to the parameterBinder callback
-                QueryGenerator generator = new QueryGenerator<>(query, null, false);
-                QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
-                String sql = generator.toSql(qb, configuration.platform());
+                QueryBuilder qb = new QueryBuilder(configuration.getQueryBuilderOptions());
+                DefaultOutput output =
+                new DefaultOutput(configuration, query, qb, null, false);
+                String sql = output.toSql();
                 int result;
-                try (Connection connection = configuration.connectionProvider().getConnection()) {
-                    StatementListener listener = configuration.statementListener();
+                try (Connection connection = configuration.getConnection()) {
+                    StatementListener listener = configuration.getStatementListener();
                     try (PreparedStatement statement = prepare(sql, connection)) {
-                        parameterBinder.bindParameters(statement, element, filter);
+                        bindParameters(statement);
                         listener.beforeExecuteUpdate(statement, sql, null);
                         result = statement.executeUpdate();
-                        listener.afterExecuteUpdate(statement);
+                        listener.afterExecuteUpdate(statement, result);
                         readGeneratedKeys(0, statement);
                     }
                 } catch (SQLException e) {
@@ -74,6 +60,8 @@ class EntityUpdateOperation<E> extends UpdateOperation {
                 }
                 return result;
             }
-        }, configuration.writeExecutor());
+        };
     }
+
+    public abstract int bindParameters(PreparedStatement statement) throws SQLException;
 }

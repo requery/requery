@@ -18,8 +18,11 @@ package io.requery.query;
 
 import io.requery.util.function.Supplier;
 
+import javax.annotation.CheckReturnValue;
+
 public interface Return<R> extends Supplier<R>, Aliasable<Return<R>> {
 
     @Override
+    @CheckReturnValue
     R get();
 }

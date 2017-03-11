@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package io.requery.sql.platform;
 
+import io.requery.query.function.Function;
+import io.requery.query.function.Now;
 import io.requery.sql.BaseType;
 import io.requery.sql.Keyword;
 import io.requery.sql.Mapping;
@@ -43,13 +45,13 @@ public class Derby extends Generic {
         }
 
         @Override
-        public Integer defaultLength() {
+        public Integer getDefaultLength() {
             return 32;
         }
 
         @Override
-        public Object identifier() {
-            switch (sqlType()) {
+        public Object getIdentifier() {
+            switch (getSqlType()) {
                 case Types.BINARY:
                     return "char";
                 case Types.VARBINARY:
@@ -60,7 +62,7 @@ public class Derby extends Generic {
         }
 
         @Override
-        public String identifierSuffix() {
+        public String getIdentifierSuffix() {
             return "for bit data";
         }
 
@@ -77,6 +79,7 @@ public class Derby extends Generic {
         mapping.replaceType(Types.VARBINARY, new CharBitData(Types.VARBINARY));
         mapping.replaceType(Types.BINARY, new CharBitData(Types.BINARY));
         mapping.replaceType(Types.NVARCHAR, new VarCharType());
+        mapping.aliasFunction(new Function.Name("current_date", true), Now.class);
     }
 
     @Override

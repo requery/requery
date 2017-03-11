@@ -46,4 +46,11 @@ public @interface JunctionTable {
      * column entries named {table}Id.
      */
     Column[] columns() default {};
+
+    /**
+     * @return the class with the junction table definition, this class must be suitable for
+     * joining the two types between the {@link ManyToMany} relationship. If not specified
+     * the processor will generate a junction type class.
+     */
+    Class<?> type() default void.class;
 }

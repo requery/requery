@@ -18,11 +18,8 @@ package io.requery.proxy;
 
 import io.requery.meta.Attribute;
 import io.requery.query.Expression;
-import io.requery.query.Tuple;
-import io.requery.util.Objects;
+import io.requery.query.MutableTuple;
 
-import java.io.Serializable;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -32,10 +29,7 @@ import java.util.Map;
  *
  * @author Nikhil Purushe
  */
-public class CompositeKey<T> implements Serializable, Tuple {
-
-    // attribute not used since this class is serializable, the key is the attribute name
-    private final Map<String, Object> map;
+public class CompositeKey<T> extends MutableTuple {
 
     /**
      * Creates a new composite key instance.
@@ -43,71 +37,13 @@ public class CompositeKey<T> implements Serializable, Tuple {
      * @param values a map of key {@link Attribute} to their corresponding values.
      */
     public CompositeKey(Map<? extends Attribute<T, ?>, ?> values) {
+        super(values.size());
         if (values.isEmpty()) {
             throw new IllegalArgumentException();
         }
-        this.map = new LinkedHashMap<>();
-        for (Map.Entry<? extends Attribute<T, ?>, ?> entry : values.entrySet()) {
-            map.put(entry.getKey().name(), entry.getValue());
-        }
-    }
-
-    @Override
-    public <V> V get(Expression<V> key) {
-        if (key instanceof Attribute) {
-            return key.classType().cast(map.get(key.name()));
-        }
-        return null;
-    }
-
-    @Override
-    public <V> V get(String key) {
-        @SuppressWarnings("unchecked")
-        V value = (V) map.get(key);
-        return value;
-    }
-
-    @Override
-    public <V> V get(int index) {
-        @SuppressWarnings("unchecked")
-        V value = (V) map.values().toArray()[index];
-        return value;
-    }
-
-    @Override
-    public int count() {
-        return map.size();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof CompositeKey) {
-            CompositeKey other = (CompositeKey) obj;
-            return Objects.equals(map, other.map);
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(map);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
         int index = 0;
-        for (Map.Entry<String, ?> entry : map.entrySet()) {
-            if (index > 0) {
-                sb.append(", ");
-            }
-            index++;
-            sb.append(entry.getKey());
-            sb.append(" = ");
-            sb.append(entry.getValue());
+        for (Map.Entry<? extends Attribute<T, ?>, ?> entry : values.entrySet()) {
+            set(index++, (Expression<?>) entry.getKey(), entry.getValue());
         }
-        sb.append("]");
-        return sb.toString();
     }
 }

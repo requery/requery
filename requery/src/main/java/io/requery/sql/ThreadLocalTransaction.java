@@ -20,10 +20,12 @@ import io.requery.EntityCache;
 import io.requery.Transaction;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
+import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 
 /**
  * Holds transaction state and current connection in {@link ThreadLocal} storage and removes them
@@ -31,9 +33,9 @@ import java.sql.SQLException;
  *
  * @author Nikhil Purushe
  */
-class ThreadLocalTransaction implements EntityProxyTransaction, ConnectionProvider {
+class ThreadLocalTransaction implements EntityTransaction, ConnectionProvider {
 
-    private final ThreadLocal<EntityProxyTransaction> threadLocal;
+    private final ThreadLocal<EntityTransaction> threadLocal;
     private final RuntimeConfiguration configuration;
 
     ThreadLocalTransaction(RuntimeConfiguration configuration) {
@@ -43,22 +45,21 @@ class ThreadLocalTransaction implements EntityProxyTransaction, ConnectionProvid
 
     @Override
     public Transaction begin() {
-        return begin(configuration.transactionIsolation());
+        return begin(configuration.getTransactionIsolation());
     }
 
     @Override
     public Transaction begin(TransactionIsolation isolation) {
-        EntityProxyTransaction transaction = threadLocal.get();
+        EntityTransaction transaction = threadLocal.get();
         if (transaction == null) {
-            EntityCache cache = configuration.cache();
-            ConnectionProvider connectionProvider = configuration.connectionProvider();
-            TransactionMode mode = configuration.transactionMode();
+            EntityCache cache = configuration.getCache();
+            TransactionMode mode = configuration.getTransactionMode();
             TransactionListener listener = new CompositeTransactionListener(
-                configuration.transactionListenerFactories());
+                configuration.getTransactionListenerFactories());
 
             transaction = mode == TransactionMode.MANAGED ?
-                new ManagedTransaction(listener, connectionProvider, cache) :
-                new ConnectionTransaction(listener, connectionProvider, cache,
+                new ManagedTransaction(listener, configuration, cache) :
+                new ConnectionTransaction(listener, configuration, cache,
                     mode != TransactionMode.NONE);
             threadLocal.set(transaction);
         }
@@ -92,9 +93,17 @@ class ThreadLocalTransaction implements EntityProxyTransaction, ConnectionProvid
 
     @Override
     public void addToTransaction(EntityProxy<?> proxy) {
-        EntityProxyTransaction transaction = threadLocal.get();
+        EntityTransaction transaction = threadLocal.get();
         if (transaction != null) {
             transaction.addToTransaction(proxy);
+        }
+    }
+
+    @Override
+    public void addToTransaction(Collection<Type<?>> types) {
+        EntityTransaction transaction = threadLocal.get();
+        if (transaction != null) {
+            transaction.addToTransaction(types);
         }
     }
 

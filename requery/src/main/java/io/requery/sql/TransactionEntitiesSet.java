@@ -17,16 +17,36 @@
 package io.requery.sql;
 
 import io.requery.EntityCache;
+import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 class TransactionEntitiesSet extends LinkedHashSet<EntityProxy<?>> {
 
-    private EntityCache cache;
+    private final EntityCache cache;
+    private final Set<Type<?>> types;
 
     TransactionEntitiesSet(EntityCache cache) {
         this.cache = cache;
+        this.types = new HashSet<>();
+    }
+
+    @Override
+    public boolean add(EntityProxy<?> proxy) {
+        if (super.add(proxy)) {
+            types.add(proxy.type());
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+        types.clear();
     }
 
     void clearAndInvalidate() {
@@ -34,9 +54,13 @@ class TransactionEntitiesSet extends LinkedHashSet<EntityProxy<?>> {
             proxy.unlink();
             Object key = proxy.key();
             if (key != null) {
-                cache.invalidate(proxy.type().classType(), key);
+                cache.invalidate(proxy.type().getClassType(), key);
             }
         }
         clear();
+    }
+
+    Set<Type<?>> types() {
+        return types;
     }
 }

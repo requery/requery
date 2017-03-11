@@ -31,7 +31,7 @@ public class JoinOnElement<E> implements JoinOn<E> {
     private final String table;
     private final Return<?> subQuery;
     private final JoinType joinType;
-    private final Set<JoinElement<E>> conditions;
+    private final Set<JoinConditionElement<E>> conditions;
 
     JoinOnElement(QueryElement<E> query, String table, JoinType joinType) {
         this.query = query;
@@ -61,13 +61,13 @@ public class JoinOnElement<E> implements JoinOn<E> {
         return joinType;
     }
 
-    public Set<JoinElement<E>> conditions() {
+    public Set<JoinConditionElement<E>> conditions() {
         return conditions;
     }
 
     @Override
     public <V> JoinAndOr<E> on(Condition<V, ?> condition) {
-        JoinElement<E> element = new JoinElement<>(query, conditions, condition, null);
+        JoinConditionElement<E> element = new JoinConditionElement<>(query, conditions, condition, null);
         conditions.add(element);
         return element;
     }

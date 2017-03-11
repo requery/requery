@@ -25,9 +25,9 @@ package io.requery.query;
  */
 public interface Condition<L, R> {
 
-    L leftOperand();
+    L getLeftOperand();
 
-    Operator operator();
+    Operator getOperator();
 
-    R rightOperand();
+    R getRightOperand();
 }

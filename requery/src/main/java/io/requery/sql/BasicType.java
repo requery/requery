@@ -61,5 +61,5 @@ public abstract class BasicType<T> extends BaseType<T> {
     }
 
     @Override
-    public abstract Keyword identifier();
+    public abstract Keyword getIdentifier();
 }

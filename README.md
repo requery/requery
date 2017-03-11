@@ -1,6 +1,6 @@
 ![requery](http://requery.github.io/logo.png)
 
-A light but powerful object mapping and SQL generator for Java/Android with RxJava and Java 8 support.
+A light but powerful object mapping and SQL generator for Java/Kotlin/Android with RxJava and Java 8 support.
 Easily map to or create databases, perform queries and updates from any platform that uses Java.
 
 [![Build Status](https://travis-ci.org/requery/requery.svg?branch=master)](https://travis-ci.org/requery/requery)
@@ -18,7 +18,7 @@ abstract class AbstractPerson {
     @Key @Generated
     int id;
 
-    @Index(name = "name_index")              // table specification
+    @Index("name_index")                     // table specification
     String name;
 
     @OneToMany                               // relationships 1:1, 1:many, many to many
@@ -71,7 +71,7 @@ abstract class Person {
         return new AutoValue_Person.Builder();
     }
 
-    @Id @GeneratedValue
+    @Key
     abstract int getId();
 
     abstract String getName();
@@ -111,6 +111,14 @@ abstract class AbstractPerson {
 }
 ```
 
+**[Kotlin](https://github.com/requery/requery/wiki/Kotlin) specific support using property references and infix functions:**
+
+```kotlin
+data {
+    val result = select(Person::class) where (Person::age gt 21) and (Person::name eq "Bob") limit 10
+}
+```
+
 **Java 8 [streams](https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html):**
 
 ```java
@@ -135,6 +143,8 @@ public interface Person {
 ```
 
 **[RxJava](https://github.com/ReactiveX/RxJava) [Observables](http://reactivex.io/documentation/observable.html):**
+
+Supports both RxJava 1.0 and 2.0
 
 ```java
 Observable<Person> observable = data
@@ -222,25 +232,7 @@ differences between requery and JPA providers like Hibernate or EclipseLink:
 Android
 -------
 
-Designed specifically with Android support in mind. Comparison to other Android libraries:
-
-Feature               |  requery |  ORMLite |  Squidb  |  DBFlow   | GreenDao
-----------------------|----------|----------|----------|-----------|-----------
-Relational mapping    |  Y       |  Y(1)    |  N       |  Y        | Y(1)
-Inverse relationships |  Y       |  N       |  N       |  N        | N
-Compile time          |  Y       |  N       |  Y       |  Y        | Y(2)
-Query DSL             |  Y       |  N       |  N(3)    |  N(3)     | N(3)
-JDBC Support          |  Y       |  Y       |  N       |  N        | N
-Table Generation      |  Y       |  Y       |  Y       |  Y        | Y
-JPA annotations       |  Y       |  Y       |  N       |  N        | N
-RxJava support        |  Y       |  N       |  Y(4)    |  N        | N
-
-1) Excludes Many-to-Many
-2) Not annotation based
-3) Builder only not DSL
-4) Table changes only
-
-See [requery-android/example](https://github.com/requery/requery/tree/master/requery-android/example)
+Designed specifically with Android support in mind. See [requery-android/example](https://github.com/requery/requery/tree/master/requery-android/example)
 for an example Android project using databinding and interface based entities. For more information
 see the [Android](https://github.com/requery/requery/wiki/Android) page.
 
@@ -274,7 +266,7 @@ Upserts are generated with the appropriate database specific query statements:
 Using it
 --------
 
-Currently beta versions are available on bintray jcenter / maven central.
+Versions are available on bintray jcenter / maven central.
 
 ```gradle
 repositories {
@@ -282,9 +274,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.0.0-beta14'
-    compile 'io.requery:requery-android:1.0.0-beta14' // for android
-    apt 'io.requery:requery-processor:1.0.0-beta14'   // use an APT plugin
+    compile 'io.requery:requery:1.2.0'
+    compile 'io.requery:requery-android:1.2.0' // for android
+    annotationProcessor 'io.requery:requery-processor:1.2.0'
 }
 ```
 
@@ -293,7 +285,7 @@ For information on gradle and annotation processing & gradle see the [wiki](http
 License
 -------
 
-    Copyright (C) 2016 requery.io
+    Copyright (C) 2017 requery.io
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.

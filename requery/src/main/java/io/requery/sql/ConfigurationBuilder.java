@@ -22,6 +22,7 @@ import io.requery.cache.WeakEntityCache;
 import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
 import io.requery.util.Objects;
+import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
 
 import javax.sql.CommonDataSource;
@@ -44,6 +45,7 @@ public class ConfigurationBuilder {
     private final ConnectionProvider connectionProvider;
     private final Set<StatementListener> statementListeners;
     private final Set<Supplier<TransactionListener>> transactionListenerFactory;
+    private final Set<EntityStateListener> entityStateListeners;
     private Platform platform;
     private EntityCache cache;
     private Mapping mapping;
@@ -54,12 +56,15 @@ public class ConfigurationBuilder {
     private int batchUpdateSize;
     private boolean quoteTableNames;
     private boolean quoteColumnNames;
+    private Function<String, String> tableTransformer;
+    private Function<String, String> columnTransformer;
     private Executor writeExecutor;
 
     public ConfigurationBuilder(ConnectionProvider connectionProvider, EntityModel model) {
         this.connectionProvider = Objects.requireNotNull(connectionProvider);
         this.model = Objects.requireNotNull(model);
         this.statementListeners = new LinkedHashSet<>();
+        this.entityStateListeners = new LinkedHashSet<>();
         this.transactionListenerFactory = new LinkedHashSet<>();
         setQuoteTableNames(false);
         setQuoteColumnNames(false);
@@ -68,6 +73,8 @@ public class ConfigurationBuilder {
         setBatchUpdateSize(64);
         setTransactionMode(TransactionMode.AUTO);
         setTransactionIsolation(null);
+        setTableTransformer(null);
+        setColumnTransformer(null);
     }
 
     public ConfigurationBuilder(CommonDataSource dataSource, EntityModel model) {
@@ -120,6 +127,16 @@ public class ConfigurationBuilder {
         return this;
     }
 
+    public ConfigurationBuilder setTableTransformer(Function<String, String> function) {
+        this.tableTransformer = function;
+        return this;
+    }
+
+    public ConfigurationBuilder setColumnTransformer(Function<String, String> function) {
+        this.columnTransformer = function;
+        return this;
+    }
+
     public ConfigurationBuilder setQuoteColumnNames(boolean quote) {
         this.quoteColumnNames = quote;
         return this;
@@ -147,6 +164,11 @@ public class ConfigurationBuilder {
         return this;
     }
 
+    public ConfigurationBuilder addEntityStateListener(EntityStateListener listener) {
+        this.entityStateListeners.add(Objects.requireNotNull(listener));
+        return this;
+    }
+
     public ConfigurationBuilder setTransactionIsolation(TransactionIsolation isolation) {
         this.transactionIsolation = isolation;
         return this;
@@ -169,11 +191,13 @@ public class ConfigurationBuilder {
             batchUpdateSize,
             quoteTableNames,
             quoteColumnNames,
+            tableTransformer,
+            columnTransformer,
+            entityStateListeners,
             statementListeners,
             transactionMode,
             transactionIsolation,
             transactionListenerFactory,
             writeExecutor);
     }
-
 }

@@ -35,7 +35,7 @@ public class BinaryType extends BasicType<byte[]> {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.BINARY;
     }
 }

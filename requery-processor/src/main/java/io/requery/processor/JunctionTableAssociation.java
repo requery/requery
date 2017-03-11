@@ -24,6 +24,8 @@ import io.requery.ReferentialAction;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -34,45 +36,71 @@ class JunctionTableAssociation implements AssociativeEntityDescriptor {
 
     private final JunctionTable table;
     private final Set<AssociativeReference> columns;
+    private final TypeMirror typeMirror;
 
     JunctionTableAssociation(Elements elements, AttributeMember member, JunctionTable table) {
         this.table = table;
         this.columns = new LinkedHashSet<>();
+
+        Optional<? extends AnnotationValue> columnValues =
+                Mirrors.findAnnotationMirror(member.element(), JunctionTable.class)
+                        .flatMap(m -> Mirrors.findAnnotationValue(m, "columns"));
+
         for (Column column : table.columns()) {
-            ForeignKey key = column.foreignKey()[0];
-            String columnName = column.name();
             ReferentialAction deleteAction = ReferentialAction.CASCADE;
             ReferentialAction updateAction = ReferentialAction.CASCADE;
             TypeElement referenceType = null;
+            String referencedColumn = null;
 
-            if (key != null) {
+            if (column.foreignKey().length > 0) {
+                ForeignKey key = column.foreignKey()[0];
                 deleteAction = key.delete();
                 updateAction = key.update();
-                Optional<? extends AnnotationValue> value =
-                    Mirrors.findAnnotationMirror(member.element(), JunctionTable.class)
-                        .flatMap(m -> Mirrors.findAnnotationValue(m, "columns"));
 
-                if (value.isPresent()) {
-                    List mirrors = (List) value.get().getValue();
+                if (columnValues.isPresent()) {
+                    List mirrors = (List) columnValues.get().getValue();
+                    AnnotationMirror mirror = null;
                     for (Object m : mirrors) {
+                        String name = Mirrors.findAnnotationValue((AnnotationMirror) m, "name")
+                                .map(AnnotationValue::getValue)
+                                .map(Object::toString)
+                                .orElse(null);
+                        if (column.name().equals(name)) {
+                            mirror = (AnnotationMirror) m;
+                            break;
+                        }
+                    }
+                    if (mirror != null) {
                         Optional<? extends AnnotationValue> keyValue =
-                            Mirrors.findAnnotationValue((AnnotationMirror) m, "foreignKey");
+                                Mirrors.findAnnotationValue(mirror, "foreignKey");
                         if (keyValue.isPresent()) {
                             List children = (List) keyValue.get().getValue();
-                            Optional<? extends AnnotationValue> annotationValue =
-                                Mirrors.findAnnotationValue(
-                                    (AnnotationMirror) children.get(0), "references");
-                            if (annotationValue.isPresent()) {
-                                referenceType = elements.getTypeElement(
-                                    annotationValue.get().getValue().toString());
-                            }
+                            AnnotationMirror keyMirror = (AnnotationMirror) children.get(0);
+                            referenceType =
+                                Mirrors.findAnnotationValue(keyMirror, "references")
+                                .map(value -> elements.getTypeElement( value.getValue().toString()))
+                                .orElse(null);
+
+                            referencedColumn =
+                                Mirrors.findAnnotationValue(keyMirror, "referencedColumn")
+                                .map(value -> value.getValue().toString())
+                                .orElse(null);
                         }
                     }
                 }
             }
-            columns.add(
-                new AssociativeReference(columnName, referenceType, deleteAction, updateAction));
+            columns.add(new AssociativeReference(column.name(), referenceType,
+                    referencedColumn, deleteAction, updateAction));
         }
+        TypeMirror mirror = null;
+        try {
+            table.type();
+        } catch (MirroredTypeException e) {
+            if (!e.getTypeMirror().toString().equals("void")) {
+                mirror = e.getTypeMirror(); // easiest way to get the mirror
+            }
+        }
+        this.typeMirror = mirror;
     }
 
     @Override
@@ -83,5 +111,10 @@ class JunctionTableAssociation implements AssociativeEntityDescriptor {
     @Override
     public Set<AssociativeReference> columns() {
         return columns;
+    }
+
+    @Override
+    public Optional<TypeMirror> type() {
+        return Optional.ofNullable(typeMirror);
     }
 }

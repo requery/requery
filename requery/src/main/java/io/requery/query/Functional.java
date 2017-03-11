@@ -17,6 +17,7 @@
 package io.requery.query;
 
 import io.requery.query.function.Avg;
+import io.requery.query.function.Function;
 import io.requery.query.function.Substr;
 import io.requery.query.function.Trim;
 import io.requery.query.function.Abs;
@@ -56,4 +57,6 @@ public interface Functional<V> {
     Upper<V> upper();
 
     Lower<V> lower();
+
+    Function<V> function(String name);
 }

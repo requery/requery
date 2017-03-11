@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import io.requery.query.BaseResult;
 import io.requery.query.Expression;
 import io.requery.query.NamedExpression;
 import io.requery.query.Result;
+import io.requery.query.MutableTuple;
 import io.requery.query.Tuple;
 import io.requery.query.element.QueryType;
 import io.requery.util.CloseableIterator;
@@ -31,6 +32,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Locale;
 import java.util.Set;
 
@@ -59,7 +61,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
         if (end < 0) {
             throw new IllegalArgumentException("Invalid query " + sql);
         }
-        String keyword = sql.substring(0, end).trim().toUpperCase(Locale.US);
+        String keyword = sql.substring(0, end).trim().toUpperCase(Locale.ROOT);
         try {
             return QueryType.valueOf(keyword);
         } catch (IllegalArgumentException e) {
@@ -69,9 +71,10 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
 
     @Override
     public Result<Tuple> get() {
+        PreparedStatement statement = null;
         try {
-            Connection connection = configuration.connectionProvider().getConnection();
-            PreparedStatement statement = prepare(sql, connection);
+            Connection connection = configuration.getConnection();
+            statement = prepare(sql, connection);
             mapParameters(statement, boundParameters);
             switch (queryType) {
                 case SELECT:
@@ -84,11 +87,11 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                 case TRUNCATE:
                 case MERGE:
                     // DML, only the row count is returned
-                    StatementListener listener = configuration.statementListener();
+                    StatementListener listener = configuration.getStatementListener();
                     listener.beforeExecuteUpdate(statement, sql, boundParameters);
                     int count = statement.executeUpdate();
-                    listener.afterExecuteUpdate(statement);
-                    ResultTuple tuple = new ResultTuple(1);
+                    listener.afterExecuteUpdate(statement, count);
+                    MutableTuple tuple = new MutableTuple(1);
                     tuple.set(0, NamedExpression.ofInteger("count"), count);
                     try {
                         statement.close();
@@ -100,8 +103,8 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                     }
                     return new SingleResult<Tuple>(tuple);
             }
-        } catch (SQLException e) {
-            throw new StatementExecutionException(e, sql);
+        } catch (Exception e) {
+            throw StatementExecutionException.closing(statement, e, sql);
         }
     }
 
@@ -117,8 +120,8 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
         @Override
         public Tuple read(ResultSet results, Set<? extends Expression<?>> selection)
             throws SQLException {
-            Mapping mapping = configuration.mapping();
-            ResultTuple tuple = new ResultTuple(expressions.length);
+            Mapping mapping = configuration.getMapping();
+            MutableTuple tuple = new MutableTuple(expressions.length);
             for (int i = 0; i < tuple.count(); i++) {
                 Object value = mapping.read(expressions[i], results, i + 1);
                 tuple.set(i, expressions[i], value);
@@ -130,7 +133,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
         public CloseableIterator<Tuple> iterator(int skip, int take) {
             try {
                 // execute the query
-                StatementListener listener = configuration.statementListener();
+                StatementListener listener = configuration.getStatementListener();
                 listener.beforeExecuteQuery(statement, sql, boundParameters);
                 ResultSet results = statement.executeQuery();
                 listener.afterExecuteQuery(statement);
@@ -138,7 +141,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                 ResultSetMetaData metadata = results.getMetaData();
                 int columns = metadata.getColumnCount();
                 expressions = new Expression[columns];
-                Mapping mapping = configuration.mapping();
+                Mapping mapping = configuration.getMapping();
 
                 CloseableIterator<Tuple> iterator =
                     new ResultSetIterator<>(this, results, null, true, true);
@@ -146,6 +149,9 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                     for (int i = 0; i < columns; i++) {
                         String name = metadata.getColumnName(i + 1);
                         int sqlType = metadata.getColumnType(i + 1);
+                        if (sqlType == Types.NUMERIC) {
+                            sqlType = Types.INTEGER;
+                        }
                         Class type = mapping.typeOf(sqlType);
                         expressions[i] = NamedExpression.of(name, type);
                     }

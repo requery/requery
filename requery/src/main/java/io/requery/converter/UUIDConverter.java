@@ -27,17 +27,17 @@ import java.util.UUID;
 public class UUIDConverter implements Converter<UUID, byte[]> {
 
     @Override
-    public Class<UUID> mappedType() {
+    public Class<UUID> getMappedType() {
         return UUID.class;
     }
 
     @Override
-    public Class<byte[]> persistedType() {
+    public Class<byte[]> getPersistedType() {
         return byte[].class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return 16;
     }
 
@@ -58,6 +58,7 @@ public class UUIDConverter implements Converter<UUID, byte[]> {
         if (value == null) {
             return null;
         }
-        return UUID.nameUUIDFromBytes(value);
+        ByteBuffer buffer = ByteBuffer.wrap(value);
+        return new UUID(buffer.getLong(), buffer.getLong());
     }
 }

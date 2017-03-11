@@ -16,6 +16,8 @@
 
 package io.requery;
 
+import javax.annotation.Nullable;
+
 /**
  * Interface for converting between a java custom type to a basic java persisted type. Example a
  * conversion to store a java URI as a string. Would define a class like:
@@ -53,17 +55,17 @@ public interface Converter<A, B> {
     /**
      * @return the type to be converted.
      */
-    Class<A> mappedType();
+    Class<A> getMappedType();
 
     /**
      * @return the persisted type.
      */
-    Class<B> persistedType();
+    Class<B> getPersistedType();
 
     /**
      * @return size or length of the persisted type (optional) in bytes otherwise return null.
      */
-    Integer persistedSize();
+    @Nullable Integer getPersistedSize();
 
     /**
      * Convert the mapped type A to the persisted type B.
@@ -80,5 +82,5 @@ public interface Converter<A, B> {
      * @param value value to convert
      * @return converted value
      */
-    A convertToMapped(Class<? extends A> type, B value);
+    A convertToMapped(Class<? extends A> type, @Nullable B value);
 }

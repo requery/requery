@@ -1,6 +1,6 @@
 package io.requery.test;
 
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import com.mysql.cj.jdbc.MysqlDataSource;
 import io.requery.sql.Platform;
 import io.requery.sql.platform.Derby;
 import io.requery.sql.platform.MySQL;
@@ -12,6 +12,7 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.postgresql.ds.PGSimpleDataSource;
+import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
 import javax.sql.CommonDataSource;
@@ -20,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Locale;
 import java.util.Properties;
 
 /**
@@ -75,6 +77,9 @@ public enum DatabaseType {
         DataSource createDataSource() {
             SQLiteDataSource dataSource = new SQLiteDataSource();
             dataSource.setUrl("jdbc:sqlite:/tmp/test.sqlite");
+            SQLiteConfig config = new SQLiteConfig();
+            config.setDateClass("TEXT");
+            dataSource.setConfig(config);
             try (Statement statement = dataSource.getConnection().createStatement()) {
                 statement.execute("PRAGMA foreign_keys = ON");
             } catch (SQLException e) {
@@ -133,7 +138,7 @@ public enum DatabaseType {
                     .asSubclass(CommonDataSource.class);
             }
             CommonDataSource dataSource = dataSourceClass.newInstance();
-            String fileName = platformClass.getSimpleName().toLowerCase();
+            String fileName = platformClass.getSimpleName().toLowerCase(Locale.US);
             Properties properties = new Properties();
             String localPath = "src/test/resources/io/requery/test/local/";
             String ciPath = "src/test/resources/io/requery/test/ci/";

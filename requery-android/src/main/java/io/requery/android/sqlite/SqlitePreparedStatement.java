@@ -80,7 +80,7 @@ class SqlitePreparedStatement extends BasePreparedStatement {
         } else {
             statement.bindBlob(index, value);
             if (bindings != null) {
-                bindings.add("x\'" + byteToHexString(value) + "\'");
+                bindBlobLiteral(index, value);
             }
         }
     }
@@ -143,7 +143,7 @@ class SqlitePreparedStatement extends BasePreparedStatement {
                 }
             }
             if (cursor == null) {
-                cursor = (SQLiteCursor) connection.getDatabase().rawQuery(sql, args);
+                cursor = (SQLiteCursor) connection.getDatabase().rawQuery(getSql(), args);
             }
             return queryResult = new CursorResultSet(this, cursor, false);
         } catch (android.database.SQLException e) {
@@ -159,17 +159,17 @@ class SqlitePreparedStatement extends BasePreparedStatement {
             try {
                 long rowId = statement.executeInsert();
                 insertResult = new SingleResultSet(this, rowId);
+                updateCount = 1;
             } catch (android.database.SQLException e) {
                 SqliteConnection.throwSQLException(e);
             }
-            return 1;
         } else {
             try {
-                return updateCount = statement.executeUpdateDelete();
+                updateCount = statement.executeUpdateDelete();
             } catch (android.database.SQLException e) {
                 SqliteConnection.throwSQLException(e);
             }
         }
-        return 0;
+        return updateCount;
     }
 }

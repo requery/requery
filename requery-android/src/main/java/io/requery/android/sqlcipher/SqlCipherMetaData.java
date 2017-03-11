@@ -19,9 +19,12 @@ package io.requery.android.sqlcipher;
 import android.database.Cursor;
 import io.requery.android.sqlite.BaseConnection;
 import io.requery.android.sqlite.SqliteMetaData;
+import io.requery.util.function.Function;
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteException;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.sql.SQLException;
 
 class SqlCipherMetaData extends SqliteMetaData {
@@ -31,17 +34,17 @@ class SqlCipherMetaData extends SqliteMetaData {
     }
 
     @Override
-    public String getDatabaseProductVersion() throws SQLException {
+    protected <R> R queryMemory(Function<Cursor, R> function, String query) throws SQLException {
         try {
-            SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(":memory:", "", null);
-            Cursor cursor = database.rawQuery("select sqlite_version() AS sqlite_version", null);
-            String version = "";
-            if (cursor.moveToNext()) {
-                version = cursor.getString(0);
-            }
-            cursor.close();
-            database.close();
-            return version;
+            final SQLiteDatabase database =
+                SQLiteDatabase.openOrCreateDatabase(":memory:", "", null);
+            Cursor cursor = database.rawQuery(query, null);
+            return function.apply(closeWithCursor(new Closeable() {
+                @Override
+                public void close() throws IOException {
+                    database.close();
+                }
+            }, cursor));
         } catch (SQLiteException e) {
             throw new SQLException(e);
         }

@@ -18,11 +18,13 @@ package io.requery.processor;
 
 import io.requery.ReferentialAction;
 
+import javax.lang.model.type.TypeMirror;
 import javax.persistence.ConstraintMode;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 
 class JoinTableAssociation implements AssociativeEntityDescriptor {
@@ -37,13 +39,13 @@ class JoinTableAssociation implements AssociativeEntityDescriptor {
             String columnName = column.name();
             ForeignKey foreignKey = column.foreignKey();
             ReferentialAction action = mapConstraint(foreignKey.value());
-            columns.add(new AssociativeReference(columnName, null, action, action));
+            columns.add(new AssociativeReference(columnName, null, null, action, action));
         }
         for (JoinColumn column : table.inverseJoinColumns()) {
             String columnName = column.name();
             ForeignKey foreignKey = column.foreignKey();
             ReferentialAction action = mapConstraint(foreignKey.value());
-            columns.add(new AssociativeReference(columnName, null, action, action));
+            columns.add(new AssociativeReference(columnName, null, null, action, action));
         }
     }
 
@@ -66,5 +68,10 @@ class JoinTableAssociation implements AssociativeEntityDescriptor {
     @Override
     public Set<AssociativeReference> columns() {
         return columns;
+    }
+
+    @Override
+    public Optional<TypeMirror> type() {
+        return Optional.empty();
     }
 }

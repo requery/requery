@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import io.requery.PropertyNameStyle;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,7 +34,7 @@ import java.util.Optional;
 interface EntityDescriptor {
 
     /**
-     * @return {@link TypeElement} element being represented
+     * @return {@link TypeElement} element being represented as an entity for processing
      */
     TypeElement element();
 
@@ -40,6 +42,11 @@ interface EntityDescriptor {
      * @return map of elements to attributes
      */
     Map<Element, ? extends AttributeDescriptor> attributes();
+
+    /**
+     * @return true if this entity type requires additional types to be generated to compile.
+     */
+    boolean generatesAdditionalTypes();
 
     /**
      * @return map of elements to listener methods
@@ -68,9 +75,14 @@ interface EntityDescriptor {
     String classFactoryName();
 
     /**
-     * @return table attributes used during table generataion
+     * @return table attributes used during table generation
      */
     String[] tableAttributes();
+
+    /**
+     * @return table unique indexes used during table generation
+     */
+    String[] tableUniqueIndexes();
 
     /**
      * @return {@link PropertyNameStyle} style of the accessors in the entity
@@ -78,9 +90,24 @@ interface EntityDescriptor {
     PropertyNameStyle propertyNameStyle();
 
     /**
-     * @return true if the entity is cacheable
+     * @return true if the entity is cacheable, false otherwise
      */
     boolean isCacheable();
+
+    /**
+     * @return true if the entity is copyable, false otherwise
+     */
+    boolean isCopyable();
+
+    /**
+     * @return true if this an embedded entity type.
+     */
+    boolean isEmbedded();
+
+    /**
+     * @return true if the underlying type being represented is immutable, false otherwise
+     */
+    boolean isImmutable();
 
     /**
      * @return true if the entity is read only, differs from immutable in that the properties can
@@ -94,20 +121,22 @@ interface EntityDescriptor {
     boolean isStateless();
 
     /**
-     * @return true if the underlying type being represented is immutable, false otherwise
+     * @return true if the annotated type should not be extended/implemented by the generation step.
+     * Either the source class that is final (cannot be extended) or another limitation prevents it
+     * from being extended/implemented.
      */
-    boolean isImmutable();
+    boolean isUnimplementable();
 
     /**
-     * @return true if the annotated type is class that is marked final (cannot be extended)
+     * @return true if the annotated type maps to a view instead of a table
      */
-    boolean isFinal();
+    boolean isView();
 
     /**
-     * @return {@link TypeElement} of the builder class that can build instances of the entity if
-     * the type is {@link #isImmutable()}
+     * @return {@link javax.lang.model.type.TypeMirror} of the builder class that can build
+     * instances of the entity if the type is {@link #isImmutable()}
      */
-    Optional<TypeElement> builderType();
+    Optional<TypeMirror> builderType();
 
     /**
      * @return {@link ExecutableElement} of the builder type that can create builder instances for
@@ -138,4 +167,9 @@ interface EntityDescriptor {
      * </code></pre>
      */
     Optional<ExecutableElement> factoryMethod();
+
+    /**
+     * @return the list of argument names for the {@link #factoryMethod()}
+     */
+    List<String> factoryArguments();
 }

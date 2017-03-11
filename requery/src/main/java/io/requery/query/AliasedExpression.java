@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,7 @@ public class AliasedExpression<V> extends FieldExpression<V> {
     private final String name;
 
     public AliasedExpression(Expression<V> expression, String alias) {
-        this.expression = expression;
-        this.alias = alias;
-        this.name = expression.name();
+        this(expression, expression.getName(), alias);
     }
 
     public AliasedExpression(Expression<V> expression, String name, String alias) {
@@ -35,26 +33,27 @@ public class AliasedExpression<V> extends FieldExpression<V> {
     }
 
     @Override
-    public String name() {
+    public String getName() {
         return name;
     }
 
     @Override
-    public Class<V> classType() {
-        return expression.classType();
+    public Class<V> getClassType() {
+        return expression.getClassType();
     }
 
     @Override
-    public ExpressionType type() {
+    public ExpressionType getExpressionType() {
         return ExpressionType.ALIAS;
     }
 
     @Override
-    public String aliasName() {
+    public String getAlias() {
         return alias;
     }
 
-    public Expression<V> innerExpression() {
+    @Override
+    public Expression<V> getInnerExpression() {
         return expression;
     }
 }

@@ -25,8 +25,8 @@ class SerializationContext {
     private static final ClassMap<Type<?>> types = new ClassMap<>();
 
     public static void map(EntityModel model) {
-        for (Type<?> type : model.allTypes()) {
-            types.put(type.classType(), type);
+        for (Type<?> type : model.getTypes()) {
+            types.put(type.getClassType(), type);
         }
     }
 

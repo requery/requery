@@ -26,11 +26,12 @@ import io.requery.sql.Platform;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.H2;
-import io.requery.sql.platform.HSQL;
 import io.requery.sql.platform.MySQL;
 import io.requery.sql.platform.SQLite;
 import io.requery.test.model3.Event;
 import io.requery.test.model3.Models;
+import io.requery.test.model3.Place;
+import io.requery.test.model3.Tag;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,12 +41,14 @@ import javax.sql.CommonDataSource;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
@@ -54,10 +57,10 @@ public class UpsertTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Platform> data() {
         return Arrays.<Platform>asList(
-            //new PostgresSQL(),
+            //new PostgresSQL(), disabled on CI
             new MySQL(),
             new H2(),
-            new HSQL(),
+            //new HSQL(),
             //new Derby(), // fails because of https://issues.apache.org/jira/browse/DERBY-6656
             new SQLite());
     }
@@ -87,27 +90,103 @@ public class UpsertTest {
     }
 
     @Test
+    public void testInsertOneToManyInsert() {
+        Event event = new Event();
+        UUID id = UUID.randomUUID();
+        event.setId(id);
+        event.setName("test");
+        Tag t1 = new Tag();
+        t1.setId(UUID.randomUUID());
+        Tag t2 = new Tag();
+        t2.setId(UUID.randomUUID());
+        event.getTags().add(t1);
+        event.getTags().add(t2);
+        data.insert(event);
+        HashSet<Tag> set = new HashSet<>(event.getTags());
+        assertEquals(2, set.size());
+        assertTrue(set.containsAll(Arrays.asList(t1, t2)));
+        assertSame(2, data.select(Tag.class).get().toList().size());
+    }
+
+    @Test
     public void testUpsertInsert() {
         Event event = new Event();
         UUID id = UUID.randomUUID();
-        event.setId(id.toString());
+        event.setId(id);
+        event.setName("test");
 
         data.upsert(event);
-        event = data.findByKey(Event.class, id.toString());
+        Event found = data.findByKey(Event.class, id);
+        assertEquals(event.getId(), found.getId());
+    }
+
+    @Test
+    public void testUpsertOneToMany() {
+        Event event = new Event();
+        event.setId(UUID.randomUUID());
+        Place place = new Place();
+        place.setId(UUID.randomUUID().toString());
+        place.setName("place");
+        place.getEvents().add(event);
+        data.upsert(place);
+    }
+
+    @Test
+    public void testUpsertManyToMany() {
+        Event event1 = new Event();
+        event1.setId(UUID.randomUUID());
+        Tag tag = new Tag();
+        tag.setId(UUID.randomUUID());
+        tag.getEvents().add(event1);
+        data.upsert(tag);
+        Event event2 = new Event();
+        event2.setId(UUID.randomUUID());
+        tag.getEvents().add(event2);
+        data.upsert(event2);
+        data.upsert(tag);
+    }
+
+    @Test
+    public void testUpsertInsertOneToMany() {
+        Event event = new Event();
+        UUID id = UUID.randomUUID();
+        event.setId(id);
+
+        data.upsert(event);
         assertNotNull(event);
+
+        Event event1 = new Event();
+        event1.setId(id);
+        Place place = new Place();
+        place.setId(UUID.randomUUID().toString());
+        place.setName("place");
+        place.getEvents().add(event1);
+        data.insert(place);
+    }
+
+    @Test
+    public void testUpsertOneToManyEmptyCollection() {
+        Event event1 = new Event();
+        event1.setId(UUID.randomUUID());
+        Place place = new Place();
+        place.setId(UUID.randomUUID().toString());
+        place.setName("place");
+        place.getEvents().add(event1);
+        place.getEvents().clear();
+        data.upsert(place);
     }
 
     @Test
     public void testUpsertUpdate() {
         Event event = new Event();
         UUID id = UUID.randomUUID();
-        event.setId(id.toString());
+        event.setId(id);
         event.setName("event1");
 
         data.insert(event);
 
         Event event2 = new Event();
-        event2.setId(id.toString());
+        event2.setId(id);
         event2.setName("event2");
         data.upsert(event2);
 

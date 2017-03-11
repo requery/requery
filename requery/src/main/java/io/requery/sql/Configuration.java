@@ -20,6 +20,7 @@ import io.requery.EntityCache;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
+import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
 
 import java.sql.Connection;
@@ -34,80 +35,96 @@ import java.util.concurrent.Executor;
 public interface Configuration {
 
     /**
+     * @return max number of statements to use in a batch insert or update operation.
+     */
+    int getBatchUpdateSize();
+
+    /**
      * @return {@link Connection} provider. This provider must return a usable connection.
      */
-    ConnectionProvider connectionProvider();
+    ConnectionProvider getConnectionProvider();
+
+    /**
+     * @return {@link EntityCache} cache to use (if null no caching will be used)
+     */
+    EntityCache getCache();
+
+    /**
+     * @return {@link EntityStateListener} optional entity state listener that will receive state
+     * callbacks for all entity state changes
+     */
+    Set<EntityStateListener> getEntityStateListeners();
+
+    /**
+     * @return the mapping implementation use (if null default mapping will be used)
+     */
+    Mapping getMapping();
+
+    /**
+     * @return {@link EntityModel} defining the model, must not be null.
+     */
+    EntityModel getModel();
 
     /**
      * @return {@link Platform} to use, if null the Platform will try to be determined automatically
      * via the Connection metadata.
      */
-    Platform platform();
-
-    /**
-     * @return {@link EntityModel} defining the model, must not be null.
-     */
-    EntityModel entityModel();
-
-    /**
-     * @return {@link EntityCache} cache to use (if null no caching will be used)
-     */
-    EntityCache entityCache();
-
-    /**
-     * @return the mapping implementation use (if null default mapping will be used)
-     */
-    Mapping mapping();
-
-    /**
-     * @return for asynchronous operations the {@link Executor} that is used to perform the write.
-     */
-    Executor writeExecutor();
-
-    /**
-     * @return true if the default logging should be enabled
-     */
-    boolean useDefaultLogging();
+    Platform getPlatform();
 
     /**
      * @return true if the all the table names should be quoted.
      */
-    boolean quoteTableNames();
+    boolean getQuoteTableNames();
 
     /**
      * @return true if all column names should be quoted.
      */
-    boolean quoteColumnNames();
+    boolean getQuoteColumnNames();
+
+    /**
+     * @return optional table name transformation function for all table names.
+     */
+    Function<String, String> getTableTransformer();
+
+    /**
+     * @return optional column name transformation function for all column names.
+     */
+    Function<String, String> getColumnTransformer();
 
     /**
      * @return number of statements to cache, 0 to disable caching.
      */
-    int statementCacheSize();
+    int getStatementCacheSize();
 
     /**
-     * @return max number of statements to use in a batch insert or update operation.
+     * @return get the set of default statement listeners
      */
-    int batchUpdateSize();
+    Set<StatementListener> getStatementListeners();
 
     /**
      * @return the mode of transactions enabled {@link TransactionMode}, defaults to
      * {@link TransactionMode#AUTO}
      */
-    TransactionMode transactionMode();
+    TransactionMode getTransactionMode();
 
     /**
      * @return optional default {@link TransactionIsolation} isolation to use for transactions.
      */
-    TransactionIsolation transactionIsolation();
+    TransactionIsolation getTransactionIsolation();
 
     /**
      * @return get the supplier of transaction listeners. One {@link TransactionListener} will be
      * requested per {@link io.requery.Transaction}
      */
-    Set<Supplier<TransactionListener>> transactionListenerFactories();
+    Set<Supplier<TransactionListener>> getTransactionListenerFactories();
 
     /**
-     * @return get the set of default statement listeners
+     * @return true if the default logging should be enabled
      */
-    Set<StatementListener> statementListeners();
+    boolean getUseDefaultLogging();
+
+    /**
+     * @return for asynchronous operations the {@link Executor} that is used to perform the write.
+     */
+    Executor getWriteExecutor();
 }

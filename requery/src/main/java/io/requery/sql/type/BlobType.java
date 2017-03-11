@@ -36,7 +36,7 @@ public class BlobType extends BasicType<Blob> {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.BLOB;
     }
 }

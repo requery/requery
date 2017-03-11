@@ -16,7 +16,7 @@
 
 package io.requery.rx;
 
-import io.requery.query.BaseResult;
+import io.requery.query.Result;
 import io.requery.util.CloseableIterator;
 import rx.Observable;
 import rx.Producer;
@@ -38,27 +38,25 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class OnSubscribeFromQuery<T> implements Observable.OnSubscribe<T> {
 
-    private final BaseResult<T> result;
+    private final Result<T> result;
 
-    OnSubscribeFromQuery(BaseResult<T> result) {
+    OnSubscribeFromQuery(Result<T> result) {
         this.result = result;
     }
 
     @Override
     public void call(Subscriber<? super T> subscriber) {
-        subscriber.setProducer(new ElementProducer<>(result, subscriber));
+        subscriber.setProducer(new ElementProducer(subscriber));
     }
 
     // TODO support paging on an attribute instead of offset/limit since it could miss/overlap records
-    private static class ElementProducer<E> implements Producer {
+    private class ElementProducer implements Producer {
 
-        private final BaseResult<E> result;
-        private final Subscriber<? super E> subscriber;
+        private final Subscriber<? super T> subscriber;
         private final AtomicLong emitted;
         private final AtomicLong requested;
 
-        ElementProducer(BaseResult<E> result, Subscriber<? super E> subscriber) {
-            this.result = result;
+        ElementProducer(Subscriber<? super T> subscriber) {
             this.subscriber = subscriber;
             requested = new AtomicLong();
             emitted = new AtomicLong();
@@ -68,12 +66,14 @@ class OnSubscribeFromQuery<T> implements Observable.OnSubscribe<T> {
         public void request(long n) {
             if (n == Long.MAX_VALUE && requested.compareAndSet(0, Long.MAX_VALUE)) {
                 // emitting all elements
-                try (CloseableIterator<E> iterator = result.iterator()) {
+                try (CloseableIterator<T> iterator = result.iterator()) {
                     while (!subscriber.isUnsubscribed()) {
                         if (iterator.hasNext()) {
                             subscriber.onNext(iterator.next());
+                            emitted.incrementAndGet();
                         } else {
                             subscriber.onCompleted();
+                            break;
                         }
                     }
                 }
@@ -81,7 +81,7 @@ class OnSubscribeFromQuery<T> implements Observable.OnSubscribe<T> {
                 // emitting with limit/offset
                 long count = n;
                 while (count > 0) {
-                    try (CloseableIterator<E> iterator =
+                    try (CloseableIterator<T> iterator =
                              result.iterator(emitted.intValue(), (int) n)) {
                         long i = 0;
                         while (!subscriber.isUnsubscribed() && iterator.hasNext()) {
@@ -95,7 +95,7 @@ class OnSubscribeFromQuery<T> implements Observable.OnSubscribe<T> {
                         // no more items
                         if (!subscriber.isUnsubscribed() && i < count) {
                             subscriber.onCompleted();
-                            return;
+                            break;
                         }
                         count = requested.addAndGet(-count);
                     }

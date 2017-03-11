@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,15 +28,20 @@ public interface Expression<V> {
     /**
      * @return identifier of the expression
      */
-    String name();
+    String getName();
 
     /**
      * @return {@link Class} that results when the expression is evaluated
      */
-    Class<V> classType();
+    Class<V> getClassType();
 
     /**
      * @return type of the expression
      */
-    ExpressionType type();
+    ExpressionType getExpressionType();
+
+    /**
+     * @return inner expression contained by this instance or null if none
+     */
+    Expression<V> getInnerExpression();
 }

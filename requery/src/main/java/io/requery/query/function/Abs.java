@@ -23,7 +23,7 @@ public class Abs<V> extends Function<V> {
     private final Expression<V> attribute;
 
     private Abs(Expression<V> expression) {
-        super("abs", expression.classType());
+        super("abs", expression.getClassType());
         this.attribute = expression;
     }
 

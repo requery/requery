@@ -19,6 +19,7 @@ package io.requery.processor;
 import io.requery.CascadeAction;
 import io.requery.Column;
 import io.requery.Convert;
+import io.requery.Embedded;
 import io.requery.ForeignKey;
 import io.requery.Generated;
 import io.requery.Index;
@@ -31,6 +32,7 @@ import io.requery.Naming;
 import io.requery.Nullable;
 import io.requery.OneToMany;
 import io.requery.OneToOne;
+import io.requery.OrderBy;
 import io.requery.PropertyNameStyle;
 import io.requery.ReadOnly;
 import io.requery.ReferentialAction;
@@ -43,6 +45,7 @@ import io.requery.meta.ListAttributeBuilder;
 import io.requery.meta.MapAttributeBuilder;
 import io.requery.meta.ResultAttributeBuilder;
 import io.requery.meta.SetAttributeBuilder;
+import io.requery.query.Order;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -73,6 +76,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -88,19 +92,21 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
 
     private final EntityDescriptor entity;
     private String name;
-    private boolean isKey;
-    private boolean isUnique;
-    private boolean isNullable;
-    private boolean isVersion;
-    private boolean isGenerated;
-    private boolean isLazy;
+    private boolean isBoolean;
+    private boolean isEmbedded;
     private boolean isForeignKey;
+    private boolean isGenerated;
+    private boolean isIndexed;
+    private boolean isIterable;
+    private boolean isKey;
+    private boolean isLazy;
+    private boolean isMap;
+    private boolean isNullable;
+    private boolean isOptional;
     private boolean isReadOnly;
     private boolean isTransient;
-    private boolean isIterable;
-    private boolean isOptional;
-    private boolean isMap;
-    private boolean isIndexed;
+    private boolean isUnique;
+    private boolean isVersion;
     private Class<? extends AttributeBuilder> builderClass;
     private Integer length;
     private Set<String> indexNames;
@@ -114,7 +120,10 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private String referencedTable;
     private String mappedBy;
     private String defaultValue;
+    private String definition;
     private String collate;
+    private String orderByColumn;
+    private Order orderByDirection;
     private AssociativeEntityDescriptor associativeDescriptor;
 
     AttributeMember(Element element, EntityDescriptor entity) {
@@ -140,13 +149,17 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         if (cardinality() != null && entity.isImmutable()) {
             validator.error("Immutable value type cannot contain relational references");
         }
+        checkReserved(name(), validator);
+        isEmbedded = annotationOf(Embedded.class).isPresent() ||
+            annotationOf(javax.persistence.Embedded.class).isPresent();
+        indexNames.forEach(name -> checkReserved(name, validator));
         return validators;
     }
 
     private void validateField(ElementValidator validator) {
         if (element().getKind().isField()) {
             Set<Modifier> modifiers = element().getModifiers();
-            if (!entity.isFinal() && modifiers.contains(Modifier.PRIVATE)) {
+            if (!entity.isUnimplementable() && modifiers.contains(Modifier.PRIVATE)) {
                 validator.error("Entity field cannot be private");
             }
             if (modifiers.contains(Modifier.STATIC)) {
@@ -162,6 +175,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                                  Set<ElementValidator> validators) {
         builderClass = AttributeBuilder.class;
         Types types = processingEnvironment.getTypeUtils();
+        isBoolean = type.getKind() == TypeKind.BOOLEAN;
         if (type.getKind() == TypeKind.DECLARED) {
             TypeElement element = (TypeElement) types.asElement(type);
             if (element != null) {
@@ -170,31 +184,38 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                     isIterable = Mirrors.isInstance(types, element, Iterable.class);
                 }
                 isMap = Mirrors.isInstance(types, element, Map.class);
-                if (isMap) {
+                if (isMap && cardinality != null) {
                     builderClass = MapAttributeBuilder.class;
                 }
                 isOptional = Mirrors.isInstance(types, element, Optional.class);
+                isBoolean = Mirrors.isInstance(types, element, Boolean.class);
             }
         }
         if (isIterable) {
-            validators.add(validateCollectionType(processingEnvironment));
+            ElementValidator validator = validateCollectionType(processingEnvironment);
+            if (validator != null) {
+                validators.add(validator);
+            }
         }
     }
 
     private ElementValidator validateCollectionType(ProcessingEnvironment processingEnvironment) {
         Types types = processingEnvironment.getTypeUtils();
         TypeElement collectionElement = (TypeElement) types.asElement(typeMirror());
-        ElementValidator validator = new ElementValidator(collectionElement, processingEnvironment);
-        if (Mirrors.isInstance(types, collectionElement, List.class)) {
-            builderClass = ListAttributeBuilder.class;
-        } else if (Mirrors.isInstance(types, collectionElement, Set.class)) {
-            builderClass = SetAttributeBuilder.class;
-        } else if (Mirrors.isInstance(types, collectionElement, Iterable.class)) {
-            builderClass = ResultAttributeBuilder.class;
-        } else {
-            validator.error("Invalid collection type, must be Set, List or Iterable");
+        if (collectionElement != null) {
+            ElementValidator validator = new ElementValidator(collectionElement, processingEnvironment);
+            if (Mirrors.isInstance(types, collectionElement, List.class)) {
+                builderClass = ListAttributeBuilder.class;
+            } else if (Mirrors.isInstance(types, collectionElement, Set.class)) {
+                builderClass = SetAttributeBuilder.class;
+            } else if (Mirrors.isInstance(types, collectionElement, Iterable.class)) {
+                builderClass = ResultAttributeBuilder.class;
+            } else {
+                validator.error("Invalid collection type, must be Set, List or Iterable");
+            }
+            return validator;
         }
-        return validator;
+        return null;
     }
 
     private void processFieldAccessAnnotations(ElementValidator validator) {
@@ -226,6 +247,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             annotationOf(GeneratedValue.class).isPresent()) {
             isGenerated = true;
             isReadOnly = true;
+
             // check generation strategy
             annotationOf(GeneratedValue.class).ifPresent(generatedValue -> {
                 if (generatedValue.strategy() != GenerationType.IDENTITY  &&
@@ -270,6 +292,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             isNullable = column.nullable();
             defaultValue = column.value();
             collate = column.collate();
+            definition = column.definition();
             if (column.length() > 0) {
                 length = column.length();
             }
@@ -329,6 +352,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             isNullable = persistenceColumn.nullable();
             length = persistenceColumn.length();
             isReadOnly = !persistenceColumn.updatable();
+            definition = persistenceColumn.columnDefinition();
         });
 
         annotationOf(Enumerated.class).ifPresent(enumerated -> {
@@ -379,6 +403,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             mappedBy = reflect.mappedBy();
             cascadeActions = reflect.cascade();
             checkIterable(validator);
+            processOrderBy();
         }
         if (manyToOne.isPresent()) {
             cardinality = Cardinality.MANY_TO_ONE;
@@ -412,6 +437,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             }
             isReadOnly = true;
             checkIterable(validator);
+            processOrderBy();
         }
         if (isForeignKey()) {
             if (deleteAction == ReferentialAction.SET_NULL && !isNullable()) {
@@ -427,6 +453,13 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             } else if (!typeMirror().getKind().isPrimitive()) {
                 referencedType = typeMirror().toString();
             }
+        }
+    }
+
+    private void checkReserved(String name, ElementValidator validator) {
+        if (Stream.of(ReservedKeyword.values())
+            .anyMatch(keyword -> keyword.toString().equalsIgnoreCase(name))) {
+            validator.warning("Column or index name " + name + " may need to be escaped");
         }
     }
 
@@ -458,6 +491,28 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         if (converterType != null && cardinality != null) {
             validator.warning("Cannot specify converter on association field", Convert.class);
         }
+    }
+
+    private void processOrderBy() {
+        annotationOf(OrderBy.class).ifPresent(orderBy -> {
+            orderByColumn = orderBy.value();
+            orderByDirection = orderBy.order();
+        });
+        annotationOf(javax.persistence.OrderBy.class).ifPresent(orderBy -> {
+            String value = orderBy.value();
+            String[] parts = value.split(" ");
+            if (parts.length > 0) {
+                orderByColumn = parts[0].trim();
+                if (parts.length > 1) {
+                    String direction = parts[1].toUpperCase().trim();
+                    try {
+                        orderByDirection = Order.valueOf(direction);
+                    } catch (IllegalArgumentException e) {
+                        orderByDirection = Order.ASC;
+                    }
+                }
+            }
+        });
     }
 
     private void cannotCombine(ElementValidator validator,
@@ -497,13 +552,14 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             return element().getSimpleName().toString();
         } else if (element().getKind() == ElementKind.METHOD) {
             ExecutableElement methodElement = (ExecutableElement) element();
-            String name = methodElement.getSimpleName().toString();
-            name = Names.removeMethodPrefixes(name);
+            String originalName = methodElement.getSimpleName().toString();
+            String name = Names.removeMethodPrefixes(originalName);
             if (Names.isAllUpper(name)) {
-                return name.toLowerCase();
+                name = name.toLowerCase(Locale.ROOT);
             } else {
-                return Names.lowerCaseFirst(name);
+                name = Names.lowerCaseFirst(name);
             }
+            return Names.checkReservedName(name, originalName);
         } else {
             throw new IllegalStateException();
         }
@@ -513,7 +569,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     public String getterName() {
         if (element().getKind().isField()) {
             String name = annotationOf(Naming.class).map(Naming::getter).orElse("");
-            return getMethodName(name, useBeanStyleProperties() ? "get" : "");
+            String prefix = "";
+            if (useBeanStyleProperties()) {
+                prefix = isBoolean ? "is" : "get";
+            }
+            return getMethodName(name, prefix);
         } else {
             return element().getSimpleName().toString();
         }
@@ -532,7 +592,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                 if (parameters.size() == 1) {
                     String property =
                         Names.removeMethodPrefixes(element.getSimpleName().toString());
-                    if (property.toLowerCase().equalsIgnoreCase(name())) {
+                    if (property.toLowerCase(Locale.ROOT).equalsIgnoreCase(name())) {
                         return element.getSimpleName().toString();
                     }
                 }
@@ -555,7 +615,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
 
     private boolean useBeanStyleProperties() {
         return entity.propertyNameStyle() == PropertyNameStyle.BEAN ||
-            entity.propertyNameStyle() == PropertyNameStyle.FLUENT_BEAN;
+               entity.propertyNameStyle() == PropertyNameStyle.FLUENT_BEAN;
     }
 
     @Override
@@ -567,6 +627,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         // for a method strip any accessor prefix such as get/is
         if (element().getKind() == ElementKind.METHOD) {
             ExecutableElement executableElement = (ExecutableElement) element();
+            String originalName = elementName;
             AccessorNamePrefix prefix = AccessorNamePrefix.fromElement(executableElement);
             switch (prefix) {
                 case GET:
@@ -576,7 +637,9 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                     elementName = elementName.replaceFirst("is", "");
                     break;
             }
-            return Names.isAllUpper(elementName) ? elementName : Names.lowerCaseFirst(elementName);
+            elementName = Names.isAllUpper(elementName) ?
+                    elementName : Names.lowerCaseFirst(elementName);
+            return Names.checkReservedName(elementName, originalName);
         }
         return elementName;
     }
@@ -604,6 +667,16 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     @Override
     public String defaultValue() {
         return defaultValue;
+    }
+
+    @Override
+    public String definition() {
+        return definition;
+    }
+
+    @Override
+    public boolean isEmbedded() {
+        return isEmbedded;
     }
 
     @Override
@@ -713,6 +786,16 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     @Override
     public String mappedBy() {
         return mappedBy;
+    }
+
+    @Override
+    public String orderBy() {
+        return orderByColumn;
+    }
+
+    @Override
+    public Order orderByDirection() {
+        return orderByDirection;
     }
 
     @Override

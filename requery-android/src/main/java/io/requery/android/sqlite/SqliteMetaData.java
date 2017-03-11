@@ -17,13 +17,22 @@
 package io.requery.android.sqlite;
 
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.database.sqlite.SQLiteDatabase;
+import io.requery.sql.Keyword;
+import io.requery.sql.QueryBuilder;
+import io.requery.util.function.Function;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class SqliteMetaData implements DatabaseMetaData {
 
@@ -31,6 +40,31 @@ public class SqliteMetaData implements DatabaseMetaData {
 
     protected SqliteMetaData(BaseConnection connection) {
         this.connection = connection;
+    }
+
+    protected <R> R queryMemory(Function<Cursor, R> function, String query) throws SQLException {
+        try {
+            final SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(":memory:", null);
+            Cursor cursor = database.rawQuery(query, null);
+            return function.apply(closeWithCursor(database, cursor));
+        } catch (android.database.SQLException e) {
+            throw new SQLException(e);
+        }
+    }
+
+    protected CursorWrapper closeWithCursor(final Closeable closeable, Cursor cursor) {
+        return new CursorWrapper(cursor) {
+            @Override
+            public void close() {
+                super.close();
+                if (closeable != null) {
+                    try {
+                        closeable.close();
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
+        };
     }
 
     @Override
@@ -132,19 +166,16 @@ public class SqliteMetaData implements DatabaseMetaData {
 
     @Override
     public String getDatabaseProductVersion() throws SQLException {
-        try {
-            SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(":memory:", null);
-            Cursor cursor = database.rawQuery("select sqlite_version() AS sqlite_version", null);
-            String version = "";
-            if (cursor.moveToNext()) {
-                version = cursor.getString(0);
+        return queryMemory(new Function<Cursor, String>() {
+            @Override
+            public String apply(Cursor cursor) {
+                String version = "";
+                if (cursor.moveToNext()) {
+                    version = cursor.getString(0);
+                }
+                return version;
             }
-            cursor.close();
-            database.close();
-            return version;
-        } catch (android.database.SQLException e) {
-            throw new SQLException(e);
-        }
+        }, "select sqlite_version() AS sqlite_version");
     }
 
     @Override
@@ -401,15 +432,59 @@ public class SqliteMetaData implements DatabaseMetaData {
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern,
                                String[] types) throws SQLException {
-
-        //Statement statement = connection.createStatement();
-        //return statement.executeQuery("");
-        return null;
+        if (types == null) {
+            types = new String[] {"TABLE", "VIEW"};
+        }
+        if (tableNamePattern == null) {
+            tableNamePattern = "%";
+        }
+        Map<String, String> select = new LinkedHashMap<>();
+        select.put("TABLE_CAT", null);
+        select.put("TABLE_SCHEM", null);
+        select.put("TABLE_NAME", "name");
+        select.put("TABLE_TYPE", "type");
+        select.put("REMARKS", null);
+        select.put("TYPE_CAT", null);
+        select.put("TYPE_SCHEM", null);
+        select.put("TYPE_NAME", null);
+        select.put("SELF_REFERENCING_COL_NAME", null);
+        select.put("REF_GENERATION", null);
+        QueryBuilder qb = new QueryBuilder(
+            new QueryBuilder.Options(getIdentifierQuoteString(), true, null, null, false, false))
+            .keyword(Keyword.SELECT)
+            .commaSeparated(select.entrySet(),
+                new QueryBuilder.Appender<Map.Entry<String, String>>() {
+                @Override
+                public void append(QueryBuilder qb, Map.Entry<String, String> entry) {
+                    String value = entry.getValue() == null ? "null" : entry.getValue();
+                    qb.append(value).append(" as ").append(entry.getKey());
+                }
+            })
+            .keyword(Keyword.FROM)
+            .openParenthesis().append("select name, type from sqlite_master").closeParenthesis()
+            .keyword(Keyword.WHERE)
+            .append(" TABLE_NAME like ").append(tableNamePattern).append(" && TABLE_TYPE in ")
+            .openParenthesis()
+            .commaSeparated(Arrays.asList(types))
+            .closeParenthesis()
+            .keyword(Keyword.ORDER, Keyword.BY)
+            .append(" TABLE_TYPE, TABLE_NAME");
+        return queryMemory(new Function<Cursor, ResultSet>() {
+            @Override
+            public ResultSet apply(Cursor cursor) {
+                return new CursorResultSet(null, cursor, true);
+            }
+        }, qb.toString());
     }
 
     @Override
     public ResultSet getTableTypes() throws SQLException {
-        return null;
+        return queryMemory(new Function<Cursor, ResultSet>() {
+            @Override
+            public ResultSet apply(Cursor cursor) {
+                return new CursorResultSet(null, cursor, true);
+            }
+        }, "select 'TABLE' as TABLE_TYPE, 'VIEW' as TABLE_TYPE");
     }
 
     @Override

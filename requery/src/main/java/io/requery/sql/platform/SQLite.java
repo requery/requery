@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,21 +19,25 @@ package io.requery.sql.platform;
 import io.requery.ReferentialAction;
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
+import io.requery.query.Expression;
+import io.requery.query.function.Function;
+import io.requery.query.function.Now;
 import io.requery.sql.AutoIncrementColumnDefinition;
 import io.requery.sql.BasicType;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.Keyword;
-import io.requery.sql.LimitDefinition;
-import io.requery.sql.LimitOffsetDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.QueryBuilder;
-import io.requery.sql.UpsertDefinition;
+import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.LimitGenerator;
+import io.requery.sql.gen.Output;
 import io.requery.sql.type.PrimitiveLongType;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Map;
 
 import static io.requery.sql.Keyword.*;
 
@@ -43,13 +47,17 @@ import static io.requery.sql.Keyword.*;
 public class SQLite extends Generic {
 
     private final AutoIncrementColumnDefinition autoIncrementColumn;
-    private final LimitDefinition limitDefinition;
-    private final UpsertDefinition upsertDefinition;
 
     public SQLite() {
         autoIncrementColumn = new AutoIncrementColumnDefinition("autoincrement");
-        limitDefinition = new LimitOffsetDefinition();
-        upsertDefinition = new InsertOrReplace();
+    }
+
+    @Override
+    public void addMappings(Mapping mapping) {
+        super.addMappings(mapping);
+        mapping.putType(long.class, new LongType(long.class));
+        mapping.putType(Long.class, new LongType(Long.class));
+        mapping.aliasFunction(new Function.Name("date('now')", true), Now.class);
     }
 
     @Override
@@ -68,25 +76,18 @@ public class SQLite extends Generic {
     }
 
     @Override
-    public LimitDefinition limitDefinition() {
-        return limitDefinition;
+    public LimitGenerator limitGenerator() {
+        return new LimitGenerator();
     }
 
     @Override
-    public UpsertDefinition upsertDefinition() {
-        return upsertDefinition;
+    public Generator<Map<Expression<?>, Object>> upsertGenerator() {
+        return new InsertOrReplace();
     }
 
     @Override
     public boolean supportsUpsert() {
         return false;
-    }
-
-    @Override
-    public void addMappings(Mapping mapping) {
-        super.addMappings(mapping);
-        mapping.putType(long.class, new LongType(long.class));
-        mapping.putType(Long.class, new LongType(Long.class));
     }
 
     // in SQLite BIGINT can be treated as just an integer, this handles the case when an long is
@@ -103,7 +104,7 @@ public class SQLite extends Generic {
         }
 
         @Override
-        public Keyword identifier() {
+        public Keyword getIdentifier() {
             return INTEGER;
         }
 
@@ -120,46 +121,48 @@ public class SQLite extends Generic {
     }
 
     // not a real upsert since replace will delete rows however provided as an option
-    protected static class InsertOrReplace implements UpsertDefinition {
+    protected static class InsertOrReplace implements Generator<Map<Expression<?>, Object>> {
 
         @Override
-        public<E> void appendUpsert(QueryBuilder qb,
-                                    Iterable<Attribute<E, ?>> attributes,
-                                    final Parameterizer<E> parameterizer) {
+        public void write(final Output output, final Map<Expression<?>, Object> values) {
+            QueryBuilder qb = output.builder();
             // insert or replace into <table> select(columns...) from
             // (select "column1" as c1...) as new left join (select ... from <table>)
             //  on prev.key = new.key
-            Type<E> type = attributes.iterator().next().declaringType();
+            Type<?> type = ((Attribute)values.keySet().iterator().next()).getDeclaringType();
             qb.keyword(INSERT, OR, REPLACE, INTO)
-                .tableName(type.name())
+                .tableNames(values.keySet())
                 .openParenthesis()
-                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
-                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
-                        if (value.isForeignKey() &&
-                            value.deleteAction() == ReferentialAction.CASCADE) {
-                            throw new IllegalStateException("replace would cause cascade");
+                    public void append(QueryBuilder qb, Expression<?> value) {
+                        if (value instanceof Attribute) {
+                            Attribute attribute = (Attribute) value;
+                            if (attribute.isForeignKey() &&
+                                attribute.getDeleteAction() == ReferentialAction.CASCADE) {
+                                throw new IllegalStateException("replace would cause cascade");
+                            }
+                            qb.attribute(attribute);
                         }
-                        qb.attribute(value);
                     }
                 })
                 .closeParenthesis().space();
             final String previousAlias = "prev";
             final String newAlias = "next";
             qb.keyword(SELECT)
-                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
-                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
-                        qb.aliasAttribute(newAlias, value);
+                    public void append(QueryBuilder qb, Expression<?> value) {
+                        qb.aliasAttribute(newAlias, (Attribute) value);
                     }
                 }).keyword(FROM)
                 .openParenthesis()
                 .keyword(SELECT)
-                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
-                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
-                        qb.append("? ").keyword(AS).append(value.name());
-                        parameterizer.addParameter(value);
+                    public void append(QueryBuilder qb, Expression expression) {
+                        qb.append("? ").keyword(AS).append(expression.getName());
+                        output.parameters().add(expression, values.get(expression));
                     }
                 })
                 .closeParenthesis().space()
@@ -167,14 +170,14 @@ public class SQLite extends Generic {
                 .keyword(LEFT, JOIN)
                 .openParenthesis()
                 .keyword(SELECT)
-                .commaSeparatedAttributes(attributes)
+                .commaSeparatedExpressions(values.keySet())
                 .keyword(FROM)
-                .tableName(type.name())
+                .tableName(type.getName())
                 .closeParenthesis().space().keyword(AS).append(previousAlias).space()
                 .keyword(ON)
-                .aliasAttribute(previousAlias, type.singleKeyAttribute())
+                .aliasAttribute(previousAlias, type.getSingleKeyAttribute())
                 .append(" = ")
-                .aliasAttribute(newAlias, type.singleKeyAttribute());
+                .aliasAttribute(newAlias, type.getSingleKeyAttribute());
         }
     }
 }

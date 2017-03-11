@@ -16,26 +16,11 @@
 
 package io.requery.sql;
 
-import io.requery.proxy.PostLoadListener;
-import io.requery.proxy.PostInsertListener;
-import io.requery.proxy.PostDeleteListener;
-import io.requery.proxy.PostUpdateListener;
-import io.requery.proxy.PreInsertListener;
-import io.requery.proxy.PreUpdateListener;
-import io.requery.proxy.PreDeleteListener;
-
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class LoggingListener<T> implements StatementListener,
-    PostLoadListener<T>,
-    PostInsertListener<T>,
-    PostDeleteListener<T>,
-    PostUpdateListener<T>,
-    PreInsertListener<T>,
-    PreDeleteListener<T>,
-    PreUpdateListener<T> {
+class LoggingListener<T> implements EntityStateListener<T>, StatementListener {
 
     private final Logger log;
     private final Level level;
@@ -95,8 +80,18 @@ class LoggingListener<T> implements StatementListener,
     }
 
     @Override
-    public void afterExecuteUpdate(Statement statement) {
-        log.log(level, "afterExecuteUpdate");
+    public void afterExecuteUpdate(Statement statement, int count) {
+        log.log(level, "afterExecuteUpdate {0}", new Object[] {count});
+    }
+
+    @Override
+    public void beforeExecuteBatchUpdate(Statement statement, String sql) {
+        log.log(level, "beforeExecuteUpdate {0} sql:\n{1})", new Object[]{statement, sql });
+    }
+
+    @Override
+    public void afterExecuteBatchUpdate(Statement statement, int[] count) {
+        log.log(level, "afterExecuteBatchUpdate");
     }
 
     @Override

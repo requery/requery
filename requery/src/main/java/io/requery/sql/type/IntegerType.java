@@ -36,7 +36,7 @@ public class IntegerType extends BasicType<Integer> implements PrimitiveIntType 
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.INTEGER;
     }
 

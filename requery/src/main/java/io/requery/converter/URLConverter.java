@@ -28,17 +28,17 @@ import java.net.URL;
 public class URLConverter implements Converter<URL, String> {
 
     @Override
-    public Class<URL> mappedType() {
+    public Class<URL> getMappedType() {
         return URL.class;
     }
 
     @Override
-    public Class<String> persistedType() {
+    public Class<String> getPersistedType() {
         return String.class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 

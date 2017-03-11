@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package io.requery.sql;
 
 import io.requery.meta.Attribute;
 import io.requery.query.Expression;
+import io.requery.query.function.Function;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -53,12 +54,28 @@ public interface Mapping {
     <T> Mapping replaceType(int sqlType, FieldType<T> replacementType);
 
     /**
+     * Adds an alias for a function, either changing it's default name.
+     * @param name overriding name of the function
+     * @param function function class type
+     * @return mapping instance
+     */
+    Mapping aliasFunction(Function.Name name, Class<? extends Function> function);
+
+    /**
      * Get the mapped storage type mapping for a given type {@link Attribute}.
      *
      * @param attribute attribute non null attribute
      * @return the mapped {@link FieldType}
      */
     FieldType mapAttribute(Attribute<?, ?> attribute);
+
+    /**
+     * Get the mapped function name for the given function.
+     *
+     * @param function to map
+     * @return final function name
+     */
+    Function.Name mapFunctionName(Function<?> function);
 
     /**
      * Get the mapped storage type mapping for a given sql type.

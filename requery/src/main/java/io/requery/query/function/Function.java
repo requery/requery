@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,17 +24,17 @@ import io.requery.util.Objects;
 
 public abstract class Function<V> extends FieldExpression<V> {
 
-    private final String name;
+    private final Name name;
     private final Class<V> type;
     private String alias;
 
-    protected Function(String name, Class<V> type) {
-        this.name = name;
+    public Function(String name, Class<V> type) {
+        this.name = new Name(name);
         this.type = type;
     }
 
     @Override
-    public ExpressionType type() {
+    public ExpressionType getExpressionType() {
         return ExpressionType.FUNCTION;
     }
 
@@ -45,17 +45,21 @@ public abstract class Function<V> extends FieldExpression<V> {
     }
 
     @Override
-    public String aliasName() {
+    public String getAlias() {
         return alias;
     }
 
     @Override
-    public Class<V> classType() {
+    public Class<V> getClassType() {
         return type;
     }
 
     @Override
-    public String name() {
+    public String getName() {
+        return name.toString();
+    }
+
+    public Name getFunctionName() {
         return name;
     }
 
@@ -81,9 +85,9 @@ public abstract class Function<V> extends FieldExpression<V> {
         }
         if(obj instanceof Function) {
             Function other = (Function) obj;
-            return Objects.equals(name(), other.name()) &&
-                   Objects.equals(classType(), other.classType()) &&
-                   Objects.equals(aliasName(), other.aliasName()) &&
+            return Objects.equals(getName(), other.getName()) &&
+                   Objects.equals(getClassType(), other.getClassType()) &&
+                   Objects.equals(getAlias(), other.getAlias()) &&
                    Objects.equals(arguments(), other.arguments());
         }
         return false;
@@ -91,7 +95,34 @@ public abstract class Function<V> extends FieldExpression<V> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name(), classType(), aliasName(), arguments());
+        return Objects.hash(getName(), getClassType(), getAlias(), arguments());
+    }
+
+    public static class Name {
+        private final String name;
+        private final boolean isConstant;
+
+        public Name(String name) {
+            this(name, false);
+        }
+
+        public Name(String name, boolean isConstant) {
+            this.name = name;
+            this.isConstant = isConstant;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public boolean isConstant() {
+            return isConstant;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
     private static class ArgumentExpression<X> implements Expression<X> {
@@ -103,18 +134,23 @@ public abstract class Function<V> extends FieldExpression<V> {
         }
 
         @Override
-        public String name() {
+        public String getName() {
             return "";
         }
 
         @Override
-        public Class<X> classType() {
+        public Class<X> getClassType() {
             return type;
         }
 
         @Override
-        public ExpressionType type() {
+        public ExpressionType getExpressionType() {
             return ExpressionType.FUNCTION;
+        }
+
+        @Override
+        public Expression<X> getInnerExpression() {
+            return null;
         }
     }
 }

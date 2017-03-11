@@ -36,7 +36,7 @@ public class TinyIntType extends BasicType<Byte> implements PrimitiveByteType {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.TINYINT;
     }
 

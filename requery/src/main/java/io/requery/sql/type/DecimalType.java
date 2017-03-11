@@ -36,7 +36,7 @@ public class DecimalType extends BasicType<BigDecimal> {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.DECIMAL;
     }
 }

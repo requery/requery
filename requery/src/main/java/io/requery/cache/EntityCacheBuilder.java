@@ -22,6 +22,10 @@ import io.requery.meta.EntityModel;
 import javax.cache.CacheManager;
 import java.util.LinkedList;
 
+/**
+ * Builder for creating the appropriate {@link EntityCache} instance based on the type of caching
+ * needed.
+ */
 public class EntityCacheBuilder {
 
     private final EntityModel model;
@@ -29,6 +33,10 @@ public class EntityCacheBuilder {
     private boolean useSerializableCache;
     private CacheManager cacheManager;
 
+    /**
+     * Creates a new {@link EntityCacheBuilder} instance.
+     * @param model to use
+     */
     public EntityCacheBuilder(EntityModel model) {
         if (model == null) {
             throw new IllegalArgumentException();
@@ -36,21 +44,39 @@ public class EntityCacheBuilder {
         this.model = model;
     }
 
+    /**
+     * Enables or disables reference (memory) caching.
+     * @param enable true to enable reference caching false otherwise.
+     * @return builder instance
+     */
     public EntityCacheBuilder useReferenceCache(boolean enable) {
         this.useReferenceCache = enable;
         return this;
     }
 
+    /**
+     * Enables or disables serialization caching.
+     * @param enable true to enable serialization caching false otherwise.
+     * @return builder instance
+     */
     public EntityCacheBuilder useSerializableCache(boolean enable) {
         this.useSerializableCache = enable;
         return this;
     }
 
+    /**
+     * Sets the {@link CacheManager}. to use.
+     * @param cacheManager instance
+     * @return builder instance
+     */
     public EntityCacheBuilder useCacheManager(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
         return this;
     }
 
+    /**
+     * @return A {@link EntityCache} with the configured options.
+     */
     public EntityCache build() {
         LinkedList<EntityCache> caches = new LinkedList<>();
         if (useReferenceCache) {

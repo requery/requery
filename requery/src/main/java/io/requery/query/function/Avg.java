@@ -23,7 +23,7 @@ public class Avg<V> extends Function<V> {
     private final Expression<V> expression;
 
     private Avg(Expression<V> expression) {
-        super("avg", expression.classType());
+        super("avg", expression.getClassType());
         this.expression = expression;
     }
 

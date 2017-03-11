@@ -1,6 +1,7 @@
 package io.requery.test.model;
 
 
+import io.requery.CascadeAction;
 import io.requery.Column;
 import io.requery.Convert;
 import io.requery.Entity;
@@ -8,7 +9,7 @@ import io.requery.Generated;
 import io.requery.Key;
 import io.requery.OneToOne;
 
-@Entity
+@Entity(copyable = true)
 public class AbstractAddress extends Coordinate {
 
     @Key @Generated
@@ -27,7 +28,7 @@ public class AbstractAddress extends Coordinate {
 
     protected String city;
 
-    @OneToOne(mappedBy = "address")
+    @OneToOne(mappedBy = "address", cascade = {CascadeAction.DELETE, CascadeAction.SAVE})
     protected Person person;
 
     @Convert(AddressTypeConverter.class)

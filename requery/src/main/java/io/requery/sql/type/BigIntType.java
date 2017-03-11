@@ -36,7 +36,7 @@ public class BigIntType extends BasicType<Long> implements PrimitiveLongType {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.BIGINT;
     }
 

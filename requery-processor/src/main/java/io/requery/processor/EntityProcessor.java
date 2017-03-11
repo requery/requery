@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package io.requery.processor;
 
+import io.requery.Embedded;
 import io.requery.Entity;
 import io.requery.Superclass;
 
@@ -26,6 +27,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -37,6 +39,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -60,7 +63,9 @@ public final class EntityProcessor extends AbstractProcessor {
     static final String GENERATE_JPA = "generate.jpa";
 
     private Map<String, EntityGraph> graphs;
-    private Map<TypeElement, SuperType> superTypes;
+    private Map<TypeElement, EntityElement> superTypes;
+    private Map<TypeElement, EntityElement> embeddedTypes;
+    private Set<String> generatedModelPackages;
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -70,6 +75,8 @@ public final class EntityProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
+        embeddedTypes = new LinkedHashMap<>();
+        generatedModelPackages = new LinkedHashSet<>();
         graphs = new LinkedHashMap<>();
         superTypes = new LinkedHashMap<>();
     }
@@ -77,27 +84,35 @@ public final class EntityProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         // types to generate in this round
-        Map<TypeElement, EntityType> entities = new HashMap<>();
+        Map<TypeElement, EntityElement> entities = new HashMap<>();
+        SourceLanguage.map(processingEnv);
         Types types = processingEnv.getTypeUtils();
 
-        for (TypeElement annotation : annotations) {
+        Set<TypeElement> annotationElements = new LinkedHashSet<>();
+        if (isEmptyKotlinAnnotationSet(annotations)) {
+            annotationElements.addAll(SourceLanguage.getAnnotations());
+        } else {
+            annotationElements.addAll(annotations);
+        }
+
+        for (TypeElement annotation : annotationElements) {
             for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
-
                 typeElementOf(element).ifPresent(typeElement -> {
-                    if (isEntityType(typeElement)) {
+                    EntityElement entity = null;
+                    if (isEntity(typeElement)) {
                         // create or get the entity for the annotation
-                        EntityType entity = entities.computeIfAbsent(typeElement,
-                            key -> new EntityType(processingEnv, key));
-                        entity.addAnnotationElement(annotation, element);
+                        entity = computeType(entities, typeElement);
                         // create or get the graph for it
-                        String key = entity.modelName();
-                        graphs.computeIfAbsent(key, k -> new EntityGraph(types)).add(entity);
-
-                    } else if (isSuperclassType(typeElement)) {
-                        SuperType superType =
-                            superTypes.computeIfAbsent(typeElement, SuperType::new);
-                        superType.addAnnotationElement(annotation, element);
-                        superTypes.put(typeElement, superType);
+                        String model = entity.modelName();
+                        graphs.computeIfAbsent(model,
+                                key -> new EntityGraph(types, embeddedTypes)).add(entity);
+                    } else if (isSuperclass(typeElement)) {
+                        entity = computeType(superTypes, typeElement);
+                    } else if (isEmbeddable(typeElement)) {
+                        entity = computeType(embeddedTypes, typeElement);
+                    }
+                    if (entity != null) {
+                        entity.addAnnotationElement(annotation, element);
                     }
                 });
             }
@@ -107,27 +122,32 @@ public final class EntityProcessor extends AbstractProcessor {
         Set<ElementValidator> validators = new LinkedHashSet<>();
         Elements elements = processingEnv.getElementUtils();
 
-        for (EntityType entity : entities.values()) {
+        for (EntityElement entity : entities.values()) {
             // add the annotated elements from the super type (if any)
+            if (entity.element().getKind() == ElementKind.INTERFACE) {
+                List<? extends TypeMirror> interfaces = entity.element().getInterfaces();
+                for (TypeMirror mirror : interfaces) {
+                    TypeElement superElement = elements.getTypeElement(mirror.toString());
+                    if (superElement != null) {
+                        mergeSuperType(entity, superElement);
+                    }
+                }
+            }
             TypeMirror typeMirror = entity.element().getSuperclass();
             while (typeMirror.getKind() != TypeKind.NONE) {
-                TypeElement superTypeElement = elements.getTypeElement(typeMirror.toString());
-                if (superTypeElement != null) {
-                    SuperType superType = superTypes.get(superTypeElement);
-                    if (superType != null) {
-                        for (Map.Entry<TypeElement, Set<Element>> entry :
-                            superType.annotatedElements().entrySet()) {
-                            for (Element element : entry.getValue()) {
-                                entity.addAnnotationElement(entry.getKey(), element);
-                            }
-                        }
-                    }
-                    typeMirror = superTypeElement.getSuperclass();
+                TypeElement superElement = elements.getTypeElement(typeMirror.toString());
+                if (superElement != null) {
+                    mergeSuperType(entity, superElement);
+                    typeMirror = superElement.getSuperclass();
                 } else {
                     break;
                 }
             }
             // process the entity
+            Set<ElementValidator> results = entity.process(processingEnv);
+            validators.addAll(results);
+        }
+        for (EntityElement entity : embeddedTypes.values()) {
             Set<ElementValidator> results = entity.process(processingEnv);
             validators.addAll(results);
         }
@@ -138,45 +158,49 @@ public final class EntityProcessor extends AbstractProcessor {
         }
         if (ElementValidator.hasErrors(validators)) {
             hasErrors = true;
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING,
-                "model has errors code generation may fail");
+            StringBuilder sb = new StringBuilder("Model has error(s) code generation may fail: ");
+            validators.forEach(validator -> sb.append(validator.toString()));
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, sb);
         }
 
         // generate
         Set<SourceGenerator> generators = new LinkedHashSet<>();
-        if (!hasErrors || getBooleanOption(GENERATE_ALWAYS, true)) {
+        if (!hasErrors || getOption(GENERATE_ALWAYS, true)) {
             for (EntityDescriptor entity : entities.values()) {
                 EntityGraph graph = graphs.get(entity.modelName());
                 if (graph != null) {
-                    generators.add(new EntityGenerator(processingEnv, graph, entity));
+                    generators.add(new EntityGenerator(processingEnv, graph, entity, null));
                 }
             }
         }
 
-        if (getBooleanOption(GENERATE_MODEL, true)) {
+        if (getOption(GENERATE_MODEL, true)) {
             Map<String, Collection<EntityDescriptor>> packagesMap = new LinkedHashMap<>();
-            Map<String, Boolean> canGenerate = new HashMap<>();
-            for (EntityType entity : entities.values()) {
+            Set<EntityDescriptor> allEntities = graphs.values().stream()
+                .flatMap(graph -> graph.entities().stream())
+                .collect(Collectors.toSet());
+
+            for (EntityDescriptor entity : allEntities) {
                 EntityGraph graph = graphs.get(entity.modelName());
                 String packageName = findModelPackageName(graph);
-                canGenerate.computeIfAbsent(packageName, key -> true);
+                packagesMap.computeIfAbsent(packageName, key -> new LinkedHashSet<>());
+                packagesMap.get(packageName).addAll(graph.entities());
+            }
+
+            for (EntityDescriptor entity : entities.values()) {
+                EntityGraph graph = graphs.get(entity.modelName());
+                String packageName = findModelPackageName(graph);
                 if (entity.generatesAdditionalTypes()) {
-                    canGenerate.put(packageName, false);
-                }
-                if (packagesMap.containsKey(packageName)) {
-                    packagesMap.get(packageName).addAll(graph.entities());
-                } else {
-                    packagesMap.put(packageName, new LinkedHashSet<>(graph.entities()));
+                    packagesMap.remove(packageName);
                 }
             }
 
-            generators.addAll(
-                packagesMap.entrySet().stream()
-                    .filter(entry -> !entry.getValue().isEmpty())
-                    .filter(entry -> canGenerate.get(entry.getKey()))
-                    .map(entry ->
-                        new ModelGenerator(processingEnv, entry.getKey(), entry.getValue()))
-                    .collect(Collectors.toList()));
+            generators.addAll( packagesMap.entrySet().stream()
+                .filter(entry -> !entry.getValue().isEmpty())
+                .filter(entry -> !generatedModelPackages.contains(entry.getKey()))
+                .map(entry -> { generatedModelPackages.add(entry.getKey()); return entry; })
+                .map(entry -> new ModelGenerator(processingEnv, entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList()));
         }
         for (SourceGenerator generator : generators) {
             try {
@@ -188,16 +212,38 @@ public final class EntityProcessor extends AbstractProcessor {
         return false;
     }
 
-    private boolean isEntityType(TypeElement element) {
+    private void mergeSuperType(EntityElement entity, TypeElement superElement) {
+        EntityElement superType = superTypes.get(superElement);
+        if (superType == null && isSuperclass(superElement)) {
+            superType = computeType(superTypes, superElement);
+        }
+        if (superType != null) {
+            superType.process(processingEnv);
+            entity.merge(superType);
+        }
+    }
+
+    private EntityElement computeType(Map<TypeElement, EntityElement> map, TypeElement element) {
+        return map.computeIfAbsent(element,
+                key -> new EntityElementDelegate(new EntityType(processingEnv, key)));
+    }
+
+    private boolean isEntity(TypeElement element) {
         return Mirrors.findAnnotationMirror(element, Entity.class).isPresent() ||
-            (getBooleanOption(GENERATE_JPA, true) &&
+            (getOption(GENERATE_JPA, true) &&
              Mirrors.findAnnotationMirror(element, javax.persistence.Entity.class).isPresent());
     }
 
-    private boolean isSuperclassType(TypeElement element) {
+    private boolean isSuperclass(TypeElement element) {
         return Mirrors.findAnnotationMirror(element, Superclass.class).isPresent() ||
-            (getBooleanOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
+            (getOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
                 javax.persistence.MappedSuperclass.class).isPresent());
+    }
+
+    private boolean isEmbeddable(TypeElement element) {
+        return Mirrors.findAnnotationMirror(element, Embedded.class).isPresent() ||
+            (getOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
+                javax.persistence.Embeddable.class).isPresent());
     }
 
     private Optional<TypeElement> typeElementOf(Element element) {
@@ -218,7 +264,7 @@ public final class EntityProcessor extends AbstractProcessor {
         return Optional.ofNullable(typeElement);
     }
 
-    private boolean getBooleanOption(String key, boolean defaultValue) {
+    private boolean getOption(String key, boolean defaultValue) {
         String value = processingEnv.getOptions().get(key);
         return value == null ? defaultValue : Boolean.valueOf(value);
     }
@@ -253,5 +299,16 @@ public final class EntityProcessor extends AbstractProcessor {
             }
         }
         return packageName;
+    }
+
+    // Kotlin 1.0.4 the set of annotation elements is empty except for '__gen.KotlinAptAnnotation'
+    private boolean isEmptyKotlinAnnotationSet(Set<? extends TypeElement> annotations) {
+        if (annotations.size() == 1) {
+            TypeElement element = annotations.iterator().next();
+            if (element.getQualifiedName().contentEquals("__gen.KotlinAptAnnotation")) {
+                return true;
+            }
+        }
+        return false;
     }
 }

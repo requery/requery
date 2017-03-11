@@ -63,7 +63,7 @@ final class Mirrors {
 
         return mirror.getElementValues() == null ? Optional.empty() :
                mirror.getElementValues().entrySet().stream()
-                .filter(entry -> entry.getKey().getSimpleName().toString().equals(name))
+                .filter(entry -> entry.getKey().getSimpleName().contentEquals(name))
                 .map(entry -> (AnnotationValue)entry.getValue()).findFirst();
     }
 
@@ -77,6 +77,7 @@ final class Mirrors {
                 }
                 return null;
             }
+
             @Override
             protected Void defaultAction(TypeMirror typeMirror, Void v) {
                 return null;
@@ -86,6 +87,9 @@ final class Mirrors {
     }
 
     static boolean isInstance(Types types, TypeElement element, Class<?> type) {
+        if (element == null) {
+            return false;
+        }
         String className = type.getCanonicalName();
         if (type.isInterface()) {
             return implementsInterface(types, element, className);
@@ -95,16 +99,19 @@ final class Mirrors {
     }
 
     static boolean isInstance(Types types, TypeElement element, String className) {
+        if (element == null) {
+            return false;
+        }
         // check name
         if (namesEqual(element, className)) {
             return true;
         }
         // check interfaces then super types
         return implementsInterface(types, element, className) ||
-               extendsClass(types, element, className);
+                extendsClass(types, element, className);
     }
 
-    static boolean implementsInterface(Types types, TypeElement element, String interfaceName) {
+    private static boolean implementsInterface(Types types, TypeElement element, String interfaceName) {
         // check name or interfaces
         if (namesEqual(element, interfaceName)) {
             return true;
@@ -113,14 +120,14 @@ final class Mirrors {
         for (TypeMirror interfaceType : interfaces) {
             interfaceType = types.erasure(interfaceType);
             TypeElement typeElement = (TypeElement) types.asElement(interfaceType);
-            if (implementsInterface(types, typeElement, interfaceName)) {
+            if (typeElement != null && implementsInterface(types, typeElement, interfaceName)) {
                 return true;
             }
         }
         return false;
     }
 
-    static boolean extendsClass(Types types, TypeElement element, String className) {
+    private static boolean extendsClass(Types types, TypeElement element, String className) {
         if (namesEqual(element, className)) {
             return true;
         }
@@ -139,7 +146,7 @@ final class Mirrors {
     static boolean overridesMethod(Types types, TypeElement element, String methodName) {
         while (element != null) {
             if (ElementFilter.methodsIn(element.getEnclosedElements()).stream()
-                .anyMatch(method -> method.getSimpleName().toString().equals(methodName))) {
+                .anyMatch(method -> method.getSimpleName().contentEquals(methodName))) {
                 return true;
             }
             TypeMirror superType = element.getSuperclass();
@@ -156,6 +163,6 @@ final class Mirrors {
     }
 
     private static boolean namesEqual(TypeElement element, String qualifiedName) {
-        return element.getQualifiedName().toString().equals(qualifiedName);
+        return element != null && element.getQualifiedName().contentEquals(qualifiedName);
     }
 }

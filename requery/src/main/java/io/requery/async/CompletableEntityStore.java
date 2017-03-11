@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Deletion;
 import io.requery.query.Expression;
+import io.requery.query.InsertInto;
 import io.requery.query.Insertion;
 import io.requery.query.Result;
 import io.requery.query.Scalar;
@@ -30,6 +31,7 @@ import io.requery.query.Tuple;
 import io.requery.query.Update;
 import io.requery.util.Objects;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -46,6 +48,7 @@ import java.util.function.Supplier;
  *
  * @author Nikhil Purushe
  */
+@ParametersAreNonnullByDefault
 public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> {
 
     private final BlockingEntityStore<T> delegate;
@@ -116,11 +119,42 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     }
 
     @Override
+    public <E extends T> CompletionStage<E> update(final E entity,
+                                                   final Attribute<?, ?>... attributes) {
+        return CompletableFuture.supplyAsync(new Supplier<E>() {
+            @Override
+            public E get() {
+                return delegate.update(entity, attributes);
+            }
+        }, executor);
+    }
+
+    @Override
+    public <E extends T> CompletableFuture<Iterable<E>> update(final Iterable<E> entities) {
+        return CompletableFuture.supplyAsync(new Supplier<Iterable<E>>() {
+            @Override
+            public Iterable<E> get() {
+                return delegate.update(entities);
+            }
+        }, executor);
+    }
+
+    @Override
     public <E extends T> CompletionStage<E> upsert(final E entity) {
         return CompletableFuture.supplyAsync(new Supplier<E>() {
             @Override
             public E get() {
                 return delegate.upsert(entity);
+            }
+        }, executor);
+    }
+
+    @Override
+    public <E extends T> CompletableFuture<Iterable<E>> upsert(final Iterable<E> entities) {
+        return CompletableFuture.supplyAsync(new Supplier<Iterable<E>>() {
+            @Override
+            public Iterable<E> get() {
+                return delegate.upsert(entities);
             }
         }, executor);
     }
@@ -210,59 +244,64 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Expression<?>... expressions) {
+    public Selection<? extends Result<Tuple>> select(Expression<?>... expressions) {
         return delegate.select(expressions);
     }
 
     @Override
-    public Selection<Result<Tuple>> select(Set<? extends Expression<?>> expressions) {
+    public Selection<? extends Result<Tuple>> select(Set<? extends Expression<?>> expressions) {
         return delegate.select(expressions);
     }
 
     @Override
-    public Update<Scalar<Integer>> update() {
+    public Update<? extends Scalar<Integer>> update() {
         return delegate.update();
     }
 
     @Override
-    public Deletion<Scalar<Integer>> delete() {
+    public Deletion<? extends Scalar<Integer>> delete() {
         return delegate.delete();
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(Class<E> type,
+    public <E extends T> Selection<? extends Result<E>> select(Class<E> type,
                                                      QueryAttribute<?, ?>... attributes) {
         return delegate.select(type, attributes);
     }
 
     @Override
-    public <E extends T> Selection<Result<E>> select(
+    public <E extends T> Selection<? extends Result<E>> select(
         Class<E> type, Set<? extends QueryAttribute<E, ?>> attributes) {
         return delegate.select(type, attributes);
     }
 
     @Override
-    public <E extends T> Insertion<Result<Tuple>> insert(Class<E> type) {
+    public <E extends T> Insertion<? extends Result<Tuple>> insert(Class<E> type) {
         return delegate.insert(type);
     }
 
     @Override
-    public <E extends T> Update<Scalar<Integer>> update(Class<E> type) {
+    public <E extends T> InsertInto<? extends Result<Tuple>> insert(Class<E> type, QueryAttribute<?, ?>... attributes) {
+        return delegate.insert(type, attributes);
+    }
+
+    @Override
+    public <E extends T> Update<? extends Scalar<Integer>> update(Class<E> type) {
         return delegate.update(type);
     }
 
     @Override
-    public <E extends T> Deletion<Scalar<Integer>> delete(Class<E> type) {
+    public <E extends T> Deletion<? extends Scalar<Integer>> delete(Class<E> type) {
         return delegate.delete(type);
     }
 
     @Override
-    public <E extends T> Selection<Scalar<Integer>> count(Class<E> type) {
+    public <E extends T> Selection<? extends Scalar<Integer>> count(Class<E> type) {
         return delegate.count(type);
     }
 
     @Override
-    public Selection<Scalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
+    public Selection<? extends Scalar<Integer>> count(QueryAttribute<?, ?>... attributes) {
         return delegate.count(attributes);
     }
 

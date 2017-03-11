@@ -18,7 +18,7 @@ package io.requery.sql;
 
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
-import io.requery.proxy.EntityProxy;
+import io.requery.meta.Type;
 import io.requery.util.function.Supplier;
 
 import java.util.HashSet;
@@ -51,30 +51,30 @@ class CompositeTransactionListener extends HashSet<TransactionListener> implemen
     }
 
     @Override
-    public void beforeCommit(Set<EntityProxy<?>> entities) {
+    public void beforeCommit(Set<Type<?>> types) {
         for (TransactionListener listener : this) {
-            listener.beforeCommit(entities);
+            listener.beforeCommit(types);
         }
     }
 
     @Override
-    public void afterCommit(Set<EntityProxy<?>> entities) {
+    public void afterCommit(Set<Type<?>> types) {
         for (TransactionListener listener : this) {
-            listener.afterCommit(entities);
+            listener.afterCommit(types);
         }
     }
 
     @Override
-    public void beforeRollback(Set<EntityProxy<?>> entities) {
+    public void beforeRollback(Set<Type<?>> types) {
         for (TransactionListener listener : this) {
-            listener.beforeRollback(entities);
+            listener.beforeRollback(types);
         }
     }
 
     @Override
-    public void afterRollback(Set<EntityProxy<?>> entities) {
+    public void afterRollback(Set<Type<?>> types) {
         for (TransactionListener listener : this) {
-            listener.afterRollback(entities);
+            listener.afterRollback(types);
         }
     }
 }

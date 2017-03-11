@@ -26,11 +26,11 @@ import io.requery.sql.EntityDataStore;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.SQLite;
-import io.requery.test.modelautovalue.Models;
-import io.requery.test.modelautovalue.Person;
-import io.requery.test.modelautovalue.PersonType;
-import io.requery.test.modelautovalue.Phone;
-import io.requery.test.modelautovalue.PhoneType;
+import io.requery.test.autovalue.Models;
+import io.requery.test.autovalue.Person;
+import io.requery.test.autovalue.PersonType;
+import io.requery.test.autovalue.Phone;
+import io.requery.test.autovalue.PhoneType;
 import io.requery.util.function.Consumer;
 import org.junit.After;
 import org.junit.Before;
@@ -44,13 +44,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -82,7 +82,7 @@ public class AutoValueModelTest {
     @Before
     public void setup() throws SQLException {
         CommonDataSource dataSource = DatabaseType.getDataSource(new SQLite());
-        EntityModel model = Models.MODELAUTOVALUE;
+        EntityModel model = Models.AUTOVALUE;
         Configuration configuration = new ConfigurationBuilder(dataSource, model)
             .useDefaultLogging()
             .setEntityCache(new EntityCacheBuilder(model)
@@ -162,13 +162,14 @@ public class AutoValueModelTest {
         assertTrue(person.getName().equals("Bobby"));
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void testDelete() throws MalformedURLException {
         Integer key = randomPerson();
         Person p = data.findByKey(Person.class, key);
         assertNotNull(p);
         data.delete(p);
         p = data.findByKey(Person.class, key);
+        assertNull(p);
     }
 
     @Test

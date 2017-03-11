@@ -8,17 +8,17 @@ class IntegerListConverter implements Converter<ArrayList<Integer>, String> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Class<ArrayList<Integer>> mappedType() {
+    public Class<ArrayList<Integer>> getMappedType() {
         return (Class)ArrayList.class;
     }
 
     @Override
-    public Class<String> persistedType() {
+    public Class<String> getPersistedType() {
         return String.class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 

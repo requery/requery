@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
     RawEntityQuery(EntityContext<S> context, Class<E> cls, String sql, Object[] parameters) {
         super(context, null);
         ParameterInliner inlined = new ParameterInliner(sql, parameters).apply();
-        this.type = configuration.model().typeOf(cls);
+        this.type = configuration.getModel().typeOf(cls);
         this.sql = inlined.sql();
         this.reader = context.read(cls);
         boundParameters = new BoundParameters(inlined.parameters());
@@ -61,13 +61,14 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
 
     @Override
     public Result<E> get() {
+        PreparedStatement statement = null;
         try {
-            Connection connection = configuration.connectionProvider().getConnection();
-            PreparedStatement statement = prepare(sql, connection);
+            Connection connection = configuration.getConnection();
+            statement = prepare(sql, connection);
             mapParameters(statement, boundParameters);
             return new EntityResult(statement);
-        } catch (SQLException e) {
-            throw new StatementExecutionException(e, sql);
+        } catch (Exception e) {
+            throw StatementExecutionException.closing(statement, e, sql);
         }
     }
 
@@ -82,7 +83,7 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
         @Override
         public CloseableIterator<E> iterator(int skip, int take) {
             try {
-                StatementListener listener = configuration.statementListener();
+                StatementListener listener = configuration.getStatementListener();
                 listener.beforeExecuteQuery(statement, sql, boundParameters);
                 ResultSet results = statement.executeQuery();
                 listener.afterExecuteQuery(statement);
@@ -90,18 +91,18 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
                 ResultSetMetaData metadata = results.getMetaData();
                 // map of entity column names to attributes
                 Map<String, Attribute<E, ?>> map = new HashMap<>();
-                for (Attribute<E, ?> attribute : type.attributes()) {
-                    map.put(attribute.name().toLowerCase(Locale.US), attribute);
+                for (Attribute<E, ?> attribute : type.getAttributes()) {
+                    map.put(attribute.getName().toLowerCase(Locale.ROOT), attribute);
                 }
                 Set<Attribute<E, ?>> attributes = new LinkedHashSet<>();
                 for (int i = 0; i < metadata.getColumnCount(); i++) {
                     String name = metadata.getColumnName(i + 1);
-                    Attribute<E, ?> attribute = map.get(name.toLowerCase(Locale.US));
+                    Attribute<E, ?> attribute = map.get(name.toLowerCase(Locale.ROOT));
                     if (attribute != null) {
                         attributes.add(attribute);
                     }
                 }
-                Attribute[] array = Attributes.attributesToArray(attributes,
+                Attribute[] array = Attributes.toArray(attributes,
                     new Predicate<Attribute<E, ?>>() {
                     @Override
                     public boolean test(Attribute<E, ?> value) {

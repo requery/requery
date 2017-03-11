@@ -3,13 +3,21 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
 buildscript {
+    ext.android_buildtools_version = '25.0.0'
+    ext.jackson_version = '2.8.6'
+    ext.jpa_version = '2.1.1'
+    ext.kotlin_version = '1.0.6'
+    ext.rxjava_version = '1.2.5'
+    ext.rxjava2_version = '2.0.5'
+    ext.reactor_version = '3.0.3.RELEASE'
     repositories {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
-        classpath "com.android.databinding:dataBinder:1.0-rc4"
+        classpath 'com.android.tools.build:gradle:2.2.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.8"
     }
 }
 
@@ -27,7 +35,7 @@ idea {
 }
 
 group = 'io.requery'
-version = '1.0.0-beta14'
+version = '1.2.0'
 description = 'A light but powerful object mapper and SQL generator for Java/Android'
 
 Properties properties = new Properties()
@@ -36,7 +44,7 @@ if (localProperties.exists()) {
     properties.load(localProperties.newDataInputStream())
 }
 
-configure([project(':requery'), project(':requery-processor')]) {
+configure([project(':requery'), project(':requery-processor'), project(':requery-kotlin'), project(':requery-jackson')]) {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
 
@@ -81,7 +89,7 @@ configure([project(':requery'), project(':requery-processor')]) {
     }
 }
 
-configure([project(':requery'), project(':requery-processor'), project(':requery-android')]) {
+configure([project(':requery'), project(':requery-processor'), project(':requery-android'), project(':requery-kotlin'), project(':requery-jackson')]) {
     apply plugin: 'com.jfrog.bintray'
 
     bintray {

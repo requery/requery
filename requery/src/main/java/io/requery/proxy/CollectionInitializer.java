@@ -25,6 +25,7 @@ import io.requery.util.function.Supplier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,14 +38,16 @@ public class CollectionInitializer<E, V> implements Initializer<E, V>,
     }
 
     @Override
-    public <U> V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute,
-                            Supplier<Result<U>> query) {
-        Class<?> type = attribute.classType();
+    public <U> V initialize(EntityProxy<E> proxy,
+                            Attribute<E, V> attribute,
+                            Supplier<? extends Result<U>> query) {
+        Class<?> type = attribute.getClassType();
         CollectionChanges<E, U> changes = new CollectionChanges<>(proxy, attribute);
         Result<U> result = query == null ? null : query.get();
         Collection<U> collection;
         if (type == Set.class) {
-            HashSet<U> set = new HashSet<>();
+            Set<U> set = attribute.getOrderByAttribute() == null ?
+                    new HashSet<U>() : new LinkedHashSet<U>();
             if (result != null) {
                 result.collect(set);
             }
@@ -58,6 +61,6 @@ public class CollectionInitializer<E, V> implements Initializer<E, V>,
         } else {
             throw new IllegalStateException("Unsupported collection type " + type);
         }
-        return attribute.classType().cast(collection);
+        return attribute.getClassType().cast(collection);
     }
 }

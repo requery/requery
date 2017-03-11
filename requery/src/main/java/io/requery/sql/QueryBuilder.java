@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,16 @@
 package io.requery.sql;
 
 import io.requery.meta.Attribute;
+import io.requery.meta.Type;
+import io.requery.query.Expression;
+import io.requery.query.ExpressionType;
+import io.requery.util.function.Function;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -35,12 +42,16 @@ public class QueryBuilder implements CharSequence {
 
     public static class Options {
         private final String quotedIdentifier;
+        private final Function<String, String> tableTransformer;
+        private final Function<String, String> columnTransformer;
         private final boolean lowercaseKeywords;
         private final boolean quoteTableNames;
         private final boolean quoteColumnNames;
 
         public Options(String quotedIdentifier,
                        boolean lowercaseKeywords,
+                       Function<String, String> tableTransformer,
+                       Function<String, String> columnTransformer,
                        boolean quoteTableNames,
                        boolean quoteColumnNames) {
 
@@ -48,6 +59,8 @@ public class QueryBuilder implements CharSequence {
                 quotedIdentifier = "\"";
             }
             this.quotedIdentifier = quotedIdentifier;
+            this.tableTransformer = tableTransformer;
+            this.columnTransformer = columnTransformer;
             this.lowercaseKeywords = lowercaseKeywords;
             this.quoteTableNames = quoteTableNames;
             this.quoteColumnNames = quoteColumnNames;
@@ -62,8 +75,8 @@ public class QueryBuilder implements CharSequence {
         this.sb = new StringBuilder(32);
     }
 
-    @SuppressWarnings("NullableProblems")
     @Override
+    @Nonnull
     public String toString() {
         return sb.toString();
     }
@@ -85,7 +98,8 @@ public class QueryBuilder implements CharSequence {
 
     public QueryBuilder keyword(Keyword... keywords) {
         for (Keyword keyword : keywords) {
-            sb.append(options.lowercaseKeywords ? keyword.toString().toLowerCase() : keyword);
+            sb.append(options.lowercaseKeywords ?
+                keyword.toString().toLowerCase(Locale.ROOT) : keyword);
             sb.append(" ");
         }
         return this;
@@ -100,19 +114,41 @@ public class QueryBuilder implements CharSequence {
     }
 
     public QueryBuilder tableName(Object value) {
-        if(options.quoteTableNames) {
-            appendIdentifier(value.toString(), options.quotedIdentifier);
+        String name = value.toString();
+        if (options.tableTransformer != null) {
+            name = options.tableTransformer.apply(name);
+        }
+        if (options.quoteTableNames) {
+            appendIdentifier(name, options.quotedIdentifier);
         } else {
-            append(value);
+            append(name);
         }
         return space();
     }
 
+    public QueryBuilder tableNames(Iterable<Expression<?>> values) {
+        Set<Type<?>> types = new LinkedHashSet<>();
+        for (Expression<?> expression : values) {
+            if (expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
+                Attribute attribute = (Attribute) expression;
+                types.add(attribute.getDeclaringType());
+            }
+        }
+        return commaSeparated(types, new Appender<Type<?>>() {
+            @Override
+            public void append(QueryBuilder qb, Type<?> value) {
+                tableName(value.getName());
+            }
+        });
+    }
+
     public QueryBuilder attribute(Attribute value) {
+        String name = options.columnTransformer == null ?
+                value.getName() : options.columnTransformer.apply(value.getName());
         if(options.quoteColumnNames) {
-            appendIdentifier(value.name(), options.quotedIdentifier);
+            appendIdentifier(name, options.quotedIdentifier);
         } else {
-            append(value.name());
+            append(name);
         }
         return space();
     }
@@ -133,13 +169,13 @@ public class QueryBuilder implements CharSequence {
 
     public QueryBuilder append(Object value, boolean space) {
         if (value == null) {
-            sb.append(Keyword.NULL);
+            keyword(Keyword.NULL);
         } else if (value instanceof String[]) {
             commaSeparated(Arrays.asList((String[]) value));
         } else {
             if (value instanceof Keyword) {
                 sb.append(options.lowercaseKeywords ?
-                        value.toString().toLowerCase() : value.toString());
+                        value.toString().toLowerCase(Locale.ROOT) : value.toString());
             } else {
                 sb.append(value.toString());
             }
@@ -154,7 +190,8 @@ public class QueryBuilder implements CharSequence {
         int index = 0;
         for (Attribute attribute : attributes) {
             if (index > 0) {
-                sb.append(Keyword.AND);
+                keyword(Keyword.AND);
+                space();
             }
             attribute(attribute);
             space();
@@ -165,10 +202,26 @@ public class QueryBuilder implements CharSequence {
         return this;
     }
 
-    public <E> QueryBuilder commaSeparatedAttributes(Iterable<Attribute<E, ?>> values) {
-        return commaSeparated(values, new QueryBuilder.Appender<Attribute<E, ?>>() {
+    public QueryBuilder commaSeparatedExpressions(Iterable<Expression<?>> values) {
+        return commaSeparated(values, new QueryBuilder.Appender<Expression<?>>() {
             @Override
-            public void append(QueryBuilder qb, Attribute<E, ?> value) {
+            public void append(QueryBuilder qb, Expression<?> value) {
+                switch (value.getExpressionType()) {
+                    case ATTRIBUTE:
+                        qb.attribute((Attribute) value);
+                        break;
+                    default:
+                        qb.append(value.getName()).space();
+                        break;
+                }
+            }
+        });
+    }
+
+    public QueryBuilder commaSeparatedAttributes(Iterable<? extends Attribute<?, ?>> values) {
+        return commaSeparated(values, new QueryBuilder.Appender<Attribute<?, ?>>() {
+            @Override
+            public void append(QueryBuilder qb, Attribute<?, ?> value) {
                 qb.attribute(value);
             }
         });

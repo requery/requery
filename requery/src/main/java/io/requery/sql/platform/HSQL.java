@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,29 @@
 
 package io.requery.sql.platform;
 
-import io.requery.sql.LimitDefinition;
-import io.requery.sql.LimitOffsetDefinition;
+import io.requery.query.element.LimitedElement;
+import io.requery.query.function.Function;
+import io.requery.query.function.Random;
+import io.requery.sql.Mapping;
+import io.requery.sql.gen.LimitGenerator;
+import io.requery.sql.gen.Generator;
 
 /**
  * platform configuration for HSQLDB.
  */
 public class HSQL extends Generic {
 
-    private final LimitDefinition limitDefinition;
-
     public HSQL() {
-        limitDefinition = new LimitOffsetDefinition();
     }
 
     @Override
-    public LimitDefinition limitDefinition() {
-        return limitDefinition;
+    public void addMappings(Mapping mapping) {
+        mapping.aliasFunction(new Function.Name("rand"), Random.class);
+    }
+
+    @Override
+    public Generator<LimitedElement> limitGenerator() {
+        return new LimitGenerator();
     }
 
     @Override

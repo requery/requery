@@ -16,13 +16,13 @@
 
 package io.requery.util;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-@SuppressWarnings("NullableProblems")
 public class ObservableList<E> implements List<E>, ObservableCollection<E> {
 
     private final List<E> list;
@@ -54,18 +54,21 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
     }
 
     @Override
+    @Nonnull
     public Iterator<E> iterator() {
         return list.iterator();
     }
 
     @Override
+    @Nonnull
     public Object[] toArray() {
         return list.toArray();
     }
 
     @SuppressWarnings("SuspiciousToArrayCall")
     @Override
-    public <T> T[] toArray(T[] a) {
+    @Nonnull
+    public <T> T[] toArray(@Nonnull T[] a) {
         return list.toArray(a);
     }
 
@@ -90,12 +93,12 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public boolean containsAll(@Nonnull Collection<?> c) {
         return list.containsAll(c);
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> c) {
+    public boolean addAll(@Nonnull Collection<? extends E> c) {
         boolean modified = false;
         for (E element : c) {
             boolean added = add(element);
@@ -107,12 +110,12 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends E> c) {
+    public boolean addAll(int index, @Nonnull Collection<? extends E> c) {
         return list.addAll(c);
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public boolean removeAll(@Nonnull Collection<?> c) {
         boolean modified = false;
         for (Object element : c) {
             boolean removed = remove(element);
@@ -124,7 +127,7 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public boolean retainAll(@Nonnull Collection<?> c) {
         ArrayList<E> toRemove = new ArrayList<>();
         for (E element : this) {
             if (!c.contains(element)) {
@@ -191,17 +194,17 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
         return list.lastIndexOf(o);
     }
 
-    @Override
+    @Override @Nonnull
     public ListIterator<E> listIterator() {
         return list.listIterator();
     }
 
-    @Override
+    @Override @Nonnull
     public ListIterator<E> listIterator(int index) {
         return list.listIterator(index);
     }
 
-    @Override
+    @Override @Nonnull
     public List<E> subList(int fromIndex, int toIndex) {
         return list.subList(fromIndex, toIndex);
     }

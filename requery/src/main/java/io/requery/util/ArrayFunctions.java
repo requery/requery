@@ -33,18 +33,6 @@ public class ArrayFunctions {
         }
     }
 
-    public static void forEach(byte[] array, Consumer<? super Byte> consumer) {
-        for (byte i : array) {
-            consumer.accept(i);
-        }
-    }
-
-    public static void forEach(char[] array, Consumer<? super Character> consumer) {
-        for (char i : array) {
-            consumer.accept(i);
-        }
-    }
-
     public static void forEach(short[] array, Consumer<? super Short> consumer) {
         for (short i : array) {
             consumer.accept(i);

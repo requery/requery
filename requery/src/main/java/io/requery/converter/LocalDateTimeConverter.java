@@ -18,9 +18,7 @@ package io.requery.converter;
 
 import io.requery.Converter;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 /**
  * Converts from a {@link LocalDateTime} to a {@link java.sql.Timestamp} for Java 8.
@@ -28,17 +26,17 @@ import java.time.ZoneId;
 public class LocalDateTimeConverter implements Converter<LocalDateTime, java.sql.Timestamp> {
 
     @Override
-    public Class<LocalDateTime> mappedType() {
+    public Class<LocalDateTime> getMappedType() {
         return LocalDateTime.class;
     }
 
     @Override
-    public Class<java.sql.Timestamp> persistedType() {
+    public Class<java.sql.Timestamp> getPersistedType() {
         return java.sql.Timestamp.class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 
@@ -47,8 +45,7 @@ public class LocalDateTimeConverter implements Converter<LocalDateTime, java.sql
         if (value == null) {
             return null;
         }
-        Instant instant = value.atZone(ZoneId.systemDefault()).toInstant();
-        return new java.sql.Timestamp(instant.toEpochMilli());
+        return java.sql.Timestamp.valueOf(value);
     }
 
     @Override
@@ -57,7 +54,6 @@ public class LocalDateTimeConverter implements Converter<LocalDateTime, java.sql
         if (value == null) {
             return null;
         }
-        Instant instant = Instant.ofEpochMilli(value.getTime());
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        return value.toLocalDateTime();
     }
 }

@@ -21,6 +21,7 @@ import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
 import io.requery.util.Objects;
+import io.requery.util.function.Function;
 import io.requery.util.function.Supplier;
 
 import java.util.Collections;
@@ -38,9 +39,12 @@ final class ImmutableConfiguration implements Configuration {
     private final int batchUpdateSize;
     private final boolean quoteTableNames;
     private final boolean quoteColumnNames;
+    private final Function<String, String> tableTransformer;
+    private final Function<String, String> columnTransformer;
     private final TransactionMode transactionMode;
     private final TransactionIsolation transactionIsolation;
     private final ConnectionProvider connectionProvider;
+    private final Set<EntityStateListener> entityStateListeners;
     private final Set<StatementListener> statementListeners;
     private final Set<Supplier<TransactionListener>> transactionListenerFactories;
     private final Executor writeExecutor;
@@ -55,6 +59,9 @@ final class ImmutableConfiguration implements Configuration {
                            int batchUpdateSize,
                            boolean quoteTableNames,
                            boolean quoteColumnNames,
+                           Function<String, String> tableTransformer,
+                           Function<String, String> columnTransformer,
+                           Set<EntityStateListener> entityStateListeners,
                            Set<StatementListener> statementListeners,
                            TransactionMode transactionMode,
                            TransactionIsolation transactionIsolation,
@@ -70,7 +77,10 @@ final class ImmutableConfiguration implements Configuration {
         this.batchUpdateSize = batchUpdateSize;
         this.quoteTableNames = quoteTableNames;
         this.quoteColumnNames = quoteColumnNames;
+        this.tableTransformer = tableTransformer;
+        this.columnTransformer = columnTransformer;
         this.transactionMode = transactionMode;
+        this.entityStateListeners = Collections.unmodifiableSet(entityStateListeners);
         this.statementListeners = Collections.unmodifiableSet(statementListeners);
         this.transactionIsolation = transactionIsolation;
         this.transactionListenerFactories = transactionListenerFactories;
@@ -78,77 +88,92 @@ final class ImmutableConfiguration implements Configuration {
     }
 
     @Override
-    public ConnectionProvider connectionProvider() {
-        return connectionProvider;
-    }
-
-    @Override
-    public Platform platform() {
-        return platform;
-    }
-
-    @Override
-    public EntityModel entityModel() {
-        return model;
-    }
-
-    @Override
-    public EntityCache entityCache() {
-        return cache;
-    }
-
-    @Override
-    public Mapping mapping() {
-        return mapping;
-    }
-
-    @Override
-    public boolean useDefaultLogging() {
-        return useDefaultLogging;
-    }
-
-    @Override
-    public int statementCacheSize() {
-        return statementCacheSize;
-    }
-
-    @Override
-    public int batchUpdateSize() {
+    public int getBatchUpdateSize() {
         return batchUpdateSize;
     }
 
     @Override
-    public boolean quoteTableNames() {
+    public EntityCache getCache() {
+        return cache;
+    }
+
+    @Override
+    public ConnectionProvider getConnectionProvider() {
+        return connectionProvider;
+    }
+
+    @Override
+    public Set<EntityStateListener> getEntityStateListeners() {
+        return entityStateListeners;
+    }
+
+    @Override
+    public Mapping getMapping() {
+        return mapping;
+    }
+
+    @Override
+    public EntityModel getModel() {
+        return model;
+    }
+
+    @Override
+    public Platform getPlatform() {
+        return platform;
+    }
+
+    @Override
+    public boolean getQuoteTableNames() {
         return quoteTableNames;
     }
 
     @Override
-    public boolean quoteColumnNames() {
+    public boolean getQuoteColumnNames() {
         return quoteColumnNames;
     }
 
     @Override
-    public Set<StatementListener> statementListeners() {
+    public Function<String, String> getColumnTransformer() {
+        return columnTransformer;
+    }
+
+    @Override
+    public Function<String, String> getTableTransformer() {
+        return tableTransformer;
+    }
+
+    @Override
+    public int getStatementCacheSize() {
+        return statementCacheSize;
+    }
+
+    @Override
+    public Set<StatementListener> getStatementListeners() {
         return statementListeners;
     }
 
     @Override
-    public TransactionIsolation transactionIsolation() {
+    public TransactionIsolation getTransactionIsolation() {
         return transactionIsolation;
     }
 
     @Override
-    public Set<Supplier<TransactionListener>> transactionListenerFactories() {
+    public Set<Supplier<TransactionListener>> getTransactionListenerFactories() {
         return transactionListenerFactories;
     }
 
     @Override
-    public TransactionMode transactionMode() {
+    public TransactionMode getTransactionMode() {
         return transactionMode;
     }
 
     @Override
-    public Executor writeExecutor() {
+    public boolean getUseDefaultLogging() {
+        return useDefaultLogging;
+    }
+
+    @Override
+    public Executor getWriteExecutor() {
         return writeExecutor;
     }
 

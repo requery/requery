@@ -17,6 +17,7 @@
 package io.requery.android;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
@@ -38,16 +39,16 @@ public class EntityParceler<T> {
     }
 
     public T readFromParcel(Parcel in) {
-        T entity = type.factory().get();
-        EntityProxy<T> proxy = type.proxyProvider().apply(entity);
-        for (Attribute<T, ?> attribute : type.attributes()) {
+        T entity = type.getFactory().get();
+        EntityProxy<T> proxy = type.getProxyProvider().apply(entity);
+        for (Attribute<T, ?> attribute : type.getAttributes()) {
             if (attribute.isAssociation()) {
                 continue;
             }
-            Class<?> typeClass = attribute.classType();
-            Object value;
+            Class<?> typeClass = attribute.getClassType();
+            Object value = null;
             if (typeClass.isEnum()) {
-                String name = (String) in.readValue(null);
+                String name = (String) in.readValue(getClass().getClassLoader());
                 if (name == null) {
                     value = null;
                 } else {
@@ -55,8 +56,21 @@ public class EntityParceler<T> {
                     Class<? extends Enum> enumClass = (Class<? extends Enum>) typeClass;
                     value = Enum.valueOf(enumClass, name);
                 }
+            } else if (typeClass.isArray()) {
+                int length = in.readInt();
+                if (length >= 0) {
+                    try {
+                        Parcelable.Creator creator = (Parcelable.Creator<?>)
+                                typeClass.getField("CREATOR").get(null);
+                        Object[] array = creator.newArray(length);
+                        in.readTypedArray(array, creator);
+                        value = array;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
             } else {
-                value = in.readValue(null);
+                value = in.readValue(getClass().getClassLoader());
             }
             PropertyState state = PropertyState.LOADED;
             if (!type.isStateless()) {
@@ -68,16 +82,29 @@ public class EntityParceler<T> {
     }
 
     public void writeToParcel(T entity, Parcel out) {
-        EntityProxy<T> proxy = type.proxyProvider().apply(entity);
-        for (Attribute<T, ?> attribute : type.attributes()) {
-            Object value = proxy.get(attribute, false);
-            Class<?> typeClass = attribute.classType();
-            if (typeClass.isEnum()) {
-                if (value != null) {
-                    value = value.toString();
-                }
+        EntityProxy<T> proxy = type.getProxyProvider().apply(entity);
+        for (Attribute<T, ?> attribute : type.getAttributes()) {
+            if (attribute.isAssociation()) {
+                continue;
             }
-            out.writeValue(value);
+            Object value = proxy.get(attribute, false);
+            Class<?> typeClass = attribute.getClassType();
+            if (typeClass.isArray()) {
+                Parcelable[] array = (Parcelable[]) value;
+                if (array == null) {
+                    out.writeInt(-1);
+                } else {
+                    out.writeInt(array.length);
+                    out.writeTypedArray(array, 0);
+                }
+            } else {
+                if (typeClass.isEnum()) {
+                    if (value != null) {
+                        value = value.toString();
+                    }
+                }
+                out.writeValue(value);
+            }
             if (!type.isStateless()) {
                 PropertyState state = proxy.getState(attribute);
                 out.writeString(state.toString());

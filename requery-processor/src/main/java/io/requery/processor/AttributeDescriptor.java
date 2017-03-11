@@ -20,6 +20,7 @@ import io.requery.CascadeAction;
 import io.requery.ReferentialAction;
 import io.requery.meta.AttributeBuilder;
 import io.requery.meta.Cardinality;
+import io.requery.query.Order;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -60,19 +61,24 @@ interface AttributeDescriptor {
     String collate();
 
     /**
-     * @return class name of the converter for this attribute
-     */
-    String converterName();
-
-    /**
      * @return optional column length for this attribute
      */
     Integer columnLength();
 
     /**
+     * @return class name of the converter for this attribute
+     */
+    String converterName();
+
+    /**
      * @return optional default value string for this attribute used during table generation.
      */
     String defaultValue();
+
+    /**
+     * @return optional column definition used during table generation
+     */
+    String definition();
 
     /**
      * @return name of the generated field for this attribute used during code generation.
@@ -113,6 +119,11 @@ interface AttributeDescriptor {
      * @return true if this attribute should be loaded lazily, false otherwise
      */
     boolean isLazy();
+
+    /**
+     * @return true if this attribute is representing an embedded type
+     */
+    boolean isEmbedded();
 
     /**
      * @return true if this column is indexed
@@ -191,6 +202,16 @@ interface AttributeDescriptor {
      * for associative attributes
      */
     String mappedBy();
+
+    /**
+     * @return optional in a relational attribute the column use to order the generated query by.
+     */
+    String orderBy();
+
+    /**
+     * @return optional if the order by attribute is provided the sort order for the query.
+     */
+    Order orderByDirection();
 
     /**
      * @return for associative attributes the column being referenced.

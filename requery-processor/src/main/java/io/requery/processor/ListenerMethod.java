@@ -71,7 +71,8 @@ class ListenerMethod extends BaseProcessableElement<ExecutableElement> implement
                 Types types = processingEnvironment.getTypeUtils();
                 for (TypeMirror mirror : element.getThrownTypes()) {
                     Element exceptionElement = types.asElement(mirror);
-                    if (exceptionElement.getKind() == ElementKind.CLASS) {
+                    if (exceptionElement != null &&
+                        exceptionElement.getKind() == ElementKind.CLASS) {
                         TypeElement typeElement = (TypeElement) exceptionElement;
                         if (!Mirrors.isInstance(types, typeElement, RuntimeException.class)) {
                             validator.error("Callback method cannot throw checked exception(s)");
@@ -80,7 +81,7 @@ class ListenerMethod extends BaseProcessableElement<ExecutableElement> implement
                 }
             }
             annotations.stream().filter(
-                    annotation -> element().getSimpleName().toString().equals(
+                    annotation -> element().getSimpleName().contentEquals(
                             Names.lowerCaseFirst(annotation.getClass().getSimpleName())))
                     .forEach(annotation -> validator.error(
                             "Callback method cannot have the same name as the listener method"));

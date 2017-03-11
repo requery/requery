@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import io.requery.converter.ZonedDateTimeConverter;
 import io.requery.meta.Attribute;
 import io.requery.query.Expression;
 import io.requery.query.ExpressionType;
+import io.requery.query.function.Function;
 import io.requery.sql.type.BigIntType;
 import io.requery.sql.type.BinaryType;
 import io.requery.sql.type.BlobType;
@@ -82,6 +83,7 @@ public class GenericMapping implements Mapping {
     private final ClassMap<FieldType> fixedTypes;
     private final ClassMap<Converter<?, ?>> converters;
     private final Map<Attribute, FieldType> resolvedTypes;
+    private final ClassMap<Function.Name> functionTypes;
     private PrimitiveIntType primitiveIntType;
     private PrimitiveLongType primitiveLongType;
     private PrimitiveShortType primitiveShortType;
@@ -125,6 +127,7 @@ public class GenericMapping implements Mapping {
 
         fixedTypes = new ClassMap<>();
         fixedTypes.put(byte[].class, new BinaryType());
+        functionTypes = new ClassMap<>();
         converters = new ClassMap<>();
         resolvedTypes = new IdentityHashMap<>();
         Set<Converter> converters = new HashSet<>();
@@ -141,11 +144,17 @@ public class GenericMapping implements Mapping {
         }
         platform.addMappings(this);
         for (Converter converter : converters) {
-            Class mapped = converter.mappedType();
+            Class mapped = converter.getMappedType();
             if (!types.containsKey(mapped)) {
                 this.converters.put(mapped, converter);
             }
         }
+    }
+
+    @Override
+    public Mapping aliasFunction(Function.Name name, Class<? extends Function> function) {
+        functionTypes.put(function, name);
+        return this;
     }
 
     @Override
@@ -159,7 +168,7 @@ public class GenericMapping implements Mapping {
     private void replace(ClassMap<FieldType> map, int sqlType, FieldType replace) {
         Set<Class<?>> keys = new LinkedHashSet<>();
         for (Map.Entry<Class<?>, FieldType> entry : map.entrySet()) {
-            if (entry.getValue().sqlType() == sqlType) {
+            if (entry.getValue().getSqlType() == sqlType) {
                 keys.add(entry.getKey());
             }
         }
@@ -167,25 +176,25 @@ public class GenericMapping implements Mapping {
             map.put(type, replace);
         }
         // check if the replacement type replaces any of the primitive types
-        if (sqlType == primitiveIntType.sqlType() && replace instanceof PrimitiveIntType) {
+        if (sqlType == primitiveIntType.getSqlType() && replace instanceof PrimitiveIntType) {
             primitiveIntType = (PrimitiveIntType) replace;
         } else if (
-            sqlType == primitiveLongType.sqlType() && replace instanceof PrimitiveLongType) {
+            sqlType == primitiveLongType.getSqlType() && replace instanceof PrimitiveLongType) {
             primitiveLongType = (PrimitiveLongType) replace;
         } else if (
-            sqlType == primitiveShortType.sqlType() && replace instanceof PrimitiveShortType) {
+            sqlType == primitiveShortType.getSqlType() && replace instanceof PrimitiveShortType) {
             primitiveShortType = (PrimitiveShortType) replace;
         } else if (
-            sqlType == primitiveBooleanType.sqlType() && replace instanceof PrimitiveBooleanType) {
+            sqlType == primitiveBooleanType.getSqlType() && replace instanceof PrimitiveBooleanType) {
             primitiveBooleanType = (PrimitiveBooleanType) replace;
         } else if (
-            sqlType == primitiveFloatType.sqlType() && replace instanceof PrimitiveFloatType) {
+            sqlType == primitiveFloatType.getSqlType() && replace instanceof PrimitiveFloatType) {
             primitiveFloatType = (PrimitiveFloatType) replace;
         } else if (
-            sqlType == primitiveDoubleType.sqlType() && replace instanceof PrimitiveDoubleType) {
+            sqlType == primitiveDoubleType.getSqlType() && replace instanceof PrimitiveDoubleType) {
             primitiveDoubleType = (PrimitiveDoubleType) replace;
         } else if (
-            sqlType == primitiveByteType.sqlType() && replace instanceof PrimitiveByteType) {
+            sqlType == primitiveByteType.getSqlType() && replace instanceof PrimitiveByteType) {
             primitiveByteType = (PrimitiveByteType) replace;
         }
     }
@@ -216,15 +225,13 @@ public class GenericMapping implements Mapping {
         if (fieldType != null) {
             return fieldType;
         }
-        Class<?> type = attribute.classType();
-        if (attribute.isForeignKey()) {
-            type = attribute.isAssociation() ?
-                attribute.referencedAttribute().get().classType() :
-                attribute.classType();
+        Class<?> type = attribute.getClassType();
+        if (attribute.isAssociation() && attribute.getReferencedAttribute() != null) {
+            type = attribute.getReferencedAttribute().get().getClassType();
         }
-        if (attribute.converter() != null) {
-            Converter<?, ?> converter = attribute.converter();
-            type = converter.persistedType();
+        if (attribute.getConverter() != null) {
+            Converter<?, ?> converter = attribute.getConverter();
+            type = converter.getPersistedType();
         }
         fieldType = getSubstitutedType(type);
         resolvedTypes.put(attribute, fieldType);
@@ -232,9 +239,15 @@ public class GenericMapping implements Mapping {
     }
 
     @Override
+    public Function.Name mapFunctionName(Function<?> function) {
+        Function.Name name = functionTypes.get(function.getClass());
+        return name != null ? name : function.getFunctionName();
+    }
+
+    @Override
     public Class<?> typeOf(int sqlType) {
         for (Map.Entry<Class<?>, FieldType> entry : types.entrySet()) {
-            if (entry.getValue().sqlType() == sqlType) {
+            if (entry.getValue().getSqlType() == sqlType) {
                 return entry.getKey();
             }
         }
@@ -246,10 +259,10 @@ public class GenericMapping implements Mapping {
         // check conversion
         Converter<?, ?> converter = converterForType(type);
         if (converter != null) {
-            if (converter.persistedSize() != null) {
-                fieldType = fixedTypes.get(converter.persistedType());
+            if (converter.getPersistedSize() != null) {
+                fieldType = fixedTypes.get(converter.getPersistedType());
             }
-            type = converter.persistedType();
+            type = converter.getPersistedType();
         }
         if (fieldType == null) {
             fieldType = types.get(type);
@@ -262,14 +275,14 @@ public class GenericMapping implements Mapping {
         Class<A> type;
         Converter<?, ?> converter = null;
         FieldType fieldType;
-        if (expression.type() == ExpressionType.ATTRIBUTE) {
+        if (expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
             @SuppressWarnings("unchecked")
             Attribute<?, A> attribute = (Attribute) expression;
-            converter = attribute.converter();
-            type = attribute.classType();
+            converter = attribute.getConverter();
+            type = attribute.getClassType();
             fieldType = mapAttribute(attribute);
         } else {
-            type = expression.classType();
+            type = expression.getClassType();
             fieldType = getSubstitutedType(type);
         }
         boolean isPrimitive = type.isPrimitive();
@@ -332,15 +345,15 @@ public class GenericMapping implements Mapping {
         Class<?> type;
         Converter converter = null;
         FieldType fieldType;
-        if (expression.type() == ExpressionType.ATTRIBUTE) {
+        if (expression.getExpressionType() == ExpressionType.ATTRIBUTE) {
             Attribute<?, A> attribute = (Attribute) expression;
-            converter = attribute.converter();
+            converter = attribute.getConverter();
             fieldType = mapAttribute(attribute);
             type = attribute.isAssociation() ?
-                    attribute.referencedAttribute().get().classType() :
-                    attribute.classType();
+                    attribute.getReferencedAttribute().get().getClassType() :
+                    attribute.getClassType();
         } else {
-            type = expression.classType();
+            type = expression.getClassType();
             fieldType = getSubstitutedType(type);
         }
         if (converter == null && !type.isPrimitive()) {
@@ -393,6 +406,8 @@ public class GenericMapping implements Mapping {
     }
 
     public void addConverter(Converter<?, ?> converter, Class<?>... classes) {
+        converters.put(converter.getMappedType(), converter);
+        // optional additional mapped classes
         for (Class<?> type : classes) {
             converters.put(type, converter);
         }

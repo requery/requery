@@ -30,7 +30,7 @@ public class CollectionChanges<T, E> implements CollectionObserver<E> {
     private final Collection<E> added;
     private final Collection<E> removed;
 
-    public CollectionChanges(EntityProxy<T> proxy, Attribute<T, ?> attribute) {
+    CollectionChanges(EntityProxy<T> proxy, Attribute<T, ?> attribute) {
         this.proxy = proxy;
         this.attribute = attribute;
         added = new ArrayList<>();

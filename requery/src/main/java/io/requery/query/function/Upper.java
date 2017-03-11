@@ -23,7 +23,7 @@ public class Upper<V> extends Function<V> {
     private final Expression<V> expression;
 
     private Upper(Expression<V> expression) {
-        super("upper", expression.classType());
+        super("upper", expression.getClassType());
         this.expression = expression;
     }
 

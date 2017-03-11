@@ -16,12 +16,6 @@
 
 package io.requery.meta;
 
-import io.requery.query.Aliasable;
-import io.requery.query.Conditional;
-import io.requery.query.Expression;
-import io.requery.query.Functional;
-import io.requery.query.LogicalCondition;
-
 /**
  * Attribute that can be used in a query on a specific {@link Type}.
  *
@@ -30,9 +24,5 @@ import io.requery.query.LogicalCondition;
  *
  * @author Nikhil Purushe
  */
-public interface QueryAttribute<T, V> extends Attribute<T, V>,
-    Expression<V>,
-    Functional<V>,
-    Aliasable<Expression<V>>,
-    Conditional<LogicalCondition<? extends Expression<V>, ?>, V> {
+public interface QueryAttribute<T, V> extends Attribute<T, V>, QueryExpression<V> {
 }

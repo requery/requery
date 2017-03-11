@@ -36,7 +36,7 @@ public class ClobType extends BasicType<Clob> {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.CLOB;
     }
 }

@@ -16,7 +16,10 @@
 
 package io.requery.processor;
 
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
 
 /**
  * Contains various properties describing how generate to a {@link io.requery.proxy.Property}.
@@ -25,133 +28,87 @@ class GeneratedProperty {
 
     private final String readName;
     private final String writeName;
-    private final String methodSuffix;
-    private final TypeName targetName;
-    private final TypeName propertyTypeName;
-    private final boolean useMethod;
-    private final boolean isNullable;
-    private final boolean isReadOnly;
-    private final boolean isWriteOnly;
+    private final TypeName entity;
+    private final TypeName typeName;
+    private String methodSuffix;
+    private String accessSuffix;
+    private boolean useMethod;
+    private boolean isNullable;
+    private boolean isReadOnly;
+    private boolean isWriteOnly;
 
-    private GeneratedProperty(String readName,
-                              String writeName,
-                              TypeName targetName,
-                              TypeName propertyTypeName,
-                              String methodSuffix,
-                              boolean useMethod,
-                              boolean isNullable,
-                              boolean isReadOnly,
-                              boolean isWriteOnly) {
+    GeneratedProperty(String propertyName, TypeName entity, TypeName typeName) {
+        this(propertyName, propertyName, entity, typeName);
+    }
+
+    GeneratedProperty(String readName, String writeName, TypeName entity, TypeName typeName) {
         this.readName = readName;
         this.writeName = writeName;
-        this.targetName = targetName;
-        this.propertyTypeName = propertyTypeName;
-        this.methodSuffix = methodSuffix;
+        this.entity = entity;
+        this.typeName = typeName;
+        this.methodSuffix = "";
+    }
+
+    GeneratedProperty setUseMethod(boolean useMethod) {
         this.useMethod = useMethod;
-        this.isNullable = isNullable;
-        this.isReadOnly = isReadOnly;
-        this.isWriteOnly = isWriteOnly;
+        return this;
     }
 
-    String readName() {
-        return readName;
+    GeneratedProperty setMethodSuffix(String suffix) {
+        this.methodSuffix = suffix;
+        return this;
     }
 
-    String writeName() {
-        return writeName;
+    GeneratedProperty setAccessSuffix(String suffix) {
+        this.accessSuffix = suffix;
+        return this;
     }
 
-    String methodSuffix() {
-        return methodSuffix;
+    GeneratedProperty setNullable(boolean nullable) {
+        this.isNullable = nullable;
+        return this;
     }
 
-    boolean useMethod() {
-        return useMethod;
+    GeneratedProperty setReadOnly(boolean readOnly) {
+        this.isReadOnly = readOnly;
+        return this;
     }
 
-    TypeName targetName() {
-        return targetName;
+    GeneratedProperty setWriteOnly(boolean writeOnly) {
+        this.isWriteOnly = writeOnly;
+        return this;
     }
 
-    TypeName propertyTypeName() {
-        return propertyTypeName;
-    }
-
-    boolean isNullable() {
-        return isNullable;
-    }
-
-    boolean isReadOnly() {
-        return isReadOnly;
-    }
-
-    boolean isWriteOnly() {
-        return isWriteOnly;
-    }
-
-    static class Builder {
-
-        private String readName;
-        private String writeName;
-        private String methodSuffix;
-        private TypeName targetName;
-        private TypeName propertyTypeName;
-        private boolean useMethod;
-        private boolean isNullable;
-        private boolean isReadOnly;
-        private boolean isWriteOnly;
-
-        Builder(String propertyName, TypeName targetName, TypeName propertyTypeName) {
-            this(propertyName, propertyName, targetName, propertyTypeName);
+    void build(TypeSpec.Builder builder) {
+        // get
+        MethodSpec.Builder getMethod = CodeGeneration.overridePublicMethod("get" + methodSuffix)
+            .addParameter(entity, "entity")
+            .returns(typeName);
+        final String accessName = "entity" + (accessSuffix == null ? "" : accessSuffix);
+        if (isWriteOnly) {
+            getMethod.addStatement("throw new UnsupportedOperationException()");
+        } else {
+            getMethod.addStatement(useMethod?
+                "return $L.$L()" : "return $L.$L", accessName, readName);
         }
-
-        Builder(String readName,
-                String writeName,
-                TypeName targetName,
-                TypeName propertyTypeName) {
-            this.methodSuffix = "";
-            this.readName = readName;
-            this.writeName = writeName;
-            this.targetName = targetName;
-            this.propertyTypeName = propertyTypeName;
+        // set
+        MethodSpec.Builder setMethod = CodeGeneration.overridePublicMethod("set" + methodSuffix)
+            .addParameter(entity, "entity")
+            .addParameter(typeName, "value");
+        if (isReadOnly) {
+            setMethod.addStatement("throw new UnsupportedOperationException()");
+        } else {
+            CodeBlock.Builder block = CodeBlock.builder();
+            if (isNullable) {
+                block.beginControlFlow("if(value != null)");
+            }
+            block.addStatement(useMethod? "$L.$L(value)" : "$L.$L = value", accessName, writeName);
+            if (isNullable) {
+                block.endControlFlow();
+            }
+            setMethod.addCode(block.build());
         }
-
-        Builder setUseMethod(boolean useMethod) {
-            this.useMethod = useMethod;
-            return this;
-        }
-
-        Builder setSuffix(String suffix) {
-            this.methodSuffix = suffix;
-            return this;
-        }
-
-        Builder setNullable(boolean nullable) {
-            this.isNullable = nullable;
-            return this;
-        }
-
-        Builder setReadOnly(boolean readOnly) {
-            this.isReadOnly = readOnly;
-            return this;
-        }
-
-        Builder setWriteOnly(boolean writeOnly) {
-            this.isWriteOnly = writeOnly;
-            return this;
-        }
-
-        GeneratedProperty build() {
-            return new GeneratedProperty(
-                readName,
-                writeName,
-                targetName,
-                propertyTypeName,
-                methodSuffix,
-                useMethod,
-                isNullable,
-                isReadOnly,
-                isWriteOnly);
-        }
+        builder.addMethod(getMethod.build());
+        builder.addMethod(setMethod.build());
     }
 }

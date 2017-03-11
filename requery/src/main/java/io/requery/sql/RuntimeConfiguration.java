@@ -20,36 +20,39 @@ import io.requery.EntityCache;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
+import io.requery.sql.gen.StatementGenerator;
 import io.requery.util.function.Supplier;
 
 import java.util.Set;
 import java.util.concurrent.Executor;
 
-interface RuntimeConfiguration {
+public interface RuntimeConfiguration extends ConnectionProvider {
 
-    Mapping mapping();
+    Mapping getMapping();
 
-    EntityModel model();
+    EntityModel getModel();
 
-    EntityCache cache();
+    EntityCache getCache();
 
-    Platform platform();
+    Platform getPlatform();
 
-    ConnectionProvider connectionProvider();
+    StatementGenerator getStatementGenerator();
 
     boolean supportsBatchUpdates();
 
-    int batchUpdateSize();
+    int getBatchUpdateSize();
 
-    StatementListener statementListener();
+    StatementListener getStatementListener();
 
-    Set<Supplier<TransactionListener>> transactionListenerFactories();
+    Set<Supplier<TransactionListener>> getTransactionListenerFactories();
 
-    TransactionMode transactionMode();
+    TransactionMode getTransactionMode();
 
-    TransactionIsolation transactionIsolation();
+    TransactionIsolation getTransactionIsolation();
 
-    Executor writeExecutor();
+    TransactionProvider getTransactionProvider();
 
-    QueryBuilder.Options queryBuilderOptions();
+    Executor getWriteExecutor();
+
+    QueryBuilder.Options getQueryBuilderOptions();
 }

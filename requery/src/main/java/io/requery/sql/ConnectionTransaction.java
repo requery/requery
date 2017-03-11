@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,13 @@ import io.requery.Transaction;
 import io.requery.TransactionException;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
+import io.requery.meta.Type;
 import io.requery.proxy.EntityProxy;
 import io.requery.util.Objects;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * {@link Transaction} implementation using JDBC {@link Connection} operations
@@ -35,11 +35,10 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-class ConnectionTransaction implements EntityProxyTransaction, ConnectionProvider {
+class ConnectionTransaction implements EntityTransaction, ConnectionProvider {
 
     private final ConnectionProvider connectionProvider;
     private final TransactionEntitiesSet entities;
-    private final Set<EntityProxy<?>> entitiesReadOnly;
     private final TransactionListener transactionListener;
     private final boolean supportsTransaction;
     private Connection connection;
@@ -56,7 +55,6 @@ class ConnectionTransaction implements EntityProxyTransaction, ConnectionProvide
         this.connectionProvider = Objects.requireNotNull(connectionProvider);
         this.supportsTransaction = supportsTransaction;
         this.entities = new TransactionEntitiesSet(cache);
-        this.entitiesReadOnly = Collections.unmodifiableSet(entities);
         this.previousIsolationLevel = -1;
     }
 
@@ -138,24 +136,17 @@ class ConnectionTransaction implements EntityProxyTransaction, ConnectionProvide
     @Override
     public void commit() {
         try {
-            transactionListener.beforeCommit(entitiesReadOnly);
+            transactionListener.beforeCommit(entities.types());
             if (supportsTransaction) {
                 connection.commit();
                 committed = true;
             }
-            transactionListener.afterCommit(entitiesReadOnly);
+            transactionListener.afterCommit(entities.types());
             entities.clear();
         } catch (SQLException e) {
             throw new TransactionException(e);
         } finally {
-            try {
-                connection.setAutoCommit(true);
-                // restore default isolation level
-                if (previousIsolationLevel != -1) {
-                    connection.setTransactionIsolation(previousIsolationLevel);
-                }
-            } catch (SQLException ignored) {
-            }
+            resetConnection();
             close();
         }
     }
@@ -163,21 +154,18 @@ class ConnectionTransaction implements EntityProxyTransaction, ConnectionProvide
     @Override
     public void rollback() {
         try {
-            transactionListener.beforeRollback(entitiesReadOnly);
+            transactionListener.beforeRollback(entities.types());
             if (supportsTransaction) {
                 connection.rollback();
                 rolledBack = true;
                 entities.clearAndInvalidate();
             }
-            transactionListener.afterRollback(entitiesReadOnly);
+            transactionListener.afterRollback(entities.types());
             entities.clear();
         } catch (SQLException e) {
             throw new TransactionException(e);
         } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException ignored) {
-            }
+            resetConnection();
         }
     }
 
@@ -193,5 +181,23 @@ class ConnectionTransaction implements EntityProxyTransaction, ConnectionProvide
     @Override
     public void addToTransaction(EntityProxy<?> proxy) {
         entities.add(proxy);
+    }
+
+    @Override
+    public void addToTransaction(Collection<Type<?>> types) {
+        entities.types().addAll(types);
+    }
+
+    private void resetConnection() {
+        if (supportsTransaction) {
+            try {
+                connection.setAutoCommit(true);
+                // restore default isolation level
+                if (previousIsolationLevel != -1) {
+                    connection.setTransactionIsolation(previousIsolationLevel);
+                }
+            } catch (SQLException ignored) {
+            }
+        }
     }
 }

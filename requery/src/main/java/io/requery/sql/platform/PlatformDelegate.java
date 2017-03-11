@@ -16,14 +16,17 @@
 
 package io.requery.sql.platform;
 
+import io.requery.query.Expression;
+import io.requery.query.element.LimitedElement;
+import io.requery.query.element.OrderByElement;
 import io.requery.sql.GeneratedColumnDefinition;
-import io.requery.sql.LimitDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.Platform;
-import io.requery.sql.UpsertDefinition;
 import io.requery.sql.VersionColumnDefinition;
+import io.requery.sql.gen.Generator;
 
 import java.sql.Connection;
+import java.util.Map;
 
 /**
  * Given a {@link Connection} will pick a existing platform type based on the JDBC driver
@@ -70,6 +73,11 @@ public class PlatformDelegate implements Platform {
     }
 
     @Override
+    public boolean supportsOnUpdateCascade() {
+        return platform.supportsOnUpdateCascade();
+    }
+
+    @Override
     public boolean supportsUpsert() {
         return platform.supportsUpsert();
     }
@@ -80,8 +88,8 @@ public class PlatformDelegate implements Platform {
     }
 
     @Override
-    public LimitDefinition limitDefinition() {
-        return platform.limitDefinition();
+    public Generator<LimitedElement> limitGenerator() {
+        return platform.limitGenerator();
     }
 
     @Override
@@ -90,8 +98,13 @@ public class PlatformDelegate implements Platform {
     }
 
     @Override
-    public UpsertDefinition upsertDefinition() {
-        return platform.upsertDefinition();
+    public Generator<Map<Expression<?>, Object>> upsertGenerator() {
+        return platform.upsertGenerator();
+    }
+
+    @Override
+    public Generator<OrderByElement> orderByGenerator() {
+        return platform.orderByGenerator();
     }
 
     @Override

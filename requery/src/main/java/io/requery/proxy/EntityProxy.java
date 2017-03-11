@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,11 +73,11 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     @Override
     public <V> V get(Attribute<E, V> attribute, boolean fetch) {
         PropertyState state = fetch ? loadProperty(attribute) : getState(attribute);
-        V value = attribute.property().get(entity);
-        if (value == null && state == PropertyState.FETCH &&
-            attribute.initializer() != null) {
+        V value = attribute.getProperty().get(entity);
+        if (value == null && (state == PropertyState.FETCH || stateless) &&
+            attribute.getInitializer() != null) {
 
-            value = attribute.initializer().initialize(this, attribute);
+            value = attribute.getInitializer().initialize(this, attribute);
             set(attribute, value, PropertyState.FETCH);
         }
         return value;
@@ -85,49 +85,49 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
 
     @Override
     public int getInt(Attribute<E, Integer> attribute) {
-        IntProperty<E> property = (IntProperty<E>) attribute.property();
+        IntProperty<E> property = (IntProperty<E>) attribute.getProperty();
         loadProperty(attribute);
         return property.getInt(entity);
     }
 
     @Override
     public long getLong(Attribute<E, Long> attribute) {
-        LongProperty<E> property = (LongProperty<E>) attribute.property();
+        LongProperty<E> property = (LongProperty<E>) attribute.getProperty();
         loadProperty(attribute);
         return property.getLong(entity);
     }
 
     @Override
     public short getShort(Attribute<E, Short> attribute) {
-        ShortProperty<E> property = (ShortProperty<E>) attribute.property();
+        ShortProperty<E> property = (ShortProperty<E>) attribute.getProperty();
         loadProperty(attribute);
         return property.getShort(entity);
     }
 
     @Override
     public byte getByte(Attribute<E, Byte> attribute) {
-        ByteProperty<E> property = (ByteProperty<E>) attribute.property();
+        ByteProperty<E> property = (ByteProperty<E>) attribute.getProperty();
         loadProperty(attribute);
         return property.getByte(entity);
     }
 
     @Override
     public float getFloat(Attribute<E, Float> attribute) {
-        FloatProperty<E> property = (FloatProperty<E>) attribute.property();
+        FloatProperty<E> property = (FloatProperty<E>) attribute.getProperty();
         loadProperty(attribute);
         return property.getFloat(entity);
     }
 
     @Override
     public double getDouble(Attribute<E, Double> attribute) {
-        DoubleProperty<E> property = (DoubleProperty<E>) attribute.property();
+        DoubleProperty<E> property = (DoubleProperty<E>) attribute.getProperty();
         loadProperty(attribute);
         return property.getDouble(entity);
     }
 
     @Override
     public boolean getBoolean(Attribute<E, Boolean> attribute) {
-        BooleanProperty<E> property = (BooleanProperty<E>) attribute.property();
+        BooleanProperty<E> property = (BooleanProperty<E>) attribute.getProperty();
         loadProperty(attribute);
         return property.getBoolean(entity);
     }
@@ -139,7 +139,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
 
     @Override
     public <V> void set(Attribute<E, V> attribute, V value, PropertyState state) {
-        attribute.property().set(entity, value);
+        attribute.getProperty().set(entity, value);
         setState(attribute, state);
         checkRegenerateKey(attribute);
     }
@@ -147,7 +147,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     @Override
     public void setObject(Attribute<E, ?> attribute, Object value, PropertyState state) {
         @SuppressWarnings("unchecked")
-        Property<E, Object> property = (Property<E, Object>) attribute.property();
+        Property<E, Object> property = (Property<E, Object>) attribute.getProperty();
         property.set(entity, value);
         setState(attribute, state);
         checkRegenerateKey(attribute);
@@ -155,7 +155,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
 
     @Override
     public void setInt(Attribute<E, Integer> attribute, int value, PropertyState state) {
-        IntProperty<E> property = (IntProperty<E>) attribute.property();
+        IntProperty<E> property = (IntProperty<E>) attribute.getProperty();
         property.setInt(entity, value);
         setState(attribute, state);
         checkRegenerateKey(attribute);
@@ -163,7 +163,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
 
     @Override
     public void setLong(Attribute<E, Long> attribute, long value, PropertyState state) {
-        LongProperty<E> property = (LongProperty<E>) attribute.property();
+        LongProperty<E> property = (LongProperty<E>) attribute.getProperty();
         property.setLong(entity, value);
         setState(attribute, state);
         checkRegenerateKey(attribute);
@@ -171,35 +171,35 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
 
     @Override
     public void setShort(Attribute<E, Short> attribute, short value, PropertyState state) {
-        ShortProperty<E> property = (ShortProperty<E>) attribute.property();
+        ShortProperty<E> property = (ShortProperty<E>) attribute.getProperty();
         property.setShort(entity, value);
         setState(attribute, state);
     }
 
     @Override
     public void setByte(Attribute<E, Byte> attribute, byte value, PropertyState state) {
-        ByteProperty<E> property = (ByteProperty<E>) attribute.property();
+        ByteProperty<E> property = (ByteProperty<E>) attribute.getProperty();
         property.setByte(entity, value);
         setState(attribute, state);
     }
 
     @Override
     public void setFloat(Attribute<E, Float> attribute, float value, PropertyState state) {
-        FloatProperty<E> property = (FloatProperty<E>) attribute.property();
+        FloatProperty<E> property = (FloatProperty<E>) attribute.getProperty();
         property.setFloat(entity, value);
         setState(attribute, state);
     }
 
     @Override
     public void setDouble(Attribute<E, Double> attribute, double value, PropertyState state) {
-        DoubleProperty<E> property = (DoubleProperty<E>) attribute.property();
+        DoubleProperty<E> property = (DoubleProperty<E>) attribute.getProperty();
         property.setDouble(entity, value);
         setState(attribute, state);
     }
 
     @Override
     public void setBoolean(Attribute<E, Boolean> attribute, boolean value, PropertyState state) {
-        BooleanProperty<E> property = (BooleanProperty<E>) attribute.property();
+        BooleanProperty<E> property = (BooleanProperty<E>) attribute.getProperty();
         property.setBoolean(entity, value);
         setState(attribute, state);
     }
@@ -218,7 +218,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
      */
     public void setState(Attribute<E, ?> attribute, PropertyState state) {
         if (!stateless) {
-            attribute.propertyState().set(entity, state);
+            attribute.getPropertyState().set(entity, state);
         }
     }
 
@@ -232,7 +232,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
         if (stateless) {
             return null;
         }
-        PropertyState state = attribute.propertyState().get(entity);
+        PropertyState state = attribute.getPropertyState().get(entity);
         return state == null ? PropertyState.FETCH : state;
     }
 
@@ -241,18 +241,36 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
      */
     public Object key() {
         if (regenerateKey || key == null) {
-            if (type.singleKeyAttribute() != null) {
-                key = get(type.singleKeyAttribute()); // typical case one key attribute
-            } else if (type.keyAttributes().size() > 1) {
+            if (type.getSingleKeyAttribute() != null) {
+                key = getKey(type.getSingleKeyAttribute()); // typical case one key attribute
+            } else if (type.getKeyAttributes().size() > 1) {
                 LinkedHashMap<Attribute<E, ?>, Object> keys =
-                    new LinkedHashMap<>(type.keyAttributes().size());
-                for (Attribute<E, ?> attribute : type.keyAttributes()) {
-                    keys.put(attribute, get(attribute));
+                    new LinkedHashMap<>(type.getKeyAttributes().size());
+                for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
+                    keys.put(attribute, getKey(attribute));
                 }
                 key = new CompositeKey<>(keys);
+            } else {
+                key = this;
             }
         }
         return key;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Object getKey(Attribute<E, ?> attribute) {
+        if (attribute.isAssociation()) {
+            Attribute referenced = attribute.getReferencedAttribute().get();
+            Object association = get(attribute, false);
+            if (association != null) {
+                Type<Object> type = referenced.getDeclaringType();
+                EntityProxy proxy = type.getProxyProvider().apply(association);
+                return proxy == null ? null : proxy.get(referenced, false);
+            } else {
+                return null;
+            }
+        }
+        return get(attribute, false);
     }
 
     /**
@@ -281,6 +299,24 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
         synchronized (syncObject()) {
             this.loader = null;
         }
+    }
+
+    public E copy() {
+        E copy = type.getFactory().get();
+        EntityProxy<E> proxy = type.getProxyProvider().apply(copy);
+        proxy.link(loader);
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
+            if (!attribute.isAssociation()) {
+                PropertyState state = getState(attribute);
+                if (state == PropertyState.LOADED || state == PropertyState.MODIFIED) {
+                    Object value = get(attribute, false);
+                    @SuppressWarnings("unchecked")
+                    Attribute<E, Object> a = (Attribute<E, Object>) attribute;
+                    proxy.set(a, value, state);
+                }
+            }
+        }
+        return copy;
     }
 
     public Type<E> type() {
@@ -345,7 +381,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
         if (obj instanceof EntityProxy) {
             EntityProxy other = (EntityProxy) obj;
             if (other.entity.getClass().equals(entity.getClass())) {
-                for (Attribute<E, ?> attribute : type.attributes()) {
+                for (Attribute<E, ?> attribute : type.getAttributes()) {
                     // comparing only the non-associative properties for now
                     if (!attribute.isAssociation()) {
                         Object value = get(attribute, false);
@@ -365,7 +401,7 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     @Override
     public int hashCode() {
         int hash = 31;
-        for (Attribute<E, ?> attribute : type.attributes()) {
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
             if (!attribute.isAssociation()) {
                 hash = 31 * hash + Objects.hashCode(get(attribute, false));
             }
@@ -376,10 +412,10 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(type.name());
+        sb.append(type.getName());
         sb.append(" [");
         int index = 0;
-        for (Attribute<E, ?> attribute : type.attributes()) {
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
             if (index > 0) {
                 sb.append(", ");
             }

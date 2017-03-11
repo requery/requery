@@ -65,7 +65,7 @@ public abstract class BaseType<T> implements FieldType<T> {
     }
 
     @Override
-    public int sqlType() {
+    public int getSqlType() {
         return sqlType;
     }
 
@@ -75,14 +75,14 @@ public abstract class BaseType<T> implements FieldType<T> {
     }
 
     @Override
-    public Integer defaultLength() {
+    public Integer getDefaultLength() {
         return null;
     }
 
-    public abstract Object identifier();
+    public abstract Object getIdentifier();
 
     @Override
-    public String identifierSuffix() {
+    public String getIdentifierSuffix() {
         return null;
     }
 
@@ -90,11 +90,11 @@ public abstract class BaseType<T> implements FieldType<T> {
     public boolean equals(Object obj) {
         if (obj instanceof FieldType) {
             FieldType other = (FieldType) obj;
-            return Objects.equals(identifier(), other.identifier()) &&
-                sqlType() == other.sqlType() &&
+            return Objects.equals(getIdentifier(), other.getIdentifier()) &&
+                getSqlType() == other.getSqlType() &&
                 hasLength() == other.hasLength() &&
-                Objects.equals(identifierSuffix(), other.identifierSuffix()) &&
-                Objects.equals(defaultLength(), other.defaultLength());
+                Objects.equals(getIdentifierSuffix(), other.getIdentifierSuffix()) &&
+                Objects.equals(getDefaultLength(), other.getDefaultLength());
         }
         return false;
     }
@@ -102,21 +102,21 @@ public abstract class BaseType<T> implements FieldType<T> {
     @Override
     public int hashCode() {
         return Objects.hash(
-            identifier(), sqlType(), defaultLength(), identifierSuffix());
+            getIdentifier(), getSqlType(), getDefaultLength(), getIdentifierSuffix());
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(identifier());
+        sb.append(getIdentifier());
         if (hasLength()) {
             sb.append("(");
-            sb.append(defaultLength());
+            sb.append(getDefaultLength());
             sb.append(")");
         }
-        if (identifierSuffix() != null) {
+        if (getIdentifierSuffix() != null) {
             sb.append(" ");
-            sb.append(identifierSuffix());
+            sb.append(getIdentifierSuffix());
         }
         return sb.toString();
     }

@@ -18,31 +18,63 @@ package io.requery.test;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
+import io.requery.android.sqlcipher.SqlCipherDatabaseSource;
+import io.requery.android.sqlite.DatabaseProvider;
 import io.requery.android.sqlite.DatabaseSource;
+import io.requery.android.sqlitex.SqlitexDatabaseSource;
 import io.requery.meta.EntityModel;
 import io.requery.sql.EntityDataStore;
 import io.requery.test.model.Models;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * Reuses the core functional tests from the test project
  */
-@RunWith(AndroidJUnit4.class)
+@RunWith(Parameterized.class)
 public class SqliteFunctionalTest extends FunctionalTest {
 
-    private DatabaseSource dataSource;
+    enum Type {
+        ANDROID,  // default Android api
+        SUPPORT,  // requery SQLite support library
+        SQLCIPHER // SQLCipher
+    }
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Type> data() {
+        return Arrays.asList(Type.values());
+    }
+
+    private DatabaseProvider dataSource;
+    private String dbName;
+
+    public SqliteFunctionalTest(Type type) {
+        EntityModel model = Models.DEFAULT;
+        Context context = InstrumentationRegistry.getContext();
+        dbName = type.toString().toLowerCase() + ".db";
+        switch (type) {
+            default:
+            case ANDROID:
+                dataSource = new DatabaseSource(context, model, dbName, 1);
+                break;
+            case SUPPORT:
+                dataSource = new SqlitexDatabaseSource(context, model, dbName, 1);
+                break;
+            case SQLCIPHER:
+                dataSource = new SqlCipherDatabaseSource(context, model, dbName, "test123", 1);
+                break;
+        }
+    }
 
     @Override
     public void setup() throws SQLException {
-        Context context = InstrumentationRegistry.getContext();
-        final String dbName = "test.db";
-        context.deleteDatabase(dbName);
-        EntityModel model = Models.DEFAULT;
-        dataSource = new DatabaseSource(context, model, dbName, 1);
         dataSource.setLoggingEnabled(true);
+        Context context = InstrumentationRegistry.getContext();
+        context.deleteDatabase(dbName);
         data = new EntityDataStore<>(dataSource.getConfiguration());
     }
 

@@ -33,8 +33,10 @@ import io.requery.proxy.Settable;
 import io.requery.query.AliasedExpression;
 import io.requery.query.Condition;
 import io.requery.query.Expression;
+import io.requery.query.Functional;
 import io.requery.query.Result;
 import io.requery.query.Tuple;
+import io.requery.query.WhereAndOr;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryType;
 import io.requery.util.FilteringIterator;
@@ -86,15 +88,17 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         this.type = Objects.requireNotNull(type);
         this.context = Objects.requireNotNull(context);
         this.queryable = Objects.requireNotNull(queryable);
-        this.cache = this.context.cache();
-        this.mapping = this.context.mapping();
+        this.cache = this.context.getCache();
+        this.mapping = this.context.getMapping();
         this.stateless = type.isStateless();
         this.cacheable = type.isCacheable();
         // compute default/minimum selections for the type
         LinkedHashSet<Expression<?>> selection = new LinkedHashSet<>();
         LinkedHashSet<Attribute<E, ?>> selectAttributes = new LinkedHashSet<>();
-        for (Attribute<E, ?> attribute : type.attributes()) {
-            if (!attribute.isLazy() && !attribute.isAssociation()) {
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
+            // include foreign or primary key
+            boolean isKey = (attribute.isForeignKey() || attribute.isKey());
+            if (!attribute.isLazy() && (isKey || !attribute.isAssociation())) {
                 if (attribute.isVersion()) {
                     Expression<?> expression = aliasVersion(attribute);
                     selection.add(expression);
@@ -106,9 +110,9 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         }
         defaultSelection = Collections.unmodifiableSet(selection);
         // optimization for single key attribute
-        keyAttribute = Attributes.query(type.singleKeyAttribute());
+        keyAttribute = Attributes.query(type.getSingleKeyAttribute());
         // attributes converted to array for performance
-        defaultSelectionAttributes = Attributes.attributesToArray(selectAttributes,
+        defaultSelectionAttributes = Attributes.toArray(selectAttributes,
             new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
@@ -135,10 +139,10 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
 
     private Expression aliasVersion(Attribute attribute) {
         // special handling for system version column
-        String columnName = context.platform().versionColumnDefinition().columnName();
+        String columnName = context.getPlatform().versionColumnDefinition().columnName();
         if (attribute.isVersion() && columnName != null) {
             Expression<?> expression = (Expression<?>) attribute;
-            return new AliasedExpression<>(expression, columnName, expression.name());
+            return new AliasedExpression<>(expression, columnName, expression.getName());
         }
         return (Expression) attribute;
     }
@@ -151,7 +155,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     public E refresh(E entity, EntityProxy<E> proxy) {
         // refresh only the attributes that were loaded...
         final Set<Attribute<E, ?>> refreshAttributes = new LinkedHashSet<>();
-        for (Attribute<E, ?> attribute : type.attributes()) {
+        for (Attribute<E, ?> attribute : type.getAttributes()) {
             if (stateless || proxy.getState(attribute) == PropertyState.LOADED) {
                 refreshAttributes.add(attribute);
             }
@@ -160,7 +164,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     }
 
     public E refreshAll(E entity, EntityProxy<E> proxy) {
-        return refresh(entity, proxy, type.attributes());
+        return refresh(entity, proxy, type.getAttributes());
     }
 
     @SafeVarargs
@@ -190,41 +194,41 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         FilteringIterator<Attribute<E, ?>> filterator =
             new FilteringIterator<>(attributes.iterator(), basicFilter);
         if (filterator.hasNext()) {
-            QueryBuilder qb = new QueryBuilder(context.queryBuilderOptions())
+            QueryBuilder qb = new QueryBuilder(context.getQueryBuilderOptions())
                 .keyword(SELECT)
                 .commaSeparated(filterator, new QueryBuilder.Appender<Attribute<E, ?>>() {
                     @Override
                     public void append(QueryBuilder qb, Attribute<E, ?> value) {
-                        String versionColumn = context.platform()
+                        String versionColumn = context.getPlatform()
                                 .versionColumnDefinition().columnName();
                         if (value.isVersion() && versionColumn != null) {
                             qb.append(versionColumn).space()
                                     .append(AS).space()
-                                    .append(value.name()).space();
+                                    .append(value.getName()).space();
                         } else {
                             qb.attribute(value);
                         }
                     }
                 })
                 .keyword(FROM)
-                .tableName(type.name())
+                .tableName(type.getName())
                 .keyword(WHERE)
-                .appendWhereConditions(type.keyAttributes());
+                .appendWhereConditions(type.getKeyAttributes());
 
             String sql = qb.toString();
-            try (Connection connection = context.connectionProvider().getConnection();
+            try (Connection connection = context.getConnection();
                  PreparedStatement statement = connection.prepareStatement(sql)) {
                 int index = 1;
-                for (Attribute<E, ?> attribute : type.keyAttributes()) {
-                    Object value = proxy.get(attribute, false);
+                for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
+                    Object value = proxy.getKey(attribute);
                     if (value == null) {
                         throw new MissingKeyException(proxy);
                     }
                     mapping.write((Expression) attribute, statement, index++, value);
                 }
-                context.statementListener().beforeExecuteQuery(statement, sql, null);
+                context.getStatementListener().beforeExecuteQuery(statement, sql, null);
                 ResultSet results = statement.executeQuery();
-                context.statementListener().afterExecuteQuery(statement);
+                context.getStatementListener().afterExecuteQuery(statement);
                 if (results.next()) {
                     Attribute[] selection = new Attribute[attributes.size()];
                     attributes.toArray(selection);
@@ -251,16 +255,16 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     }
 
     private <V> void refreshAssociation(EntityProxy<E> proxy, Attribute<E, V> attribute) {
-        Supplier<Result<S>> query = associativeQuery(proxy, attribute);
-        switch (attribute.cardinality()) {
+        Supplier<? extends Result<S>> query = associativeQuery(proxy, attribute);
+        switch (attribute.getCardinality()) {
             case ONE_TO_ONE:
             case MANY_TO_ONE:
                 S value = query == null ? null : query.get().firstOrNull();
-                proxy.set(attribute, attribute.classType().cast(value), PropertyState.LOADED);
+                proxy.set(attribute, attribute.getClassType().cast(value), PropertyState.LOADED);
                 break;
             case ONE_TO_MANY:
             case MANY_TO_MANY:
-                Initializer<E, V> initializer = attribute.initializer();
+                Initializer<E, V> initializer = attribute.getInitializer();
                 if (initializer instanceof QueryInitializer) {
                     @SuppressWarnings("unchecked")
                     QueryInitializer<E, V> queryInitializer = (QueryInitializer<E, V>) initializer;
@@ -273,9 +277,9 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         }
     }
 
-    private <Q extends S> Supplier<Result<Q>> associativeQuery(EntityProxy<E> proxy,
-                                                               Attribute<E, ?> attribute) {
-        switch (attribute.cardinality()) {
+    private <Q extends S> Supplier<? extends Result<Q>>
+    associativeQuery(EntityProxy<E> proxy, Attribute<E, ?> attribute) {
+        switch (attribute.getCardinality()) {
             case ONE_TO_ONE:
             case ONE_TO_MANY:
             case MANY_TO_ONE: {
@@ -283,55 +287,79 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 QueryAttribute<Q, Object> keyAttribute;
                 Class<Q> uType;
                 if (attribute.isForeignKey()) {
-                    keyAttribute = Attributes.get(attribute.referencedAttribute());
-                    uType = keyAttribute.declaringType().classType();
+                    keyAttribute = Attributes.get(attribute.getReferencedAttribute());
+                    uType = keyAttribute.getDeclaringType().getClassType();
                     Q entity = uType.cast(proxy.get(attribute, false));
                     if (entity == null) {
                         return null;
                     }
-                    EntityProxy<Q> referredProxy = context.model()
-                        .typeOf(uType).proxyProvider().apply(entity);
+                    EntityProxy<Q> referredProxy = context.getModel()
+                        .typeOf(uType).getProxyProvider().apply(entity);
 
                     key = referredProxy.get(keyAttribute);
                 } else {
-                    keyAttribute = Attributes.get(attribute.mappedAttribute());
-                    uType = keyAttribute.declaringType().classType();
+                    keyAttribute = Attributes.get(attribute.getMappedAttribute());
+                    uType = keyAttribute.getDeclaringType().getClassType();
                     Attribute<E, ?> referenced = Attributes.get(
-                        keyAttribute.referencedAttribute());
+                        keyAttribute.getReferencedAttribute());
                     key = proxy.get(referenced);
                 }
-                return queryable.select(uType).where(keyAttribute.equal(key));
+                return order(queryable.select(uType).where(keyAttribute.equal(key)),
+                    attribute.getOrderByAttribute());
             }
             case MANY_TO_MANY: {
                 @SuppressWarnings("unchecked")
-                Class<Q> uType = (Class<Q>) attribute.elementClass();
+                Class<Q> uType = (Class<Q>) attribute.getElementClass();
                 QueryAttribute<E, Object> tKey = null;
                 QueryAttribute<Q, Object> uKey = null;
-                Type<?> junctionType = context.model().typeOf(attribute.referencedClass());
-                for (Attribute a : junctionType.attributes()) {
-                    if (type.classType().isAssignableFrom(a.referencedClass())) {
-                        tKey = Attributes.query(a);
-                    } else if (uType.isAssignableFrom(a.referencedClass())) {
-                        uKey = Attributes.query(a);
+                Type<?> junctionType = context.getModel().typeOf(attribute.getReferencedClass());
+                for (Attribute a : junctionType.getAttributes()) {
+                    Class referenceType = a.getReferencedClass();
+                    if (referenceType != null) {
+                        if (tKey == null && type.getClassType().isAssignableFrom(referenceType)) {
+                            tKey = Attributes.query(a);
+                        } else if (uType.isAssignableFrom(referenceType)) {
+                            uKey = Attributes.query(a);
+                        }
                     }
                 }
                 Objects.requireNotNull(tKey);
                 Objects.requireNotNull(uKey);
-                QueryAttribute<E, Object> tId = Attributes.get(tKey.referencedAttribute());
-                QueryAttribute<Q, Object> uId = Attributes.get(uKey.referencedAttribute());
+                QueryAttribute<E, Object> tId = Attributes.get(tKey.getReferencedAttribute());
+                QueryAttribute<Q, Object> uId = Attributes.get(uKey.getReferencedAttribute());
                 Object id = proxy.get(tId);
                 if (id == null) {
                     throw new IllegalStateException();
                 }
                 // create the many to many join query
-                return queryable.select(uType)
-                    .join(junctionType.classType()).on(uId.equal(uKey))
-                    .join(type.classType()).on(tKey.equal(tId))
-                    .where(tId.equal(id));
+                return order(queryable.select(uType)
+                    .join(junctionType.getClassType()).on(uId.equal(uKey))
+                    .join(type.getClassType()).on(tKey.equal(tId))
+                    .where(tId.equal(id)), attribute.getOrderByAttribute());
             }
             default:
                 throw new IllegalStateException();
         }
+    }
+
+    private <Q extends S> Supplier<? extends Result<Q>>
+    order(WhereAndOr<? extends Result<Q>> query, Supplier<Attribute> supplier) {
+        if (supplier != null) {
+            Attribute attribute = supplier.get();
+            if (attribute.getOrderByDirection() != null && attribute instanceof Functional) {
+                switch (attribute.getOrderByDirection()) {
+                    case ASC:
+                        query.orderBy(((Functional)attribute).asc());
+                        break;
+                    case DESC:
+                        query.orderBy(((Functional)attribute).desc());
+                        break;
+                }
+            } else {
+                query.orderBy((Expression)attribute);
+            }
+        }
+        return query;
     }
 
     @SafeVarargs
@@ -342,7 +370,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         if (keyAttribute == null) {
             // non optimal case objects with multiple keys or no keys
             for (E entity : entities) {
-                entity = refresh(entity, type.proxyProvider().apply(entity), attributes);
+                entity = refresh(entity, type.getProxyProvider().apply(entity), attributes);
                 if (collection != null) {
                     collection.add(entity);
                 }
@@ -370,7 +398,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             }
             Map<Object, EntityProxy<E>> map = new HashMap<>();
             for (E entity : entities) {
-                EntityProxy<E> proxy = type.proxyProvider().apply(entity);
+                EntityProxy<E> proxy = type.getProxyProvider().apply(entity);
                 Object key = proxy.key();
                 if (key == null) {
                     throw new MissingKeyException();
@@ -391,8 +419,8 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 ResultReader<E> resultReader = newResultReader(selectAttributes);
 
                 SelectOperation<E> select = new SelectOperation<>(context, resultReader);
-                QueryElement<Result<E>> query =
-                    new QueryElement<>(QueryType.SELECT, context.model(), select);
+                QueryElement<? extends Result<E>> query =
+                    new QueryElement<>(QueryType.SELECT, context.getModel(), select);
 
                 try (Result<E> result = query.select(selection).where(condition).get()) {
                     result.each(collector);
@@ -407,7 +435,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                                 Object value = tuple.get(expression);
                                 if (expression instanceof AliasedExpression) {
                                     AliasedExpression aliased = (AliasedExpression) expression;
-                                    expression = aliased.innerExpression();
+                                    expression = aliased.getInnerExpression();
                                 }
                                 Attribute<E, Object> attribute =
                                     Attributes.query((Attribute) expression);
@@ -432,8 +460,8 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     }
 
     private E createEntity() {
-        E entity = type.factory().get();
-        EntityProxy<E> proxy = type.proxyProvider().apply(entity);
+        E entity = type.getFactory().get();
+        EntityProxy<E> proxy = type.getProxyProvider().apply(entity);
         proxy.link(this);
         return entity;
     }
@@ -441,23 +469,30 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     private Object readCacheKey(ResultSet results) throws SQLException {
         Object key = null;
         if (keyAttribute != null) { // common case 1 primary key
-            String name = keyAttribute.name();
-            int index = results.findColumn(name);
-            key = mapping.read((Expression) keyAttribute, results, index);
+            key = readKey(keyAttribute, results, results.findColumn(keyAttribute.getName()));
         } else {
-            int count = type.keyAttributes().size();
+            int count = type.getKeyAttributes().size();
             if (count > 1) {
                 LinkedHashMap<Attribute<E, ?>, Object> keys = new LinkedHashMap<>(count);
-                for (Attribute<E, ?> attribute : type.keyAttributes()) {
-                    String name = attribute.name();
-                    int column = results.findColumn(name);
-                    Object value = mapping.read((Expression) attribute, results, column);
+                for (Attribute<E, ?> attribute : type.getKeyAttributes()) {
+                    String name = attribute.getName();
+                    Object value = readKey(attribute, results, results.findColumn(name));
                     keys.put(attribute, value);
                 }
                 key = new CompositeKey<>(keys);
             }
         }
         return key;
+    }
+
+    private Object readKey(Attribute<E, ?> attribute, ResultSet results, int index)
+        throws SQLException {
+        Attribute referenced = attribute;
+        if (attribute.isAssociation()) {
+            // in the case of a foreign key referenced read the type of the key in the other type
+            referenced = Attributes.get(attribute.getReferencedAttribute());
+        }
+        return mapping.read((Expression) referenced, results, index);
     }
 
     final E fromResult(E entity, ResultSet results, Attribute[] selection) throws SQLException {
@@ -472,14 +507,14 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     // try lookup cached object
                     final Object key = readCacheKey(results);
                     if (key != null) {
-                        entity = cache.get(type.classType(), key);
+                        entity = cache.get(type.getClassType(), key);
                         wasCached = entity != null;
                     }
                     // not cached create a new one
                     if (entity == null) {
                         entity = createEntity();
                         if (key != null) {
-                            cache.put(type.classType(), key, entity);
+                            cache.put(type.getClassType(), key, entity);
                         }
                     }
                 }
@@ -489,29 +524,30 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         }
 
         // set the properties
-        EntityProxy<E> proxy = type.proxyProvider().apply(entity);
+        EntityProxy<E> proxy = type.getProxyProvider().apply(entity);
         synchronized (proxy.syncObject()) {
             proxy.link(this);
             int index = 1;
             for (Attribute expression : selection) {
                 @SuppressWarnings("unchecked")
                 Attribute<E, ?> attribute = (Attribute<E, ?>) expression;
+                boolean isAssociation = attribute.isAssociation();
 
-                if (attribute.isForeignKey() && attribute.isAssociation()) {
+                if ((attribute.isForeignKey() || attribute.isKey()) && isAssociation) {
                     // handle loading the foreign key into referenced object
-                    Attribute referenced = Attributes.get(attribute.referencedAttribute());
+                    Attribute referenced = Attributes.get(attribute.getReferencedAttribute());
 
                     Object key = mapping.read((Expression) referenced, results, index);
                     if (key != null) {
                         Object value = proxy.get(attribute, false);
                         if (value == null) {
                             // create one...
-                            Class classType = attribute.classType();
+                            Class classType = attribute.getClassType();
                             EntityReader reader = context.read(classType);
                             value = reader.createEntity();
                         }
                         context.proxyOf(value, false)
-                            .set(Attributes.get(attribute.referencedAttribute()), key,
+                            .set(Attributes.get(attribute.getReferencedAttribute()), key,
                                 PropertyState.LOADED);
 
                         // leave in fetch state if only key is loaded
@@ -522,10 +558,10 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                         }
                         proxy.setObject(attribute, value, state);
                     }
-                } else if (attribute.isAssociation()) {
+                } else if (isAssociation) {
                     continue;
                 } else if (overwrite || proxy.getState(attribute) != PropertyState.MODIFIED) {
-                    if (attribute.primitiveKind() != null) {
+                    if (attribute.getPrimitiveKind() != null) {
                         readPrimitiveField(proxy, attribute, results, index);
                     } else {
                         Object value = mapping.read((Expression) attribute, results, index);
@@ -536,7 +572,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
             }
         }
         if (!wasCached) {
-            context.stateListener().postLoad(entity, proxy);
+            context.getStateListener().postLoad(entity, proxy);
         }
         return entity;
     }
@@ -547,7 +583,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
         for (Attribute expression : selection) {
             @SuppressWarnings("unchecked")
             Attribute<E, ?> attribute = (Attribute<E, ?>) expression;
-            if (attribute.primitiveKind() != null) {
+            if (attribute.getPrimitiveKind() != null) {
                 readPrimitiveField(proxy, attribute, results, index);
             } else {
                 Object value = mapping.read((Expression) attribute, results, index);
@@ -562,7 +598,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     private void readPrimitiveField(Settable<E> proxy,
                                     Attribute<E, ?> attribute,
                                     ResultSet results, int index) throws SQLException {
-        switch (attribute.primitiveKind()) {
+        switch (attribute.getPrimitiveKind()) {
             case INT:
                 Attribute<E, Integer> intAttribute = (Attribute<E, Integer>) attribute;
                 int intValue = mapping.readInt(results, index);

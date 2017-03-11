@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package io.requery.query;
 
-public interface Insertion<E> extends Return<E> {
-
-    <V> Insertion<E> value(Expression<V> expression, V value);
+public interface Insertion<R> extends Return<R> {
+    <V> Insertion<R> value(Expression<V> expression, V value);
 }

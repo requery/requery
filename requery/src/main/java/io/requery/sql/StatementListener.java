@@ -20,7 +20,9 @@ import java.sql.Statement;
 
 public interface StatementListener {
     void beforeExecuteUpdate(Statement statement, String sql, BoundParameters parameters);
-    void afterExecuteUpdate(Statement statement);
+    void afterExecuteUpdate(Statement statement, int count);
+    void beforeExecuteBatchUpdate(Statement statement, String sql);
+    void afterExecuteBatchUpdate(Statement statement, int[] count);
     void beforeExecuteQuery(Statement statement, String sql, BoundParameters parameters);
     void afterExecuteQuery(Statement statement);
 }

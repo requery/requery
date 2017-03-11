@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,13 @@
  */
 
 package io.requery.sql;
+
+import io.requery.query.Expression;
+import io.requery.query.element.LimitedElement;
+import io.requery.query.element.OrderByElement;
+import io.requery.sql.gen.Generator;
+
+import java.util.Map;
 
 /**
  * Defines platform/vendor specific SQL features.
@@ -62,8 +69,14 @@ public interface Platform {
     boolean supportsGeneratedKeysInBatchUpdate();
 
     /**
+     * @return true if the platform supports the 'on update cascade' clause in a constraint,
+     * false otherwise
+     */
+    boolean supportsOnUpdateCascade();
+
+    /**
      * @return true if the platform supports an upsert (insert or update) operation either via
-     * merge or an alternate syntax that is defined in {@link #upsertDefinition()}
+     * merge or an alternate syntax that is defined in {@link #upsertGenerator()}
      */
     boolean supportsUpsert();
 
@@ -73,17 +86,22 @@ public interface Platform {
     GeneratedColumnDefinition generatedColumnDefinition();
 
     /**
-     * @return the type of limit support this database supports.
+     * @return the limit generator for this database
      */
-    LimitDefinition limitDefinition();
+    Generator<LimitedElement> limitGenerator();
+
+    /**
+     * @return the upsert generator for this database
+     */
+    Generator<Map<Expression<?>, Object>> upsertGenerator();
+
+    /**
+     * @return the order by generator for this database
+     */
+    Generator<OrderByElement> orderByGenerator();
 
     /**
      * @return the type of version column this database supports.
      */
     VersionColumnDefinition versionColumnDefinition();
-
-    /**
-     * @return the type of upsert definition the platform supports.
-     */
-    UpsertDefinition upsertDefinition();
 }

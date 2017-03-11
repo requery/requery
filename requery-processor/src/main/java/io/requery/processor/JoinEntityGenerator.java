@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package io.requery.processor;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import io.requery.Entity;
 import io.requery.ForeignKey;
@@ -29,8 +30,14 @@ import io.requery.Table;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -61,64 +68,101 @@ class JoinEntityGenerator implements SourceGenerator {
 
     @Override
     public void generate() throws IOException {
-        AssociativeEntityDescriptor associativeDescriptor = attribute.associativeEntity()
+        AssociativeEntityDescriptor descriptor = attribute.associativeEntity()
             .orElseThrow(IllegalStateException::new);
 
-        String name = associativeDescriptor.name();
+        String name = descriptor.name();
         if (Names.isEmpty(name)) {
             // create junction table name with TableA_TableB
             name = from.tableName() + "_" + to.tableName();
         }
-        ClassName joinEntityName = nameResolver.joinEntityName(associativeDescriptor, from, to);
-        String className = "Abstract" + joinEntityName.simpleName();
+        ClassName entityName = nameResolver.joinEntityName(descriptor, from, to);
+        String className = "Abstract" + entityName.simpleName();
         TypeSpec.Builder junctionType = TypeSpec.classBuilder(className)
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addSuperinterface(Serializable.class)
             .addAnnotation(AnnotationSpec.builder(Entity.class)
-                .addMember("model", "$S", from.modelName()).build())
+                .addMember("model", "$S", from.modelName())
+                .addMember("stateless", "$L", from.isStateless()).build())
             .addAnnotation(AnnotationSpec.builder(Table.class)
                 .addMember("name", "$S", name).build());
         CodeGeneration.addGeneratedAnnotation(processingEnvironment, junctionType);
 
-        Set<AssociativeReference> references = associativeDescriptor.columns();
-        EntityDescriptor[] types = new EntityDescriptor[] { from, to };
+        Set<AssociativeReference> references = descriptor.columns();
+        EntityDescriptor[] entities = new EntityDescriptor[] { from, to };
+        Map<AssociativeReference, EntityDescriptor> map = new LinkedHashMap<>();
         if (references.isEmpty()) {
             // generate with defaults
-            for (EntityDescriptor type : types) {
-                AssociativeReference reference = new AssociativeReference(
-                    type.tableName() + "Id",
-                    type.element(),
-                    ReferentialAction.CASCADE,
-                    ReferentialAction.CASCADE );
+            for (int i = 0; i < entities.length; i++) {
+                EntityDescriptor type = entities[i];
+                String column = type.tableName() + "Id";
+                if (from == to) { // if self referencing add a number to the column name
+                    column += (i + 1);
+                }
+                AssociativeReference reference = new AssociativeReference(column,
+                        type.element(), null,
+                        ReferentialAction.CASCADE,  ReferentialAction.CASCADE );
                 references.add(reference);
+                map.put(reference, type);
+            }
+        } else {
+            for (AssociativeReference reference : references) {
+                for (EntityDescriptor entity : entities) {
+                    if (reference.referencedType() != null &&
+                        reference.referencedType().equals(entity.element())) {
+                        map.put(reference, entity);
+                    }
+                }
             }
         }
 
-        int typeIndex = 0;
+        int index = 0;
         for (AssociativeReference reference : references) {
+            ClassName action = ClassName.get(ReferentialAction.class);
             AnnotationSpec.Builder key = AnnotationSpec.builder(ForeignKey.class)
-                .addMember("delete", "$T.$L",
-                    ClassName.get(ReferentialAction.class), reference.deleteAction().toString())
-                .addMember("update", "$T.$L",
-                    ClassName.get(ReferentialAction.class), reference.updateAction().toString());
+                .addMember("delete", "$T.$L", action, reference.deleteAction().toString())
+                .addMember("update", "$T.$L", action, reference.updateAction().toString());
 
             TypeElement referenceElement = reference.referencedType();
-            if (referenceElement == null && typeIndex < types.length) {
-                referenceElement = types[typeIndex++].element();
+            EntityDescriptor entity = map.get(reference);
+            if (referenceElement == null) {
+                if (entity != null) {
+                    referenceElement = entity.element();
+                } else {
+                    referenceElement = entities[index++].element();
+                }
             }
             if (referenceElement != null) {
                 key.addMember("references", "$L.class",
                     nameResolver.generatedTypeNameOf(referenceElement)
                         .orElseThrow(IllegalStateException::new));
             }
+            if (reference.referencedColumn() != null) {
+                key.addMember("referencedColumn", "$S", reference.referencedColumn());
+            }
             AnnotationSpec.Builder id = AnnotationSpec.builder(Key.class);
-            FieldSpec.Builder field = FieldSpec.builder(Integer.class, reference.name(),
+            TypeName typeName = TypeName.get(Integer.class);
+            if (entity != null) {
+                Optional<? extends AttributeDescriptor> keyAttribute =
+                    entity.attributes().values().stream()
+                        .filter(AttributeDescriptor::isKey).findAny();
+
+                if (keyAttribute.isPresent()) {
+                    TypeMirror keyType = keyAttribute.get().typeMirror();
+                    if (keyType.getKind().isPrimitive()) {
+                        Types types = processingEnvironment.getTypeUtils();
+                        keyType = types.boxedClass((PrimitiveType)keyType).asType();
+                    }
+                    typeName = TypeName.get(keyType);
+                }
+            }
+            FieldSpec.Builder field = FieldSpec.builder(typeName, reference.name(),
                 Modifier.PROTECTED)
                 .addAnnotation(key.build())
                 .addAnnotation(id.build());
             junctionType.addField(field.build());
         }
-        CodeGeneration.writeType(processingEnvironment,
-            joinEntityName.packageName(), junctionType.build());
+        String packageName = entityName.packageName();
+        CodeGeneration.writeType(processingEnvironment, packageName, junctionType.build());
     }
 }

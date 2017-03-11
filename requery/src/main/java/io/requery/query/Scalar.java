@@ -16,10 +16,11 @@
 
 package io.requery.query;
 
-import io.requery.rx.ToSingle;
 import io.requery.util.function.Consumer;
 import io.requery.util.function.Supplier;
 
+import javax.annotation.CheckReturnValue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -28,12 +29,18 @@ import java.util.concurrent.Executor;
  *
  * @param <E> type of element.
  */
-public interface Scalar<E> extends ToSingle<E> {
+public interface Scalar<E> extends Callable<E> {
 
     /**
      * @return the scalar value, causing the query to be executed.
      */
     E value();
+
+    /**
+     * @return the scalar value, causing the query to be executed.
+     */
+    @Override
+    E call() throws Exception;
 
     /**
      * Consume the result with the given {@link Consumer}.
@@ -45,6 +52,7 @@ public interface Scalar<E> extends ToSingle<E> {
     /**
      * @return {@link CompletableFuture} computing the result.
      */
+    @CheckReturnValue
     CompletableFuture<E> toCompletableFuture();
 
     /**
@@ -52,18 +60,12 @@ public interface Scalar<E> extends ToSingle<E> {
      *
      * @return {@link CompletableFuture} computing the result.
      */
+    @CheckReturnValue
     CompletableFuture<E> toCompletableFuture(Executor executor);
-
-    /**
-     * Converts this Scalar computation to a single {@link rx.Single}.
-     *
-     * @return {@link rx.Single} for the result of this query.
-     */
-    @Override
-    rx.Single<E> toSingle();
 
     /**
      * @return {@link Supplier} for the result of this query.
      */
+    @CheckReturnValue
     Supplier<E> toSupplier();
 }

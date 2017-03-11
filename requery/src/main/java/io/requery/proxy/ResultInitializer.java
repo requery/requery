@@ -29,9 +29,10 @@ public class ResultInitializer<E, V> implements Initializer<E, V>, QueryInitiali
     }
 
     @Override
-    public <U> V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute,
-                            Supplier<Result<U>> query) {
-        Class<?> type = attribute.classType();
+    public <U> V initialize(EntityProxy<E> proxy,
+                            Attribute<E, V> attribute,
+                            Supplier<? extends Result<U>> query) {
+        Class<?> type = attribute.getClassType();
         CollectionChanges<E, U> changes = new CollectionChanges<>(proxy, attribute);
         Result<U> result = query == null ? null : query.get();
         Object collection;
@@ -40,6 +41,6 @@ public class ResultInitializer<E, V> implements Initializer<E, V>, QueryInitiali
         } else {
             throw new IllegalStateException("Unsupported result type " + type);
         }
-        return attribute.classType().cast(collection);
+        return attribute.getClassType().cast(collection);
     }
 }

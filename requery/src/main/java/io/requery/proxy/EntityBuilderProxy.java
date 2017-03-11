@@ -36,7 +36,7 @@ public class EntityBuilderProxy<B, E> implements Settable<E> {
     private final B builder;
 
     public EntityBuilderProxy(Type<E> type) {
-        Supplier<B> supplier = type.builderFactory();
+        Supplier<B> supplier = type.getBuilderFactory();
         this.builder = supplier.get();
         this.type = type;
     }
@@ -53,53 +53,53 @@ public class EntityBuilderProxy<B, E> implements Settable<E> {
 
     @Override
     public void setObject(Attribute<E, ?> attribute, Object value, PropertyState state) {
-        Property<B, Object> property = (Property<B, Object>) attribute.builderProperty();
+        Property<B, Object> property = (Property<B, Object>) attribute.getBuilderProperty();
         property.set(builder, value);
     }
 
     @Override
     public void setBoolean(Attribute<E, Boolean> attribute, boolean value, PropertyState state) {
-        BooleanProperty<B> property = (BooleanProperty<B>) attribute.builderProperty();
+        BooleanProperty<B> property = (BooleanProperty<B>) attribute.getBuilderProperty();
         property.setBoolean(builder, value);
     }
 
     @Override
     public void setDouble(Attribute<E, Double> attribute, double value, PropertyState state) {
-        DoubleProperty<B> property = (DoubleProperty<B>) attribute.builderProperty();
+        DoubleProperty<B> property = (DoubleProperty<B>) attribute.getBuilderProperty();
         property.setDouble(builder, value);
     }
 
     @Override
     public void setFloat(Attribute<E, Float> attribute, float value, PropertyState state) {
-        FloatProperty<B> property = (FloatProperty<B>) attribute.builderProperty();
+        FloatProperty<B> property = (FloatProperty<B>) attribute.getBuilderProperty();
         property.setFloat(builder, value);
     }
 
     @Override
     public void setByte(Attribute<E, Byte> attribute, byte value, PropertyState state) {
-        ByteProperty<B> property = (ByteProperty<B>) attribute.builderProperty();
+        ByteProperty<B> property = (ByteProperty<B>) attribute.getBuilderProperty();
         property.setByte(builder, value);
     }
 
     @Override
     public void setShort(Attribute<E, Short> attribute, short value, PropertyState state) {
-        ShortProperty<B> property = (ShortProperty<B>) attribute.builderProperty();
+        ShortProperty<B> property = (ShortProperty<B>) attribute.getBuilderProperty();
         property.setShort(builder, value);
     }
 
     @Override
     public void setInt(Attribute<E, Integer> attribute, int value, PropertyState state) {
-        IntProperty<B> property = (IntProperty<B>) attribute.builderProperty();
+        IntProperty<B> property = (IntProperty<B>) attribute.getBuilderProperty();
         property.setInt(builder, value);
     }
 
     @Override
     public void setLong(Attribute<E, Long> attribute, long value, PropertyState state) {
-        LongProperty<B> property = (LongProperty<B>) attribute.builderProperty();
+        LongProperty<B> property = (LongProperty<B>) attribute.getBuilderProperty();
         property.setLong(builder, value);
     }
 
     public E build() {
-        return type.buildFunction().apply(builder);
+        return type.getBuildFunction().apply(builder);
     }
 }

@@ -55,7 +55,7 @@ class PreparedStatementCache implements AutoCloseable {
     private final LinkedHashMap<String, PreparedStatement> elements;
     private boolean closed;
 
-    public PreparedStatementCache(final int count) {
+    PreparedStatementCache(final int count) {
         elements = new LinkedHashMap<String, PreparedStatement>(count, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry eldest) {

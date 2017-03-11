@@ -48,7 +48,7 @@ class CodeGeneration {
     static TypeSpec createAnonymousSupplier(TypeName type, CodeBlock block) {
         return TypeSpec.anonymousClassBuilder("")
             .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Supplier.class), type))
-            .addMethod(CodeGeneration.overridePublicMethod("get")
+            .addMethod(overridePublicMethod("get")
                 .addCode(block)
                 .returns(type)
                 .build())

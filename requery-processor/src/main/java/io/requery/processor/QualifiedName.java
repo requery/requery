@@ -31,7 +31,7 @@ class QualifiedName implements Name {
 
     QualifiedName(String packageName, String className) {
         if (Names.isEmpty(className)) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Empty class name");
         }
         if (!SourceVersion.isIdentifier(className)) {
             throw new IllegalArgumentException("Invalid class name identifier: " + className);
@@ -43,12 +43,12 @@ class QualifiedName implements Name {
     QualifiedName(String qualifiedName) {
         String[] parts = qualifiedName.split("\\.");
         String className = "";
-        StringBuilder packageBuilder = new StringBuilder();
-        if(parts.length != 0) {
+        StringBuilder sb = new StringBuilder();
+        if (parts.length != 0) {
             for (String part : parts) {
                 if (Character.isLowerCase(part.charAt(0))) {
-                    packageBuilder.append(part);
-                    packageBuilder.append(".");
+                    sb.append(part);
+                    sb.append(".");
                 } else {
                     className = part;
                 }
@@ -56,17 +56,16 @@ class QualifiedName implements Name {
         } else {
             className = qualifiedName;
         }
-        if (packageBuilder.length() > 0 &&
-            packageBuilder.charAt(packageBuilder.length() - 1) == '.') {
-            packageBuilder.deleteCharAt(packageBuilder.length() - 1);
+        if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '.') {
+            sb.deleteCharAt(sb.length() - 1);
         }
-        packageName = packageBuilder.toString();
         if (Names.isEmpty(className)) {
             throw new IllegalArgumentException("Empty class name");
         }
         if (!SourceVersion.isIdentifier(className)) {
             throw new IllegalArgumentException("Invalid class name identifier: " + className);
         }
+        this.packageName = sb.toString();
         this.className = className;
     }
 

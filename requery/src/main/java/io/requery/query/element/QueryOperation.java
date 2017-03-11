@@ -23,5 +23,5 @@ package io.requery.query.element;
  */
 public interface QueryOperation<E> {
 
-    E execute(QueryElement<E> query);
+    E evaluate(QueryElement<E> query);
 }

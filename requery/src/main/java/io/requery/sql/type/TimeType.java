@@ -36,7 +36,7 @@ public class TimeType extends BasicType<Time> {
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.TIME;
     }
 }

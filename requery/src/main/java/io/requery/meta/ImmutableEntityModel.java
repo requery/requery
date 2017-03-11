@@ -33,14 +33,14 @@ final class ImmutableEntityModel implements EntityModel {
         this.name = name;
         ClassMap<Type<?>> map = new ClassMap<>();
         for (Type<?> type : types) {
-            map.put(type.classType(), type);
-            map.put(type.baseType(), type);
+            map.put(type.getClassType(), type);
+            map.put(type.getBaseType(), type);
         }
         this.map = Collections.unmodifiableMap(map);
     }
 
     @Override
-    public String name() {
+    public String getName() {
         return name;
     }
 
@@ -60,7 +60,7 @@ final class ImmutableEntityModel implements EntityModel {
     }
 
     @Override
-    public Set<Type<?>> allTypes() {
+    public Set<Type<?>> getTypes() {
         return new LinkedHashSet<>(map.values());
     }
 
@@ -73,7 +73,7 @@ final class ImmutableEntityModel implements EntityModel {
     public boolean equals(Object obj) {
         if (obj instanceof EntityModel) {
             EntityModel other = (EntityModel) obj;
-            return Objects.equals(name, other.name()) && allTypes().equals(other.allTypes());
+            return Objects.equals(name, other.getName()) && getTypes().equals(other.getTypes());
         }
         return false;
     }

@@ -16,12 +16,12 @@
 
 package io.requery.util;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-@SuppressWarnings("NullableProblems")
 public class ObservableSet<E> implements Set<E>, ObservableCollection<E> {
 
     private final Set<E> set;
@@ -52,19 +52,20 @@ public class ObservableSet<E> implements Set<E>, ObservableCollection<E> {
         return set.contains(o);
     }
 
-    @Override
+    @Override @Nonnull
     public Iterator<E> iterator() {
         return set.iterator();
     }
 
-    @Override
+    @Override @Nonnull
     public Object[] toArray() {
         return set.toArray();
     }
 
     @SuppressWarnings("SuspiciousToArrayCall")
     @Override
-    public <T> T[] toArray(T[] a) {
+    @Nonnull
+    public <T> T[] toArray(@Nonnull T[] a) {
         return set.toArray(a);
     }
 
@@ -89,12 +90,12 @@ public class ObservableSet<E> implements Set<E>, ObservableCollection<E> {
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public boolean containsAll(@Nonnull Collection<?> c) {
         return set.containsAll(c);
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> c) {
+    public boolean addAll(@Nonnull Collection<? extends E> c) {
         boolean modified = false;
         for (E element : c) {
             boolean added = add(element);
@@ -106,7 +107,7 @@ public class ObservableSet<E> implements Set<E>, ObservableCollection<E> {
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public boolean retainAll(@Nonnull Collection<?> c) {
         ArrayList<E> toRemove = new ArrayList<>();
         for (E element : this) {
             if (!c.contains(element)) {
@@ -117,7 +118,7 @@ public class ObservableSet<E> implements Set<E>, ObservableCollection<E> {
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public boolean removeAll(@Nonnull Collection<?> c) {
         boolean modified = false;
         for (Object element : c) {
             boolean removed = remove(element);

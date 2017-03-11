@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,22 @@ package io.requery.sql.platform;
 
 import io.requery.meta.Attribute;
 import io.requery.meta.Type;
+import io.requery.query.Expression;
 import io.requery.sql.BaseType;
 import io.requery.sql.GeneratedColumnDefinition;
-import io.requery.sql.LimitDefinition;
-import io.requery.sql.LimitOffsetDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.QueryBuilder;
-import io.requery.sql.UpsertDefinition;
 import io.requery.sql.VersionColumnDefinition;
+import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.LimitGenerator;
+import io.requery.sql.gen.Output;
 import io.requery.sql.type.VarCharType;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Map;
 import java.util.UUID;
 
 import static io.requery.sql.Keyword.CONFLICT;
@@ -49,15 +51,11 @@ import static io.requery.sql.Keyword.VALUES;
 public class PostgresSQL extends Generic {
 
     private final SerialColumnDefinition serialColumnDefinition;
-    private final LimitDefinition limitDefinition;
     private final VersionColumnDefinition versionColumnDefinition;
-    private final UpsertDefinition upsertDefinition;
 
     public PostgresSQL() {
         serialColumnDefinition = new SerialColumnDefinition();
-        limitDefinition = new LimitOffsetDefinition();
         versionColumnDefinition = new SystemVersionColumnDefinition();
-        upsertDefinition = new UpsertOnConflictDoUpdate();
     }
 
     @Override
@@ -85,8 +83,8 @@ public class PostgresSQL extends Generic {
     }
 
     @Override
-    public LimitDefinition limitDefinition() {
-        return limitDefinition;
+    public LimitGenerator limitGenerator() {
+        return new LimitGenerator();
     }
 
     @Override
@@ -95,8 +93,8 @@ public class PostgresSQL extends Generic {
     }
 
     @Override
-    public UpsertDefinition upsertDefinition() {
-        return upsertDefinition;
+    public Generator<Map<Expression<?>, Object>> upsertGenerator() {
+        return new UpsertOnConflictDoUpdate();
     }
 
     private static class ByteArrayType extends BaseType<byte[]> {
@@ -106,7 +104,7 @@ public class PostgresSQL extends Generic {
         }
 
         @Override
-        public String identifier() {
+        public String getIdentifier() {
             return "bytea";
         }
 
@@ -124,7 +122,7 @@ public class PostgresSQL extends Generic {
         }
 
         @Override
-        public String identifier() {
+        public String getIdentifier() {
             return "uuid";
         }
 
@@ -169,40 +167,39 @@ public class PostgresSQL extends Generic {
     /**
      * Performs an upsert (insert/update) using insert on conflict do update.
      */
-    private static class UpsertOnConflictDoUpdate implements UpsertDefinition {
+    private static class UpsertOnConflictDoUpdate implements Generator<Map<Expression<?>, Object>> {
 
         @Override
-        public <E> void appendUpsert(QueryBuilder qb,
-                                     Iterable<Attribute<E, ?>> attributes,
-                                     final Parameterizer<E> parameterizer) {
-            Type<E> type = attributes.iterator().next().declaringType();
+        public void write(final Output output, final Map<Expression<?>, Object> values) {
+            QueryBuilder qb = output.builder();
+            Type<?> type = ((Attribute)values.keySet().iterator().next()).getDeclaringType();
             // insert into <table> (<columns>) values (<values)
             // on conflict do update (<column>=EXCLUDED.<value>...
             qb.keyword(INSERT, INTO)
-                .tableName(type.name())
+                .tableNames(values.keySet())
                 .openParenthesis()
-                .commaSeparatedAttributes(attributes)
+                .commaSeparatedExpressions(values.keySet())
                 .closeParenthesis().space()
                 .keyword(VALUES)
                 .openParenthesis()
-                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
-                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
+                    public void append(QueryBuilder qb, Expression expression) {
                         qb.append("?");
-                        parameterizer.addParameter(value);
+                        output.parameters().add(expression, values.get(expression));
                     }
                 })
                 .closeParenthesis().space()
                 .keyword(ON, CONFLICT)
                 .openParenthesis()
-                .attribute(type.singleKeyAttribute())
+                .commaSeparatedAttributes(type.getKeyAttributes())
                 .closeParenthesis().space()
                 .keyword(DO, UPDATE, SET)
-                .commaSeparated(attributes, new QueryBuilder.Appender<Attribute<E, ?>>() {
+                .commaSeparated(values.keySet(), new QueryBuilder.Appender<Expression<?>>() {
                     @Override
-                    public void append(QueryBuilder qb, Attribute<E, ?> value) {
-                        qb.attribute(value);
-                        qb.append("= EXCLUDED." + value.name());
+                    public void append(QueryBuilder qb, Expression<?> value) {
+                        qb.attribute((Attribute) value);
+                        qb.append("= EXCLUDED." + value.getName());
                     }
                 });
         }

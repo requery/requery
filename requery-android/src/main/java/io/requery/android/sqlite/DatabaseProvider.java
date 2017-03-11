@@ -16,6 +16,8 @@
 
 package io.requery.android.sqlite;
 
+import android.annotation.TargetApi;
+import android.os.Build;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConnectionProvider;
 import io.requery.sql.TableCreationMode;
@@ -25,7 +27,8 @@ import io.requery.sql.TableCreationMode;
  *
  * @param <T> database type
  */
-public interface DatabaseProvider<T> extends ConnectionProvider {
+@TargetApi(Build.VERSION_CODES.KITKAT)
+public interface DatabaseProvider<T> extends ConnectionProvider, AutoCloseable {
 
     /**
      * Enables statement logging. Not use for debugging only as it impacts performance.
@@ -46,13 +49,39 @@ public interface DatabaseProvider<T> extends ConnectionProvider {
      */
     Configuration getConfiguration();
 
+    /**
+     * Callback for when the database schema is to be created.
+     *
+     * @param db instance
+     */
     void onCreate(T db);
 
+    /**
+     * Callback for when the database should be configured.
+     *
+     * @param db instance
+     */
     void onConfigure(T db);
 
+    /**
+     * Callback for when the database should be upgraded from an previous version to a new version.
+     *
+     * @param db instance
+     */
     void onUpgrade(T db, int oldVersion, int newVersion);
 
+    /**
+     * @return read only database instance
+     */
     T getReadableDatabase();
 
+    /**
+     * @return readable and writable database instance
+     */
     T getWritableDatabase();
+
+    /**
+     * closes the database.
+     */
+    void close();
 }

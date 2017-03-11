@@ -23,7 +23,7 @@ public class Coalesce<T> extends Function<T> {
     private final Expression<?>[] expressions;
 
     private Coalesce(Expression<T>[] attributes) {
-        super("coalesce", attributes[0].classType());
+        super("coalesce", attributes[0].getClassType());
         this.expressions = attributes;
     }
 

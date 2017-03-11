@@ -21,7 +21,7 @@ import java.sql.SQLException;
 
 class UncloseableConnection extends ConnectionDelegate {
 
-    public UncloseableConnection(Connection connection) {
+    UncloseableConnection(Connection connection) {
         super(connection);
     }
 

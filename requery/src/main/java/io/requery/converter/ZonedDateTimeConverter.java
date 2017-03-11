@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,47 +18,49 @@ package io.requery.converter;
 
 import io.requery.Converter;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 /**
- * Converts from a {@link LocalDateTime} to a {@link java.sql.Timestamp} for Java 8.
+ * Converts from a {@link LocalDateTime} to a {@link java.sql.Timestamp} for Java 8. Note that
+ * when converting between the time type and the database type all times will be converted to the
+ * System default zone offset.
  */
-public class ZonedDateTimeConverter implements Converter<ZonedDateTime, java.sql.Timestamp> {
+public class ZonedDateTimeConverter implements Converter<ZonedDateTime, Timestamp> {
 
     @Override
-    public Class<ZonedDateTime> mappedType() {
+    public Class<ZonedDateTime> getMappedType() {
         return ZonedDateTime.class;
     }
 
     @Override
-    public Class<java.sql.Timestamp> persistedType() {
-        return java.sql.Timestamp.class;
+    public Class<Timestamp> getPersistedType() {
+        return Timestamp.class;
     }
 
     @Override
-    public Integer persistedSize() {
+    public Integer getPersistedSize() {
         return null;
     }
 
     @Override
-    public java.sql.Timestamp convertToPersisted(ZonedDateTime value) {
+    public Timestamp convertToPersisted(ZonedDateTime value) {
         if (value == null) {
             return null;
         }
         Instant instant = value.toInstant();
-        return new java.sql.Timestamp(instant.toEpochMilli());
+        return Timestamp.from(instant);
     }
 
     @Override
-    public ZonedDateTime convertToMapped(Class<? extends ZonedDateTime> type,
-                                         java.sql.Timestamp value) {
+    public ZonedDateTime convertToMapped(Class<? extends ZonedDateTime> type, Timestamp value) {
         if (value == null) {
             return null;
         }
-        Instant instant = Instant.ofEpochMilli(value.getTime());
-        return ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+        Instant instant = value.toInstant();
+        return ZonedDateTime.ofInstant(instant, ZoneOffset.systemDefault());
     }
 }

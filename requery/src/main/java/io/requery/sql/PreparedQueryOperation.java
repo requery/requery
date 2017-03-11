@@ -42,13 +42,13 @@ abstract class PreparedQueryOperation {
                            GeneratedResultReader generatedResultReader) {
         this.configuration = configuration;
         this.generatedResultReader = generatedResultReader;
-        this.model = configuration.model();
+        this.model = configuration.getModel();
     }
 
     PreparedStatement prepare(String sql, Connection connection) throws SQLException {
         PreparedStatement statement;
         if (generatedResultReader != null) {
-            if (configuration.platform().supportsGeneratedColumnsInPrepareStatement()) {
+            if (configuration.getPlatform().supportsGeneratedColumnsInPrepareStatement()) {
                 String[] generatedColumns = generatedResultReader.generatedColumns();
                 statement = connection.prepareStatement(sql, generatedColumns);
             } else {
@@ -70,7 +70,7 @@ abstract class PreparedQueryOperation {
                 Attribute attribute = (Attribute) expression;
                 if (attribute.isAssociation()) {
                     // get the referenced value
-                    value = Attributes.replaceForeignKeyReference(value, attribute);
+                    value = Attributes.replaceKeyReference(value, attribute);
                 }
             }
             Class<?> type = value == null ? null: value.getClass();
@@ -78,14 +78,14 @@ abstract class PreparedQueryOperation {
                 // allows entity arguments with single keys to be remapped to their keys
                 if (model.containsTypeOf(type)) {
                     Type<Object> entityType = model.typeOf(type);
-                    Attribute<Object, ?> keyAttribute = entityType.singleKeyAttribute();
+                    Attribute<Object, ?> keyAttribute = entityType.getSingleKeyAttribute();
                     if (keyAttribute != null) {
-                        value = keyAttribute.property().get(value);
+                        value = keyAttribute.getProperty().get(value);
                         expression = (Expression) keyAttribute;
                     }
                 }
             }
-            configuration.mapping().write(expression, statement, i + 1, value);
+            configuration.getMapping().write(expression, statement, i + 1, value);
         }
     }
 

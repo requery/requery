@@ -25,7 +25,7 @@ public class Substr<V> extends Function<V> {
     private final int length;
 
     private Substr(Expression<V> expression, int offset, int length) {
-        super("substr", expression.classType());
+        super("substr", expression.getClassType());
         this.expression = expression;
         this.offset = offset;
         this.length = length;

@@ -22,5 +22,7 @@ import io.requery.util.function.Supplier;
 
 public interface QueryInitializer<E, V> {
 
-    <U> V initialize(EntityProxy<E> proxy, Attribute<E, V> attribute, Supplier<Result<U>> query);
+    <U> V initialize(EntityProxy<E> proxy,
+                     Attribute<E, V> attribute,
+                     Supplier<? extends Result<U>> query);
 }

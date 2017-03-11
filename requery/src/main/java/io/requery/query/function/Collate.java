@@ -23,7 +23,7 @@ public class Collate<T> extends Function<T> {
     private final Expression<?> expression;
 
     private Collate(Expression<T> expression) {
-        super("collate", expression.classType());
+        super("collate", expression.getClassType());
         this.expression = expression;
     }
 

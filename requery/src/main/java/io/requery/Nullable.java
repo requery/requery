@@ -32,5 +32,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({FIELD, METHOD})
 @Retention(RUNTIME)
 public @interface Nullable {
-
 }

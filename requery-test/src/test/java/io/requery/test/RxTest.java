@@ -20,15 +20,16 @@ import io.requery.Persistable;
 import io.requery.cache.EntityCacheBuilder;
 import io.requery.meta.EntityModel;
 import io.requery.query.Result;
-import io.requery.rx.SingleEntityStore;
+import io.requery.rx.RxResult;
 import io.requery.rx.RxSupport;
+import io.requery.rx.SingleEntityStore;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
 import io.requery.sql.EntityDataStore;
+import io.requery.sql.Platform;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.HSQL;
-import io.requery.sql.Platform;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
 import org.junit.After;
@@ -37,6 +38,7 @@ import org.junit.Test;
 import rx.Observable;
 import rx.Single;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -103,6 +105,28 @@ public class RxTest extends RandomData {
                     .where(Person.ID.equal(person.getId())).get().first();
                 assertSame(cached, person);
                 latch.countDown();
+            }
+        });
+        latch.await();
+    }
+
+    @Test
+    public void testInsertList() throws Exception {
+        final List<Person> items = new ArrayList<>();
+        for (int i = 0; i < 1; i++) {
+            Person person = randomPerson();
+            items.add(person);
+        }
+        final CountDownLatch latch = new CountDownLatch(1);
+        data.insert(items).subscribe(new Action1<Iterable<Person>>() {
+            @Override
+            public void call(Iterable<Person> iterable) {
+                List<Person> queried = data.select(Person.class).get().toList();
+                try {
+                    assertEquals(queried, items);
+                } finally {
+                    latch.countDown();
+                }
             }
         });
         latch.await();
@@ -191,9 +215,31 @@ public class RxTest extends RandomData {
     }
 
     @Test
-    public void testQuerySelfObservableDelete() throws Exception {
+    public void testQuerySelfObservableMap() throws Exception {
         final AtomicInteger count = new AtomicInteger();
-        data.select(Person.class).get().toSelfObservable().subscribe(
+        Subscription subscription = data.select(Person.class).limit(2).get().toSelfObservable()
+            .flatMap(new Func1<RxResult<Person>, Observable<Person>>() {
+                @Override
+                public Observable<Person> call(RxResult<Person> persons) {
+                    return persons.toObservable();
+                }
+            }).subscribe(
+            new Action1<Person>() {
+                @Override
+                public void call(Person persons) {
+                    count.incrementAndGet();
+                }
+            });
+        data.insert(randomPerson()).toBlocking().value();
+        data.insert(randomPerson()).toBlocking().value();
+        assertEquals(3, count.get());
+        subscription.unsubscribe();
+    }
+
+    @Test
+    public void testSelfObservableDelete() throws Exception {
+        final AtomicInteger count = new AtomicInteger();
+        Subscription subscription = data.select(Person.class).get().toSelfObservable().subscribe(
             new Action1<Result<Person>>() {
                 @Override
                 public void call(Result<Person> persons) {
@@ -204,6 +250,46 @@ public class RxTest extends RandomData {
         data.insert(person).toBlocking().value();
         data.delete(person).toBlocking().value();
         assertEquals(3, count.get());
+        subscription.unsubscribe();
+    }
+
+    @Test
+    public void testSelfObservableDeleteQuery() throws Exception {
+        final AtomicInteger count = new AtomicInteger();
+        Subscription subscription = data.select(Person.class).get().toSelfObservable().subscribe(
+            new Action1<Result<Person>>() {
+                @Override
+                public void call(Result<Person> persons) {
+                    count.incrementAndGet();
+                }
+            });
+        Person person = randomPerson();
+        data.insert(person).toBlocking().value();
+        assertEquals(2, count.get());
+        int rows = data.delete(Person.class).get().value();
+        assertEquals(3, count.get());
+        subscription.unsubscribe();
+        assertEquals(rows, 1);
+    }
+
+    @Test
+    public void testQuerySelfObservableRelational() throws Exception {
+        final AtomicInteger count = new AtomicInteger();
+        Subscription subscription = data.select(Person.class).get().toSelfObservable().subscribe(
+            new Action1<Result<Person>>() {
+                @Override
+                public void call(Result<Person> persons) {
+                    count.incrementAndGet();
+                }
+            });
+        Person person = randomPerson();
+        data.insert(person).toBlocking().value();
+        Phone phone = randomPhone();
+        person.getPhoneNumbers().add(phone);
+        data.update(person).toBlocking().value();
+        data.delete(phone).toBlocking().value();
+        assertEquals(4, count.get());
+        subscription.unsubscribe();
     }
 
     @Test
@@ -222,8 +308,33 @@ public class RxTest extends RandomData {
                 return data.insert(phone);
             }
         }).toBlocking().value();
-        int count = person.getPhoneNumbers().toObservable().count().toBlocking().first();
+        int count = person.getPhoneNumbers().toList().size();
         assertEquals(1, count);
+    }
+
+    @Test
+    public void testRunInTransaction() {
+        final Person person = randomPerson();
+        data.runInTransaction(
+                data.insert(person),
+                data.update(person),
+                data.delete(person)).toBlocking().forEach(new Action1<Object>() {
+            @Override
+            public void call(Object o) {
+
+            }
+        });
+        assertEquals(0, data.count(Person.class).get().value().intValue());
+
+        final Person person2 = randomPerson();
+        data.runInTransaction(
+            data.insert(person2)).toBlocking().forEach(new Action1<Person>() {
+            @Override
+            public void call(Person person) {
+
+            }
+        });
+        assertEquals(1, data.count(Person.class).get().value().intValue());
     }
 
     @Test

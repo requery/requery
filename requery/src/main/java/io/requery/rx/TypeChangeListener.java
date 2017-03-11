@@ -19,11 +19,11 @@ package io.requery.rx;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
 import io.requery.meta.Type;
-import io.requery.proxy.EntityProxy;
 import io.requery.util.function.Supplier;
 import rx.subjects.PublishSubject;
+import rx.subjects.SerializedSubject;
+import rx.subjects.Subject;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -32,14 +32,14 @@ import java.util.Set;
  *
  * @author Nikhil Purushe
  */
-class TypeChangeListener implements Supplier<TransactionListener> {
+final class TypeChangeListener implements Supplier<TransactionListener> {
 
-    private final PublishSubject<Type<?>> commitSubject;
-    private final PublishSubject<Type<?>> rollbackSubject;
+    private final SerializedSubject<Set<Type<?>>, Set<Type<?>>> commitSubject;
+    private final SerializedSubject<Set<Type<?>>, Set<Type<?>>> rollbackSubject;
 
     TypeChangeListener() {
-        commitSubject = PublishSubject.create();
-        rollbackSubject = PublishSubject.create();
+        commitSubject = new SerializedSubject<>(PublishSubject.<Set<Type<?>>>create());
+        rollbackSubject = new SerializedSubject<>(PublishSubject.<Set<Type<?>>>create());
     }
 
     @Override
@@ -54,38 +54,28 @@ class TypeChangeListener implements Supplier<TransactionListener> {
             }
 
             @Override
-            public void beforeCommit(Set<EntityProxy<?>> entities) {
+            public void beforeCommit(Set<Type<?>> types) {
 
             }
 
             @Override
-            public void afterCommit(Set<EntityProxy<?>> entities) {
-                emitTypes(commitSubject, entities);
+            public void afterCommit(Set<Type<?>> types) {
+                commitSubject.onNext(types);
             }
 
             @Override
-            public void beforeRollback(Set<EntityProxy<?>> entities) {
+            public void beforeRollback(Set<Type<?>> types) {
 
             }
 
             @Override
-            public void afterRollback(Set<EntityProxy<?>> entities) {
-                emitTypes(rollbackSubject, entities);
+            public void afterRollback(Set<Type<?>> types) {
+                rollbackSubject.onNext(types);
             }
         };
     }
 
-    PublishSubject<Type<?>> commitSubject() {
+    Subject<Set<Type<?>>, Set<Type<?>>> commitSubject() {
         return commitSubject;
-    }
-
-    private void emitTypes(PublishSubject<Type<?>> subject, Set<EntityProxy<?>> entities) {
-        Set<Type<?>> types = new LinkedHashSet<>();
-        for (EntityProxy proxy : entities) {
-            types.add(proxy.type());
-        }
-        for (Type type : types) {
-            subject.onNext(type);
-        }
     }
 }

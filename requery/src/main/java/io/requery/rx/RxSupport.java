@@ -18,16 +18,13 @@ package io.requery.rx;
 
 import io.requery.BlockingEntityStore;
 import io.requery.meta.Type;
-import io.requery.query.BaseResult;
-import io.requery.query.Result;
-import io.requery.query.Scalar;
+import io.requery.meta.Types;
 import io.requery.query.element.QueryElement;
-import io.requery.util.function.Supplier;
 import rx.Observable;
-import rx.Scheduler;
-import rx.Single;
-import rx.functions.Action0;
 import rx.functions.Func1;
+
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Support utility class for use with RxJava
@@ -45,51 +42,22 @@ public final class RxSupport {
         return new SingleEntityStoreFromBlocking<>(store);
     }
 
-    public static <T> Observable<Result<T>> toResultObservable(final Result<T> result) {
-        if (!(result instanceof ObservableResult)) {
-            throw new UnsupportedOperationException();
-        }
-        ObservableResult observableResult = (ObservableResult) result;
-        final QueryElement element = observableResult.unwrapQuery();
+    static <T> Observable<RxResult<T>> toResultObservable(final RxResult<T> result) {
+        final QueryElement<?> element = result.unwrapQuery();
         // ensure the transaction listener is added in the target data store
-        observableResult.addTransactionListener(typeChanges);
-        return typeChanges.commitSubject().filter(new Func1<Type<?>, Boolean>() {
-            @Override
-            public Boolean call(Type<?> type) {
-                return element.entityTypes().contains(type);
-            }
-        }).map(new Func1<Type<?>, Result<T>>() {
-            @Override
-            public Result<T> call(Type<?> type) {
-                return result;
-            }
-        }).startWith(result);
-    }
-
-    public static <E> Observable<E> toObservable(final BaseResult<E> result, Integer limit) {
-        // if a limit on the query is set then just create a plain observable via iterator.
-        // Otherwise create a Observable with a custom subscriber that can modify the limit
-        if (limit == null) {
-            return Observable.create(new OnSubscribeFromQuery<>(result));
-        } else {
-            return Observable.from(result).doOnTerminate(new Action0() {
+        result.addTransactionListener(typeChanges);
+        return typeChanges.commitSubject()
+            .filter(new Func1<Set<Type<?>>, Boolean>() {
                 @Override
-                public void call() {
-                    result.close();
+                public Boolean call(Set<Type<?>> types) {
+                    return !Collections.disjoint(element.entityTypes(), types) ||
+                        Types.referencesType(element.entityTypes(), types);
                 }
-            });
-        }
-    }
-
-    public static <E> Single<E> toSingle(final Scalar<E> scalar) {
-        return Single.create(new SingleOnSubscribeFromSupplier<>(scalar.toSupplier()));
-    }
-
-    static <E> Single<E> toSingle(Supplier<E> supplier, Scheduler subscribeOn) {
-        Single<E> single = Single.create(new SingleOnSubscribeFromSupplier<>(supplier));
-        if (subscribeOn != null) {
-            return single.subscribeOn(subscribeOn);
-        }
-        return single;
+            }).map(new Func1<Set<Type<?>>, RxResult<T>>() {
+                @Override
+                public RxResult<T> call(Set<Type<?>> types) {
+                    return result;
+                }
+            }).startWith(result);
     }
 }

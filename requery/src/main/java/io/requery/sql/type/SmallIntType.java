@@ -36,7 +36,7 @@ public class SmallIntType extends BasicType<Short> implements PrimitiveShortType
     }
 
     @Override
-    public Keyword identifier() {
+    public Keyword getIdentifier() {
         return Keyword.SMALLINT;
     }
 

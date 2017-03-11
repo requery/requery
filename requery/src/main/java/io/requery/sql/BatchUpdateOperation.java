@@ -19,6 +19,7 @@ package io.requery.sql;
 import io.requery.PersistenceException;
 import io.requery.query.element.QueryElement;
 import io.requery.query.element.QueryOperation;
+import io.requery.sql.gen.DefaultOutput;
 
 import java.sql.BatchUpdateException;
 import java.sql.Connection;
@@ -52,14 +53,13 @@ class BatchUpdateOperation<E> extends PreparedQueryOperation implements QueryOpe
     }
 
     @Override
-    public int[] execute(QueryElement<int[]> query) {
+    public int[] evaluate(QueryElement<int[]> query) {
         int[] result = batchInStatement ? null : new int[length];
 
-        try (Connection connection = configuration.connectionProvider().getConnection()) {
-            QueryGenerator generator = new QueryGenerator<>(query);
-            QueryBuilder qb = new QueryBuilder(configuration.queryBuilderOptions());
-            String sql = generator.toSql(qb, configuration.platform());
-            StatementListener listener = configuration.statementListener();
+        try (Connection connection = configuration.getConnection()) {
+            DefaultOutput generator = new DefaultOutput(configuration, query);
+            String sql = generator.toSql();
+            StatementListener listener = configuration.getStatementListener();
 
             try (PreparedStatement statement = prepare(sql, connection)) {
                 for (int i = 0; i < length; i++) {
@@ -68,16 +68,16 @@ class BatchUpdateOperation<E> extends PreparedQueryOperation implements QueryOpe
                     if (batchInStatement) {
                         statement.addBatch();
                     } else {
-                        listener.beforeExecuteUpdate(statement, sql, null);
+                        listener.beforeExecuteBatchUpdate(statement, sql);
                         result[i] = statement.executeUpdate();
-                        listener.afterExecuteUpdate(statement);
+                        listener.afterExecuteBatchUpdate(statement, result);
                         readGeneratedKeys(i, statement);
                     }
                 }
                 if (batchInStatement) {
-                    listener.beforeExecuteUpdate(statement, sql, null);
+                    listener.beforeExecuteBatchUpdate(statement, sql);
                     result = statement.executeBatch();
-                    listener.afterExecuteUpdate(statement);
+                    listener.afterExecuteBatchUpdate(statement, result);
                     readGeneratedKeys(0, statement);
                 }
             }

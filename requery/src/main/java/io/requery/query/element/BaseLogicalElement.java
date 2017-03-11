@@ -53,12 +53,12 @@ abstract class BaseLogicalElement<E extends S, S> implements AndOr<S>, LogicalEl
     }
 
     @Override
-    public Condition<?,?> condition() {
+    public Condition<?,?> getCondition() {
         return condition;
     }
 
     @Override
-    public LogicalOperator operator() {
+    public LogicalOperator getOperator() {
         return operator;
     }
 
