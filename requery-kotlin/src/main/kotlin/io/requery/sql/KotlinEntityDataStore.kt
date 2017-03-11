@@ -141,9 +141,9 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
 
     override fun <E : T, K> findByKey(type: KClass<E>, key: K): E? = data.findByKey(type.java, key)
 
-    override fun raw(query: String, vararg parameters: Any): Result<Tuple> = data.raw(query, parameters)
+    override fun raw(query: String, vararg parameters: Any): Result<Tuple> = data.raw(query, *parameters)
     override fun <E : T> raw(type: KClass<E>, query: String, vararg parameters: Any): Result<E> =
-            data.raw(type.java, query, parameters)
+            data.raw(type.java, query, *parameters)
 
     override fun <V> withTransaction(body: BlockingEntityStore<T>.() -> V): V {
         val transaction = data.transaction().begin()
