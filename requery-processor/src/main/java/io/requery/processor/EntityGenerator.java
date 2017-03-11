@@ -173,7 +173,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     } else {
                         fieldName = nameResolver.tryGeneratedTypeName(typeMirror);
                     }
-                    if (!existingFieldNames.contains(attribute.fieldName())) {
+                    if (entity.isImmutable() || !existingFieldNames.contains(attribute.fieldName())) {
                       builder.addField(FieldSpec
                           .builder(fieldName, attribute.fieldName(), visibility)
                           .build());
