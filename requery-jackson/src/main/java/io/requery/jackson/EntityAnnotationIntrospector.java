@@ -26,12 +26,6 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.ObjectIdInfo;
 import io.requery.Column;
-import io.requery.ForeignKey;
-import io.requery.JunctionTable;
-import io.requery.ManyToMany;
-import io.requery.ManyToOne;
-import io.requery.OneToMany;
-import io.requery.OneToOne;
 import io.requery.Table;
 import io.requery.Transient;
 import io.requery.View;
@@ -98,28 +92,6 @@ class EntityAnnotationIntrospector extends AnnotationIntrospector {
             }
         }
         return super.findObjectIdInfo(annotated);
-    }
-
-    @Override
-    public ReferenceProperty findReferenceType(AnnotatedMember member) {
-        if (member.hasAnnotation(OneToOne.class)) {
-            if (member.hasAnnotation(ForeignKey.class)) {
-                return ReferenceProperty.managed(null);
-            } else {
-                return ReferenceProperty.back(null);
-            }
-        } else if (member.hasAnnotation(OneToMany.class)) {
-            return ReferenceProperty.back(null);
-        } else if (member.hasAnnotation(ManyToOne.class)) {
-            return ReferenceProperty.managed(null);
-        } else if (member.hasAnnotation(ManyToMany.class)) {
-            if (member.hasAnnotation(JunctionTable.class)) {
-                return ReferenceProperty.managed(null);
-            } else {
-                return ReferenceProperty.back(null);
-            }
-        }
-        return super.findReferenceType(member);
     }
 
     @Override
