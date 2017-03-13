@@ -22,6 +22,7 @@ import io.requery.meta.Type
 import io.requery.query.Expression
 import io.requery.query.OrderingExpression
 import io.requery.query.Return
+import io.requery.query.RowExpression
 import io.requery.query.function.Abs
 import io.requery.query.function.Avg
 import io.requery.query.function.Lower
@@ -79,6 +80,12 @@ inline fun <reified T : Any, R> KProperty1<T, R>.notNull(): Logical<out Expressi
 inline fun <reified T : Any, R> KProperty1<T, R>.like(expression: String): Logical<out Expression<R>, out String> = findAttribute(this).like(expression)
 inline fun <reified T : Any, R> KProperty1<T, R>.notLike(expression: String): Logical<out Expression<R>, out String> = findAttribute(this).notLike(expression)
 inline fun <reified T : Any, R> KProperty1<T, R>.between(start: R, end: R): Logical<out Expression<R>, Any> = findAttribute(this).between(start, end)
+
+inline fun <reified T : Any, R> rowExpressionOf(vararg expressions: KProperty1<T, R>): RowExpression {
+    val list = ArrayList<Expression<*>>()
+    expressions.forEach { e -> list.add(findAttribute(e)) }
+    return RowExpression.of(list)
+}
 
 /** Given a property find the corresponding generated attribute for it */
 inline fun <reified T : Any, R> findAttribute(property: KProperty1<T, R>):
