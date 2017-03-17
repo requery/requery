@@ -54,8 +54,8 @@ public class SchemaUpdater {
         if (mode == TableCreationMode.DROP_CREATE) {
             return; // don't need to check missing columns
         }
-        Function<String,String> columnTransformer= configuration.getColumnTransformer();
-        Function<String,String> tableTransformer= configuration.getTableTransformer();
+        Function<String, String> columnTransformer = configuration.getColumnTransformer();
+        Function<String, String> tableTransformer = configuration.getTableTransformer();
         // check for missing columns
         List<Attribute> missingAttributes = new ArrayList<>();
         for (Type<?> type : configuration.getModel().getTypes()) {
@@ -74,8 +74,7 @@ public class SchemaUpdater {
                 }
                 if (columnTransformer == null) {
                     map.put(attribute.getName(), attribute);
-                }
-                else {
+                } else {
                     map.put(columnTransformer.apply(attribute.getName()), attribute);
                 }
             }
