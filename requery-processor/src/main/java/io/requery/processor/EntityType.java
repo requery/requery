@@ -83,11 +83,20 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
                 .forEach(this::computeAttribute);
         } else {
             // private/static/final members fields are skipped
-            ElementFilter.fieldsIn(element().getEnclosedElements()).stream()
-                .filter(element -> !element.getModifiers().contains(Modifier.PRIVATE) &&
-                    !element.getModifiers().contains(Modifier.STATIC) &&
-                    (!element.getModifiers().contains(Modifier.FINAL) || isImmutable()))
-                .forEach(this::computeAttribute);
+            Set<VariableElement> elements = ElementFilter.fieldsIn(element().getEnclosedElements())
+                    .stream()
+                    .filter(element -> !element.getModifiers().contains(Modifier.PRIVATE) &&
+                            !element.getModifiers().contains(Modifier.STATIC) &&
+                            (!element.getModifiers().contains(Modifier.FINAL) || isImmutable()))
+                    .collect(Collectors.toSet());
+
+            if (elements.isEmpty()) { // if nothing to process try the getters instead
+                ElementFilter.methodsIn(element().getEnclosedElements()).stream()
+                        .filter(this::isMethodProcessable)
+                        .forEach(this::computeAttribute);
+            } else {
+                elements.forEach(this::computeAttribute);
+            }
         }
         // find listener annotated methods
         ElementFilter.methodsIn(element().getEnclosedElements()).forEach(element ->
