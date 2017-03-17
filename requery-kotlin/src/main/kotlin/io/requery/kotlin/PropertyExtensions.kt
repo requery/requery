@@ -90,13 +90,21 @@ inline fun <reified T : Any, R> rowExpressionOf(vararg expressions: KProperty1<T
 /** Given a property find the corresponding generated attribute for it */
 inline fun <reified T : Any, R> findAttribute(property: KProperty1<T, R>):
         AttributeDelegate<T, R> {
-    val type: Type<*> = AttributeDelegate.types
+    val type: Type<*>? = AttributeDelegate.types
             .filter { type -> (type.classType == T::class.java || type.baseType == T::class.java)}
-            .first()
+            .firstOrNull()
+
+    if (type == null) {
+        throw UnsupportedOperationException(T::class.java.simpleName + "." + property.name + " cannot be used in query")
+    }
+
     val attribute: Attribute<*, *>? = type.attributes
-            .filter { attribute ->
-                attribute.propertyName.replaceFirst("get", "")
+            .filter { attribute -> attribute.propertyName.replaceFirst("get", "")
                         .equals(property.name, ignoreCase = true) }.firstOrNull()
+
+    if (attribute !is AttributeDelegate) {
+        throw UnsupportedOperationException(T::class.java.simpleName + "." + property.name + " cannot be used in query")
+    }
     @Suppress("UNCHECKED_CAST")
     return attribute as AttributeDelegate<T, R>
 }
