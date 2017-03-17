@@ -54,6 +54,8 @@ public class SchemaUpdater {
         if (mode == TableCreationMode.DROP_CREATE) {
             return; // don't need to check missing columns
         }
+        Function<String, String> columnTransformer = configuration.getColumnTransformer();
+        Function<String, String> tableTransformer = configuration.getTableTransformer();
         // check for missing columns
         List<Attribute> missingAttributes = new ArrayList<>();
         for (Type<?> type : configuration.getModel().getTypes()) {
@@ -61,13 +63,20 @@ public class SchemaUpdater {
                 continue;
             }
             String tableName = type.getName();
+            if (tableTransformer != null) {
+                tableName = tableTransformer.apply(tableName);
+            }
             Cursor cursor = queryFunction.apply("PRAGMA table_info(" + tableName + ")");
             Map<String, Attribute> map = new LinkedHashMap<>();
             for (Attribute attribute : type.getAttributes()) {
                 if (attribute.isAssociation() && !attribute.isForeignKey()) {
                     continue;
                 }
-                map.put(attribute.getName(), attribute);
+                if (columnTransformer == null) {
+                    map.put(attribute.getName(), attribute);
+                } else {
+                    map.put(columnTransformer.apply(attribute.getName()), attribute);
+                }
             }
             if (cursor.getCount() > 0) {
                 int nameIndex = cursor.getColumnIndex("name");
