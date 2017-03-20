@@ -66,7 +66,7 @@ class EntityAnnotationIntrospector extends AnnotationIntrospector {
         for (Type<?> type : model.getTypes()) {
             if (type.getClassType() == rawClass && type.getSingleKeyAttribute() != null) {
                 Attribute<?, ?> attribute = type.getSingleKeyAttribute();
-                String name = attribute.getPropertyName();
+                String name = removePrefix(attribute.getPropertyName());
                 if (useTableNames) {
                     name = attribute.getName();
                 }
@@ -92,6 +92,18 @@ class EntityAnnotationIntrospector extends AnnotationIntrospector {
             }
         }
         return super.findObjectIdInfo(annotated);
+    }
+
+    private String removePrefix(String name) {
+        String[] prefixes = { "get", "is" };
+        for (String prefix : prefixes) {
+            if (name.startsWith(prefix) && name.length() > prefix.length()) {
+                StringBuilder sb = new StringBuilder(name.substring(prefix.length()));
+                sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
+                return sb.toString();
+            }
+        }
+        return name;
     }
 
     @Override
