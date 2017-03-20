@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+## 1.2.1
+
+- Support row value expressions
+- Support generating entities from Kotlin abstract classes
+- Support Kotlin 1.1
+- Fix handling of self referencing Many-to-Many relationship
+- Fix Android table/column name transformers not used during upgrade
+- Fix use AutoValue builder setters if available
+- Fix @Value.Default handling for immutable.org types
+- Fix deleting entities from a One-To-Many when using delete(Iterable)
+- Kotlin fix varargs in raw query not expanded
+- Kotlin fix ClassCastException when using a join clause
+
 ## 1.2.0
 
 - Support Jackson serialization with a new Jackson serialization module (requery-jackson)
