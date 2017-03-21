@@ -30,11 +30,11 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:25.1.1'
-    compile 'com.android.support:recyclerview-v7:25.1.1'
+    compile 'com.android.support:appcompat-v7:25.3.0'
+    compile 'com.android.support:recyclerview-v7:25.3.0'
     compile "io.reactivex.rxjava2:rxjava:$rxjava2_version"
     compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'io.requery:requery:1.1.2'
-    compile 'io.requery:requery-android:1.1.2'
-    annotationProcessor 'io.requery:requery-processor:1.1.2'
+    compile 'io.requery:requery:1.2.1'
+    compile 'io.requery:requery-android:1.2.1'
+    annotationProcessor 'io.requery:requery-processor:1.2.1'
 }
