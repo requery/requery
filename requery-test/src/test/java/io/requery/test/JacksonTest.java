@@ -17,6 +17,7 @@
 package io.requery.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.ValueInstantiator;
 import io.requery.Persistable;
 import io.requery.cache.WeakEntityCache;
 import io.requery.jackson.EntityMapper;
@@ -28,6 +29,7 @@ import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.SQLite;
 import io.requery.test.model3.Event;
+import io.requery.test.model3.LocationEntity;
 import io.requery.test.model3.Models;
 import io.requery.test.model3.Place;
 import io.requery.test.model3.Tag;
@@ -128,4 +130,30 @@ public class JacksonTest {
             throw new RuntimeException(e);
         }
     }
+
+    @Test
+    public void testEmbedSerialize() {
+        LocationEntity t1 = new LocationEntity();
+        t1.setId(1);
+        data.insert(t1);
+
+        ObjectMapper mapper = new EntityMapper(Models.MODEL3, data);
+        StringWriter writer = new StringWriter();
+        try {
+            mapper.writeValue(writer, t1);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        String value = writer.toString();
+        System.out.println(value);
+
+        try {
+            LocationEntity location = mapper.readValue(value, LocationEntity.class);
+            assertSame(t1, location);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    ValueInstantiator s;
 }

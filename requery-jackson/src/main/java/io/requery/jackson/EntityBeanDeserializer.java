@@ -17,6 +17,7 @@
 package io.requery.jackson;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.BeanDeserializer;
@@ -24,8 +25,10 @@ import com.fasterxml.jackson.databind.deser.BeanDeserializerBase;
 import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
 import com.fasterxml.jackson.databind.deser.impl.ObjectIdReader;
 import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId;
+import io.requery.util.ClassMap;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 /**
  * Attempts to read the id property from the json stream first, lookup the existing bean with
@@ -33,6 +36,8 @@ import java.io.IOException;
  * to do this with the current Jackson api so handle it ourselves.
  */
 class EntityBeanDeserializer extends BeanDeserializer {
+
+    private final ClassMap<Method> embeddedGetters = new ClassMap<>();
 
     EntityBeanDeserializer(BeanDeserializerBase source, ObjectIdReader reader) {
         super(source, reader);
@@ -83,5 +88,37 @@ class EntityBeanDeserializer extends BeanDeserializer {
         }
 
         return bean;
+    }
+
+    @Override
+    protected Object deserializeFromObjectUsingNonDefault(JsonParser p, DeserializationContext ctxt) throws IOException {
+        JsonStreamContext parent = p.getParsingContext().getParent();
+        // handle embedded types
+        if (parent != null && parent.getCurrentValue() != null) {
+
+            Object value = parent.getCurrentValue();
+            Class<?> parentClass = value.getClass();
+            Method method = embeddedGetters.get(parentClass);
+
+            if (method == null) {
+                Class<?> target = getValueType().getRawClass();
+                for (Method m : parentClass.getDeclaredMethods()) {
+                    if (target.isAssignableFrom(m.getReturnType()) && m.getParameters().length == 0) {
+                        embeddedGetters.put(parentClass, m);
+                        method = m;
+                        break;
+                    }
+                }
+            }
+            if (method != null) {
+                try {
+                    return method.invoke(value);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        return super.deserializeFromObjectUsingNonDefault(p, ctxt);
     }
 }
