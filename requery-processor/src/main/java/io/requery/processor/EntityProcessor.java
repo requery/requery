@@ -39,9 +39,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -125,11 +126,13 @@ public final class EntityProcessor extends AbstractProcessor {
         for (EntityElement entity : entities.values()) {
             // add the annotated elements from the super type (if any)
             if (entity.element().getKind() == ElementKind.INTERFACE) {
-                List<? extends TypeMirror> interfaces = entity.element().getInterfaces();
-                for (TypeMirror mirror : interfaces) {
+                Queue<TypeMirror> interfaces = new LinkedList<>(entity.element().getInterfaces());
+                while (!interfaces.isEmpty()) {
+                    TypeMirror mirror = interfaces.remove();
                     TypeElement superElement = elements.getTypeElement(mirror.toString());
                     if (superElement != null) {
                         mergeSuperType(entity, superElement);
+                        interfaces.addAll(superElement.getInterfaces());
                     }
                 }
             }
