@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,16 +39,19 @@ import java.util.Optional;
 class AndroidObservableExtension implements TypeGenerationExtension, PropertyGenerationExtension {
 
     private static final String BINDING_PACKAGE = "android.databinding";
+    private static final String MODULE_PACKAGE_OPTION = "android.databinding.modulePackage";
 
     private final EntityDescriptor entity;
     private final ProcessingEnvironment processingEnvironment;
     private final boolean observable;
+    private final String modulePackage;
 
     AndroidObservableExtension(EntityDescriptor entity,
                                ProcessingEnvironment processingEnvironment) {
         this.entity = entity;
         this.processingEnvironment = processingEnvironment;
         this.observable = isObservable();
+        this.modulePackage = processingEnvironment.getOptions().get(MODULE_PACKAGE_OPTION);
     }
 
     private boolean isObservable() {
@@ -91,7 +94,10 @@ class AndroidObservableExtension implements TypeGenerationExtension, PropertyGen
         TypeElement dataBindingType = elements.getTypeElement(bindingInfo);
         ClassName BRclass = null;
 
-        if (dataBindingType != null) {
+        if (!Names.isEmpty(modulePackage)) {
+            BRclass = ClassName.get(modulePackage, "BR");
+        } else if (dataBindingType != null) {
+            // fallback for pre Android gradle plugin 2.3.0
             Optional<String> modulePackage = Mirrors.findAnnotationMirror(
                 dataBindingType, BINDING_PACKAGE + ".BindingBuildInfo")
             .map(mirror -> Mirrors.findAnnotationValue(mirror, "modulePackage"))
