@@ -264,8 +264,8 @@ class QueryDelegate<E : Any>(element : QueryElement<E>) :
         return this as QueryDelegate<F>
     }
 
-    override fun invoke(query: Return<*>): Return<E> {
-        element.query(query)
+    override fun query(query: Return<*>): Return<E> {
+        element.query((query as QueryDelegate).element)
         return this
     }
 

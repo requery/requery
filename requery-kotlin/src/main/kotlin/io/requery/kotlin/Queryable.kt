@@ -59,6 +59,13 @@ inline operator fun <T : Any, reified E : T> Queryable<T>
     return select(*attributes.toTypedArray())
 }
 
+inline fun <T : Any, reified E : T> Queryable<T>
+        .insert(type: KClass<E>, vararg properties: KProperty1<E, *>): InsertInto<out Result<Tuple>> {
+    val attributes: MutableSet<QueryableAttribute<E, *>> = LinkedHashSet()
+    properties.forEach { property -> attributes.add(findAttribute(property)) }
+    return insert(type, *attributes.toTypedArray())
+}
+
 interface QueryableAttribute<T, V> : Attribute<T, V>,
         Expression<V>,
         Functional<V>,

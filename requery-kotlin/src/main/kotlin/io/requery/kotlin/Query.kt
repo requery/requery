@@ -101,7 +101,7 @@ interface Insertion<E> : Return<E> {
 }
 
 interface InsertInto<Q> : Return<Q> {
-    operator infix fun invoke(query: Return<*>): Return<Q>
+    infix fun query(query: Return<*>): Return<Q>
 }
 
 interface Join<E> {
