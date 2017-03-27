@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package io.requery.kotlin
 
-import io.requery.Persistable
 import io.requery.TransactionIsolation
 import io.requery.meta.Attribute
 import java.util.*
@@ -68,7 +67,7 @@ interface BlockingEntityStore<T : Any> : EntityStore<T, Any> {
     operator fun <V> invoke(block: BlockingEntityStore<T>.() -> V): V = block()
 }
 
-inline fun <T : Persistable, reified E : T> BlockingEntityStore<T>
+inline fun <T : Any, reified E : T> BlockingEntityStore<T>
         .refresh(entity: E, vararg properties: KProperty1<E, *>): E {
     val attributes: MutableSet<QueryableAttribute<E, *>> = LinkedHashSet()
     properties.forEach { property -> attributes.add(findAttribute(property)) }
