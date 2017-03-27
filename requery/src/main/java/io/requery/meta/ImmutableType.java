@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ final class ImmutableType<T> extends BaseType<T> {
         this.cacheable = builder.isCacheable();
         this.readOnly = builder.isReadOnly();
         this.immutable = builder.isImmutable();
+        this.isView = builder.isView();
         this.stateless = builder.isStateless();
         this.factory = builder.getFactory();
         this.proxyProvider = builder.getProxyProvider();
