@@ -498,7 +498,6 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
     final E fromResult(E entity, ResultSet results, Attribute[] selection) throws SQLException {
         // if refreshing (entity not null) overwrite the properties
         boolean overwrite = entity != null || stateless;
-        boolean wasCached = false;
 
         if (entity == null) {
             // get or create the entity object
@@ -508,7 +507,6 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     final Object key = readCacheKey(results);
                     if (key != null) {
                         entity = cache.get(type.getClassType(), key);
-                        wasCached = entity != null;
                     }
                     // not cached create a new one
                     if (entity == null) {
@@ -571,9 +569,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                 index++;
             }
         }
-        if (!wasCached) {
-            context.getStateListener().postLoad(entity, proxy);
-        }
+        context.getStateListener().postLoad(entity, proxy);
         return entity;
     }
 
