@@ -40,6 +40,7 @@ import io.requery.util.function.Supplier;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -294,7 +295,7 @@ public class DefaultOutput implements Output {
         }
         if (join.tableName() != null) {
             if (autoAlias) {
-                aliases.appendJoin(qb, join.tableName());
+                aliases.append(qb, join.tableName());
             } else {
                 qb.tableName(join.tableName());
             }
@@ -499,6 +500,7 @@ public class DefaultOutput implements Output {
     private static class Aliases {
 
         private final Map<String, String> aliases = new HashMap<>();
+        private final Set<String> appended = new HashSet<>();
         private char index = 'a';
 
         private String alias(String key) {
@@ -513,20 +515,14 @@ public class DefaultOutput implements Output {
             return alias;
         }
 
-        void appendJoin(QueryBuilder qb, String table) {
+        void append(QueryBuilder qb, String table) {
             String key = table.replaceAll("\"", "");
-            // TODO could be a problem depending on join orders
-            if (aliases.containsKey(key)) {
-                aliases.remove(key);
+            if (appended.contains(key)) {
+                aliases.remove(key); // generate a new alias for the rest of the statement
             }
             String alias = alias(key);
             qb.tableName(table).value(alias);
-        }
-
-        void append(QueryBuilder qb, String table) {
-            String key = table.replaceAll("\"", "");
-            String alias = alias(key);
-            qb.tableName(table).value(alias);
+            appended.add(key);
         }
 
         void prefix(QueryBuilder qb, Attribute attribute) {
