@@ -415,6 +415,7 @@ public class SchemaModifier {
             }
             qb.value(fieldType.getIdentifier());
         }
+
         qb.keyword(REFERENCES);
         qb.tableName(referenced.getName());
         if (referencedAttribute != null) {
@@ -423,6 +424,7 @@ public class SchemaModifier {
                 .closeParenthesis()
                 .space();
         }
+
         if (attribute.getDeleteAction() != null) {
             qb.keyword(ON, DELETE);
             appendReferentialAction(qb, attribute.getDeleteAction());
@@ -431,6 +433,15 @@ public class SchemaModifier {
             !referencedAttribute.isGenerated() && attribute.getUpdateAction() != null) {
             qb.keyword(ON, UPDATE);
             appendReferentialAction(qb, attribute.getUpdateAction());
+        }
+
+        if (platform.supportsInlineForeignKeyReference()) {
+            if (!attribute.isNullable()) {
+                qb.keyword(NOT, NULL);
+            }
+            if (attribute.isUnique()) {
+                qb.keyword(UNIQUE);
+            }
         }
     }
 
