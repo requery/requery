@@ -88,9 +88,21 @@ class FunctionalTest {
         data.invoke {
             insert(person)
             assertTrue(person.id > 0)
-            val result = data.select(Person::id, Person::name) limit 1
+            val result = select(Person::class, Person::id, Person::name) limit 1
             val first = result().first()
             assertNotNull(first.name)
+        }
+    }
+
+    @Test
+    fun testSelectTuple() {
+        val person = randomPerson()
+        data.invoke {
+            insert(person)
+            assertTrue(person.id > 0)
+            val result = select(Person::id, Person::name) limit 1
+            val first = result().first()
+            assertNotNull(first[0])
         }
     }
 

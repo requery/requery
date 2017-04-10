@@ -56,16 +56,15 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
         return query
     }
 
-    override fun <E : T> select(vararg attributes: QueryableAttribute<E, *>): Selection<Result<E>> {
+    override fun <E : T> select(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): Selection<Result<E>> {
         if (attributes.isEmpty()) {
             throw IllegalArgumentException()
         }
-        val classType = attributes[0].declaringType.classType
-        val reader = context.read<E>(classType)
+        val reader = context.read<E>(type.java)
         val selection: Set<Expression<*>> = LinkedHashSet(Arrays.asList<Expression<*>>(*attributes))
         val resultReader = reader.newResultReader(attributes)
         val query = QueryDelegate(QueryType.SELECT, model, SelectOperation(context, resultReader))
-        query.select(*selection.toTypedArray()).from(classType)
+        query.select(*selection.toTypedArray()).from(type.java)
         return query
     }
 

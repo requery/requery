@@ -30,7 +30,7 @@ import kotlin.reflect.KProperty1
 interface Queryable<T : Any> {
 
     infix fun <E : T> select(type: KClass<E>): Selection<out Result<E>>
-    fun <E : T> select(vararg attributes: QueryableAttribute<E, *>): Selection<out Result<E>>
+    fun <E : T> select(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): Selection<out Result<E>>
     infix fun <E : T> insert(type: KClass<E>): Insertion<out Result<Tuple>>
     fun <E : T> insert(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): InsertInto<out Result<Tuple>>
     infix fun <E : T> update(type: KClass<E>): Update<out Scalar<Int>>
@@ -46,8 +46,15 @@ interface Queryable<T : Any> {
 
 // property selection support
 inline fun <T : Any, reified E : T> Queryable<T>
-        .select(vararg properties: KProperty1<E, *>): Selection<out Result<E>> {
+        .select(type: KClass<E>, vararg properties: KProperty1<E, *>): Selection<out Result<E>> {
     val attributes: MutableSet<QueryableAttribute<E, *>> = LinkedHashSet()
+    properties.forEach { property -> attributes.add(findAttribute(property)) }
+    return select(type, *attributes.toTypedArray())
+}
+
+inline fun <T : Any, reified E : T> Queryable<T>
+        .select(vararg properties: KProperty1<E, *>): Selection<out Result<Tuple>> {
+    val attributes: MutableSet<Expression<*>> = LinkedHashSet()
     properties.forEach { property -> attributes.add(findAttribute(property)) }
     return select(*attributes.toTypedArray())
 }
@@ -56,7 +63,7 @@ inline operator fun <T : Any, reified E : T> Queryable<T>
         .get(vararg properties: KProperty1<E, *>): Selection<out Result<E>> {
     val attributes: MutableSet<QueryableAttribute<E, *>> = LinkedHashSet()
     properties.forEach { property -> attributes.add(findAttribute(property)) }
-    return select(*attributes.toTypedArray())
+    return select(E::class, *attributes.toTypedArray())
 }
 
 inline fun <T : Any, reified E : T> Queryable<T>

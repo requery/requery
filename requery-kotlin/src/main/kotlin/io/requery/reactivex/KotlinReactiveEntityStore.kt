@@ -39,7 +39,7 @@ class KotlinReactiveEntityStore<T : Any>(private var store: BlockingEntityStore<
     override fun close() = store.close()
 
     override infix fun <E : T> select(type: KClass<E>): Selection<ReactiveResult<E>> = result(store.select(type))
-    override fun <E : T> select(vararg attributes: QueryableAttribute<E, *>): Selection<ReactiveResult<E>> = result(store.select(*attributes))
+    override fun <E : T> select(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): Selection<ReactiveResult<E>> = result(store.select(type, *attributes))
     override fun select(vararg expressions: Expression<*>): Selection<ReactiveResult<Tuple>> = result(store.select(*expressions))
 
     override fun <E : T> insert(type: KClass<E>): Insertion<ReactiveResult<Tuple>> = result(store.insert(type))
