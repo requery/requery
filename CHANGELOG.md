@@ -1,6 +1,17 @@
 Change Log
 ==========
 
+## 1.3.0
+
+- Support @Superclass hierarchies  
+- Support @Embedded types in Jackson serialization
+- Support mixed Kotlin queries (note this is an API change to Kotlin partial select statements)
+- Fix incorrect join alias generated in query
+- Fix Android gradle plugin update 2.3.0 not working with entities using databinding
+- Fix Kotlin insert into select query
+- Fix non-null constraint not generated on Postgres
+- Fix @View entities created as tables during schema generation
+
 ## 1.2.1
 
 - Support row value expressions
