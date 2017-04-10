@@ -75,7 +75,7 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
     }
 
     override fun <E : T> insert(type: KClass<E>): Insertion<Result<Tuple>> {
-        val selection = data.keyExpressions(type.java)
+        val selection = data.generatedExpressions(type.java)
         val operation = InsertReturningOperation(context, selection)
         val query = QueryDelegate<Result<Tuple>>(QueryType.INSERT, model, operation)
         query.from(type)
@@ -83,7 +83,7 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
     }
 
     override fun <E : T> insert(type: KClass<E>, vararg attributes: QueryableAttribute<E, *>): InsertInto<out Result<Tuple>> {
-        val selection = data.keyExpressions(type.java)
+        val selection = data.generatedExpressions(type.java)
         val operation = InsertReturningOperation(context, selection)
         val query = QueryDelegate<Result<Tuple>>(QueryType.INSERT, model, operation)
         return query.insertColumns(attributes)

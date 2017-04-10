@@ -471,8 +471,8 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     @Override
     public <E extends T> Insertion<? extends Result<Tuple>> insert(Class<E> type) {
         checkClosed();
-        Set<Expression<?>> keySelection = keyExpressions(type);
-        InsertReturningOperation operation = new InsertReturningOperation(context, keySelection);
+        Set<Expression<?>> generated = generatedExpressions(type);
+        InsertReturningOperation operation = new InsertReturningOperation(context, generated);
         return new QueryElement<>(INSERT, entityModel, operation).from(type);
     }
 
@@ -480,16 +480,18 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     public <E extends T> InsertInto<? extends Result<Tuple>>
     insert(Class<E> type, QueryAttribute<?, ?>... attributes) {
         checkClosed();
-        Set<Expression<?>> keySelection = keyExpressions(type);
-        InsertReturningOperation operation = new InsertReturningOperation(context, keySelection);
+        Set<Expression<?>> generated = generatedExpressions(type);
+        InsertReturningOperation operation = new InsertReturningOperation(context, generated);
         return new QueryElement<>(INSERT, entityModel, operation).insertColumns(attributes);
     }
 
-    Set<Expression<?>> keyExpressions(Class<? extends T> type) {
+    Set<Expression<?>> generatedExpressions(Class<? extends T> type) {
         Type<?> entityType = context.getModel().typeOf(type);
         Set<Expression<?>> keySelection = new LinkedHashSet<>();
         for (Attribute<?, ?> attribute : entityType.getKeyAttributes()) {
-            keySelection.add((Expression<?>) attribute);
+            if (attribute.isGenerated()) {
+                keySelection.add((Expression<?>) attribute);
+            }
         }
         return keySelection;
     }
