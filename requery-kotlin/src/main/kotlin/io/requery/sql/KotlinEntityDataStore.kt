@@ -38,9 +38,10 @@ import kotlin.reflect.KClass
  */
 class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEntityStore<T> {
 
-    private var data: EntityDataStore<T> = EntityDataStore(configuration)
-    private var context : EntityContext<T> = data.context()
-    private var model : EntityModel = configuration.model
+    val data: EntityDataStore<T> = EntityDataStore(configuration)
+
+    private val context : EntityContext<T> = data.context()
+    private val model : EntityModel = configuration.model
 
     override fun close() = data.close()
 
