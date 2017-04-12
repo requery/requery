@@ -414,6 +414,12 @@ public abstract class FieldExpression<V> implements
         }
 
         @Override
+        public LogicalCondition<LogicalCondition<L, R>, Condition<?, ?>> not() {
+            return new ExpressionCondition<LogicalCondition<L, R>, Condition<?, ?>>(
+                    this, Operator.NOT, new NullOperand());
+        }
+
+        @Override
         public Operator getOperator() {
             return operator;
         }

@@ -53,6 +53,13 @@ abstract class BaseLogicalElement<E extends S, S> implements AndOr<S>, LogicalEl
     }
 
     @Override
+    public S not() {
+        E element = newElement(elements, condition, LogicalOperator.NOT);
+        elements.add(element);
+        return element;
+    }
+
+    @Override
     public Condition<?,?> getCondition() {
         return condition;
     }
