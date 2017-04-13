@@ -19,6 +19,7 @@ package io.requery.query;
 public enum Operator {
     AND,
     OR,
+    NOT,
     EQUAL,
     NOT_EQUAL,
     LESS_THAN,

@@ -67,6 +67,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static io.requery.query.Unary.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -880,6 +881,31 @@ public abstract class FunctionalTest extends RandomData {
         try (Result<Person> query = data.select(Person.class)
                 .where(Person.NAME.equal(name)).get()) {
             assertEquals(10, query.toList().size());
+        }
+    }
+
+    @Test
+    public void testSingleQueryWhereNot() {
+        final String name = "firstName";
+        final String email = "not@test.io";
+        for (int i = 0; i < 10; i++) {
+            Person person = randomPerson();
+            switch (i) {
+                case 0:
+                    person.setName(name);
+                    break;
+                case 1:
+                    person.setEmail(email);
+                    break;
+            }
+            data.insert(person);
+        }
+        try (Result<Person> query = data.select(Person.class)
+                .where(
+                        not(Person.NAME.equal(name)
+                                .or(Person.EMAIL.equal(email)))
+                ).get()) {
+            assertEquals(8, query.toList().size());
         }
     }
 

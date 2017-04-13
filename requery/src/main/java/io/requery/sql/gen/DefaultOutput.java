@@ -19,6 +19,7 @@ package io.requery.sql.gen;
 import io.requery.meta.Attribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.query.Aliasable;
+import io.requery.query.NullOperand;
 import io.requery.query.RowExpression;
 import io.requery.query.Condition;
 import io.requery.query.Expression;
@@ -357,19 +358,31 @@ public class DefaultOutput implements Output {
                 appendConditionValue(expression, value);
             }
         } else if(leftOperand instanceof Condition) {
-            if (depth > 0) {
-                qb.openParenthesis();
-            }
-            appendOperation((Condition) leftOperand, depth + 1);
-            appendOperator(condition.getOperator());
-            Object value = condition.getRightOperand();
-            if (value instanceof Condition) {
-                appendOperation((Condition) value, depth + 1);
+            // Handle unary operator
+            if (condition.getRightOperand() instanceof NullOperand) {
+                appendOperator(condition.getOperator());
+                if (depth > 0) {
+                    qb.openParenthesis();
+                }
+                appendOperation((Condition) leftOperand, depth + 1);
+                if (depth > 0) {
+                    qb.closeParenthesis().space();
+                }
             } else {
-                throw new IllegalStateException();
-            }
-            if (depth > 0) {
-                qb.closeParenthesis().space();
+                if (depth > 0) {
+                    qb.openParenthesis();
+                }
+                appendOperation((Condition) leftOperand, depth + 1);
+                appendOperator(condition.getOperator());
+                Object value = condition.getRightOperand();
+                if (value instanceof Condition) {
+                    appendOperation((Condition) value, depth + 1);
+                } else {
+                    throw new IllegalStateException();
+                }
+                if (depth > 0) {
+                    qb.closeParenthesis().space();
+                }
             }
         } else {
             throw new IllegalStateException("unknown start expression type " + leftOperand);
@@ -483,6 +496,9 @@ public class DefaultOutput implements Output {
                 break;
             case OR:
                 qb.keyword(OR);
+                break;
+            case NOT:
+                qb.keyword(NOT);
                 break;
         }
     }
