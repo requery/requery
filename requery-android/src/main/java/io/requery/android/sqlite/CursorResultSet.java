@@ -259,7 +259,7 @@ public class CursorResultSet extends NonUpdateableResultSet implements ResultSet
         } else {
             try {
                 String value = cursor.getString(columnIndex - 1);
-                return new Date(BasePreparedStatement.ISO8601_FORMAT.parse(value).getTime());
+                return new Date(BasePreparedStatement.ISO8601_FORMAT.get().parse(value).getTime());
             } catch (ParseException e) {
                 throw new SQLException(e);
             }
