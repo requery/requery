@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ public interface Attribute<T, V> {
     Supplier<Attribute> getMappedAttribute();
 
     /**
-     * @return the type name, not this can be different from the member/field name.
+     * @return the type name, note this can be different from the member/field name.
      */
     String getName();
 
@@ -212,6 +212,11 @@ public interface Attribute<T, V> {
      * @return true if this attribute is not required to be present in the type, (nullable)
      */
     boolean isNullable();
+
+    /**
+     * @return true if this column is read only and cannot be inserted or updated.
+     */
+    boolean isReadOnly();
 
     /**
      * @return true if this attribute is unique for the given {@link Type}.

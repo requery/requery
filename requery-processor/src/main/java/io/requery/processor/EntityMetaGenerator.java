@@ -336,6 +336,7 @@ class EntityMetaGenerator extends EntityPartGenerator {
             builder.add(".setKey(true)\n");
         }
         builder.add(".setGenerated($L)\n", attribute.isGenerated());
+        builder.add(".setReadOnly($L)\n", attribute.isReadOnly());
         builder.add(".setLazy($L)\n", attribute.isLazy());
         builder.add(".setNullable($L)\n", attribute.isNullable());
         builder.add(".setUnique($L)\n", attribute.isUnique());

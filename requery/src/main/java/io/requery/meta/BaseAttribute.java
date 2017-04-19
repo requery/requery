@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     boolean isIndex;
     boolean isLazy;
     boolean isNullable;
+    boolean isReadOnly;
     boolean isUnique;
     boolean isVersion;
     Integer length;
@@ -242,6 +243,11 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     @Override
     public boolean isUnique() {
         return isUnique;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return isReadOnly;
     }
 
     @Override

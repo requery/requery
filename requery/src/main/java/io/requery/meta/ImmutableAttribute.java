@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ final class ImmutableAttribute<T, V> extends BaseAttribute<T, V> {
         isKey = builder.isKey();
         isLazy = builder.isLazy();
         isNullable = builder.isNullable();
+        isReadOnly = builder.isReadOnly();
         isUnique = builder.isUnique();
         isVersion = builder.isVersion();
         length = builder.getLength();

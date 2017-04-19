@@ -137,7 +137,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 boolean isSystemVersion = value.isVersion() && hasSystemVersionColumn();
                 boolean isAssociation = value.isAssociation() &&
                     !(value.isForeignKey() || value.isKey());
-                return !(isGeneratedKey || isSystemVersion) && !isAssociation;
+                boolean isReadOnly = value.isReadOnly();
+                return !(isGeneratedKey || isSystemVersion) && !isAssociation && !isReadOnly;
             }
         };
         // create bindable attributes as an array for performance

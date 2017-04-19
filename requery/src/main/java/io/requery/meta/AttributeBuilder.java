@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,6 +105,11 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
     public AttributeBuilder<T, V> setIndexNames(String... names) {
         this.indexNames = new LinkedHashSet<>();
         Collections.addAll(indexNames, names);
+        return this;
+    }
+
+    public AttributeBuilder<T, V> setReadOnly(boolean readOnly) {
+        this.isReadOnly = readOnly;
         return this;
     }
 
