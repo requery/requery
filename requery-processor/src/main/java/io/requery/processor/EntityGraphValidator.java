@@ -97,7 +97,7 @@ class EntityGraphValidator {
                 Types types = processingEnvironment.getTypeUtils();
                 for (EntityDescriptor descriptor : graph.entities()) {
                     if (types.isSubtype(descriptor.element().asType(), attribute.typeMirror()) &&
-                        attribute.converterName() == null) {
+                        attribute.converterName() == null && !attribute.isTransient()) {
                         validator.error("Entity reference missing relationship annotation");
                     }
                 }
