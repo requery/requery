@@ -17,6 +17,7 @@
 package io.requery.sql;
 
 import io.requery.Converter;
+import io.requery.converter.CurrencyConverter;
 import io.requery.converter.EnumStringConverter;
 import io.requery.converter.LocalDateConverter;
 import io.requery.converter.LocalDateTimeConverter;
@@ -135,6 +136,7 @@ public class GenericMapping implements Mapping {
         converters.add(new UUIDConverter());
         converters.add(new URIConverter());
         converters.add(new URLConverter());
+        converters.add(new CurrencyConverter());
         if (LanguageVersion.current().atLeast(LanguageVersion.JAVA_1_8)) {
             converters.add(new LocalDateConverter());
             converters.add(new LocalTimeConverter());
