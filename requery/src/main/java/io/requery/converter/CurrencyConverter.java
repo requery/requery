@@ -17,15 +17,6 @@ public class CurrencyConverter implements Converter<Currency, String> {
      */
     public static final int PERSISTED_SIZE = 3;
 
-// Commented because it requires API level 14
-//    static {
-//        int max = 0;
-//        for (Currency currency : Currency.getAvailableCurrencies()) {
-//            max = Math.max(max, currency.getCurrencyCode().length());
-//        }
-//        PERSISTED_SIZE = max;
-//    }
-
     @Override
     public Class<Currency> getMappedType() {
         return Currency.class;

@@ -1,10 +1,9 @@
 package io.requery.test;
 
-import com.google.common.collect.BiMap;
-
-import junit.framework.Assert;
-
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import io.requery.Converter;
 
@@ -17,11 +16,17 @@ public abstract class AbstractConverterTest<T extends Converter<FROM, TO>, FROM,
 
     public abstract T getConverter();
 
-    public abstract BiMap<FROM, TO> getTestCases();
+    /**
+     * Get the map containing all the conversions to test.
+     * Note: the map should have unique values, so that converter can be tested in both directions.
+     *
+     * @return the map of test cases.
+     */
+    public abstract Map<FROM, TO> getTestCases();
 
     @Test
     public void testConvertToPersisted() {
-        BiMap<FROM, TO> testCases = getTestCases();
+        Map<FROM, TO> testCases = getTestCases();
         for (FROM from : testCases.keySet()) {
             TO expectedConvertedValue = testCases.get(from);
             TO convertedValue = getConverter().convertToPersisted(from);
@@ -32,7 +37,11 @@ public abstract class AbstractConverterTest<T extends Converter<FROM, TO>, FROM,
 
     @Test
     public void testConvertToMapped() {
-        BiMap<TO, FROM> testCases = getTestCases().inverse();
+        Map<TO, FROM> testCases = new HashMap<>();
+        for (Map.Entry<FROM, TO> entry : getTestCases().entrySet()) {
+            testCases.put(entry.getValue(), entry.getKey());
+        }
+        org.junit.Assert.assertTrue("Test cases map does not have unique values!", testCases.size() == getTestCases().size());
         for (TO from : testCases.keySet()) {
             FROM expectedConvertedValue = testCases.get(from);
             FROM convertedValue = getConverter().convertToMapped(null, from);
@@ -42,7 +51,7 @@ public abstract class AbstractConverterTest<T extends Converter<FROM, TO>, FROM,
     }
 
     protected void assertEquals(Object obj1, Object obj2) {
-        Assert.assertEquals(obj1, obj2);
+        org.junit.Assert.assertEquals(obj1, obj2);
     }
 
 }

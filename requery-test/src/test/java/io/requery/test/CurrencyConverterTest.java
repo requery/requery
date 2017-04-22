@@ -1,9 +1,8 @@
 package io.requery.test;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-
 import java.util.Currency;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.requery.converter.CurrencyConverter;
 
@@ -19,8 +18,8 @@ public class CurrencyConverterTest extends AbstractConverterTest<CurrencyConvert
     }
 
     @Override
-    public BiMap<Currency, String> getTestCases() {
-        BiMap<Currency, String> testCases = HashBiMap.create();
+    public Map<Currency, String> getTestCases() {
+        Map<Currency, String> testCases = new HashMap<>();
 //        for (Currency currency : Currency.getAvailableCurrencies()) {
 //            testCases.put(currency, currency.getCurrencyCode());
 //        }

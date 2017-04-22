@@ -43,7 +43,6 @@ dependencies {
     testCompile 'javax.cache:cache-api:1.0.0'
     compile "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
     compile 'junit:junit:4.12'
-    compile "com.google.guava:guava:20.0"
 }
 
 test {
