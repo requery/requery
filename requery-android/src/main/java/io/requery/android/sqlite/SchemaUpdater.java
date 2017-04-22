@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,11 @@ import io.requery.meta.Type;
 import io.requery.sql.Configuration;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
+import io.requery.sql.TableModificationException;
 import io.requery.util.function.Function;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,10 +53,21 @@ public class SchemaUpdater {
 
     public void update() {
         SchemaModifier schema = new SchemaModifier(configuration);
-        schema.createTables(mode);
         if (mode == TableCreationMode.DROP_CREATE) {
-            return; // don't need to check missing columns
+            schema.createTables(mode); // don't need to check missing columns
+        } else {
+            try (Connection connection = schema.getConnection()) {
+                connection.setAutoCommit(false);
+                upgrade(connection, schema);
+                connection.commit();
+            } catch (SQLException e) {
+                throw new TableModificationException(e);
+            }
         }
+    }
+
+    private void upgrade(Connection connection, SchemaModifier schema) {
+        schema.createTables(connection, mode, false);
         Function<String, String> columnTransformer = configuration.getColumnTransformer();
         Function<String, String> tableTransformer = configuration.getTableTransformer();
         // check for missing columns
@@ -103,7 +117,8 @@ public class SchemaUpdater {
             }
         });
         for (Attribute<?, ?> attribute : missingAttributes) {
-            schema.addColumn(attribute);
+            schema.addColumn(connection, attribute);
         }
+        schema.createIndexes(connection, mode);
     }
 }
