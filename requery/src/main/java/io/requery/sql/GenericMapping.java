@@ -292,6 +292,10 @@ public class GenericMapping implements Mapping {
             converter = converterForType(type);
         }
         Object value = fieldType.read(results, column);
+        // if the type is primitive the wasNull check isn't performed by the type, check here
+        if (isPrimitive && results.wasNull()) {
+            value = null;
+        }
         if (converter != null) {
             value = toMapped((Converter) converter, type, value);
         }
