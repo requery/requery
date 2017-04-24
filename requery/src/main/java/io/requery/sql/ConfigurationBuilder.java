@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,10 +82,10 @@ public class ConfigurationBuilder {
     }
 
     private static ConnectionProvider createConnectionProvider(CommonDataSource dataSource) {
-        if (dataSource instanceof DataSource) {
-            return new DataSourceConnectionProvider((DataSource)dataSource);
-        } else if(dataSource instanceof ConnectionPoolDataSource) {
+        if(dataSource instanceof ConnectionPoolDataSource) {
             return new PooledConnectionProvider((ConnectionPoolDataSource)dataSource);
+        } else if (dataSource instanceof DataSource) {
+            return new DataSourceConnectionProvider((DataSource)dataSource);
         } else {
             throw new IllegalArgumentException("unsupported dataSource " + dataSource);
         }
