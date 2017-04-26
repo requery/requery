@@ -147,6 +147,14 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testInsertSelectNullKeyReference() {
+        Person person = randomPerson();
+        data.insert(person);
+        assertNull(person.getAddress());
+        assertNull(data.select(Person.class).get().first().getAddress());
+    }
+
+    @Test
     public void testInsertWithTransaction() {
         data.runInTransaction(new Callable<Object>() {
             @Override
