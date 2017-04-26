@@ -549,13 +549,14 @@ public class DefaultOutput implements Output {
 
         void prefix(QueryBuilder qb, Expression expression) {
             Expression inner = unwrapExpression(expression);
-            String key = inner.getName();
             if(inner.getExpressionType() == ExpressionType.ATTRIBUTE) {
                 Attribute attribute = (Attribute) inner;
-                key = attribute.getDeclaringType().getName();
+                prefix(qb, attribute);
+            } else {
+                String key = inner.getName();
+                String alias = alias(key);
+                qb.append(alias + "." + expression.getName()).space();
             }
-            String alias = alias(key);
-            qb.append(alias + "." + expression.getName()).space();
         }
     }
 }
