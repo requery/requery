@@ -544,18 +544,26 @@ public class DefaultOutput implements Output {
         void prefix(QueryBuilder qb, Attribute attribute) {
             String key = attribute.getDeclaringType().getName();
             String alias = alias(key);
-            qb.append(alias + ".").attribute(attribute);
+            qb.aliasAttribute(alias, attribute);
         }
 
         void prefix(QueryBuilder qb, Expression expression) {
             Expression inner = unwrapExpression(expression);
-            String key = inner.getName();
-            if(inner.getExpressionType() == ExpressionType.ATTRIBUTE) {
+
+            if (inner.getExpressionType() == ExpressionType.ATTRIBUTE) {
                 Attribute attribute = (Attribute) inner;
-                key = attribute.getDeclaringType().getName();
+                if (expression.getExpressionType() == ExpressionType.ALIAS) {
+                    // work around aliasing a system version column
+                    String key = attribute.getDeclaringType().getName();
+                    qb.append(alias(key) + "." + expression.getName()).space();
+                } else {
+                    prefix(qb, attribute);
+                }
+            } else {
+                String key = inner.getName();
+                String alias = alias(key);
+                qb.append(alias + "." + expression.getName()).space();
             }
-            String alias = alias(key);
-            qb.append(alias + "." + expression.getName()).space();
         }
     }
 }
