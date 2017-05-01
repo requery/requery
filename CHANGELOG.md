@@ -1,6 +1,20 @@
 Change Log
 ==========
 
+## 1.3.1
+
+- Support Logical NOT operator
+- Support Converter for java.util.Currency
+- Fix non-null reference returned for null foreign key reference on entity retrieval 
+- Fix column transformers not used when aliasing columns
+- Fix ConnectionPoolDataSource not used in ConnectionProvider
+- Fix Read only values not filtered from insert/update operations
+- Fix Android schema upgrade using not yet created indexes  
+- Fix Android incorrect concurrent access of DateFormat instance 
+- Fix Android QueryLoader closed previous result instance
+- Fix processing error generated for @Transient entity not used in a relationship
+- Fix Kotlin EntityDataStore inner instance not exposed
+
 ## 1.3.0
 
 - Support @Superclass hierarchies  
