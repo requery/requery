@@ -38,11 +38,12 @@ class TransactionScope implements AutoCloseable {
         if (!transaction.active()) {
             transaction.begin();
             enteredTransaction = true;
-            if (types != null) {
-                transaction.addToTransaction(types);
-            }
         } else {
             enteredTransaction = false;
+        }
+        
+        if (types != null) {
+            transaction.addToTransaction(types);
         }
     }
 
