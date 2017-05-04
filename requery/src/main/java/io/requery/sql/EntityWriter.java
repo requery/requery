@@ -147,7 +147,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
-                return value.isAssociation();
+                return value.isAssociation() &&
+                       !value.getCascadeActions().contains(CascadeAction.NONE);
             }
         });
 
@@ -576,7 +577,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             }
             // persist the foreign key object if needed
             S referenced = foreignKeyReference(proxy, attribute);
-            if (referenced != null && !stateless) {
+            if (referenced != null && !stateless &&
+                    !attribute.getCascadeActions().contains(CascadeAction.NONE)) {
                 proxy.setState(attribute, PropertyState.LOADED);
                 cascadeWrite(mode, referenced, null);
             }
