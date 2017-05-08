@@ -1514,6 +1514,34 @@ public abstract class FunctionalTest extends RandomData {
         }
     }
 
+    @Test
+    public void testQueryUnionJoinOnSameEntities() {
+        Group group = new Group();
+        group.setName("Hello!");
+        data.insert(group);
+        Person person1 = randomPerson();
+        person1.setName("Carol");
+        person1.getGroups().add(group);
+        data.insert(person1);
+        Person person2 = randomPerson();
+        person2.getGroups().add(group);
+        person2.setName("Bob");
+        data.insert(person2);
+        List<Tuple> result = data.select(Person.NAME.as("personName"), Group.NAME.as("groupName"))
+                .where(Person.ID.eq(person1.getId()))
+                .union()
+                .select(Person.NAME.as("personName"), Group.NAME.as("groupName"))
+                .where(Person.ID.eq(person2.getId()))
+                .orderBy(Person.NAME.as("personName")).get().toList();
+        System.err.println(result.size());
+        System.err.println(result.size() == 2);
+        assertTrue(result.size() == 2);
+        assertTrue(result.get(0).get("personName").equals("Bob"));
+        assertTrue(result.get(0).get("groupName").equals("Hello!"));
+        assertTrue(result.get(1).get("personName").equals("Carol"));
+        assertTrue(result.get(1).get("groupName").equals("Hello!"));
+    }
+
     @Test(expected = PersistenceException.class)
     public void testViolateUniqueConstraint() {
         UUID uuid = UUID.randomUUID();
