@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+## 1.3.2
+
+- Fix Rx observable changes not triggered for nested transactions
+- Fix query table auto aliases removed in union statement
+- Fix CascadeAction.NONE having no effect during a insert/update/delete
+
 ## 1.3.1
 
 - Support Logical NOT operator
