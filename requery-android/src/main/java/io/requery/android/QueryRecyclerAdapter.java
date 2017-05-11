@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import java.util.concurrent.Future;
  *
  * @author Nikhil Purushe
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class QueryRecyclerAdapter<E, VH extends RecyclerView.ViewHolder> extends
         RecyclerView.Adapter<VH> implements Closeable {
 
@@ -96,6 +97,13 @@ public abstract class QueryRecyclerAdapter<E, VH extends RecyclerView.ViewHolder
             iterator = null;
         }
         setExecutor(null);
+    }
+
+    /**
+     * @return the underlying iterator being used or null if none
+     */
+    protected ResultSetIterator<E> getIterator() {
+        return iterator;
     }
 
     /**
@@ -208,9 +216,26 @@ public abstract class QueryRecyclerAdapter<E, VH extends RecyclerView.ViewHolder
     }
 
     @Override
+    public int getItemViewType(int position) {
+        E item = iterator.get(position);
+        return getItemViewType(item);
+    }
+
+    /**
+     * Return the view type of the item.
+     *
+     * @param item being checked
+     * @return integer identifying the type of the view
+     */
+    protected int getItemViewType(E item) {
+        return 0;
+    }
+
+    @Override
     public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
         super.onDetachedFromRecyclerView(recyclerView);
         close();
         setExecutor(null);
     }
+
 }
