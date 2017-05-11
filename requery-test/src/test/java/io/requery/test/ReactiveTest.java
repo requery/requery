@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package io.requery.test;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
@@ -23,13 +24,14 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import io.requery.BlockingEntityStore;
 import io.requery.Persistable;
 import io.requery.cache.EntityCacheBuilder;
 import io.requery.meta.EntityModel;
 import io.requery.query.Result;
+import io.requery.reactivex.ReactiveEntityStore;
 import io.requery.reactivex.ReactiveResult;
 import io.requery.reactivex.ReactiveSupport;
-import io.requery.reactivex.ReactiveEntityStore;
 import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
 import io.requery.sql.EntityDataStore;
@@ -53,6 +55,7 @@ import javax.sql.CommonDataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -325,6 +328,27 @@ public class ReactiveTest extends RandomData {
 
             }
         });
+        assertEquals(1, data.count(Person.class).get().value().intValue());
+    }
+
+    @Test
+    public void testRunInTransactionFromBlocking() {
+        final BlockingEntityStore<Persistable> blocking = data.toBlocking();
+        Completable.fromCallable(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                blocking.runInTransaction(new Callable<Object>() {
+                    @Override
+                    public Object call() throws Exception {
+                        final Person person = randomPerson();
+                        blocking.insert(person);
+                        blocking.update(person);
+                        return null;
+                    }
+                });
+                return null;
+            }
+        }).subscribe();
         assertEquals(1, data.count(Person.class).get().value().intValue());
     }
 
