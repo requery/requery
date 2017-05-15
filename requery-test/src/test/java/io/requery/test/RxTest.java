@@ -40,6 +40,7 @@ import rx.Single;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.functions.Action1;
+import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -52,6 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
@@ -289,6 +291,57 @@ public class RxTest extends RandomData {
         data.update(person).toBlocking().value();
         data.delete(phone).toBlocking().value();
         assertEquals(4, count.get());
+        subscription.unsubscribe();
+    }
+
+    @Test
+    public void testEmptySelfObservableOnComplete() throws Exception {
+        final AtomicBoolean flatMapCalled = new AtomicBoolean(false);
+        final AtomicBoolean switchIfEmptyCalled = new AtomicBoolean(false);
+        final AtomicBoolean onNextCalled = new AtomicBoolean(false);
+        final AtomicBoolean onErrorCalled = new AtomicBoolean(false);
+        final AtomicBoolean onCompleteCalled = new AtomicBoolean(false);
+
+        //Query that is intentionally empty
+        final Subscription subscription = data.select(Person.class)
+                .where(Person.AGE.greaterThan(50))
+                .get().toSelfObservable()
+                .flatMap(new Func1<Result<Person>, Observable<Person>>() {
+                    @Override
+                    public Observable<Person> call(final Result<Person> persons) {
+                        flatMapCalled.getAndSet(true);
+                        return persons.toObservable();
+                    }
+                })
+                .switchIfEmpty(Observable.defer(new Func0<Observable<Person>>() {
+                    @Override
+                    public Observable<Person> call() {
+                        switchIfEmptyCalled.getAndSet(true);
+                        return Observable.just(randomPerson());
+                    }
+                }))
+                .subscribe(new Subscriber<Person>() {
+                    @Override
+                    public void onCompleted() {
+                        onCompleteCalled.getAndSet(true);
+                    }
+
+                    @Override
+                    public void onError(final Throwable e) {
+                        onErrorCalled.getAndSet(true);
+                    }
+
+                    @Override
+                    public void onNext(final Person person) {
+                        onNextCalled.getAndSet(true);
+                    }
+                });
+
+        assertEquals(true, flatMapCalled.get());
+        assertEquals(true, switchIfEmptyCalled.get());
+        assertEquals(true, onNextCalled.get());
+        assertEquals(false, onErrorCalled.get());
+        assertEquals(true, onCompleteCalled.get());
         subscription.unsubscribe();
     }
 
