@@ -160,4 +160,20 @@ class ReactiveTest {
                 .test()
                 .assertValue { it.size == 30 }
     }
+
+    @Test
+    fun testWithTransaction() {
+        data.withTransaction {
+            for (i in 1..10) {
+                val person = randomPerson()
+                insert(person)
+            }
+        } .test()
+        data.select(Person::class)
+                .get()
+                .observable()
+                .toList()
+                .test()
+                .assertValue { it.size == 10 }
+    }
 }
