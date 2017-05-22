@@ -16,6 +16,26 @@
 
 package io.requery.test;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.cache.CacheManager;
+import javax.cache.Caching;
+import javax.cache.spi.CachingProvider;
+import javax.sql.CommonDataSource;
+
 import io.requery.Persistable;
 import io.requery.cache.EntityCacheBuilder;
 import io.requery.meta.EntityModel;
@@ -30,11 +50,10 @@ import io.requery.sql.Platform;
 import io.requery.sql.SchemaModifier;
 import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.HSQL;
+import io.requery.sql.platform.SQLite;
+import io.requery.test.model.Movie;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import rx.Observable;
 import rx.Single;
 import rx.Subscriber;
@@ -43,29 +62,30 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-import javax.cache.CacheManager;
-import javax.cache.Caching;
-import javax.cache.spi.CachingProvider;
-import javax.sql.CommonDataSource;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(Parameterized.class)
 public class RxTest extends RandomData {
 
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Platform> platforms() {
+        return Arrays.<Platform>asList(
+                new HSQL(),
+                new SQLite());
+    }
+
+    private final Platform platform;
     protected SingleEntityStore<Persistable> data;
+
+    public RxTest(Platform platform) {
+        this.platform = platform;
+    }
 
     @Before
     public void setup() throws SQLException {
-        Platform platform = new HSQL();
         CommonDataSource dataSource = DatabaseType.getDataSource(platform);
         EntityModel model = io.requery.test.model.Models.DEFAULT;
 
@@ -160,6 +180,13 @@ public class RxTest extends RandomData {
         assertTrue(p.getId() > 0);
         int count = data.count(Person.class).get().toSingle().toBlocking().value();
         assertEquals(1, count);
+    }
+
+    @Test
+    public void testUpsertCount() throws Exception {
+        Movie movie = new Movie(1, "Title");
+        data.upsert(movie).test();
+        data.count(Movie.class).get().toSingle().test().assertValue(1);
     }
 
     @Test
