@@ -485,7 +485,8 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 context.getStateListener().postUpdate(entity, proxy);
             } else {
                 // not a real upsert, but can be ok for embedded databases
-                if (update(entity, proxy, Cascade.UPSERT, null, null) == 0) {
+                int updateResult = update(entity, proxy, Cascade.UPSERT, null, null);
+                if (updateResult == -1 || updateResult == 0) {
                     insert(entity, proxy, Cascade.UPSERT, null);
                 }
             }
@@ -515,6 +516,11 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         }
     }
 
+    /**
+     *
+     * @return non-negative number of rows that were affected by this update
+     *         or -1 when update was not needed and was not performed
+     */
     private int update(final E entity, final EntityProxy<E> proxy, Cascade mode,
                        Predicate<Attribute<E, ?>> filterBindable,
                        Predicate<Attribute<E, ?>> filterAssociations) {
@@ -570,7 +576,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         };
         QueryElement<Scalar<Integer>> query = new QueryElement<>(UPDATE, model, operation);
         query.from(entityClass);
-        int count = 0;
+        int updatableAttributes = 0;
         for (Attribute<E, ?> attribute : bindableAttributes) {
             if (!filterBindable.test(attribute)) {
                 continue;
@@ -583,10 +589,10 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 cascadeWrite(mode, referenced, null);
             }
             query.set((Expression)attribute, null);
-            count++;
+            updatableAttributes++;
         }
         int result = -1;
-        if (count > 0) {
+        if (updatableAttributes > 0) {
             if (keyAttribute != null) {
                 query.where(Attributes.query(keyAttribute).equal("?"));
             } else {
