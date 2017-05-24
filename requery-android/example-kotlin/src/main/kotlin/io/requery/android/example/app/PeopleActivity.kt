@@ -47,7 +47,7 @@ class PeopleActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         data.count(Person::class).get().single().subscribe { integer ->
-            if (integer === 0) {
+            if (integer == 0) {
                 Observable.fromCallable(CreatePeople(data))
                     .flatMap { o -> o }
                     .observeOn(Schedulers.computation())

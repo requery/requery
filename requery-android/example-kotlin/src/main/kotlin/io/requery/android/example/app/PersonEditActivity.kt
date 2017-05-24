@@ -5,7 +5,6 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
-import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.requery.Persistable
 import io.requery.android.example.app.model.*
@@ -102,10 +101,10 @@ class PersonEditActivity : AppCompatActivity() {
         address.zip = getViewText(R.id.zip)
         address.state = getViewText(R.id.state)
         // save the person
-        if (person.id === 0) {
-            Observable.fromCallable { data.insert(person) }.subscribe({ finish() })
+        if (person.id == 0) {
+            data.insert(person).subscribe { _ -> finish() }
         } else {
-            Observable.fromCallable { data.update(person) }.subscribe({ finish() })
+            data.update(person).subscribe { _ -> finish() }
         }
     }
 }
