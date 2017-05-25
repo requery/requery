@@ -17,6 +17,7 @@
 package io.requery.util;
 
 import javax.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -56,7 +57,7 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
     @Override
     @Nonnull
     public Iterator<E> iterator() {
-        return list.iterator();
+        return new ObservableCollectionIterator<>(list, observer);
     }
 
     @Override
@@ -140,7 +141,6 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
     @Override
     public void clear() {
         if (observer != null) {
-            observer.clear();
             for (E element : this) {
                 observer.elementRemoved(element);
             }
@@ -194,17 +194,20 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
         return list.lastIndexOf(o);
     }
 
-    @Override @Nonnull
+    @Override
+    @Nonnull
     public ListIterator<E> listIterator() {
         return list.listIterator();
     }
 
-    @Override @Nonnull
+    @Override
+    @Nonnull
     public ListIterator<E> listIterator(int index) {
         return list.listIterator(index);
     }
 
-    @Override @Nonnull
+    @Override
+    @Nonnull
     public List<E> subList(int fromIndex, int toIndex) {
         return list.subList(fromIndex, toIndex);
     }

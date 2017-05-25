@@ -17,6 +17,7 @@
 package io.requery.util;
 
 import javax.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -52,12 +53,14 @@ public class ObservableSet<E> implements Set<E>, ObservableCollection<E> {
         return set.contains(o);
     }
 
-    @Override @Nonnull
+    @Override
+    @Nonnull
     public Iterator<E> iterator() {
-        return set.iterator();
+        return new ObservableCollectionIterator<>(set, observer);
     }
 
-    @Override @Nonnull
+    @Override
+    @Nonnull
     public Object[] toArray() {
         return set.toArray();
     }
@@ -132,7 +135,6 @@ public class ObservableSet<E> implements Set<E>, ObservableCollection<E> {
     @Override
     public void clear() {
         if (observer != null) {
-            observer.clear();
             for (E element : this) {
                 observer.elementRemoved(element);
             }
