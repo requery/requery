@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.requery.BlockingEntityStore;
 import io.requery.EntityStore;
 import io.requery.meta.Attribute;
+import io.requery.util.function.Function;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Extends {@link EntityStore} where all return values are either single {@link Single} instances or
@@ -103,10 +103,5 @@ public abstract class ReactiveEntityStore<T> implements EntityStore<T, Object>, 
     public abstract <E extends T, K> Maybe<E> findByKey(Class<E> type, K key);
 
     @CheckReturnValue
-    @SafeVarargs
-    public final <E> Observable<E> runInTransaction(Single<? extends E>... elements) {
-        return runInTransaction(Arrays.asList(elements));
-    }
-
-    abstract <E> Observable<E> runInTransaction(List<Single<? extends E>> elements);
+    public abstract <R> Single<R> runInTransaction(Function<BlockingEntityStore<T>, R> function);
 }

@@ -16,8 +16,11 @@
 
 package io.requery.rx;
 
+import io.requery.BlockingEntityStore;
 import io.requery.EntityStore;
 import io.requery.meta.Attribute;
+import io.requery.util.function.Consumer;
+import io.requery.util.function.Function;
 import rx.Observable;
 import rx.Single;
 
@@ -103,10 +106,5 @@ public abstract class SingleEntityStore<T> implements EntityStore<T, Single<?>>,
     public abstract <E extends T, K> Single<E> findByKey(Class<E> type, K key);
 
     @CheckReturnValue
-    @SafeVarargs
-    public final <E> Observable<E> runInTransaction(Single<? extends E>... elements) {
-        return runInTransaction(Arrays.asList(elements));
-    }
-
-    abstract <E> Observable<E> runInTransaction(List<Single<? extends E>> elements);
+    public abstract <R> Single<R> runInTransaction(Function<BlockingEntityStore<T>, R> function);
 }

@@ -320,14 +320,25 @@ public class ReactiveTest extends RandomData {
     @Test
     public void testRunInTransaction() {
         final Person person = randomPerson();
-        data.runInTransaction(
-                data.insert(person),
-                data.update(person)).subscribe(new Consumer<Object>() {
+        data.runInTransaction(new io.requery.util.function.Function<BlockingEntityStore<Persistable>, Boolean>() {
             @Override
-            public void accept(Object o) {
-
+            public Boolean apply(BlockingEntityStore<Persistable> blocking) {
+                blocking.insert(person);
+                blocking.update(person);
+                blocking.delete(person);
+                return true;
             }
-        });
+        }).blockingGet();
+        assertEquals(0, data.count(Person.class).get().value().intValue());
+
+        final Person person2 = randomPerson();
+        data.runInTransaction(new io.requery.util.function.Function<BlockingEntityStore<Persistable>, Boolean>() {
+            @Override
+            public Boolean apply(BlockingEntityStore<Persistable> blocking) {
+                blocking.insert(person2);
+                return true;
+            }
+        }).blockingGet();
         assertEquals(1, data.count(Person.class).get().value().intValue());
     }
 

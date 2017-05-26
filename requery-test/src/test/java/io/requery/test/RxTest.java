@@ -16,6 +16,7 @@
 
 package io.requery.test;
 
+import io.requery.BlockingEntityStore;
 import io.requery.Persistable;
 import io.requery.cache.EntityCacheBuilder;
 import io.requery.meta.EntityModel;
@@ -32,6 +33,7 @@ import io.requery.sql.TableCreationMode;
 import io.requery.sql.platform.HSQL;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
+import io.requery.util.function.Function;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -315,25 +317,25 @@ public class RxTest extends RandomData {
     @Test
     public void testRunInTransaction() {
         final Person person = randomPerson();
-        data.runInTransaction(
-                data.insert(person),
-                data.update(person),
-                data.delete(person)).toBlocking().forEach(new Action1<Object>() {
+        data.runInTransaction(new Function<BlockingEntityStore<Persistable>, Boolean>() {
             @Override
-            public void call(Object o) {
-
+            public Boolean apply(BlockingEntityStore<Persistable> blocking) {
+                blocking.insert(person);
+                blocking.update(person);
+                blocking.delete(person);
+                return true;
             }
-        });
+        }).toBlocking().value();
         assertEquals(0, data.count(Person.class).get().value().intValue());
 
         final Person person2 = randomPerson();
-        data.runInTransaction(
-            data.insert(person2)).toBlocking().forEach(new Action1<Person>() {
+        data.runInTransaction(new Function<BlockingEntityStore<Persistable>, Boolean>() {
             @Override
-            public void call(Person person) {
-
+            public Boolean apply(BlockingEntityStore<Persistable> blocking) {
+                blocking.insert(person2);
+                return true;
             }
-        });
+        }).toBlocking().value();
         assertEquals(1, data.count(Person.class).get().value().intValue());
     }
 

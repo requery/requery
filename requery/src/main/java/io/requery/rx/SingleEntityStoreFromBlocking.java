@@ -32,13 +32,10 @@ import io.requery.query.Update;
 import io.requery.query.element.QueryElement;
 import io.requery.util.Objects;
 import io.requery.util.function.Function;
-import rx.Completable;
-import rx.Observable;
 import rx.Scheduler;
 import rx.Single;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -308,36 +305,13 @@ class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
     }
 
     @Override
-    public final <E> Observable<E> runInTransaction(final List<Single<? extends E>> elements) {
-        Objects.requireNotNull(elements);
-
-        Observable<E> startTransaction = Completable.fromCallable(new Callable<Object>() {
+    public <R> Single<R> runInTransaction(final Function<BlockingEntityStore<T>, R> function) {
+        return Single.fromCallable(new Callable<R>() {
             @Override
-            public Object call() throws Exception {
-                if (!delegate.transaction().active()) {
-                    delegate.transaction().begin();
-                }
-                return delegate;
+            public R call() throws Exception {
+                return function.apply(toBlocking());
             }
-        }).toObservable();
-
-        Observable<E> commitTransaction = Completable.fromCallable(new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-                try {
-                    delegate.transaction().commit();
-                } finally {
-                    delegate.transaction().close();
-                }
-                return delegate;
-            }
-        }).toObservable();
-
-        Observable<E> current = startTransaction;
-        for (Single<? extends E> single : elements) {
-            current = current.concatWith(single.toObservable());
-        }
-        return current.concatWith(commitTransaction);
+        });
     }
 
     private static <E> QueryElement<RxResult<E>> result(Return<? extends Result<E>> query) {
