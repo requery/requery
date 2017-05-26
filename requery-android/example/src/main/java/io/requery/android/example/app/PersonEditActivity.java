@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 20167 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,10 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import io.requery.Persistable;
 import io.requery.android.example.app.databinding.ActivityEditPersonBinding;
 import io.requery.android.example.app.model.Address;
@@ -58,7 +60,8 @@ public class PersonEditActivity extends AppCompatActivity {
             binding.setPerson(person);
         } else {
             data.findByKey(PersonEntity.class, personId)
-                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.single())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<PersonEntity>() {
                 @Override
                 public void accept(PersonEntity person) {
@@ -108,20 +111,14 @@ public class PersonEditActivity extends AppCompatActivity {
         address.setZip(binding.zip.getText().toString());
         address.setState(binding.state.getText().toString());
         // save the person
-        if (person.getId() == 0) {
-            data.insert(person).subscribe(new Consumer<Person>() {
-                @Override
-                public void accept(Person person) {
-                    finish();
-                }
-            });
-        } else {
-            data.update(person).subscribe(new Consumer<Person>() {
-                @Override
-                public void accept(Person person) {
-                    finish();
-                }
-            });
-        }
+        Single<PersonEntity> single = person.getId() == 0 ? data.insert(person) : data.update(person);
+        single.subscribeOn(Schedulers.single())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Person>() {
+                    @Override
+                    public void accept(Person person) {
+                        finish();
+                    }
+                });
     }
 }

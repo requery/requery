@@ -6,6 +6,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import io.requery.Persistable
 import io.requery.android.example.app.model.*
 import io.requery.reactivex.KotlinReactiveEntityStore
@@ -35,7 +36,8 @@ class PersonEditActivity : AppCompatActivity() {
             setPerson(person)
         } else {
             data.findByKey(PersonEntity::class, personId)
-                    .subscribeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.single())
+                    .observeOn(AndroidSchedulers.mainThread())
                     .subscribe { person -> setPerson(person) }
         }
     }
@@ -101,10 +103,9 @@ class PersonEditActivity : AppCompatActivity() {
         address.zip = getViewText(R.id.zip)
         address.state = getViewText(R.id.state)
         // save the person
-        if (person.id == 0) {
-            data.insert(person).subscribe { _ -> finish() }
-        } else {
-            data.update(person).subscribe { _ -> finish() }
-        }
+        val observable = if (person.id == 0) data.insert(person) else data.update(person)
+        observable.subscribeOn(Schedulers.single())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { _ -> finish() }
     }
 }
