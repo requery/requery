@@ -22,6 +22,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,7 +42,7 @@ interface EntityDescriptor {
     /**
      * @return map of elements to attributes
      */
-    Map<Element, ? extends AttributeDescriptor> attributes();
+    Collection<? extends AttributeDescriptor> attributes();
 
     /**
      * @return true if this entity type requires additional types to be generated to compile.

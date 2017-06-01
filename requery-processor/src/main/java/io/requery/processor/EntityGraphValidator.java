@@ -20,10 +20,8 @@ import io.requery.ForeignKey;
 import io.requery.meta.Cardinality;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
 import javax.lang.model.util.Types;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -56,10 +54,7 @@ class EntityGraphValidator {
     private Set<ElementValidator> validateEntity(EntityDescriptor entity) {
         Set<ElementValidator> results = new LinkedHashSet<>();
 
-        for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
-            entity.attributes().entrySet()) {
-
-            AttributeDescriptor attribute = entry.getValue();
+        for (AttributeDescriptor attribute : entity.attributes()) {
             ElementValidator validator =
                 new ElementValidator(attribute.element(), processingEnvironment);
 
@@ -115,7 +110,7 @@ class EntityGraphValidator {
                                 referenced.get().typeName() + " for " + attribute);
                     } else {
                         // check all the foreign keys and see if they reference this entity
-                        referenced.get().attributes().values().stream()
+                        referenced.get().attributes().stream()
                             .filter(AttributeDescriptor::isForeignKey)
                             .map(graph::referencingEntity)
                             .filter(Optional::isPresent)

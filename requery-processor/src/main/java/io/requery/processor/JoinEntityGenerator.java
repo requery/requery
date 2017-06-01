@@ -144,7 +144,7 @@ class JoinEntityGenerator implements SourceGenerator {
             TypeName typeName = TypeName.get(Integer.class);
             if (entity != null) {
                 Optional<? extends AttributeDescriptor> keyAttribute =
-                    entity.attributes().values().stream()
+                    entity.attributes().stream()
                         .filter(AttributeDescriptor::isKey).findAny();
 
                 if (keyAttribute.isPresent()) {

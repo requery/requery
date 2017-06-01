@@ -133,7 +133,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         Modifier visibility = entity.isEmbedded() ? Modifier.PROTECTED : Modifier.PRIVATE;
         // generate property states
         if (!entity.isStateless()) {
-            entity.attributes().values().stream()
+            entity.attributes().stream()
                     .filter(attribute -> !attribute.isTransient())
                     .forEach(attribute -> {
                 TypeName stateType = ClassName.get(PropertyState.class);
@@ -143,7 +143,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             });
         }
         if (entity.isEmbedded() && !(entity.isImmutable() || entity.isUnimplementable())) {
-            entity.attributes().values().stream()
+            entity.attributes().stream()
                     .filter(attribute -> !attribute.isTransient())
                     .forEach(attribute -> {
                         ParameterizedTypeName attributeType = ParameterizedTypeName.get(
@@ -158,15 +158,14 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         // only generate for interfaces or if the entity is immutable but has no builder
         boolean generateMembers = typeElement.getKind().isInterface() ||
             !entity.builderType().isPresent();
-        Set<String> existingFieldNames = entity.attributes().keySet().stream()
+        Set<String> existingFieldNames = entity.attributes().stream()
+            .map(AttributeDescriptor::element)
             .filter(it -> it.getKind() == ElementKind.FIELD)
             .map(it -> it.getSimpleName().toString())
             .collect(Collectors.toSet());
         if (generateMembers) {
-            for (Map.Entry<Element, ? extends AttributeDescriptor> entry :
-                entity.attributes().entrySet()) {
-                Element element = entry.getKey();
-                AttributeDescriptor attribute = entry.getValue();
+            for (AttributeDescriptor attribute : entity.attributes()) {
+                Element element = attribute.element();
                 if (element.getKind() == ElementKind.METHOD) {
                     ExecutableElement methodElement = (ExecutableElement) element;
                     TypeMirror typeMirror = methodElement.getReturnType();
@@ -191,7 +190,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         if (entity.isImmutable()) {
             generateBuilder(builder, entity, "builder");
 
-            entity.attributes().values().stream()
+            entity.attributes().stream()
                 .filter(AttributeDescriptor::isEmbedded)
                 .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded ->
                     embedded.builderType().ifPresent(type -> {
@@ -278,7 +277,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         }
         builder.addField(proxyField.build());
 
-        for (AttributeDescriptor attribute : entity.attributes().values()) {
+        for (AttributeDescriptor attribute : entity.attributes()) {
 
             boolean useField = attribute.isTransient() || attribute.isEmbedded();
             TypeMirror typeMirror = attribute.typeMirror();
@@ -395,7 +394,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         if (entity.isEmbedded()) {
             constructor.addParameter(ParameterSpec.builder(proxyName, "proxy").build());
             constructor.addStatement("this.$L = proxy", PROXY_NAME);
-            entity.attributes().values().stream()
+            entity.attributes().stream()
                     .filter(attribute -> !attribute.isTransient())
                     .forEach(attribute -> {
                         ParameterizedTypeName attributeType = ParameterizedTypeName.get(
@@ -409,11 +408,11 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         }
         generateListeners(constructor);
         // initialize the generated embedded entities
-        entity.attributes().values().stream()
+        entity.attributes().stream()
             .filter(AttributeDescriptor::isEmbedded)
             .forEach(attribute -> graph.embeddedDescriptorOf(attribute).ifPresent(embedded -> {
                 ClassName embeddedName = nameResolver.embeddedTypeNameOf(embedded, entity);
-                String format = embedded.attributes().values().stream().map(attr ->
+                String format = embedded.attributes().stream().map(attr ->
                         Names.upperCaseUnderscore(embeddedAttributeName(attribute, attr)))
                         .collect(Collectors.joining(", ", "$L = new $T($L, ", ")"));
                 constructor.addStatement(format, attribute.fieldName(), embeddedName, PROXY_NAME);

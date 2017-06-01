@@ -46,6 +46,7 @@ import javax.persistence.Index;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -109,7 +110,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
         }));
 
         Set<ProcessableElement<?>> elements = new LinkedHashSet<>();
-        attributes().values().forEach(
+        attributes().forEach(
             attribute -> elements.add((ProcessableElement<?>) attribute));
 
         elements.addAll(listeners.values());
@@ -225,12 +226,12 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
 
     @Override
     public void merge(EntityDescriptor from) {
-        from.attributes().entrySet().forEach(entry -> {
+        from.attributes().forEach(entry -> {
             // add this attribute if an attribute with the same name is not already existing
             if (attributes.values().stream().noneMatch(
-                    attribute -> attribute.name().equals(entry.getValue().name()))) {
-                Element element = entry.getValue().element();
-                attributes.put(entry.getKey(), new AttributeMember(element, this));
+                    attribute -> attribute.name().equals(entry.name()))) {
+                Element element = entry.element();
+                attributes.put(element, new AttributeMember(element, this));
             }
         });
         from.listeners().entrySet().stream()
@@ -259,8 +260,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
     }
 
     @Override
-    public Map<Element, ? extends AttributeDescriptor> attributes() {
-        return attributes;
+    public Collection<? extends AttributeDescriptor> attributes() {
+        return attributes.values();
     }
 
     @Override

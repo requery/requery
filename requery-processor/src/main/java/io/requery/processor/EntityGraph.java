@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,7 +142,7 @@ class EntityGraph {
         String referencedColumn = attribute.referencedColumn();
         if (Names.isEmpty(referencedColumn)) {
             // using the id
-            List<AttributeDescriptor> keys = referenced.attributes().values().stream()
+            List<AttributeDescriptor> keys = referenced.attributes().stream()
                 .filter(AttributeDescriptor::isKey).collect(Collectors.toList());
 
             if (keys.size() == 1) {
@@ -153,7 +153,7 @@ class EntityGraph {
                     .findFirst();
             }
         } else {
-            return referenced.attributes().values().stream()
+            return referenced.attributes().stream()
                 .filter(other -> other.name().equals(referencedColumn))
                 .findFirst();
         }
@@ -172,14 +172,14 @@ class EntityGraph {
                                               EntityDescriptor referenced) {
         String mappedBy = attribute.mappedBy();
         if (Names.isEmpty(mappedBy)) {
-            return referenced.attributes().values().stream()
+            return referenced.attributes().stream()
                 .filter(other -> other.cardinality() != null)
                 .filter(other -> referencingEntity(other).isPresent())
                 .filter(other -> referencingEntity(other)
                         .orElseThrow(IllegalStateException::new) == entity)
                 .collect(Collectors.toSet());
         } else {
-            return referenced.attributes().values().stream()
+            return referenced.attributes().stream()
                 .filter(other -> other.name().equals(mappedBy))
                 .collect(Collectors.toSet());
         }
