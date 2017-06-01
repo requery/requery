@@ -54,7 +54,7 @@ public class ObservableSet<E> implements Set<E>, ObservableCollection<E> {
 
     @Override @Nonnull
     public Iterator<E> iterator() {
-        return set.iterator();
+        return new ObservableCollectionIterator<>(set, observer);
     }
 
     @Override @Nonnull
@@ -132,7 +132,6 @@ public class ObservableSet<E> implements Set<E>, ObservableCollection<E> {
     @Override
     public void clear() {
         if (observer != null) {
-            observer.clear();
             for (E element : this) {
                 observer.elementRemoved(element);
             }

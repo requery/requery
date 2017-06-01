@@ -56,7 +56,7 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
     @Override
     @Nonnull
     public Iterator<E> iterator() {
-        return list.iterator();
+        return new ObservableCollectionIterator<>(list, observer);
     }
 
     @Override
@@ -140,7 +140,6 @@ public class ObservableList<E> implements List<E>, ObservableCollection<E> {
     @Override
     public void clear() {
         if (observer != null) {
-            observer.clear();
             for (E element : this) {
                 observer.elementRemoved(element);
             }
