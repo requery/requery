@@ -2,13 +2,21 @@ package io.requery.test;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import io.requery.proxy.CollectionChanges;
+import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
 import io.requery.util.ObservableCollection;
+import io.requery.util.ObservableList;
+import io.requery.util.ObservableSet;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -16,25 +24,36 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by mluchi on 25/05/2017.
  */
+@RunWith(Parameterized.class)
+public class ObservableCollectionTest<T extends Collection<Phone> & ObservableCollection<Phone>> {
 
-public abstract class AbstractObservableCollectionTest<T extends Collection<Phone> & ObservableCollection<Phone>> {
+    @Parameterized.Parameters
+    public static <T extends Collection<Phone> & ObservableCollection<Phone>> Collection<T> observableCollections() {
+        Person person = new Person();
 
-    /**
-     * Get the observable collection to test.
-     *
-     * @return The collection.
-     */
-    protected abstract T initObservableCollection();
+        // ObservableList
+        List<Phone> observableList = person.getPhoneNumbersList();
+        assertTrue(observableList instanceof ObservableList);
 
+        // ObservableSet
+        Set<Phone> observableSet = person.getPhoneNumbersSet();
+        assertTrue(observableSet instanceof ObservableSet);
+
+        return Arrays.asList((T) observableList, (T) observableSet);
+    }
+
+    private T observableCollection;
     private Phone phone1;
     private Phone phone2;
-    private T observableCollection;
     private CollectionChanges collectionChanges;
+
+    public ObservableCollectionTest(T observableCollection) {
+        this.observableCollection = observableCollection;
+    }
 
     @Before
     public void setUp() {
         // Populate the collection with 2 items
-        observableCollection = initObservableCollection();
         observableCollection.clear();
         phone1 = new Phone();
         phone1.setPhoneNumber("1");

@@ -6,13 +6,10 @@ import java.util.Iterator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-
-/**
- * Created by mluchi on 25/05/2017.
- */
-
 /**
  * The iterator of an {@link ObservableCollection}.
+ *
+ * @author Mirko Luchi
  */
 class ObservableCollectionIterator<T> implements Iterator<T> {
 
