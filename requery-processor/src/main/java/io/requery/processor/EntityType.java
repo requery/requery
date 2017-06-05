@@ -65,13 +65,13 @@ import java.util.stream.Stream;
 class EntityType extends BaseProcessableElement<TypeElement> implements EntityElement {
 
     private final ProcessingEnvironment processingEnvironment;
-    private final Map<Element, AttributeDescriptor> attributes;
+    private final Set<AttributeDescriptor> attributes;
     private final Map<Element, ListenerMethod> listeners;
 
     EntityType(ProcessingEnvironment processingEnvironment, TypeElement typeElement) {
         super(typeElement);
         this.processingEnvironment = processingEnvironment;
-        attributes = new LinkedHashMap<>();
+        attributes = new LinkedHashSet<>();
         listeners = new LinkedHashMap<>();
     }
 
@@ -129,11 +129,11 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
         if (element().getKind() == ElementKind.ENUM) {
             validator.error("Entity annotation cannot be applied to an enum class");
         }
-        if (attributes.values().isEmpty()) {
+        if (attributes.isEmpty()) {
             validator.warning("Entity contains no attributes");
         }
-        if (!isReadOnly() && !isEmbedded() && attributes.values().size() == 1 &&
-            attributes.values().iterator().next().isGenerated()) {
+        if (!isReadOnly() && !isEmbedded() && attributes.size() == 1 &&
+            attributes.iterator().next().isGenerated()) {
             validator.warning(
                 "Entity contains only a single generated attribute may fail to persist");
         }
@@ -220,18 +220,22 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
     }
 
     private Optional<AttributeMember> computeAttribute(Element element) {
-        return Optional.of((AttributeMember)
-            attributes.computeIfAbsent(element, key -> new AttributeMember(element, this)));
+        AttributeMember attribute = new AttributeMember(element, this);
+        if (attributes.stream().noneMatch( a -> a.name().equals(attribute.name()))) {
+            attributes.add(attribute);
+            return Optional.of(attribute);
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
     public void merge(EntityDescriptor from) {
         from.attributes().forEach(entry -> {
             // add this attribute if an attribute with the same name is not already existing
-            if (attributes.values().stream().noneMatch(
+            if (attributes.stream().noneMatch(
                     attribute -> attribute.name().equals(entry.name()))) {
-                Element element = entry.element();
-                attributes.put(element, new AttributeMember(element, this));
+                attributes.add(new AttributeMember(entry.element(), this));
             }
         });
         from.listeners().entrySet().stream()
@@ -248,8 +252,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
 
     @Override
     public boolean generatesAdditionalTypes() {
-        return attributes.values().stream()
-            .anyMatch(member -> member.associativeEntity().isPresent());
+        return attributes.stream().anyMatch(member -> member.associativeEntity().isPresent());
     }
 
     private void checkReserved(String name, ElementValidator validator) {
@@ -261,7 +264,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
 
     @Override
     public Collection<? extends AttributeDescriptor> attributes() {
-        return attributes.values();
+        return attributes;
     }
 
     @Override
@@ -469,7 +472,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
         ExecutableElement method = factoryMethod().orElseThrow(IllegalStateException::new);
         // TODO need more validation here
         // now match the builder fields to the parameters...
-        Map<Element, AttributeDescriptor> map = new LinkedHashMap<>(attributes);
+        Map<Element, AttributeDescriptor> map = new LinkedHashMap<>();
+        attributes.forEach(attribute -> map.put(attribute.element(), attribute));
         for (VariableElement parameter : method.getParameters()) {
             // straight forward case type and name are the same
             Element matched = null;
