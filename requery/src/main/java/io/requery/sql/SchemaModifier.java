@@ -360,12 +360,25 @@ public class SchemaModifier implements ConnectionProvider {
         return Collections.unmodifiableSet(referencedTypes);
     }
 
+    /**
+     * Generates the create table for a specific type.
+     *
+     * @param type to generate the table statement
+     * @param mode creation mode
+     * @param <T> Type
+     * @return create table sql string
+     */
     public <T> String tableCreateStatement(Type<T> type, TableCreationMode mode) {
         String tableName = type.getName();
-        Set<Attribute<T, ?>> attributes = type.getAttributes();
 
         QueryBuilder qb = createQueryBuilder();
-        qb.keyword(CREATE, TABLE);
+        qb.keyword(CREATE);
+        if (type.getTableCreateAttributes() != null) {
+            for (String attribute : type.getTableCreateAttributes()) {
+                qb.append(attribute, true);
+            }
+        }
+        qb.keyword(TABLE);
         if (mode == TableCreationMode.CREATE_NOT_EXISTS) {
             qb.keyword(IF, NOT, EXISTS);
         }
@@ -389,6 +402,7 @@ public class SchemaModifier implements ConnectionProvider {
             }
         };
 
+        Set<Attribute<T, ?>> attributes = type.getAttributes();
         for (Attribute attribute : attributes) {
             if (filter.test(attribute)) {
                 if (index > 0) {
