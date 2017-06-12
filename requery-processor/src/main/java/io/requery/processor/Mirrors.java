@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,13 +116,22 @@ final class Mirrors {
         if (namesEqual(element, interfaceName)) {
             return true;
         }
-        List<? extends TypeMirror> interfaces = element.getInterfaces();
-        for (TypeMirror interfaceType : interfaces) {
-            interfaceType = types.erasure(interfaceType);
-            TypeElement typeElement = (TypeElement) types.asElement(interfaceType);
-            if (typeElement != null && implementsInterface(types, typeElement, interfaceName)) {
-                return true;
+
+        TypeMirror type = element.asType();
+        while (type != null && type.getKind() != TypeKind.NONE) {
+            TypeElement currentElement = (TypeElement) types.asElement(type);
+            if (currentElement == null) {
+                break;
             }
+            List<? extends TypeMirror> interfaces = element.getInterfaces();
+            for (TypeMirror interfaceType : interfaces) {
+                interfaceType = types.erasure(interfaceType);
+                TypeElement typeElement = (TypeElement) types.asElement(interfaceType);
+                if (typeElement != null && implementsInterface(types, typeElement, interfaceName)) {
+                    return true;
+                }
+            }
+            type = currentElement.getSuperclass();
         }
         return false;
     }
