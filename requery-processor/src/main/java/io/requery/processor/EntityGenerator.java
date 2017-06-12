@@ -316,8 +316,13 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     getter.addStatement("return this.$L", attributeName);
                 }
             } else if (attribute.isOptional()) {
-                getter.addStatement("return $T.ofNullable($L.get($L))",
-                    Optional.class, PROXY_NAME, fieldName);
+                String ofNullable = "ofNullable";
+                if ("com.google.common.base.Optional".equals(attribute.optionalClass())) {
+                    ofNullable = "fromNullable";
+                }
+                getter.addStatement("return $T.$L($L.get($L))",
+                        ClassName.bestGuess(attribute.optionalClass()),
+                        ofNullable, PROXY_NAME, fieldName);
             } else {
                 getter.addStatement("return $L.get($L)", PROXY_NAME, fieldName);
             }
