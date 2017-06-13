@@ -117,7 +117,10 @@ public class SchemaUpdater {
             }
         });
         for (Attribute<?, ?> attribute : missingAttributes) {
-            schema.addColumn(connection, attribute);
+            schema.addColumn(connection, attribute, false);
+            if (attribute.isUnique() && !attribute.isIndexed()) {
+                schema.createIndex(connection, attribute, mode);
+            }
         }
         schema.createIndexes(connection, mode);
     }

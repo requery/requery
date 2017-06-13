@@ -249,6 +249,10 @@ public class SchemaModifier implements ConnectionProvider {
      * @param <T>        parent type of the attribute
      */
     public <T> void addColumn(Connection connection, Attribute<T, ?> attribute) {
+        addColumn(connection, attribute, true);
+    }
+
+    public <T> void addColumn(Connection connection, Attribute<T, ?> attribute, boolean inlineUnique) {
         Type<T> type = attribute.getDeclaringType();
         QueryBuilder qb = createQueryBuilder();
         qb.keyword(ALTER, TABLE).tableName(type.getName());
@@ -271,7 +275,7 @@ public class SchemaModifier implements ConnectionProvider {
             }
         } else {
             qb.keyword(ADD, COLUMN);
-            createColumn(qb, attribute);
+            createColumn(qb, attribute, inlineUnique);
         }
         executeSql(connection, qb);
     }
@@ -523,6 +527,10 @@ public class SchemaModifier implements ConnectionProvider {
     }
 
     private void createColumn(QueryBuilder qb, Attribute<?,?> attribute) {
+        createColumn(qb, attribute, true);
+    }
+
+    private void createColumn(QueryBuilder qb, Attribute<?,?> attribute, boolean inlineUnique) {
 
         qb.attribute(attribute);
         FieldType fieldType = mapping.mapAttribute(attribute);
@@ -600,9 +608,16 @@ public class SchemaModifier implements ConnectionProvider {
         if (!attribute.isNullable()) {
             qb.keyword(NOT, NULL);
         }
-        if (attribute.isUnique()) {
+        if (inlineUnique && attribute.isUnique()) {
             qb.keyword(UNIQUE);
         }
+    }
+
+    public void createIndex(Connection connection, Attribute<?,?> attribute, TableCreationMode mode) {
+        QueryBuilder qb = createQueryBuilder();
+        String name = attribute.getName() + "_index";
+        createIndex(qb, name, Collections.singleton(attribute), attribute.getDeclaringType(), mode);
+        executeSql(connection, qb);
     }
 
     private <T> void createIndexes(Connection connection, TableCreationMode mode, Type<T> type) {
@@ -633,7 +648,7 @@ public class SchemaModifier implements ConnectionProvider {
 
     private void createIndex(QueryBuilder qb,
                              String indexName,
-                             Set<Attribute<?,?>> attributes,
+                             Set<? extends Attribute<?,?>> attributes,
                              Type<?> type, TableCreationMode mode) {
         qb.keyword(CREATE);
         if ((attributes.size() >= 1 && attributes.iterator().next().isUnique()) ||
