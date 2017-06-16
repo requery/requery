@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,6 +79,9 @@ final class ParameterInliner implements Predicate<Object[]> {
         // Iterate backwards to avoid modifying the indices of parameters in the front
         for (int i = parameters.length - 1; i >= 0; i--) {
             Object parameter = parameters[i];
+            if (indicesOfArguments.size() <= i) {
+                break;
+            }
             int index = indicesOfArguments.get(i);
 
             if (parameter instanceof Iterable) {
