@@ -167,6 +167,18 @@ class FunctionalTest {
         assertSame(result.first(), person)
     }
 
+    @Test
+    fun testQueryUpdate() {
+        val person = randomPerson()
+        person.age = 100
+        data.insert(person)
+        val rowCount = data.update<Person>(Person::class)
+                .set(Person::about, "nothing")
+                .set(Person::age, 50)
+                .where(Person::age.eq(100)).get().value()
+        assertEquals(1, rowCount.toLong())
+    }
+
     @After
     fun teardown() {
         data.close()

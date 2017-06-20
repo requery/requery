@@ -16,10 +16,10 @@
 
 package io.requery.kotlin
 
-import io.requery.Persistable
 import io.requery.query.Condition
 import io.requery.query.Expression
 import io.requery.query.Return
+import io.requery.query.Scalar
 import io.requery.util.function.Supplier
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -175,8 +175,8 @@ interface Update<E> :
     fun <V> set(expression: Expression<V>, value: V): Update<E>
 }
 
-inline fun <reified T : Persistable, reified E : T, V> Update<E>
-        .set(property: KProperty1<T, V>, value: V): Update<E> {
+inline fun <reified T : Any, V> Update<Scalar<Int>>
+        .set(property: KProperty1<T, V>, value: V): Update<Scalar<Int>> {
     return set(findAttribute(property), value)
 }
 
