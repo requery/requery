@@ -18,24 +18,24 @@ package io.requery.test.kt
 
 import io.requery.async.KotlinCompletableEntityStore
 import io.requery.kotlin.eq
-import io.requery.kotlin.invoke
+import io.requery.query.Result
 import io.requery.sql.KotlinConfiguration
 import io.requery.sql.KotlinEntityDataStore
 import io.requery.sql.SchemaModifier
 import io.requery.sql.TableCreationMode
 import org.h2.jdbcx.JdbcDataSource
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.sql.SQLException
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.properties.Delegates
 
 class CompletableTest {
 
-    val executor: ExecutorService = Executors.newSingleThreadExecutor()
+    val executor = Executors.newSingleThreadExecutor()
     var instance: KotlinEntityDataStore<Any> by Delegates.notNull()
     val data: KotlinCompletableEntityStore<Any> get() = KotlinCompletableEntityStore(instance, executor)
 
@@ -70,31 +70,53 @@ class CompletableTest {
     }
 
     @Test
-    fun testInsert() {
-        val person = FunctionalTest.randomPerson()
-        val insertedPerson = data.execute {
-            insert(person)
-        }.get()
-
-        assertTrue(insertedPerson.id > 0)
-        data.invoke {
-            val result = select(Person::class) where (Person::id eq person.id) limit 10
-            assertSame(result().first(), person)
-        }
-    }
-
-
-    @Test
     fun testGet() {
         val person = randomPerson()
         val personId = instance.insert(person).id
 
-        val returnedPerson = data.execute {
-            select(Person::class)
+        data.select(Person::class)
+                .where(Person::id.eq(personId))
+                .get()
+                .toCompletableFuture(Result<Person>::firstOrNull)
+                .get()
+                .let {
+                    assertEquals(person, it)
+                }
+    }
+
+    @Test
+    fun testGetUsingExecute() {
+        val person = randomPerson()
+        val personId = instance.insert(person).id
+
+        data.execute {
+            data.select(Person::class)
                     .where(Person::id.eq(personId))
                     .get()
-                    .first()
-        }.get()
-        assertEquals(person, returnedPerson)
+                    .firstOrNull()
+        }
+                .get()
+                .let {
+                    assertEquals(person, it)
+                }
+
+    }
+
+    @Test
+    fun testInsertCount() {
+        val person = randomPerson()
+        data.insert(person)
+                .get()
+                .let {
+                    assertTrue(it.id > 0)
+                }
+
+        data.count(Person::class)
+                .get()
+                .toCompletableFuture()
+                .get()
+                .let {
+                    assertEquals(1, it)
+                }
     }
 }
