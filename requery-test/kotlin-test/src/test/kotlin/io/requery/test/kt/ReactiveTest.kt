@@ -27,11 +27,12 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.sql.SQLException
+import kotlin.properties.Delegates
 
 class ReactiveTest {
 
-    var instance: KotlinEntityDataStore<Any>? = null
-    val data: KotlinReactiveEntityStore<Any> get() = KotlinReactiveEntityStore(instance!!)
+    lateinit var instance: KotlinEntityDataStore<Any>
+    val data: KotlinReactiveEntityStore<Any> get() = KotlinReactiveEntityStore(instance)
 
     internal fun randomPerson(): Person {
         return FunctionalTest.randomPerson()
@@ -66,7 +67,7 @@ class ReactiveTest {
     @Test
     fun testGet() {
         val person = randomPerson()
-        val personId = instance!!.insert(person).id
+        val personId = instance.insert(person).id
 
         data.select(Person::class)
                 .where(Person::id.eq(personId))
