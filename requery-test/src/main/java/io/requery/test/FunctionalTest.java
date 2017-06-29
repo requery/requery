@@ -147,6 +147,14 @@ public abstract class FunctionalTest extends RandomData {
     }
 
     @Test
+    public void testInsertDefaultValue() {
+        Person person = randomPerson();
+        data.insert(person);
+        assertTrue(person.getId() > 0);
+        assertEquals("empty", person.getDescription());
+    }
+
+    @Test
     public void testInsertSelectNullKeyReference() {
         Person person = randomPerson();
         data.insert(person);
