@@ -30,13 +30,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.sql.SQLException
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.properties.Delegates
 
 class CompletableTest {
 
-    val executor = Executors.newSingleThreadExecutor()
-    var instance: KotlinEntityDataStore<Any> by Delegates.notNull()
+    val executor: ExecutorService = Executors.newSingleThreadExecutor()
+    lateinit var instance: KotlinEntityDataStore<Any>
     val data: KotlinCompletableEntityStore<Any> get() = KotlinCompletableEntityStore(instance, executor)
 
     internal fun randomPerson(): Person {

@@ -31,8 +31,8 @@ import java.util.*
 
 class FunctionalTest {
 
-    var instance : KotlinEntityDataStore<Any>? = null
-    val data : KotlinEntityDataStore<Any> get() = instance!!
+    lateinit var instance : KotlinEntityDataStore<Any>
+    val data : KotlinEntityDataStore<Any> get() = instance
 
     companion object {
         fun randomPerson(): Person {
