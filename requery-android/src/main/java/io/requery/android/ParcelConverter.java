@@ -33,12 +33,11 @@ import io.requery.Converter;
  * }
  * </code></pre>
  * <p>
- * and specify the class in the {@link Converter} annotation on the field to persist. Note be
- * careful when using with Android Parcelable classes as the internal format of the object may
- * change between versions.
+ * and specify the class in the {@link Converter} annotation on the field to persist.
  *
- * @author Nikhil Purushe
+ * @deprecated Since the internal format of Android Parcelable classes may change between versions.
  */
+@Deprecated
 public class ParcelConverter<T extends Parcelable> implements Converter<T, byte[]> {
 
     private final Class<T> type;
