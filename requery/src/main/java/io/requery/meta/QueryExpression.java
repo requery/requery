@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,6 @@ import io.requery.query.LogicalCondition;
 public interface QueryExpression<V> extends
     Expression<V>,
     Functional<V>,
-    Aliasable<Expression<V>>,
+    Aliasable<QueryExpression<V>>,
     Conditional<LogicalCondition<? extends Expression<V>, ?>, V> {
 }

@@ -16,6 +16,7 @@
 
 package io.requery.query;
 
+import io.requery.meta.QueryExpression;
 import io.requery.query.function.Abs;
 import io.requery.query.function.Avg;
 import io.requery.query.function.Function;
@@ -39,11 +40,7 @@ import java.util.Collection;
  *
  * @param <V> field type
  */
-public abstract class FieldExpression<V> implements
-    Expression<V>,
-    Functional<V>,
-    Aliasable<Expression<V>>,
-    Conditional<LogicalCondition<? extends Expression<V>, ?>, V> {
+public abstract class FieldExpression<V> implements QueryExpression<V> {
 
     protected FieldExpression() {
     }
@@ -63,7 +60,7 @@ public abstract class FieldExpression<V> implements
     }
 
     @Override
-    public Expression<V> as(String alias) {
+    public FieldExpression<V> as(String alias) {
         return new AliasedExpression<>(this, alias);
     }
 
