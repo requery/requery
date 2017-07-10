@@ -9,7 +9,7 @@ buildscript {
     ext.kotlin_version = '1.1.3'
     ext.rxjava_version = '1.3.0'
     ext.rxjava2_version = '2.1.0'
-    ext.reactor_version = '3.0.3.RELEASE'
+    ext.reactor_version = '3.0.7.RELEASE'
     repositories {
         jcenter()
     }
