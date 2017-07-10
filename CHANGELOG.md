@@ -1,6 +1,21 @@
 Change Log
 ==========
 
+## 1.4.0
+
+- Support item view types in Android RecyclerView adapter
+- Support withTransaction overloads for Kotlin entity stores
+- Support guava/streamsupport Optional types
+- Rx support transaction methods modified to update in a more expected way
+- Fix default value usage in inserts
+- Fix aliased expression not usable in orderby clause
+- Fix collection getters not used in Jackson serialization
+- Fix collection modification behavior
+- Fix cases where duplicate entity attributes would be generated
+- Fix MutableResult not usable in an entity definition 
+- Fix Android unique column not being able to be added in an upgrade
+- Fix Kotlin Update.set() method property support
+
 ## 1.3.2
 
 - Fix Rx observable changes not triggered for nested transactions
