@@ -524,7 +524,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
-    public Result<Tuple> raw(final String query, final Object... parameters) {
+    public Result<Tuple> raw(String query, Object... parameters) {
         checkClosed();
         return new RawTupleQuery(context, query, parameters).get();
     }
@@ -539,18 +539,19 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     public <V> V runInTransaction(Callable<V> callable, @Nullable TransactionIsolation isolation) {
         Objects.requireNotNull(callable);
         checkClosed();
-        Transaction transaction = transactionProvider.get();
-        if (transaction == null) {
-            throw new TransactionException("no transaction");
-        }
-        try {
-            transaction.begin(isolation);
-            V result = callable.call();
-            transaction.commit();
-            return result;
-        } catch (Exception e) {
-            transaction.rollback();
-            throw new RollbackException(e);
+        try (Transaction transaction = transactionProvider.get()) {
+            if (transaction == null) {
+                throw new TransactionException("no transaction");
+            }
+            try {
+                transaction.begin(isolation);
+                V result = callable.call();
+                transaction.commit();
+                return result;
+            } catch (Exception e) {
+                transaction.rollback();
+                throw new RollbackException(e);
+            }
         }
     }
 
