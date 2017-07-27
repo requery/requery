@@ -168,7 +168,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
                !type.equals(builderType().orElse(null)) &&
                !element.getModifiers().contains(Modifier.STATIC) &&
                !element.getModifiers().contains(Modifier.DEFAULT) &&
-               !Mirrors.findAnnotationMirror(element(), Transient.class).isPresent() &&
+               !Mirrors.findAnnotationMirror(element, Transient.class).isPresent() &&
                !name.equals("toString") && !name.equals("hashCode");
     }
 
