@@ -867,7 +867,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             for (CascadeType type : types) {
                 switch (type) {
                     case ALL:
-                        actions.addAll(EnumSet.allOf(CascadeAction.class));
+                        actions.add(CascadeAction.SAVE);
+                        actions.add(CascadeAction.DELETE);
                     case PERSIST:
                         actions.add(CascadeAction.SAVE);
                         break;
