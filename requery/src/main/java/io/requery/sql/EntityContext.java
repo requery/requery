@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package io.requery.sql;
 
 import io.requery.proxy.EntityProxy;
 
-interface EntityContext<T> extends RuntimeConfiguration {
+public interface EntityContext<T> extends RuntimeConfiguration {
 
     <E extends T> EntityReader<E, T> read(Class<? extends E> type);
 
