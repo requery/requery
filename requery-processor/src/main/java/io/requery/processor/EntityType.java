@@ -160,6 +160,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
 
         TypeMirror type = element.getReturnType();
         boolean isInterface = element().getKind().isInterface();
+        boolean isTransient = Mirrors.findAnnotationMirror(element, Transient.class).isPresent();
+
         // must be a getter style method with no args, can't return void or itself or its builder
         return type.getKind() != TypeKind.VOID &&
                element.getParameters().isEmpty() &&
@@ -168,7 +170,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
                !type.equals(builderType().orElse(null)) &&
                !element.getModifiers().contains(Modifier.STATIC) &&
                !element.getModifiers().contains(Modifier.DEFAULT) &&
-               !Mirrors.findAnnotationMirror(element, Transient.class).isPresent() &&
+               (!isTransient || isInterface) &&
                !name.equals("toString") && !name.equals("hashCode");
     }
 
