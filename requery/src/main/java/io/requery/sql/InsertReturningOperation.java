@@ -16,6 +16,7 @@
 
 package io.requery.sql;
 
+import io.requery.TransactionListener;
 import io.requery.meta.Type;
 import io.requery.query.Expression;
 import io.requery.query.MutableTuple;
@@ -74,9 +75,10 @@ class InsertReturningOperation extends PreparedQueryOperation implements
         BoundParameters parameters = generator.parameters();
         int count;
         PreparedStatement statement = null;
-        TransactionProvider transactionProvider = configuration.getTransactionProvider();
         Set<Type<?>> types = query.entityTypes();
-        try (TransactionScope scope = new TransactionScope(transactionProvider, types)) {
+        TransactionListener transactionListener = new CompositeTransactionListener(
+                configuration.getTransactionListenerFactories());
+        try {
             Connection connection = configuration.getConnection();
             StatementListener listener = configuration.getStatementListener();
             if (query.insertType() == InsertType.SELECT) {
@@ -85,10 +87,15 @@ class InsertReturningOperation extends PreparedQueryOperation implements
                 statement = prepare(sql, connection);
             }
             mapParameters(statement, parameters);
+
             listener.beforeExecuteUpdate(statement, sql, parameters);
+            transactionListener.beforeCommit(types);
+
             count = statement.executeUpdate();
+
             listener.afterExecuteUpdate(statement, count);
-            scope.commit();
+            transactionListener.afterCommit(types);
+
             if (selection == null || selection.isEmpty() || query.insertType() == InsertType.SELECT) {
                 connection.close();
                 MutableTuple tuple = new MutableTuple(1);
