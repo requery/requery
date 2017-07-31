@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,4 +108,12 @@ public @interface Entity {
      * @return the name style of properties in the target entity.
      */
     PropertyNameStyle propertyNameStyle() default PropertyNameStyle.BEAN;
+
+    /**
+     * Defines the target visibility of properties in the target entity. Note this is not
+     * applicable to abstract or immutable classes.
+     *
+     * @return the visibility level of properties in the target entity
+     */
+    PropertyVisibility propertVisibility() default PropertyVisibility.PRIVATE;
 }

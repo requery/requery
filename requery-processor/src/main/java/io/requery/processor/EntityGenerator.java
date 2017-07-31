@@ -47,10 +47,10 @@ import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -129,8 +129,31 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         CodeGeneration.writeType(processingEnv, typeName.packageName(), builder.build());
     }
 
+    private Modifier[] generatedMemberModifiers(Modifier... modifiers) {
+        Modifier visibility = null;
+        switch (entity.propertyVisibility()) {
+            case PUBLIC:
+                visibility = Modifier.PUBLIC;
+                break;
+            case PRIVATE:
+                if (entity.isEmbedded()) {
+                    visibility = Modifier.PROTECTED;
+                } else {
+                    visibility = Modifier.PRIVATE;
+                }
+                break;
+            case PACKAGE:
+                break;
+        }
+        ArrayList<Modifier> list = new ArrayList<>();
+        if (visibility != null) {
+            list.add(visibility);
+        }
+        Collections.addAll(list, modifiers);
+        return list.toArray(new Modifier[list.size()]);
+    }
+
     private void generateMembers(TypeSpec.Builder builder) {
-        Modifier visibility = entity.isEmbedded() ? Modifier.PROTECTED : Modifier.PRIVATE;
         // generate property states
         if (!entity.isStateless()) {
             entity.attributes().stream()
@@ -138,7 +161,8 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     .forEach(attribute -> {
                 TypeName stateType = ClassName.get(PropertyState.class);
                 builder.addField(FieldSpec
-                        .builder(stateType, propertyStateFieldName(attribute), visibility)
+                        .builder(stateType, propertyStateFieldName(attribute),
+                                 generatedMemberModifiers())
                         .build());
             });
         }
@@ -150,8 +174,9 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                                 ClassName.get(Attribute.class), nameResolver.typeNameOf(parent),
                                 resolveAttributeType(attribute));
                         builder.addField(FieldSpec
-                                .builder(attributeType, attributeFieldName(attribute),
-                                        Modifier.PRIVATE, Modifier.FINAL)
+                                .builder(attributeType,
+                                        attributeFieldName(attribute),
+                                        generatedMemberModifiers(Modifier.FINAL))
                                 .build());
                     });
         }
@@ -180,7 +205,9 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     }
                     if (entity.isImmutable() || !existingFieldNames.contains(attribute.fieldName())) {
                       builder.addField(FieldSpec
-                          .builder(fieldName, attribute.fieldName(), visibility)
+                          .builder(fieldName,
+                                  attribute.fieldName(),
+                                  generatedMemberModifiers())
                           .build());
                     }
                 }

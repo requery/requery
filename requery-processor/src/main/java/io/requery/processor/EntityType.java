@@ -20,6 +20,7 @@ import io.requery.Embedded;
 import io.requery.Entity;
 import io.requery.Factory;
 import io.requery.PropertyNameStyle;
+import io.requery.PropertyVisibility;
 import io.requery.ReadOnly;
 import io.requery.Table;
 import io.requery.Transient;
@@ -334,8 +335,15 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
     @Override
     public PropertyNameStyle propertyNameStyle() {
         return annotationOf(Entity.class)
-            .map(Entity::propertyNameStyle)
-            .orElse(PropertyNameStyle.BEAN);
+                .map(Entity::propertyNameStyle)
+                .orElse(PropertyNameStyle.BEAN);
+    }
+
+    @Override
+    public PropertyVisibility propertyVisibility() {
+        return annotationOf(Entity.class)
+                .map(Entity::propertVisibility)
+                .orElse(PropertyVisibility.PRIVATE);
     }
 
     @Override

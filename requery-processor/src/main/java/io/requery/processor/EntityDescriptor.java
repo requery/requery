@@ -17,6 +17,7 @@
 package io.requery.processor;
 
 import io.requery.PropertyNameStyle;
+import io.requery.PropertyVisibility;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -89,6 +90,11 @@ interface EntityDescriptor {
      * @return {@link PropertyNameStyle} style of the accessors in the entity
      */
     PropertyNameStyle propertyNameStyle();
+
+    /**
+     * @return {@link PropertyVisibility} level of the fields in the entity
+     */
+    PropertyVisibility propertyVisibility();
 
     /**
      * @return true if the entity is cacheable, false otherwise
