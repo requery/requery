@@ -49,7 +49,7 @@ public interface Person extends Serializable {
     @Column(nullable = true)
     int getAge();
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(foreignKey = @ForeignKey)
     Address getAddress();
 

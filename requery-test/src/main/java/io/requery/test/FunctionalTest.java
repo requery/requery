@@ -37,9 +37,11 @@ import io.requery.query.function.Random;
 import io.requery.query.function.Upper;
 import io.requery.sql.EntityDataStore;
 import io.requery.test.model.Address;
+import io.requery.test.model.Child;
 import io.requery.test.model.Group;
 import io.requery.test.model.GroupType;
 import io.requery.test.model.Group_Person;
+import io.requery.test.model.Parent;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
 import io.requery.util.function.Consumer;
@@ -1561,4 +1563,16 @@ public abstract class FunctionalTest extends RandomData {
         data.insert(p2);
         fail();
     }
+
+    @Test(expected = PersistenceException.class)
+    public void testInsertWithoutCascadeActionSave() {
+        Child child = new Child();
+        child.setId(1);
+        Parent parent = new Parent();
+        parent.setChild(child);
+
+        // This violates the Foreign Key Constraint, because Child does not exist and CascadeAction.SAVE is not specified
+        data.insert(parent);
+    }
+
 }
