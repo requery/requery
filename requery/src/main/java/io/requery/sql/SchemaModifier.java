@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -141,7 +142,9 @@ public class SchemaModifier implements ConnectionProvider {
         ArrayList<Type<?>> sorted = sortTypes();
         try (Statement statement = connection.createStatement()) {
             if (mode == TableCreationMode.DROP_CREATE) {
-                executeDropStatements(statement);
+                ArrayList<Type<?>> reversed = sortTypes();
+                Collections.reverse(reversed);
+                executeDropStatements(statement, reversed);
             }
             for (Type<?> type : sorted) {
                 String sql = tableCreateStatement(type, mode);
@@ -197,16 +200,28 @@ public class SchemaModifier implements ConnectionProvider {
     public void dropTables() {
         try (Connection connection = getConnection();
              Statement statement = connection.createStatement()) {
-            executeDropStatements(statement);
+            ArrayList<Type<?>> reversed = sortTypes();
+            Collections.reverse(reversed);
+            executeDropStatements(statement, reversed);
         } catch (SQLException e) {
             throw new TableModificationException(e);
         }
     }
 
-    private void executeDropStatements(Statement statement) throws SQLException {
-        ArrayList<Type<?>> reversed = sortTypes();
-        Collections.reverse(reversed);
-        for (Type<?> type : reversed) {
+    /**
+     * Drops a single table in the schema.
+     */
+    public void dropTable(Type<?> type) {
+        try (Connection connection = getConnection();
+             Statement statement = connection.createStatement()) {
+            executeDropStatements(statement, Collections.<Type<?>>singletonList(type));
+        } catch (SQLException e) {
+            throw new TableModificationException(e);
+        }
+    }
+
+    private void executeDropStatements(Statement statement, List<Type<?>> types) throws SQLException {
+        for (Type<?> type : types) {
             QueryBuilder qb = createQueryBuilder();
             qb.keyword(DROP, TABLE);
             if (platform.supportsIfExists()) {
