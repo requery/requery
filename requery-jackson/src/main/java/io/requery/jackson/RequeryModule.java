@@ -25,7 +25,7 @@ public class RequeryModule extends Module {
     private static final Version VERSION = new Version(1,0,0, "", "io.requery", "requery-jackson");
     private final EntityModel model;
 
-    RequeryModule(EntityModel model) {
+    protected RequeryModule(EntityModel model) {
         this.model = model;
     }
 
