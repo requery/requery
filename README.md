@@ -144,14 +144,14 @@ public interface Person {
 
 **[RxJava](https://github.com/ReactiveX/RxJava) [Observables](http://reactivex.io/documentation/observable.html):**
 
-Supports both RxJava 1.0 and 2.0
+Supports both RxJava 1.0 and 2.0. (RxJava 2.0 examples shown)
 
 ```java
 Observable<Person> observable = data
     .select(Person.class)
     .orderBy(Person.AGE.desc())
     .get()
-    .toObservable();
+    .observable();
 ```
 
 **[RxJava](https://github.com/ReactiveX/RxJava) observe query on table changes:**
@@ -161,7 +161,7 @@ Observable<Person> observable = data
     .select(Person.class)
     .orderBy(Person.AGE.desc())
     .get()
-    .toSelfObservable().subscribe(::updateFromResult);
+    .observableResult().subscribe(::updateFromResult);
 ```
 
 **Read/write separation** Along with immutable types optionally separate queries (reading)
