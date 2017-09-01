@@ -16,6 +16,7 @@
 
 package io.requery.kotlin
 
+import io.requery.Transaction
 import io.requery.TransactionIsolation
 import io.requery.meta.Attribute
 import java.util.*
@@ -148,6 +149,8 @@ interface BlockingEntityStore<T : Any> : EntityStore<T, Any> {
     fun <V> withTransaction(isolation: TransactionIsolation, body: BlockingEntityStore<T>.() -> V): V
 
     operator fun <V> invoke(block: BlockingEntityStore<T>.() -> V): V = block()
+
+    val transaction: Transaction
 }
 
 inline fun <T : Any, reified E : T> BlockingEntityStore<T>
