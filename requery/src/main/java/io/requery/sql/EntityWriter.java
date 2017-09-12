@@ -442,7 +442,9 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
 
         for (Attribute<E, ?> attribute : associativeAttributes) {
             // persist the foreign key object if needed
-            cascadeKeyReference(Cascade.INSERT, proxy, attribute);
+            if(attribute.getCascadeActions().contains(CascadeAction.SAVE)) {
+                cascadeKeyReference(Cascade.INSERT, proxy, attribute);
+            }
         }
         incrementVersion(proxy);
         for (Attribute<E, ?> attribute : bindableAttributes) {

@@ -80,11 +80,9 @@ public enum DatabaseType {
             SQLiteConfig config = new SQLiteConfig();
             config.setDateClass("TEXT");
             dataSource.setConfig(config);
-            try (Statement statement = dataSource.getConnection().createStatement()) {
-                statement.execute("PRAGMA foreign_keys = ON");
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            // Turn on foreign keys support.
+            // NOTE: Do it after setConfig, or setConfig will overwrite this setting
+            dataSource.setEnforceForeinKeys(true);
             return dataSource;
         }
     },
