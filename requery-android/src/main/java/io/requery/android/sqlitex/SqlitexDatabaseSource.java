@@ -138,6 +138,11 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
     }
 
     @Override
+    public void onConfigure(SQLiteDatabase db) {
+        db.setForeignKeyConstraintsEnabled(true);
+    }
+
+    @Override
     public void onUpgrade(final SQLiteDatabase db, int oldVersion, int newVersion) {
         this.db = db;
         SchemaUpdater updater = new SchemaUpdater(getConfiguration(),
