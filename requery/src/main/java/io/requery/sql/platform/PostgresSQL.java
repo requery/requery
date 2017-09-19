@@ -16,34 +16,19 @@
 
 package io.requery.sql.platform;
 
-import io.requery.meta.Attribute;
-import io.requery.meta.Type;
+import static io.requery.sql.Keyword.*;
+
+import java.sql.*;
+import java.sql.Types;
+import java.util.*;
+import javax.sql.rowset.serial.SerialBlob;
+
+import io.requery.meta.*;
 import io.requery.query.Expression;
 import io.requery.sql.BaseType;
-import io.requery.sql.GeneratedColumnDefinition;
-import io.requery.sql.Mapping;
-import io.requery.sql.QueryBuilder;
-import io.requery.sql.VersionColumnDefinition;
-import io.requery.sql.gen.Generator;
-import io.requery.sql.gen.LimitGenerator;
-import io.requery.sql.gen.Output;
+import io.requery.sql.*;
+import io.requery.sql.gen.*;
 import io.requery.sql.type.VarCharType;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Map;
-import java.util.UUID;
-
-import static io.requery.sql.Keyword.CONFLICT;
-import static io.requery.sql.Keyword.DO;
-import static io.requery.sql.Keyword.INSERT;
-import static io.requery.sql.Keyword.INTO;
-import static io.requery.sql.Keyword.ON;
-import static io.requery.sql.Keyword.SET;
-import static io.requery.sql.Keyword.UPDATE;
-import static io.requery.sql.Keyword.VALUES;
 
 /**
  * PostgresSQL PL/pgSQL (9+)
@@ -79,6 +64,7 @@ public class PostgresSQL extends Generic {
         mapping.replaceType(Types.BINARY, new ByteArrayType(Types.BINARY));
         mapping.replaceType(Types.VARBINARY, new ByteArrayType(Types.VARBINARY));
         mapping.replaceType(Types.NVARCHAR, new VarCharType());
+        mapping.replaceType(Types.BLOB, new BlobType());
         mapping.putType(UUID.class, new UUIDType());
     }
 
@@ -91,12 +77,30 @@ public class PostgresSQL extends Generic {
     public VersionColumnDefinition versionColumnDefinition() {
         return versionColumnDefinition;
     }
-
+    
     @Override
     public Generator<Map<Expression<?>, Object>> upsertGenerator() {
         return new UpsertOnConflictDoUpdate();
     }
-
+    
+    private static class BlobType extends BaseType<Blob> {
+        
+        BlobType() {
+            super(Blob.class, Types.BLOB);
+        }
+        
+        @Override
+        public String getIdentifier() {
+            return "bytea";
+        }
+        
+        @Override
+        public Blob read(ResultSet results, int column) throws SQLException {
+            byte[] value = results.getBytes(column);
+            return results.wasNull() ? null : new SerialBlob(value);
+        }
+    }
+    
     private static class ByteArrayType extends BaseType<byte[]> {
 
         ByteArrayType(int jdbcType) {
