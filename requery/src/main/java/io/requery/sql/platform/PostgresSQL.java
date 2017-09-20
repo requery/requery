@@ -104,7 +104,7 @@ public class PostgresSQL extends Generic {
     private static class BlobType extends BaseType<Blob> {
         
         BlobType() {
-            super(Blob.class, Types.BLOB);
+            super(Blob.class, Types.VARBINARY);
         }
         
         @Override
@@ -116,6 +116,15 @@ public class PostgresSQL extends Generic {
         public Blob read(ResultSet results, int column) throws SQLException {
             byte[] value = results.getBytes(column);
             return results.wasNull() ? null : new SerialBlob(value);
+        }
+    
+        @Override
+        public void write(PreparedStatement statement, int index, Blob value) throws SQLException {
+            if (value == null) {
+                statement.setNull(index, Types.VARBINARY);
+            } else {
+                statement.setObject(index, value.getBytes(0, (int) value.length()), Types.VARBINARY);
+            }
         }
     }
     
