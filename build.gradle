@@ -35,7 +35,7 @@ idea {
 }
 
 group = 'io.requery'
-version = '1.4.0'
+version = '1.4.0-SNAPSHOT'
 description = 'A light but powerful object mapper and SQL generator for Java/Android'
 
 Properties properties = new Properties()
@@ -76,14 +76,14 @@ configure([project(':requery'), project(':requery-processor'), project(':requery
                 }
             }
         }
-
+    
         repositories {
             maven {
-                credentials {
-                    username = bintray.user
-                    password = bintray.key
+                url "https://maven.devpi.de/repository/default"
+                credentials(PasswordCredentials) {
+                    username "admin"
+                    password "Bail4Dai"
                 }
-                url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
             }
         }
     }

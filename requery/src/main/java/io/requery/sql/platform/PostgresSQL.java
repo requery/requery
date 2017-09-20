@@ -123,7 +123,7 @@ public class PostgresSQL extends Generic {
             if (value == null) {
                 statement.setNull(index, Types.VARBINARY);
             } else {
-                statement.setObject(index, value.getBytes(0, (int) value.length()), Types.VARBINARY);
+                statement.setBinaryStream(index, value.getBinaryStream(), value.length());
             }
         }
     }
