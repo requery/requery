@@ -100,7 +100,7 @@ class InsertReturningOperation extends PreparedQueryOperation implements
                 connection.close();
                 MutableTuple tuple = new MutableTuple(1);
                 tuple.set(0, NamedExpression.ofInteger("count"), count);
-                return new SingleResult<Tuple>(tuple);
+                return new CollectionResult<Tuple>(tuple);
             } else {
                 ResultSet results = statement.getGeneratedKeys();
                 return new GeneratedKeyResult(configuration, selection, connection, results, count);

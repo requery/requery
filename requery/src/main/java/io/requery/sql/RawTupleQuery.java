@@ -101,7 +101,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                         } catch (Exception ignored) {
                         }
                     }
-                    return new SingleResult<Tuple>(tuple);
+                    return new CollectionResult<Tuple>(tuple);
             }
         } catch (Exception e) {
             throw StatementExecutionException.closing(statement, e, sql);

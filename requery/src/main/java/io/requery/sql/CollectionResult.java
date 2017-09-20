@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,21 +19,39 @@ package io.requery.sql;
 import io.requery.query.BaseResult;
 import io.requery.util.CloseableIterator;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
-class SingleResult<E> extends BaseResult<E> {
+public class CollectionResult<E> extends BaseResult<E> {
 
-    private final E element;
+    private Collection<E> elements;
 
-    SingleResult(E element) {
+    /**
+     * Creates an empty result
+     */
+    CollectionResult() {
+        this(Collections.<E>emptySet());
+    }
+
+    /**
+     * Creates a result with a single element
+     */
+    CollectionResult(E element) {
+        this(Collections.singleton(element));
+    }
+
+    /**
+     * Creates a result from a collection instance.
+     */
+    CollectionResult(Collection<E> collection) {
         super(1);
-        this.element = element;
+        this.elements = collection;
     }
 
     @Override
     public CloseableIterator<E> iterator(int skip, int take) {
-        final Iterator<E> iterator = Collections.singleton(element).iterator();
+        final Iterator<E> iterator = elements.iterator();
         return new CloseableIterator<E>() {
             @Override
             public void close() {
