@@ -21,6 +21,12 @@ import android.support.v4.content.AsyncTaskLoader;
 import io.requery.EntityStore;
 import io.requery.query.Result;
 
+/**
+ * This class is deprecated, prefer using your own AsyncTaskLoader implementation or a framework
+ * such as RxJava.
+ * @param <E>
+ */
+@Deprecated
 public abstract class QueryLoader<E> extends AsyncTaskLoader<Result<E>> {
 
     private final EntityStore data;
