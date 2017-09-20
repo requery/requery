@@ -16,19 +16,37 @@
 
 package io.requery.sql.platform;
 
-import static io.requery.sql.Keyword.*;
-
-import java.sql.*;
-import java.sql.Types;
-import java.util.*;
-import javax.sql.rowset.serial.SerialBlob;
-
-import io.requery.meta.*;
+import io.requery.meta.Attribute;
+import io.requery.meta.Type;
 import io.requery.query.Expression;
 import io.requery.sql.BaseType;
-import io.requery.sql.*;
-import io.requery.sql.gen.*;
+import io.requery.sql.GeneratedColumnDefinition;
+import io.requery.sql.Mapping;
+import io.requery.sql.QueryBuilder;
+import io.requery.sql.VersionColumnDefinition;
+import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.LimitGenerator;
+import io.requery.sql.gen.Output;
 import io.requery.sql.type.VarCharType;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.sql.Blob;
+import java.util.Map;
+import java.util.UUID;
+
+import static io.requery.sql.Keyword.CONFLICT;
+import static io.requery.sql.Keyword.DO;
+import static io.requery.sql.Keyword.INSERT;
+import static io.requery.sql.Keyword.INTO;
+import static io.requery.sql.Keyword.ON;
+import static io.requery.sql.Keyword.SET;
+import static io.requery.sql.Keyword.UPDATE;
+import static io.requery.sql.Keyword.VALUES;
+
+import javax.sql.rowset.serial.SerialBlob;
 
 /**
  * PostgresSQL PL/pgSQL (9+)
