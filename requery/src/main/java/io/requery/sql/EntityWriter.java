@@ -153,8 +153,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
             new Predicate<Attribute<E, ?>>() {
             @Override
             public boolean test(Attribute<E, ?> value) {
-                return value.isAssociation() &&
-                       !value.getCascadeActions().contains(CascadeAction.NONE);
+                return value.isAssociation();
             }
         });
 
@@ -838,7 +837,11 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         EntityProxy<S> proxy = context.proxyOf(entity, false);
         Attribute<S, Object> mapped = Attributes.get(attribute.getMappedAttribute());
         proxy.set(mapped, value, PropertyState.MODIFIED);
-        cascadeWrite(mode, entity, proxy);
+        if(attribute.getCascadeActions().contains(CascadeAction.SAVE)) {
+            cascadeWrite(mode, entity, proxy);
+        }else{
+            cascadeWrite(Cascade.UPDATE, entity, proxy);
+        }
     }
 
     public void delete(E entity, EntityProxy<E> proxy) {
@@ -945,7 +948,13 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                     writer.insert(entity, proxy, mode, null);
                     break;
                 case UPDATE:
-                    writer.update(entity, proxy, mode, null, null);
+                    int updated = writer.update(entity, proxy, mode, null, null);
+                    if(updated == 0){
+                        // If this happens, it means that I'm updating the 'many' side of a
+                        // one-to-many (where the foreign key is) to link it to the 'one' side of
+                        // the relationship, but the 'many' side does not exist.
+                        throw new RowCountException(1, updated);
+                    }
                     break;
                 case UPSERT:
                     writer.upsert(entity, proxy);

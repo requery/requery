@@ -16,6 +16,8 @@
 
 package io.requery.test;
 
+import junit.framework.Assert;
+
 import io.requery.Persistable;
 import io.requery.PersistenceException;
 import io.requery.RollbackException;
@@ -36,12 +38,19 @@ import io.requery.query.function.Now;
 import io.requery.query.function.Random;
 import io.requery.query.function.Upper;
 import io.requery.sql.EntityDataStore;
+import io.requery.sql.RowCountException;
+import io.requery.sql.StatementExecutionException;
 import io.requery.test.model.Address;
 import io.requery.test.model.Child;
+import io.requery.test.model.ChildManyToManyNoCascade;
+import io.requery.test.model.ChildManyToOneNoCascade;
+import io.requery.test.model.ChildOneToManyNoCascade;
+import io.requery.test.model.ChildOneToOneNoCascade;
 import io.requery.test.model.Group;
 import io.requery.test.model.GroupType;
 import io.requery.test.model.Group_Person;
 import io.requery.test.model.Parent;
+import io.requery.test.model.ParentNoCascade;
 import io.requery.test.model.Person;
 import io.requery.test.model.Phone;
 import io.requery.util.function.Consumer;
@@ -50,6 +59,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -1573,6 +1583,221 @@ public abstract class FunctionalTest extends RandomData {
 
         // This violates the Foreign Key Constraint, because Child does not exist and CascadeAction.SAVE is not specified
         data.insert(parent);
+    }
+
+    @Test(expected = StatementExecutionException.class)
+    public void testInsertNoCascade_OneToOne_NonExistingChild() {
+        // Insert parent entity, associated one-to-one to a non existing child entity
+        // This should fail with a foreign-key violation, since child does not exist in the database
+        ChildOneToOneNoCascade child = new ChildOneToOneNoCascade();
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.setOneToOne(child);
+        data.insert(parent);
+    }
+
+    @Test
+    public void testInsertNoCascade_OneToOne_ExistingChild() {
+        // Insert parent entity, associated one-to-one to an existing child entity
+        ChildOneToOneNoCascade child = new ChildOneToOneNoCascade();
+        child.setId(1);
+        child.setAttribute("1");
+        data.insert(child);
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.setOneToOne(child);
+        data.insert(parent);
+
+        // Assert that child has been associated to parent
+        ParentNoCascade parentGot = data.findByKey(ParentNoCascade.class, 1l);
+        assertEquals(child, parentGot.getOneToOne());
+    }
+
+    @Test(expected = StatementExecutionException.class)
+    public void testInsertNoCascade_ManyToOne_NonExistingchild() {
+        // Insert parent entity, associated many-to-one to a non existing child entity
+        // This should fail with a foreign-key violation, since child does not exist in the database
+        ChildManyToOneNoCascade child = new ChildManyToOneNoCascade();
+        child.setId(1);
+        child.setAttribute("1");
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.setManyToOne(child);
+        data.insert(parent);
+    }
+
+    @Test
+    public void testInsertNoCascade_ManyToOne_ExistingChild() {
+        // Insert parent entity, associated many-to-one to an existing child entity
+        ChildManyToOneNoCascade child = new ChildManyToOneNoCascade();
+        child.setId(1);
+        child.setAttribute("1");
+        data.insert(child);
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.setManyToOne(child);
+        data.insert(parent);
+
+        // Assert that child has been associated to parent
+        ParentNoCascade parentGot = data.findByKey(ParentNoCascade.class, 1l);
+        assertEquals(child, parentGot.getManyToOne());
+    }
+
+    //@Test(expected = StatementExecutionException.class)
+    @Test(expected = RowCountException.class)
+    public void testInsertNoCascade_OneToMany_NonExistingChild() {
+        // Insert parent entity, associated one-to-may to 1 non-existing child entity
+        ChildOneToManyNoCascade child = new ChildOneToManyNoCascade();
+        child.setId(1);
+        child.setAttribute("1");
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.getOneToMany().add(child);
+        data.insert(parent);
+    }
+
+    @Test
+    public void testInsertNoCascade_OneToMany_ExistingChild() {
+        // Insert parent entity, associated one-to-may to 1 existing child entity
+        ChildOneToManyNoCascade child = new ChildOneToManyNoCascade();
+        child.setId(1);
+        child.setAttribute("1");
+        data.insert(child);
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.getOneToMany().add(child);
+        data.insert(parent);
+
+        // Assert that child has been associated to parent
+        ParentNoCascade parentGot = data.findByKey(ParentNoCascade.class, 1l);
+        assertTrue(parentGot.getOneToMany().size() == 1);
+        assertEquals(child, parentGot.getOneToMany().get(0));
+    }
+
+    @Test(expected = StatementExecutionException.class)
+    public void testInsertNoCascade_ManyToMany_NonExistingChild() {
+        // Insert parent entity, associated many-to-may to 1 non-existing child entity
+        ChildManyToManyNoCascade child = new ChildManyToManyNoCascade();
+        child.setId(1);
+        child.setAttribute("1");
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.getManyToMany().add(child);
+        data.insert(parent);
+    }
+
+    @Test
+    public void testInsertNoCascade_ManyToMany_ExistingChild() {
+        // Insert parent entity, associated many-to-may to 1 existing child entity
+        ChildManyToManyNoCascade child = new ChildManyToManyNoCascade();
+        child.setId(1);
+        child.setAttribute("1");
+        data.insert(child);
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.getManyToMany().add(child);
+        data.insert(parent);
+
+        // Assert that child has been associated to parent
+        ParentNoCascade parentGot = data.findByKey(ParentNoCascade.class, 1l);
+        assertTrue(parentGot.getManyToMany().size() == 1);
+        assertEquals(child, parentGot.getManyToMany().get(0));
+    }
+
+    @Test
+    public void testDeleteNoCascade_OneToOne() {
+        // Insert parent and child entity
+        ChildOneToOneNoCascade child = new ChildOneToOneNoCascade();
+        child.setId(123);
+        child.setAttribute("1");
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(123);
+        parent.setOneToOne(child);
+        data.insert(child);
+        data.insert(parent);
+
+        // Delete parent
+        data.delete(parent);
+
+        // Assert that child has not been deleted (i.e. that delete has not been cascaded)
+        ChildOneToOneNoCascade childGot = data.findByKey(ChildOneToOneNoCascade.class, 123l);
+        assertNotNull(childGot);
+    }
+
+    @Test
+    public void testDeleteNoCascade_ManyToOne() {
+        // Insert parent entity and child
+        ChildManyToOneNoCascade child = new ChildManyToOneNoCascade();
+        child.setId(123);
+        child.setAttribute("1");
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(123);
+        parent.setManyToOne(child);
+        data.insert(child);
+        data.insert(parent);
+
+        // Delete parent
+        data.delete(parent);
+
+        // Assert that child has not been deleted (i.e. that delete has not been cascaded)
+        ChildManyToOneNoCascade childGot = data.findByKey(ChildManyToOneNoCascade.class, 123l);
+        assertNotNull(childGot);
+    }
+
+    @Test
+    public void testDeleteNoCascade_OneToMany() {
+        // Insert parent entity and children
+        ChildOneToManyNoCascade child1 = new ChildOneToManyNoCascade();
+        child1.setId(1);
+        child1.setAttribute("1");
+        ChildOneToManyNoCascade child2 = new ChildOneToManyNoCascade();
+        child2.setId(2);
+        child2.setAttribute("2");
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.getOneToMany().add(child1);
+        parent.getOneToMany().add(child2);
+        data.insert(child1);
+        data.insert(child2);
+        data.insert(parent);
+
+        // Delete parent
+        data.delete(parent);
+
+        // Assert that children have not been deleted (i.e. that delete has not been cascaded)
+        ChildOneToManyNoCascade child1Got = data.findByKey(ChildOneToManyNoCascade.class, 1);
+        assertNotNull(child1Got);
+        assertNull(child1Got.getParent());
+        ChildOneToManyNoCascade child2Got = data.findByKey(ChildOneToManyNoCascade.class, 2);
+        assertNotNull(child2Got);
+        assertNull(child2Got.getParent());
+    }
+
+    @Test
+    public void testDeleteNoCascade_ManyToMany() {
+        // Insert parent entity and children
+        ChildManyToManyNoCascade child1 = new ChildManyToManyNoCascade();
+        child1.setId(1);
+        child1.setAttribute("1");
+        ChildManyToManyNoCascade child2 = new ChildManyToManyNoCascade();
+        child2.setId(2);
+        child2.setAttribute("2");
+        ParentNoCascade parent = new ParentNoCascade();
+        parent.setId(1);
+        parent.getManyToMany().add(child1);
+        parent.getManyToMany().add(child2);
+        data.insert(child1);
+        data.insert(child2);
+        data.insert(parent);
+
+        // Delete parent
+        data.delete(parent);
+
+        // Assert that children have not been deleted (i.e. that delete has not been cascaded)
+        ChildManyToManyNoCascade child1Got = data.findByKey(ChildManyToManyNoCascade.class, 1);
+        assertNotNull(child1Got);
+        ChildManyToManyNoCascade child2Got = data.findByKey(ChildManyToManyNoCascade.class, 2);
+        assertNotNull(child2Got);
     }
 
 }
