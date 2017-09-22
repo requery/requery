@@ -22,7 +22,7 @@ public abstract class AbstractChildOneToManyNoCascade {
     String attribute;
 
     @ManyToOne(cascade = CascadeAction.NONE)
-    @ForeignKey(delete = ReferentialAction.SET_NULL)
+    @ForeignKey(update = ReferentialAction.RESTRICT, delete = ReferentialAction.SET_NULL)
     ParentNoCascade parent;
 
 }

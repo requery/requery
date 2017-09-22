@@ -25,11 +25,11 @@ public abstract class AbstractParentNoCascade {
     @Key
     long id;
 
-    @ForeignKey(delete = ReferentialAction.SET_NULL)
+    @ForeignKey(delete = ReferentialAction.SET_NULL, update = ReferentialAction.RESTRICT)
     @OneToOne(cascade = {CascadeAction.NONE})
     ChildOneToOneNoCascade oneToOne;
 
-    @ForeignKey(delete = ReferentialAction.SET_NULL)
+    @ForeignKey(delete = ReferentialAction.SET_NULL, update = ReferentialAction.RESTRICT)
     @ManyToOne(cascade = {CascadeAction.NONE})
     ChildManyToOneNoCascade manyToOne;
 
