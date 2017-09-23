@@ -283,6 +283,12 @@ public class GenericMapping implements Mapping {
             converter = attribute.getConverter();
             type = attribute.getClassType();
             fieldType = mapAttribute(attribute);
+        } else if (expression.getExpressionType() == ExpressionType.ALIAS) {
+            @SuppressWarnings("unchecked")
+            Attribute<?, A> attribute = (Attribute) expression.getInnerExpression();
+            converter = attribute.getConverter();
+            type = attribute.getClassType();
+            fieldType = mapAttribute(attribute);
         } else {
             type = expression.getClassType();
             fieldType = getSubstitutedType(type);
