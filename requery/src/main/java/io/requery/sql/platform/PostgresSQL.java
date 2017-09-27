@@ -33,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.sql.Blob;
 import java.util.Map;
 import java.util.UUID;
 
@@ -44,6 +45,8 @@ import static io.requery.sql.Keyword.ON;
 import static io.requery.sql.Keyword.SET;
 import static io.requery.sql.Keyword.UPDATE;
 import static io.requery.sql.Keyword.VALUES;
+
+import javax.sql.rowset.serial.SerialBlob;
 
 /**
  * PostgresSQL PL/pgSQL (9+)
@@ -79,6 +82,7 @@ public class PostgresSQL extends Generic {
         mapping.replaceType(Types.BINARY, new ByteArrayType(Types.BINARY));
         mapping.replaceType(Types.VARBINARY, new ByteArrayType(Types.VARBINARY));
         mapping.replaceType(Types.NVARCHAR, new VarCharType());
+        mapping.replaceType(Types.BLOB, new BlobType());
         mapping.putType(UUID.class, new UUIDType());
     }
 
@@ -91,12 +95,39 @@ public class PostgresSQL extends Generic {
     public VersionColumnDefinition versionColumnDefinition() {
         return versionColumnDefinition;
     }
-
+    
     @Override
     public Generator<Map<Expression<?>, Object>> upsertGenerator() {
         return new UpsertOnConflictDoUpdate();
     }
-
+    
+    private static class BlobType extends BaseType<Blob> {
+        
+        BlobType() {
+            super(Blob.class, Types.VARBINARY);
+        }
+        
+        @Override
+        public String getIdentifier() {
+            return "bytea";
+        }
+        
+        @Override
+        public Blob read(ResultSet results, int column) throws SQLException {
+            byte[] value = results.getBytes(column);
+            return results.wasNull() ? null : new SerialBlob(value);
+        }
+    
+        @Override
+        public void write(PreparedStatement statement, int index, Blob value) throws SQLException {
+            if (value == null) {
+                statement.setNull(index, Types.VARBINARY);
+            } else {
+                statement.setBinaryStream(index, value.getBinaryStream(), value.length());
+            }
+        }
+    }
+    
     private static class ByteArrayType extends BaseType<byte[]> {
 
         ByteArrayType(int jdbcType) {
