@@ -96,4 +96,10 @@ public class Derby extends Generic {
     public boolean supportsUpsert() {
         return true;
     }
+
+    @Override
+    public boolean supportsOnUpdateCascade() {
+        return false;
+    }
+
 }
