@@ -115,5 +115,5 @@ public @interface Entity {
      *
      * @return the visibility level of properties in the target entity
      */
-    PropertyVisibility propertVisibility() default PropertyVisibility.PRIVATE;
+    PropertyVisibility propertyVisibility() default PropertyVisibility.PRIVATE;
 }

@@ -342,7 +342,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
     @Override
     public PropertyVisibility propertyVisibility() {
         return annotationOf(Entity.class)
-                .map(Entity::propertVisibility)
+                .map(Entity::propertyVisibility)
                 .orElse(PropertyVisibility.PRIVATE);
     }
 
