@@ -103,7 +103,7 @@ class EntityBeanDeserializer extends BeanDeserializer {
             if (method == null) {
                 Class<?> target = getValueType().getRawClass();
                 for (Method m : parentClass.getDeclaredMethods()) {
-                    if (target.isAssignableFrom(m.getReturnType()) && m.getParameters().length == 0) {
+                    if (target.isAssignableFrom(m.getReturnType()) && m.getParameterTypes().length == 0) {
                         embeddedGetters.put(parentClass, m);
                         method = m;
                         break;
