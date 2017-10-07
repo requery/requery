@@ -420,7 +420,13 @@ public class EntityProxy<E> implements Gettable<E>, Settable<E>, EntityStateList
                 sb.append(", ");
             }
             Object value = get(attribute, false);
-            sb.append(value == null ? "null" : value.toString());
+            if (value == null) {
+                sb.append("null");
+            } else if (attribute.isAssociation()) {
+                sb.append(value.getClass().getName());
+            } else {
+                sb.append(value.toString());
+            }
             index++;
         }
         sb.append("]");
