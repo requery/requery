@@ -1,6 +1,21 @@
 Change Log
 ==========
 
+## 1.4.1
+
+- Support accessing the Configuration instance from EntityDataStore
+- Support setting generated member visibility (for removing synthetic accessors)
+- Support accessing Transaction instance from KotlinReactiveEntityStore
+- PostgresSQL store blobs as bytea
+- Fix foreign key support in Android sqlcipher/sqlite-support
+- Fix stack overflow on bi-directional attributes in EnityProxy.toString
+- Fix references cascaded even if Cascade.NONE specified
+- Fix NoSuchMethodError when converting a entity with @Embedded types to json
+- Fix Observables not triggered for insert operations 
+- Fix @Transient annotation not applied to methods
+- Fix @Transient members were checked for reserved works
+- Fix Connection instance not closed on transaction rollback
+
 ## 1.4.0
 
 - Support item view types in Android RecyclerView adapter

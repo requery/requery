@@ -35,7 +35,7 @@ idea {
 }
 
 group = 'io.requery'
-version = '1.4.0'
+version = '1.4.1'
 description = 'A light but powerful object mapper and SQL generator for Java/Android'
 
 Properties properties = new Properties()

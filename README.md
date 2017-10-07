@@ -274,9 +274,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.4.0'
-    compile 'io.requery:requery-android:1.4.0' // for android
-    annotationProcessor 'io.requery:requery-processor:1.4.0'
+    compile 'io.requery:requery:1.4.1'
+    compile 'io.requery:requery-android:1.4.1' // for android
+    annotationProcessor 'io.requery:requery-processor:1.4.1'
 }
 ```
 
