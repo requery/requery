@@ -19,17 +19,15 @@ package io.requery.rx;
 import io.requery.BlockingEntityStore;
 import io.requery.EntityStore;
 import io.requery.meta.Attribute;
-import io.requery.util.function.Consumer;
 import io.requery.util.function.Function;
-import rx.Observable;
 import rx.Single;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Arrays;
-import java.util.List;
 
 /**
+ * Deprecated. RxJava 1.0 support will be removed in a future release, please migrate to RxJava 2.0.
+ *
  * Extends {@link EntityStore} where all return values are single {@link rx.Single} instances
  * representing the outcome of each operation. {@link rx.Observable} query results can be obtained
  * via {@link RxResult#toObservable()}.
@@ -38,6 +36,7 @@ import java.util.List;
  *
  * @author Nikhil Purushe
  */
+@Deprecated
 @ParametersAreNonnullByDefault
 public abstract class SingleEntityStore<T> implements EntityStore<T, Single<?>>, RxQueryable<T> {
 

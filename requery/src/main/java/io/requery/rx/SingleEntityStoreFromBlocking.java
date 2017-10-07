@@ -40,6 +40,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
+ * Deprecated. RxJava 1.0 support will be removed in a future release, please migrate to RxJava 2.0.
+ *
  * Implementation of {@link SingleEntityStore} where all operations are passed through a
  * {@link BlockingEntityStore} instance. All observables are 'cold' and must be subscribed to
  * invoke the operation. All operations are subscribed on the given {@link Scheduler}, by default
@@ -49,6 +51,7 @@ import java.util.concurrent.Callable;
  *
  * @author Nikhil Purushe
  */
+@Deprecated
 @ParametersAreNonnullByDefault
 class SingleEntityStoreFromBlocking<T> extends SingleEntityStore<T> {
 

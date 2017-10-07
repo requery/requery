@@ -29,6 +29,10 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Set;
 
+/**
+ * Deprecated. RxJava 1.0 support will be removed in a future release, please migrate to RxJava 2.0.
+ */
+@Deprecated
 @ParametersAreNonnullByDefault
 public interface RxQueryable<T> {
 

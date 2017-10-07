@@ -28,10 +28,13 @@ import rx.Observable;
 import javax.annotation.CheckReturnValue;
 
 /**
+ * Deprecated. RxJava 1.0 support will be removed in a future release, please migrate to RxJava 2.0.
+ *
  * {@link Result} type with RxJava conversion methods.
  *
  * @param <E> element type
  */
+@Deprecated
 public class RxResult<E> extends ResultDelegate<E> implements QueryWrapper, TransactionListenable {
 
     RxResult(Result<E> delegate) {

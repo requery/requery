@@ -27,10 +27,12 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * Deprecated. RxJava 1.0 support will be removed in a future release, please migrate to RxJava 2.0.
  * Support utility class for use with RxJava
  *
  * @author Nikhil Purushe
  */
+@Deprecated
 public final class RxSupport {
 
     private static final TypeChangeListener typeChanges = new TypeChangeListener();

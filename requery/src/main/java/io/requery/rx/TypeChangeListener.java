@@ -27,6 +27,8 @@ import rx.subjects.Subject;
 import java.util.Set;
 
 /**
+ * Deprecated. RxJava 1.0 support will be removed in a future release, please migrate to RxJava 2.0.
+ *
  * {@link TransactionListener} for listening to entity commits and emitting the types that have
  * changed through an Rx {@link rx.subjects.Subject}.
  *
