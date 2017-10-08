@@ -34,6 +34,7 @@ import kotlin.reflect.KClass
  * Wraps a [BlockingEntityStore] instance returning [rx.Single] and [rx.Completable] for entity
  * operations, and [RxResult] or [RxScalar] for queries.
  */
+@Deprecated("RxJava 1.0 support will be removed in a future release, please migrate to RxJava 2.0")
 class KotlinRxEntityStore<T : Any>(private var store: BlockingEntityStore<T>) : EntityStore<T, Any> {
 
     override fun close() = store.close()
