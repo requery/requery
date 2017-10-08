@@ -23,6 +23,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
+/**
+ * A {@link io.requery.query.Result} that wraps a collection.
+ *
+ * @param <E> element type
+ */
 public class CollectionResult<E> extends BaseResult<E> {
 
     private Collection<E> elements;
@@ -30,21 +35,21 @@ public class CollectionResult<E> extends BaseResult<E> {
     /**
      * Creates an empty result
      */
-    CollectionResult() {
+    public CollectionResult() {
         this(Collections.<E>emptySet());
     }
 
     /**
      * Creates a result with a single element
      */
-    CollectionResult(E element) {
+    public CollectionResult(E element) {
         this(Collections.singleton(element));
     }
 
     /**
      * Creates a result from a collection instance.
      */
-    CollectionResult(Collection<E> collection) {
+    public CollectionResult(Collection<E> collection) {
         super(1);
         this.elements = collection;
     }
