@@ -112,6 +112,11 @@ public interface Type<T> extends Expression<T> {
     Attribute<T, ?> getSingleKeyAttribute();
 
     /**
+     * @return A readonly collection of {@link QueryExpression}s for this type.
+     */
+    Set<QueryExpression<?>> getQueryExpressions();
+
+    /**
      * @return {@link Supplier} instance used to provide new instances of {@link #getClassType()}.
      */
     Supplier<T> getFactory();
