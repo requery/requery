@@ -470,8 +470,10 @@ public class SchemaModifier implements ConnectionProvider {
         final Attribute referencedAttribute;
         if (attribute.getReferencedAttribute() != null) {
             referencedAttribute = attribute.getReferencedAttribute().get();
-        } else {
+        } else if (!referenced.getKeyAttributes().isEmpty()) {
             referencedAttribute = referenced.getKeyAttributes().iterator().next();
+        } else {
+            referencedAttribute = null;
         }
 
         if (!forceInline && (!platform.supportsInlineForeignKeyReference() || !forCreateStatement)) {
