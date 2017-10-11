@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,8 +96,7 @@ class AndroidParcelableExtension implements TypeGenerationExtension {
         TypeName parcelerType = ParameterizedTypeName.get(
                 ClassName.get(PACKAGE_PARCELER, "EntityParceler"), className);
         builder.addField(
-                FieldSpec.builder(parcelerType, "PARCELER",
-                    Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                FieldSpec.builder(parcelerType, "PARCELER", Modifier.STATIC, Modifier.FINAL)
                     .initializer("new $T($L)", parcelerType,
                         EntityGenerator.TYPE_NAME).build());
     }

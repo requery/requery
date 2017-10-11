@@ -205,9 +205,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
                     }
                     if (entity.isImmutable() || !existingFieldNames.contains(attribute.fieldName())) {
                       builder.addField(FieldSpec
-                          .builder(fieldName,
-                                  attribute.fieldName(),
-                                  generatedMemberModifiers())
+                          .builder(fieldName, attribute.fieldName(), generatedMemberModifiers())
                           .build());
                     }
                 }
@@ -298,7 +296,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
         TypeName entityType = entity.isEmbedded() ? nameResolver.typeNameOf(parent) : typeName;
         TypeName proxyName = parameterizedTypeName(EntityProxy.class, entityType);
         FieldSpec.Builder proxyField = FieldSpec.builder(proxyName, PROXY_NAME,
-                Modifier.PRIVATE, Modifier.FINAL, Modifier.TRANSIENT);
+                generatedMemberModifiers(Modifier.FINAL, Modifier.TRANSIENT));
         if (!entity.isEmbedded()) {
             proxyField.initializer("new $T(this, $L)", proxyName, TYPE_NAME);
         }
