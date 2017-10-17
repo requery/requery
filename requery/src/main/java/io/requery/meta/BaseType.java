@@ -125,6 +125,11 @@ abstract class BaseType<T> implements Type<T> {
     }
 
     @Override
+    public Set<QueryExpression<?>> getQueryExpressions() {
+        return expressions;
+    }
+
+    @Override
     public <B> Supplier<B> getBuilderFactory() {
         @SuppressWarnings("unchecked")
         Supplier<B> supplier = (Supplier<B>) builderFactory;

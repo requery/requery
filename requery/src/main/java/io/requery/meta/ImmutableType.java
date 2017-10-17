@@ -53,6 +53,7 @@ final class ImmutableType<T> extends BaseType<T> {
         if (keyAttributes.size() == 1) {
             keyAttribute = keyAttributes.iterator().next();
         }
+        this.expressions = Collections.unmodifiableSet(builder.expressions);
         for (QueryExpression<?> expression : builder.expressions) {
             setDeclaringType(expression);
         }
