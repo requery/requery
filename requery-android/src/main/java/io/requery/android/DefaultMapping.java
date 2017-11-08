@@ -17,15 +17,14 @@
 package io.requery.android;
 
 import io.requery.sql.GenericMapping;
-import io.requery.sql.Platform;
 
 /**
  * Extended {@link io.requery.sql.Mapping} with useful {@link io.requery.Converter}s added
  * specifically for Android.
  */
 public class DefaultMapping extends GenericMapping {
-    public DefaultMapping(Platform platform) {
-        super(platform);
+    public DefaultMapping() {
+        super();
         addConverter(new UriConverter());
     }
 }

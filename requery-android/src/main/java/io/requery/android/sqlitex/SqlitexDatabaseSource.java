@@ -96,7 +96,7 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
     }
 
     protected Mapping onCreateMapping(Platform platform) {
-        return new DefaultMapping(platform);
+        return new DefaultMapping();
     }
 
     protected void onConfigure(ConfigurationBuilder builder) {
