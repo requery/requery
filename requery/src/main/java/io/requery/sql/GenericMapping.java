@@ -93,7 +93,7 @@ public class GenericMapping implements Mapping {
     private PrimitiveFloatType primitiveFloatType;
     private PrimitiveDoubleType primitiveDoubleType;
 
-    public GenericMapping(Platform platform) {
+    public GenericMapping() {
         types = new ClassMap<>();
         primitiveIntType = new IntegerType(int.class);
         primitiveLongType = new BigIntType(long.class);
@@ -144,7 +144,6 @@ public class GenericMapping implements Mapping {
             converters.add(new ZonedDateTimeConverter());
             converters.add(new OffsetDateTimeConverter());
         }
-        platform.addMappings(this);
         for (Converter converter : converters) {
             Class mapped = converter.getMappedType();
             if (!types.containsKey(mapped)) {

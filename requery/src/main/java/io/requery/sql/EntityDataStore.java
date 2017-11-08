@@ -92,15 +92,15 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     private final TransactionProvider transactionProvider;
     private final Configuration configuration;
     private final AtomicBoolean closed;
+    private final DataContext context;
+    private final Mapping mapping;
     private TransactionMode transactionMode;
     private PreparedStatementCache statementCache;
     private QueryBuilder.Options queryOptions;
-    private Mapping mapping;
     private Platform platform;
     private StatementGenerator statementGenerator;
     private boolean metadataChecked;
     private boolean supportsBatchUpdates;
-    private final DataContext context;
 
     /**
      * Creates a new {@link EntityDataStore} with the given {@link DataSource} and
@@ -138,7 +138,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         writers = new ClassMap<>();
         entityModel = Objects.requireNotNull(configuration.getModel());
         connectionProvider = Objects.requireNotNull(configuration.getConnectionProvider());
-        mapping = configuration.getMapping();
+        mapping = configuration.getMapping() == null? new GenericMapping() : configuration.getMapping();
         platform = configuration.getPlatform();
         transactionMode = configuration.getTransactionMode();
         this.configuration = configuration;
@@ -152,8 +152,8 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
             statementCache = new PreparedStatementCache(statementCacheSize);
         }
         // set default mapping (otherwise deferred to getConnection()
-        if (platform != null && mapping == null) {
-            mapping = new GenericMapping(platform);
+        if (platform != null) {
+            platform.addMappings(mapping);
         }
         context = new DataContext();
         transactionProvider = new TransactionProvider(context);
@@ -565,24 +565,26 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         return this;
     }
 
-    protected synchronized void checkConnectionMetadata() {
-        // only done once metadata assumed to be the same for every connection
-        if (!metadataChecked) {
-            try (Connection connection = context.getConnection()) {
-                DatabaseMetaData metadata = connection.getMetaData();
-                if (!metadata.supportsTransactions()) {
-                    transactionMode = TransactionMode.NONE;
+    protected void checkConnectionMetadata() {
+        synchronized (configuration) {
+            // only done once metadata assumed to be the same for every connection
+            if (!metadataChecked) {
+                try (Connection connection = context.getConnection()) {
+                    DatabaseMetaData metadata = connection.getMetaData();
+                    if (!metadata.supportsTransactions()) {
+                        transactionMode = TransactionMode.NONE;
+                    }
+                    supportsBatchUpdates = metadata.supportsBatchUpdates();
+                    String quoteIdentifier = metadata.getIdentifierQuoteString();
+                    queryOptions = new QueryBuilder.Options(quoteIdentifier, true,
+                            configuration.getTableTransformer(),
+                            configuration.getColumnTransformer(),
+                            configuration.getQuoteTableNames(),
+                            configuration.getQuoteColumnNames());
+                    metadataChecked = true;
+                } catch (SQLException e) {
+                    throw new PersistenceException(e);
                 }
-                supportsBatchUpdates = metadata.supportsBatchUpdates();
-                String quoteIdentifier = metadata.getIdentifierQuoteString();
-                queryOptions = new QueryBuilder.Options(quoteIdentifier, true,
-                    configuration.getTableTransformer(),
-                    configuration.getColumnTransformer(),
-                    configuration.getQuoteTableNames(),
-                    configuration.getQuoteColumnNames());
-                metadataChecked = true;
-            } catch (SQLException e) {
-                throw new PersistenceException(e);
             }
         }
     }
@@ -618,7 +620,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         }
 
         @Override
-        public synchronized Connection getConnection() throws SQLException {
+        public Connection getConnection() throws SQLException {
             Connection connection = null;
             Transaction transaction = transactionProvider.get();
             // if the transaction holds a connection use that
@@ -634,38 +636,42 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                     connection = new StatementCachingConnection(statementCache, connection);
                 }
             }
-            // lazily create things that depend on a connection
-            if (platform == null) {
-                platform = new PlatformDelegate(connection);
-            }
-            if (mapping == null) {
-                mapping = new GenericMapping(platform);
+            synchronized (mapping) {
+                // lazily create things that depend on a connection
+                if (platform == null) {
+                    platform = new PlatformDelegate(connection);
+                    platform.addMappings(mapping);
+                }
             }
             return connection;
         }
 
         @Override
-        public synchronized <E extends T> EntityReader<E, T> read(Class<? extends E> type) {
-            @SuppressWarnings("unchecked")
-            EntityReader<E, T> reader = (EntityReader<E, T>) readers.get(type);
-            if (reader == null) {
-                checkConnectionMetadata();
-                reader = new EntityReader<>(entityModel.typeOf(type), this, EntityDataStore.this);
-                readers.put(type, reader);
+        public <E extends T> EntityReader<E, T> read(Class<? extends E> type) {
+            synchronized (readers) {
+                @SuppressWarnings("unchecked")
+                EntityReader<E, T> reader = (EntityReader<E, T>) readers.get(type);
+                if (reader == null) {
+                    checkConnectionMetadata();
+                    reader = new EntityReader<>(entityModel.typeOf(type), this, EntityDataStore.this);
+                    readers.put(type, reader);
+                }
+                return reader;
             }
-            return reader;
         }
 
         @Override
-        public synchronized <E extends T> EntityWriter<E, T> write(Class<? extends E> type) {
-            @SuppressWarnings("unchecked")
-            EntityWriter<E, T> writer = (EntityWriter<E, T>) writers.get(type);
-            if (writer == null) {
-                checkConnectionMetadata();
-                writer = new EntityWriter<>(entityModel.typeOf(type), this, EntityDataStore.this);
-                writers.put(type, writer);
+        public <E extends T> EntityWriter<E, T> write(Class<? extends E> type) {
+            synchronized (writers) {
+                @SuppressWarnings("unchecked")
+                EntityWriter<E, T> writer = (EntityWriter<E, T>) writers.get(type);
+                if (writer == null) {
+                    checkConnectionMetadata();
+                    writer = new EntityWriter<>(entityModel.typeOf(type), this, EntityDataStore.this);
+                    writers.put(type, writer);
+                }
+                return writer;
             }
-            return writer;
         }
 
         @Override

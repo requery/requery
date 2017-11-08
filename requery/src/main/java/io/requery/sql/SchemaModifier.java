@@ -94,7 +94,8 @@ public class SchemaModifier implements ConnectionProvider {
             platform = new PlatformDelegate(connection);
         }
         if (mapping == null) {
-            mapping = new GenericMapping(platform);
+            mapping = new GenericMapping();
+            platform.addMappings(mapping);
         }
         return connection;
     }
