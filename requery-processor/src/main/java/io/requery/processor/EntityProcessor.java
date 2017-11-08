@@ -201,7 +201,7 @@ public final class EntityProcessor extends AbstractProcessor {
             generators.addAll( packagesMap.entrySet().stream()
                 .filter(entry -> !entry.getValue().isEmpty())
                 .filter(entry -> !generatedModelPackages.contains(entry.getKey()))
-                .map(entry -> { generatedModelPackages.add(entry.getKey()); return entry; })
+                .peek(entry -> generatedModelPackages.add(entry.getKey()))
                 .map(entry -> new ModelGenerator(processingEnv, entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList()));
         }
