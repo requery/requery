@@ -564,12 +564,10 @@ public class SchemaModifier implements ConnectionProvider {
                 GenericMapping genericMapping = (GenericMapping) mapping;
                 converter = genericMapping.converterForType(attribute.getClassType());
             }
-            boolean hasLength = fieldType.hasLength() ||
-                    (converter != null && converter.getPersistedSize() != null);
 
             if (attribute.getDefinition() != null && attribute.getDefinition().length() > 0) {
                 qb.append(attribute.getDefinition());
-            } else if (hasLength) {
+            } else if (fieldType.hasLength()) {
 
                 Integer length = attribute.getLength();
                 if (length == null && converter != null) {

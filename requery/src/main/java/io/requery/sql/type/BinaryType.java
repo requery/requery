@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,5 +37,10 @@ public class BinaryType extends BasicType<byte[]> {
     @Override
     public Keyword getIdentifier() {
         return Keyword.BINARY;
+    }
+
+    @Override
+    public boolean hasLength() {
+        return true;
     }
 }
