@@ -152,7 +152,9 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
      * @return the configured mapping.
      */
     protected Mapping onCreateMapping(Platform platform) {
-        return new DefaultMapping();
+        Mapping mapping = new DefaultMapping();
+        platform.addMappings(mapping);
+        return mapping;
     }
 
     /**
