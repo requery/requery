@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,16 @@
 package io.requery.android;
 
 import io.requery.sql.GenericMapping;
+import io.requery.sql.Platform;
 
 /**
  * Extended {@link io.requery.sql.Mapping} with useful {@link io.requery.Converter}s added
  * specifically for Android.
  */
 public class DefaultMapping extends GenericMapping {
-    public DefaultMapping() {
+    public DefaultMapping(Platform platform) {
         super();
+        platform.addMappings(this);
         addConverter(new UriConverter());
     }
 }

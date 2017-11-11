@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -152,9 +152,7 @@ public class DatabaseSource extends SQLiteOpenHelper implements DatabaseProvider
      * @return the configured mapping.
      */
     protected Mapping onCreateMapping(Platform platform) {
-        Mapping mapping = new DefaultMapping();
-        platform.addMappings(mapping);
-        return mapping;
+        return new DefaultMapping(platform);
     }
 
     /**
