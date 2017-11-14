@@ -56,6 +56,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -232,7 +233,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
                 return result;
             }
         }
-        return null;
+        return Collections.emptySet();
     }
 
     @Override
