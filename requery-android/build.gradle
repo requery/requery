@@ -45,7 +45,7 @@ dependencies {
     compile 'com.android.support:support-v4:25.3.0'
     compile 'com.android.support:recyclerview-v7:25.3.0'
     compile 'net.zetetic:android-database-sqlcipher:3.5.7'
-    compile 'io.requery:sqlite-android:3.20.1'
+    compile 'io.requery:sqlite-android:3.21.0'
     testCompile 'junit:junit:4.12'
     androidTestCompile project(':requery-test')
     androidTestCompile 'com.android.support.test:runner:0.5'
@@ -96,7 +96,7 @@ task javadoc(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     classpath += configurations.compile
-    failOnError false;
+    failOnError false
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {

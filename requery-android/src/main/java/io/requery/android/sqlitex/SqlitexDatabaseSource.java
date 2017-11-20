@@ -26,7 +26,6 @@ import io.requery.android.database.sqlite.SQLiteOpenHelper;
 import io.requery.android.sqlite.DatabaseProvider;
 import io.requery.android.sqlite.SchemaUpdater;
 import io.requery.meta.EntityModel;
-import io.requery.sql.Configuration;
 import io.requery.sql.ConfigurationBuilder;
 import io.requery.sql.Mapping;
 import io.requery.sql.Platform;
@@ -59,7 +58,7 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
     private final EntityModel model;
     private Mapping mapping;
     private SQLiteDatabase db;
-    private Configuration configuration;
+    private io.requery.sql.Configuration configuration;
     private boolean loggingEnabled;
     private TableCreationMode mode;
 
@@ -113,7 +112,7 @@ public class SqlitexDatabaseSource extends SQLiteOpenHelper implements
     }
 
     @Override
-    public Configuration getConfiguration() {
+    public io.requery.sql.Configuration getConfiguration() {
         if (mapping == null) {
             mapping = onCreateMapping(platform);
         }
