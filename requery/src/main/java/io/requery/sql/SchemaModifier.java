@@ -631,7 +631,7 @@ public class SchemaModifier implements ConnectionProvider {
 
     public void createIndex(Connection connection, Attribute<?,?> attribute, TableCreationMode mode) {
         QueryBuilder qb = createQueryBuilder();
-        String name = attribute.getName() + "_index";
+        String name = getIndexDefaultName(attribute);
         createIndex(qb, name, Collections.singleton(attribute), attribute.getDeclaringType(), mode);
         executeSql(connection, qb);
     }
@@ -645,7 +645,7 @@ public class SchemaModifier implements ConnectionProvider {
                 for(String indexName : names) {
                     if (indexName.isEmpty()) {
                         // if no name set create a default one
-                        indexName = attribute.getName() + "_index";
+                        indexName = getIndexDefaultName(attribute);
                     }
                     Set<Attribute<?, ?>> indexColumns = indexes.get(indexName);
                     if (indexColumns == null) {
@@ -660,6 +660,10 @@ public class SchemaModifier implements ConnectionProvider {
             createIndex(qb, entry.getKey(), entry.getValue(), type, mode);
             executeSql(connection, qb);
         }
+    }
+
+    private String getIndexDefaultName(Attribute<?,?> attribute) {
+        return attribute.getDeclaringType().getName() + "_" + attribute.getName() + "_index";
     }
 
     private void createIndex(QueryBuilder qb,
