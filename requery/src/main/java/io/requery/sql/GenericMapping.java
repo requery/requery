@@ -67,11 +67,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Default mapping of Java types to Persisted types.
@@ -79,6 +81,13 @@ import java.util.Set;
  * @author Nikhil Purushe
  */
 public class GenericMapping implements Mapping {
+
+    private static final Comparator<Class<?>> CLASS_NAME_COMPARATOR = new Comparator<Class<?>>() {
+        @Override
+        public int compare(Class<?> o1, Class<?> o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
 
     private final ClassMap<FieldType> types;
     private final ClassMap<FieldType> fixedTypes;
@@ -246,13 +255,17 @@ public class GenericMapping implements Mapping {
     }
 
     @Override
-    public Class<?> typeOf(int sqlType) {
-        for (Map.Entry<Class<?>, FieldType> entry : types.entrySet()) {
+    public Set<Class<?>> typesOf(int sqlType) {
+        Set<Class<?>> types = new TreeSet<>(CLASS_NAME_COMPARATOR);
+        for (Map.Entry<Class<?>, FieldType> entry : this.types.entrySet()) {
             if (entry.getValue().getSqlType() == sqlType) {
-                return entry.getKey();
+                types.add(entry.getKey());
             }
         }
-        return String.class; // fall back to string value
+        if (types.isEmpty()) {
+            types.add(String.class); // fall back to string value
+        }
+        return types;
     }
 
     private FieldType getSubstitutedType(Class<?> type) {

@@ -23,6 +23,7 @@ import io.requery.query.function.Function;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Set;
 
 /**
  * Defines the mapping between java class types and {@link FieldType} instances which determines
@@ -78,12 +79,12 @@ public interface Mapping {
     Function.Name mapFunctionName(Function<?> function);
 
     /**
-     * Get the mapped storage type mapping for a given sql type.
+     * Get the mapped storage type mappings for a given sql type.
      *
      * @param sqlType {@link java.sql.Types} type
-     * @return the mapped class for the given sql type.
+     * @return the mapped class(es) for the given sql type or empty set if none.
      */
-    Class<?> typeOf(int sqlType);
+    Set<Class<?>> typesOf(int sqlType);
 
     /**
      * Given the expression read it from {@link ResultSet} instance.

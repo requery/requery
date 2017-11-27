@@ -152,8 +152,8 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                         if (sqlType == Types.NUMERIC) {
                             sqlType = Types.INTEGER;
                         }
-                        Class type = mapping.typeOf(sqlType);
-                        expressions[i] = NamedExpression.of(name, type);
+                        Set<Class<?>> types = mapping.typesOf(sqlType);
+                        expressions[i] = NamedExpression.of(name, types.iterator().next());
                     }
                 }
                 return iterator;
