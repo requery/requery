@@ -119,9 +119,9 @@ class KotlinEntityDataStore<T : Any>(configuration: Configuration) : BlockingEnt
     override fun <E : T> insert(entity: E): E = data.insert(entity)
     override fun <E : T> insert(entities: Iterable<E>): Iterable<E> = data.insert(entities)
     override fun <K : Any, E : T> insert(entity: E, keyClass: KClass<K>): K =
-            data.insert(entity, keyClass.java)
+            data.insert(entity, keyClass.javaObjectType)
     override fun <K : Any, E : T> insert(entities: Iterable<E>, keyClass: KClass<K>): Iterable<K> =
-            data.insert(entities, keyClass.java)
+            data.insert(entities, keyClass.javaObjectType)
 
     override fun <E : T> update(entity: E): E = data.update(entity)
     override fun <E : T> update(entities: Iterable<E>): Iterable<E> = data.update(entities)
