@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import io.requery.util.CloseableIterator;
 import io.requery.util.function.Consumer;
 import io.requery.util.function.Supplier;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,8 +62,6 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
         this.closed = new AtomicBoolean();
     }
 
-    public abstract CloseableIterator<E> iterator(int skip, int take);
-
     @Override
     public List<E> toList() {
         List<E> list = maxSize == null ? new ArrayList<E>() : new ArrayList<E>(maxSize);
@@ -72,7 +71,7 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
 
     @Override
     public <C extends Collection<E>> C collect(C collection) {
-        try (CloseableIterator<E> iterator = iterator()) {
+        try (CloseableIterator<E> iterator = createIterator()) {
             while (iterator.hasNext()) {
                 collection.add(iterator.next());
             }
@@ -82,14 +81,14 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
 
     @Override
     public E first() {
-        try (CloseableIterator<E> iterator = iterator()) {
+        try (CloseableIterator<E> iterator = createIterator()) {
             return iterator.next();
         }
     }
 
     @Override
     public E firstOr(E defaultElement) {
-        try (CloseableIterator<E> iterator = iterator()) {
+        try (CloseableIterator<E> iterator = createIterator()) {
             if (iterator.hasNext()) {
                 return iterator.next();
             }
@@ -99,7 +98,7 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
 
     @Override
     public E firstOr(Supplier<E> supplier) {
-        try (CloseableIterator<E> iterator = iterator()) {
+        try (CloseableIterator<E> iterator = createIterator()) {
             if (iterator.hasNext()) {
                 return iterator.next();
             }
@@ -113,19 +112,35 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
     }
 
     @Override
+    @Nonnull
     public CloseableIterator<E> iterator() {
-        // check closed
         if (closed.get()) {
             throw new IllegalStateException();
         }
-        CloseableIterator<E> iterator = iterator(0, Integer.MAX_VALUE);
+        CloseableIterator<E> iterator = createIterator(0, Integer.MAX_VALUE);
         iterators.add(iterator);
         return iterator;
     }
 
     @Override
+    public CloseableIterator<E> iterator(int skip, int take) {
+        if (closed.get()) {
+            throw new IllegalStateException();
+        }
+        CloseableIterator<E> iterator = createIterator(skip, take);
+        iterators.add(iterator);
+        return iterator;
+    }
+
+    protected CloseableIterator<E> createIterator() {
+        return createIterator(0, Integer.MAX_VALUE);
+    }
+
+    protected abstract CloseableIterator<E> createIterator(int skip, int take);
+
+    @Override
     public Stream<E> stream() {
-        final CloseableIterator<E> iterator = iterator();
+        final CloseableIterator<E> iterator = createIterator();
         Spliterator<E> spliterator = maxSize == null ?
             Spliterators.spliteratorUnknownSize(iterator, 0) :
             Spliterators.spliterator(iterator, maxSize, 0);
@@ -139,7 +154,7 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
 
     @Override
     public void each(Consumer<? super E> action) {
-        try (CloseableIterator<E> iterator = iterator()) {
+        try (CloseableIterator<E> iterator = createIterator()) {
             while (iterator.hasNext()) {
                 action.accept(iterator.next());
             }
@@ -154,7 +169,7 @@ public abstract class BaseResult<E> implements Result<E>, CloseableIterable<E> {
     @Override
     @SuppressWarnings("unchecked")
     public <K> Map<K, E> toMap(Expression<K> key, Map<K, E> map) {
-        try (CloseableIterator<E> iterator = iterator()) {
+        try (CloseableIterator<E> iterator = createIterator()) {
             while (iterator.hasNext()) {
                 E value = iterator.next();
                 Type<E> type = null;

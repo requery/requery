@@ -81,7 +81,7 @@ class RawEntityQuery<E extends S, S> extends PreparedQueryOperation implements
         }
 
         @Override
-        public CloseableIterator<E> iterator(int skip, int take) {
+        public CloseableIterator<E> createIterator(int skip, int take) {
             try {
                 StatementListener listener = configuration.getStatementListener();
                 listener.beforeExecuteQuery(statement, sql, boundParameters);

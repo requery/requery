@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2017 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ class GeneratedKeyResult extends BaseResult<Tuple> {
     }
 
     @Override
-    public CloseableIterator<Tuple> iterator(int skip, int take) {
+    public CloseableIterator<Tuple> createIterator(int skip, int take) {
         return new ResultSetIterator<>(reader, results, selection, true, true);
     }
 

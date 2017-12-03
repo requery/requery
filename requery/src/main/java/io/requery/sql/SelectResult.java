@@ -87,7 +87,7 @@ class SelectResult<E> extends BaseResult<E> implements TransactionListenable, Qu
     }
 
     @Override
-    public CloseableIterator<E> iterator(int skip, int take) {
+    public CloseableIterator<E> createIterator(int skip, int take) {
         Statement statement = null;
         try {
             // connection held by the iterator if statement not reused

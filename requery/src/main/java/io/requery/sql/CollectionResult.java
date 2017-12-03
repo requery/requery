@@ -55,7 +55,7 @@ public class CollectionResult<E> extends BaseResult<E> {
     }
 
     @Override
-    public CloseableIterator<E> iterator(int skip, int take) {
+    public CloseableIterator<E> createIterator(int skip, int take) {
         final Iterator<E> iterator = elements.iterator();
         return new CloseableIterator<E>() {
             @Override

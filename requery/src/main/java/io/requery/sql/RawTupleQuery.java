@@ -130,7 +130,7 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
         }
 
         @Override
-        public CloseableIterator<Tuple> iterator(int skip, int take) {
+        public CloseableIterator<Tuple> createIterator(int skip, int take) {
             try {
                 // execute the query
                 StatementListener listener = configuration.getStatementListener();
