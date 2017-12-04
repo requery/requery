@@ -16,13 +16,22 @@
 
 package io.requery.query;
 
-import io.requery.query.function.Function;
+import io.requery.query.function.Lower;
+import io.requery.query.function.Substr;
+import io.requery.query.function.Trim;
+import io.requery.query.function.Upper;
 
-public interface Functional<V> {
+public interface StringExpression<V> {
 
-    OrderingExpression<V> asc();
+    LogicalCondition<? extends Expression<V>, ? extends Expression<V>> equalsIgnoreCase(CharSequence string);
 
-    OrderingExpression<V> desc();
+    Substr<V> substr(int offset, int length);
 
-    Function<V> function(String name);
+    Upper<V> upper();
+
+    Lower<V> lower();
+
+    Trim<V> trim(String chars);
+
+    Trim<V> trim();
 }

@@ -70,6 +70,46 @@ abstract class BaseAttribute<T, V> extends FieldExpression<V> implements
     Class<?> referencedClass;
     ReferentialAction updateAction;
 
+    BaseAttribute() {
+    }
+
+    BaseAttribute(AttributeBuilder<T, V> builder) {
+        builderProperty = builder.getBuilderProperty();
+        cardinality = builder.getCardinality();
+        cascadeActions = builder.getCascadeActions();
+        classType = builder.getClassType();
+        collate = builder.getCollate();
+        converter = builder.getConverter();
+        defaultValue = builder.getDefaultValue();
+        definition = builder.getDefinition();
+        deleteAction = builder.getDeleteAction();
+        elementClass = builder.getElementClass();
+        indexNames = builder.getIndexNames();
+        initializer = builder.getInitializer();
+        isForeignKey = builder.isForeignKey();
+        isGenerated = builder.isGenerated();
+        isIndex = builder.isIndexed();
+        isKey = builder.isKey();
+        isLazy = builder.isLazy();
+        isNullable = builder.isNullable();
+        isReadOnly = builder.isReadOnly();
+        isUnique = builder.isUnique();
+        isVersion = builder.isVersion();
+        length = builder.getLength();
+        mapKeyClass = builder.getMapKeyClass();
+        mappedAttribute = builder.getMappedAttribute();
+        name = builder.getName();
+        orderByAttribute = builder.getOrderByAttribute();
+        orderByDirection = builder.getOrderByDirection();
+        primitiveKind = builder.getPrimitiveKind();
+        property = builder.getProperty();
+        propertyName = builder.getPropertyName();
+        propertyState = builder.getPropertyState();
+        referencedAttribute = builder.getReferencedAttribute();
+        referencedClass = builder.getReferencedClass();
+        updateAction = builder.getUpdateAction();
+    }
+
     @Override
     public Property<?, V> getBuilderProperty() {
         return builderProperty;

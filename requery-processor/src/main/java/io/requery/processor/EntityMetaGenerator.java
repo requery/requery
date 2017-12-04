@@ -27,8 +27,10 @@ import io.requery.CascadeAction;
 import io.requery.ReferentialAction;
 import io.requery.meta.Attribute;
 import io.requery.meta.Cardinality;
+import io.requery.meta.NumericAttribute;
 import io.requery.meta.QueryAttribute;
 import io.requery.meta.QueryExpression;
+import io.requery.meta.StringAttribute;
 import io.requery.meta.Type;
 import io.requery.meta.TypeBuilder;
 import io.requery.proxy.BooleanProperty;
@@ -63,8 +65,6 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 class EntityMetaGenerator extends EntityPartGenerator {
-
-    private static final String KOTLIN_ATTRIBUTE_DELEGATE = "io.requery.meta.AttributeDelegate";
 
     private final HashSet<String> attributeNames;
     private final HashSet<String> expressionNames;
@@ -268,14 +268,36 @@ class EntityMetaGenerator extends EntityPartGenerator {
         } else {
             // if it's an association don't make it available as a query attribute
             boolean isQueryable = attribute.cardinality() == null || attribute.isForeignKey();
-            Class<?> attributeClass = isQueryable ? QueryAttribute.class : Attribute.class;
-            attributeType = ClassName.get(attributeClass);
             if (isQueryable) {
-                TypeElement delegateType = elements.getTypeElement(KOTLIN_ATTRIBUTE_DELEGATE);
+                Class<?> attributeClass;
+                String kotlinDelegate;
+
+                switch (attribute.getType()) {
+                    case STRING:
+                        attributeClass = StringAttribute.class;
+                        kotlinDelegate = "StringAttributeDelegate";
+                        break;
+                    case NUMERIC:
+                        attributeClass = NumericAttribute.class;
+                        kotlinDelegate = "NumericAttributeDelegate";
+                        break;
+                    default:
+                    case DEFAULT:
+                        attributeClass = QueryAttribute.class;
+                        kotlinDelegate = "AttributeDelegate";
+                        break;
+                }
+
+                attributeType = ClassName.get(attributeClass);
+                // check if the kotlin delegate is available, if so use that
+                TypeElement delegateType = elements.getTypeElement("io.requery.meta." + kotlinDelegate);
                 if (delegateType != null) {
                     attributeType = ClassName.get(delegateType);
                     useKotlinDelegate = true;
                 }
+
+            } else {
+                attributeType = ClassName.get(Attribute.class);
             }
             type = ParameterizedTypeName.get(attributeType, targetName, typeName);
         }
@@ -452,7 +474,19 @@ class EntityMetaGenerator extends EntityPartGenerator {
                 }
             });
         }
-        builder.add(".build()");
+
+        switch (attribute.getType()) {
+            case DEFAULT:
+                builder.add(".build()");
+                break;
+            case STRING:
+                builder.add(".buildString()");
+                break;
+            case NUMERIC:
+                builder.add(".buildNumeric()");
+                break;
+        }
+
         FieldSpec.Builder field = FieldSpec.builder(type, fieldName,
             Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
         if (useKotlinDelegate) {

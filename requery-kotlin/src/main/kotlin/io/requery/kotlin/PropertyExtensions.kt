@@ -18,6 +18,8 @@ package io.requery.kotlin
 
 import io.requery.meta.Attribute
 import io.requery.meta.AttributeDelegate
+import io.requery.meta.NumericAttributeDelegate
+import io.requery.meta.StringAttributeDelegate
 import io.requery.meta.Type
 import io.requery.query.Expression
 import io.requery.query.OrderingExpression
@@ -37,18 +39,18 @@ import kotlin.reflect.KProperty1
 
 inline fun <reified T : Any, R> KProperty1<T, R>.asc(): OrderingExpression<R> = findAttribute(this).asc()
 inline fun <reified T : Any, R> KProperty1<T, R>.desc(): OrderingExpression<R> = findAttribute(this).desc()
-inline fun <reified T : Any, R> KProperty1<T, R>.abs(): Abs<R> = findAttribute(this).abs()
-inline fun <reified T : Any, R> KProperty1<T, R>.max(): Max<R> = findAttribute(this).max()
-inline fun <reified T : Any, R> KProperty1<T, R>.min(): Min<R> = findAttribute(this).min()
-inline fun <reified T : Any, R> KProperty1<T, R>.avg(): Avg<R> = findAttribute(this).avg()
-inline fun <reified T : Any, R> KProperty1<T, R>.sum(): Sum<R> = findAttribute(this).sum()
-inline fun <reified T : Any, R> KProperty1<T, R>.round(): Round<R> = findAttribute(this).round()
-inline fun <reified T : Any, R> KProperty1<T, R>.round(decimals: Int): Round<R> = findAttribute(this).round(decimals)
-inline fun <reified T : Any, R> KProperty1<T, R>.trim(chars: String?): Trim<R> = findAttribute(this).trim(chars)
-inline fun <reified T : Any, R> KProperty1<T, R>.trim(): Trim<R> = findAttribute(this).trim()
-inline fun <reified T : Any, R> KProperty1<T, R>.substr(offset: Int, length: Int): Substr<R> = findAttribute(this).substr(offset, length)
-inline fun <reified T : Any, R> KProperty1<T, R>.upper(): Upper<R> = findAttribute(this).upper()
-inline fun <reified T : Any, R> KProperty1<T, R>.lower(): Lower<R> = findAttribute(this).lower()
+inline fun <reified T : Any, R> KProperty1<T, R>.abs(): Abs<R> = findNumericAttribute(this).abs()
+inline fun <reified T : Any, R> KProperty1<T, R>.max(): Max<R> = findNumericAttribute(this).max()
+inline fun <reified T : Any, R> KProperty1<T, R>.min(): Min<R> = findNumericAttribute(this).min()
+inline fun <reified T : Any, R> KProperty1<T, R>.avg(): Avg<R> = findNumericAttribute(this).avg()
+inline fun <reified T : Any, R> KProperty1<T, R>.sum(): Sum<R> = findNumericAttribute(this).sum()
+inline fun <reified T : Any, R> KProperty1<T, R>.round(): Round<R> = findNumericAttribute(this).round()
+inline fun <reified T : Any, R> KProperty1<T, R>.round(decimals: Int): Round<R> = findNumericAttribute(this).round(decimals)
+inline fun <reified T : Any, R> KProperty1<T, R>.trim(chars: String?): Trim<R> = findStringAttribute(this).trim(chars)
+inline fun <reified T : Any, R> KProperty1<T, R>.trim(): Trim<R> = findStringAttribute(this).trim()
+inline fun <reified T : Any, R> KProperty1<T, R>.substr(offset: Int, length: Int): Substr<R> = findStringAttribute(this).substr(offset, length)
+inline fun <reified T : Any, R> KProperty1<T, R>.upper(): Upper<R> = findStringAttribute(this).upper()
+inline fun <reified T : Any, R> KProperty1<T, R>.lower(): Lower<R> = findStringAttribute(this).lower()
 
 inline infix fun <reified T : Any, R> KProperty1<T, R>.eq(value: R): Logical<out Expression<R>, R> = findAttribute(this).eq(value)
 inline infix fun <reified T : Any, R> KProperty1<T, R>.ne(value: R): Logical<out Expression<R>, R> = findAttribute(this).ne(value)
@@ -107,4 +109,14 @@ inline fun <reified T : Any, R> findAttribute(property: KProperty1<T, R>):
     }
     @Suppress("UNCHECKED_CAST")
     return attribute as AttributeDelegate<T, R>
+}
+
+inline fun <reified T : Any, R> findStringAttribute(property: KProperty1<T, R>):
+        StringAttributeDelegate<T, R> {
+    return findAttribute(property) as StringAttributeDelegate<T, R>
+}
+
+inline fun <reified T : Any, R> findNumericAttribute(property: KProperty1<T, R>):
+        NumericAttributeDelegate<T, R> {
+    return findAttribute(property) as NumericAttributeDelegate<T, R>
 }

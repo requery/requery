@@ -16,8 +16,6 @@
 
 package io.requery.test;
 
-import junit.framework.Assert;
-
 import io.requery.Persistable;
 import io.requery.PersistenceException;
 import io.requery.RollbackException;
@@ -59,7 +57,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -1406,6 +1403,17 @@ public abstract class FunctionalTest extends RandomData {
                 .where(Person.NAME.notLike("B%"))
                 .get().firstOrNull();
         assertTrue(b != person);
+    }
+
+    @Test
+    public void testQueryEqualsIgnoreCase() {
+        Person person = randomPerson();
+        person.setName("Carol");
+        data.insert(person);
+        Person a = data.select(Person.class)
+                .where(Person.NAME.equalsIgnoreCase("carol"))
+                .get().first();
+        assertSame(a, person);
     }
 
     @Test

@@ -50,6 +50,14 @@ interface AttributeDescriptor {
      */
     String name();
 
+    enum Type {
+        DEFAULT,
+        STRING,
+        NUMERIC
+    }
+
+    Type getType();
+
     /**
      * @return the type of builder used to construct the attribute in the generated code
      */

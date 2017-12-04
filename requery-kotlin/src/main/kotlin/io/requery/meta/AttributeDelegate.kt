@@ -21,7 +21,6 @@ import io.requery.kotlin.Conditional
 import io.requery.kotlin.Logical
 import io.requery.kotlin.QueryableAttribute
 import io.requery.query.*
-import io.requery.query.function.*
 import io.requery.query.function.Function
 import io.requery.util.function.Supplier
 import java.util.LinkedHashSet
@@ -31,7 +30,7 @@ import java.util.LinkedHashSet
  *
  * @author Nikhil Purushe
  */
-class AttributeDelegate<T, V>(attribute : QueryAttribute<T, V>) :
+open class AttributeDelegate<T, V>(attribute : QueryAttribute<T, V>) :
         BaseExpression<V>(),
         QueryableAttribute<T, V>,
         TypeDeclarable<T>,
@@ -61,6 +60,20 @@ class AttributeDelegate<T, V>(attribute : QueryAttribute<T, V>) :
     override fun get(): QueryAttribute<T, V> = attribute
 }
 
+class StringAttributeDelegate<T, V>(attribute : StringAttribute<T, V>) :
+        AttributeDelegate<T, V>(attribute),
+        QueryableAttribute<T, V>,
+        TypeDeclarable<T>,
+        Supplier<QueryAttribute<T, V>>,
+        StringExpression<V> by attribute
+
+class NumericAttributeDelegate<T, V>(attribute : NumericAttribute<T, V>) :
+        AttributeDelegate<T, V>(attribute),
+        QueryableAttribute<T, V>,
+        TypeDeclarable<T>,
+        Supplier<QueryAttribute<T, V>>,
+        NumericExpression<V> by attribute
+
 abstract class BaseExpression<V> protected constructor() :
         Expression<V>,
         Functional<V>,
@@ -76,18 +89,7 @@ abstract class BaseExpression<V> protected constructor() :
 
     override fun asc(): OrderingExpression<V> = OrderExpression(this, Order.ASC)
     override fun desc(): OrderingExpression<V> = OrderExpression(this, Order.DESC)
-    override fun abs(): Abs<V> = Abs.abs(this)
-    override fun max(): Max<V> = Max.max(this)
-    override fun min(): Min<V> = Min.min(this)
-    override fun avg(): Avg<V> = Avg.avg(this)
-    override fun sum(): Sum<V> = Sum.sum(this)
-    override fun round(): Round<V> = round(0)
-    override fun round(decimals: Int): Round<V> = Round.round(this, decimals)
-    override fun trim(chars: String?): Trim<V> = Trim.trim(this, chars)
-    override fun trim(): Trim<V> = trim(null)
-    override fun substr(offset: Int, length: Int): Substr<V> = Substr.substr(this, offset, length)
-    override fun upper(): Upper<V> = Upper.upper(this)
-    override fun lower(): Lower<V> = Lower.lower(this)
+
     override fun function(name: String): Function<V> {
         return object : Function<V>(name, classType) {
             override fun arguments(): Array<out Any> {

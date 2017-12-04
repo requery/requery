@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package io.requery.query;
+package io.requery.meta;
 
-import io.requery.query.function.Function;
+import io.requery.query.StringExpression;
 
-public interface Functional<V> {
-
-    OrderingExpression<V> asc();
-
-    OrderingExpression<V> desc();
-
-    Function<V> function(String name);
+/**
+ * Attribute that can be used as a string in a query on a specific {@link Type}.
+ *
+ * @param <T> entity type
+ * @param <V> value type
+ */
+public interface StringAttribute<T, V> extends QueryAttribute<T, V>, StringExpression<V> {
 }

@@ -196,4 +196,12 @@ public class AttributeBuilder<T, V> extends BaseAttribute<T, V> {
     public QueryAttribute<T, V> build() {
         return new ImmutableAttribute<>(this);
     }
+
+    public StringAttribute<T, V> buildString() {
+        return new ImmutableStringAttribute<>(this);
+    }
+
+    public NumericAttribute<T, V> buildNumeric() {
+        return new ImmutableNumericAttribute<>(this);
+    }
 }

@@ -56,6 +56,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
@@ -107,6 +108,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private boolean isTransient;
     private boolean isUnique;
     private boolean isVersion;
+    private Type type;
     private Class<? extends AttributeBuilder> builderClass;
     private Integer length;
     private Set<String> indexNames;
@@ -134,6 +136,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         }
         this.entity = entity;
         this.indexNames = new LinkedHashSet<>();
+        this.type = Type.DEFAULT;
     }
 
     @Override
@@ -146,7 +149,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         processBasicColumnAnnotations(validator);
         processAssociativeAnnotations(processingEnvironment, validator);
         processConverterAnnotation(validator);
-        checkMemberType(processingEnvironment, typeMirror(), validators);
+        checkMemberType(processingEnvironment, validators);
         if (cardinality() != null && entity.isImmutable()) {
             validator.error("Immutable value type cannot contain relational references");
         }
@@ -174,13 +177,14 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         }
     }
 
-    private void checkMemberType(ProcessingEnvironment processingEnvironment, TypeMirror type,
+    private void checkMemberType(ProcessingEnvironment processingEnvironment,
                                  Set<ElementValidator> validators) {
         builderClass = AttributeBuilder.class;
         Types types = processingEnvironment.getTypeUtils();
-        isBoolean = type.getKind() == TypeKind.BOOLEAN;
-        if (type.getKind() == TypeKind.DECLARED) {
-            TypeElement element = (TypeElement) types.asElement(type);
+        TypeMirror mirror = typeMirror();
+        isBoolean = mirror.getKind() == TypeKind.BOOLEAN;
+        if (mirror.getKind() == TypeKind.DECLARED) {
+            TypeElement element = (TypeElement) types.asElement(mirror);
             if (element != null) {
                 // only set if the attribute is relational
                 if (cardinality != null) {
@@ -210,6 +214,23 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             ElementValidator validator = validateCollectionType(processingEnvironment);
             if (validator != null) {
                 validators.add(validator);
+            }
+        } else {
+            TypeElement element = null;
+            if (mirror.getKind().isPrimitive()) {
+                element = types.boxedClass((PrimitiveType) mirror);
+            } else if (mirror.getKind() == TypeKind.DECLARED) {
+                element = (TypeElement) types.asElement(mirror);
+            }
+
+            if (element != null) {
+                if (Mirrors.isInstance(types, element, Number.class)
+                    || Mirrors.isInstance(types, element, java.util.Date.class)
+                    || Mirrors.isInstance(types, element, java.time.temporal.Temporal.class)) {
+                    type = Type.NUMERIC;
+                } else if (Mirrors.isInstance(types, element, String.class)) {
+                    type = Type.STRING;
+                }
             }
         }
     }
@@ -549,6 +570,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         } else {
             return override;
         }
+    }
+
+    @Override
+    public Type getType() {
+        return type;
     }
 
     @Override

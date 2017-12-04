@@ -16,13 +16,26 @@
 
 package io.requery.query;
 
-import io.requery.query.function.Function;
+import io.requery.query.function.Abs;
+import io.requery.query.function.Avg;
+import io.requery.query.function.Max;
+import io.requery.query.function.Min;
+import io.requery.query.function.Round;
+import io.requery.query.function.Sum;
 
-public interface Functional<V> {
+public interface NumericExpression<V> {
 
-    OrderingExpression<V> asc();
+    Abs<V> abs();
 
-    OrderingExpression<V> desc();
+    Max<V> max();
 
-    Function<V> function(String name);
+    Min<V> min();
+
+    Avg<V> avg();
+
+    Sum<V> sum();
+
+    Round<V> round();
+
+    Round<V> round(int decimals);
 }

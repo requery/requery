@@ -17,17 +17,7 @@
 package io.requery.query;
 
 import io.requery.meta.QueryExpression;
-import io.requery.query.function.Abs;
-import io.requery.query.function.Avg;
 import io.requery.query.function.Function;
-import io.requery.query.function.Lower;
-import io.requery.query.function.Max;
-import io.requery.query.function.Min;
-import io.requery.query.function.Round;
-import io.requery.query.function.Substr;
-import io.requery.query.function.Sum;
-import io.requery.query.function.Trim;
-import io.requery.query.function.Upper;
 import io.requery.util.Objects;
 
 import java.util.ArrayList;
@@ -77,66 +67,6 @@ public abstract class FieldExpression<V> implements QueryExpression<V> {
     @Override
     public OrderingExpression<V> desc() {
         return new OrderExpression<>(this, Order.DESC);
-    }
-
-    @Override
-    public Abs<V> abs() {
-        return Abs.abs(this);
-    }
-
-    @Override
-    public Max<V> max() {
-        return Max.max(this);
-    }
-
-    @Override
-    public Min<V> min() {
-        return Min.min(this);
-    }
-
-    @Override
-    public Avg<V> avg() {
-        return Avg.avg(this);
-    }
-
-    @Override
-    public Sum<V> sum() {
-        return Sum.sum(this);
-    }
-
-    @Override
-    public Round<V> round() {
-        return round(0);
-    }
-
-    @Override
-    public Round<V> round(int decimals) {
-        return Round.round(this, decimals);
-    }
-
-    @Override
-    public Trim<V> trim(String chars) {
-        return Trim.trim(this, chars);
-    }
-
-    @Override
-    public Trim<V> trim() {
-        return trim(null);
-    }
-
-    @Override
-    public Substr<V> substr(int offset, int length) {
-        return Substr.substr(this, offset, length);
-    }
-
-    @Override
-    public Upper<V> upper() {
-        return Upper.upper(this);
-    }
-
-    @Override
-    public Lower<V> lower() {
-        return Lower.lower(this);
     }
 
     @Override
