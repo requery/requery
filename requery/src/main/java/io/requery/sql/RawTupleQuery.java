@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package io.requery.sql;
 
-import io.requery.PersistenceException;
 import io.requery.query.BaseResult;
 import io.requery.query.Expression;
 import io.requery.query.NamedExpression;
@@ -158,7 +157,21 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
                 }
                 return iterator;
             } catch (SQLException e) {
-                throw new PersistenceException(e);
+                throw StatementExecutionException.closing(statement, e, sql);
+            }
+        }
+
+        @Override
+        public void close() {
+            try {
+                if (statement != null) {
+                    Connection connection = statement.getConnection();
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                super.close();
             }
         }
     }
