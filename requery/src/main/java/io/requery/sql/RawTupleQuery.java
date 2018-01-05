@@ -166,7 +166,9 @@ class RawTupleQuery extends PreparedQueryOperation implements Supplier<Result<Tu
             try {
                 if (statement != null) {
                     Connection connection = statement.getConnection();
-                    connection.close();
+                    if (connection != null) {
+                        connection.close();
+                    }
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
