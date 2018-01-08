@@ -1,6 +1,20 @@
 Change Log
 ==========
 
+## 1.5.0
+
+- Deprecates RxJava 1.0 support in order to bring improvements to RxJava 2.0 support in a future version
+- Default indexes now include table name in the index name
+- Support setting generated member visibility (for removing synthetic accessors)
+- Support package private code generation for reduced method count on Android
+- Fix NoSuchElementException during table generation of an entity with no keys
+- Fix Android proguard rules
+- Fix EntityDataStore synchronization that could dead lock
+- Fix inserting empty collection returning null key set
+- Fix Kotlin ClassCastException when using long/int key types in the insert returning query
+- Fix CloseableIterator accumulation when using Result functions
+- Fix Connection not closed when exception thrown from a raw query 
+
 ## 1.4.1
 
 - Support accessing the Configuration instance from EntityDataStore
