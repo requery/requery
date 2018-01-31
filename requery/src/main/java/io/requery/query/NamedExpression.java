@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,6 @@
 
 package io.requery.query;
 
-import io.requery.query.function.Abs;
-import io.requery.query.function.Avg;
-import io.requery.query.function.Lower;
-import io.requery.query.function.Max;
-import io.requery.query.function.Min;
-import io.requery.query.function.Round;
-import io.requery.query.function.Substr;
-import io.requery.query.function.Sum;
-import io.requery.query.function.Trim;
-import io.requery.query.function.Upper;
-
 public class NamedExpression<V> extends FieldExpression<V> {
 
     private final String name;
@@ -36,8 +25,20 @@ public class NamedExpression<V> extends FieldExpression<V> {
         return new NamedExpression<>(name, type);
     }
 
+    public static NamedNumericExpression<Double> ofDouble(String name) {
+        return new NamedNumericExpression<>(name, Double.class);
+    }
+
+    public static NamedNumericExpression<Float> ofFloat(String name) {
+        return new NamedNumericExpression<>(name, Float.class);
+    }
+
     public static NamedNumericExpression<Integer> ofInteger(String name) {
         return new NamedNumericExpression<>(name, Integer.class);
+    }
+
+    public static NamedNumericExpression<Long> ofLong(String name) {
+        return new NamedNumericExpression<>(name, Long.class);
     }
 
     public static NamedStringExpression ofString(String name) {
@@ -64,81 +65,4 @@ public class NamedExpression<V> extends FieldExpression<V> {
         return ExpressionType.NAME;
     }
 
-    public static class NamedStringExpression extends NamedExpression<String> implements StringExpression<String> {
-        NamedStringExpression(String name) {
-            super(name, String.class);
-        }
-
-        @Override
-        public LogicalCondition<? extends Expression<String>, ? extends Expression<String>>
-        equalsIgnoreCase(CharSequence string) {
-            return Upper.upper(this).eq(NamedExpression.ofString(string.toString()).upper());
-        }
-
-        @Override
-        public Trim<String> trim(String chars) {
-            return Trim.trim(this, chars);
-        }
-
-        @Override
-        public Trim<String> trim() {
-            return trim(null);
-        }
-
-        @Override
-        public Substr<String> substr(int offset, int length) {
-            return Substr.substr(this, offset, length);
-        }
-
-        @Override
-        public Upper<String> upper() {
-            return Upper.upper(this);
-        }
-
-        @Override
-        public Lower<String> lower() {
-            return Lower.lower(this);
-        }
-    }
-
-    public static class NamedNumericExpression<V> extends NamedExpression<V> implements NumericExpression<V> {
-        NamedNumericExpression(String name, Class<V> type) {
-            super(name, type);
-        }
-
-        @Override
-        public Abs<V> abs() {
-            return Abs.abs(this);
-        }
-
-        @Override
-        public Max<V> max() {
-            return Max.max(this);
-        }
-
-        @Override
-        public Min<V> min() {
-            return Min.min(this);
-        }
-
-        @Override
-        public Avg<V> avg() {
-            return Avg.avg(this);
-        }
-
-        @Override
-        public Sum<V> sum() {
-            return Sum.sum(this);
-        }
-
-        @Override
-        public Round<V> round() {
-            return round(0);
-        }
-
-        @Override
-        public Round<V> round(int decimals) {
-            return Round.round(this, decimals);
-        }
-    }
 }
