@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import io.requery.kotlin.Logical
 import io.requery.kotlin.QueryableAttribute
 import io.requery.query.*
 import io.requery.query.function.Function
+import io.requery.query.function.Max
+import io.requery.query.function.Min
 import io.requery.util.function.Supplier
 import java.util.LinkedHashSet
 
@@ -89,6 +91,8 @@ abstract class BaseExpression<V> protected constructor() :
 
     override fun asc(): OrderingExpression<V> = OrderExpression(this, Order.ASC)
     override fun desc(): OrderingExpression<V> = OrderExpression(this, Order.DESC)
+    override fun max(): Max<V> = Max.max(this)
+    override fun min(): Min<V> = Min.min(this)
 
     override fun function(name: String): Function<V> {
         return object : Function<V>(name, classType) {

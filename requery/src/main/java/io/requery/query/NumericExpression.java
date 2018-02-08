@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,12 @@ package io.requery.query;
 
 import io.requery.query.function.Abs;
 import io.requery.query.function.Avg;
-import io.requery.query.function.Max;
-import io.requery.query.function.Min;
 import io.requery.query.function.Round;
 import io.requery.query.function.Sum;
 
 public interface NumericExpression<V> {
 
     Abs<V> abs();
-
-    Max<V> max();
-
-    Min<V> min();
 
     Avg<V> avg();
 

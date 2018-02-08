@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,18 @@
 package io.requery.query;
 
 import io.requery.query.function.Function;
+import io.requery.query.function.Max;
+import io.requery.query.function.Min;
 
 public interface Functional<V> {
 
     OrderingExpression<V> asc();
 
     OrderingExpression<V> desc();
+
+    Max<V> max();
+
+    Min<V> min();
 
     Function<V> function(String name);
 }

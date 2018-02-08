@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package io.requery.query;
 
 import io.requery.meta.QueryExpression;
 import io.requery.query.function.Function;
+import io.requery.query.function.Max;
+import io.requery.query.function.Min;
 import io.requery.util.Objects;
 
 import java.util.ArrayList;
@@ -67,6 +69,16 @@ public abstract class FieldExpression<V> implements QueryExpression<V> {
     @Override
     public OrderingExpression<V> desc() {
         return new OrderExpression<>(this, Order.DESC);
+    }
+
+    @Override
+    public Max<V> max() {
+        return Max.max(this);
+    }
+
+    @Override
+    public Min<V> min() {
+        return Min.min(this);
     }
 
     @Override
