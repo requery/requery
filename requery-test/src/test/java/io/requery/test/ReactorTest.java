@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,12 +125,12 @@ public class ReactorTest extends RandomData {
                 phone1.setOwner(person);
                 return phone1;
             }
-        }).flatMap(new Function<Phone, Mono<?>>() {
+        }).flatMap(new Function<Phone, Mono<Phone>>() {
             @Override
-            public Mono<?> apply(Phone phone) {
+            public Mono<Phone> apply(Phone phone) {
                 return data.insert(phone);
             }
-        }).blockFirst();
+        }).block();
         assertTrue(person.getPhoneNumbers().toList().size() == 1);
     }
 
@@ -187,12 +187,12 @@ public class ReactorTest extends RandomData {
                 phone1.setOwner(person);
                 return phone1;
             }
-        }).flatMap(new Function<Phone, Mono<?>>() {
+        }).flatMap(new Function<Phone, Mono<Phone>>() {
             @Override
-            public Mono<?> apply(Phone phone) {
+            public Mono<Phone> apply(Phone phone) {
                 return data.insert(phone);
             }
-        }).blockFirst();
+        }).block();
         int count = person.getPhoneNumbers().toList().size();
         assertEquals(1, count);
     }
