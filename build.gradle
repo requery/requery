@@ -6,10 +6,10 @@ buildscript {
     ext.android_buildtools_version = '26.0.2'
     ext.jackson_version = '2.8.6'
     ext.jpa_version = '2.1.1'
-    ext.kotlin_version = '1.2.0'
+    ext.kotlin_version = '1.2.20'
     ext.rxjava_version = '1.3.0'
-    ext.rxjava2_version = '2.1.6'
-    ext.reactor_version = '3.0.7.RELEASE'
+    ext.rxjava2_version = '2.1.9'
+    ext.reactor_version = '3.1.4.RELEASE'
     repositories {
         google()
         jcenter()
