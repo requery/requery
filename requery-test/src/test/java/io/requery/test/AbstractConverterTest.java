@@ -44,11 +44,13 @@ public abstract class AbstractConverterTest<T extends Converter<FROM, TO>, FROM,
         org.junit.Assert.assertTrue("Test cases map does not have unique values!", testCases.size() == getTestCases().size());
         for (TO from : testCases.keySet()) {
             FROM expectedConvertedValue = testCases.get(from);
-            FROM convertedValue = getConverter().convertToMapped(null, from);
+            FROM convertedValue = getConverter().convertToMapped(getType(), from);
 
             assertEquals(expectedConvertedValue, convertedValue);
         }
     }
+
+    protected abstract Class<? extends FROM> getType();
 
     protected void assertEquals(Object obj1, Object obj2) {
         org.junit.Assert.assertEquals(obj1, obj2);

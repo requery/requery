@@ -19,7 +19,7 @@ package io.requery.converter;
 import io.requery.Converter;
 
 /**
- * Converter which persists an {@link Enum} using its {@link Enum#toString()} representation.
+ * Converter which persists an {@link Enum} using its {@link Enum#name()} representation.
  *
  * @param <E> type of enum
  */
@@ -48,7 +48,7 @@ public class EnumStringConverter<E extends Enum> implements Converter<E, String>
 
     @Override
     public String convertToPersisted(Enum value) {
-        return value == null ? null : value.toString();
+        return value == null ? null : value.name();
     }
 
     @Override

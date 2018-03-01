@@ -30,4 +30,9 @@ public class CurrencyConverterTest extends AbstractConverterTest<CurrencyConvert
         return testCases;
     }
 
+    @Override
+    protected Class<? extends Currency> getType() {
+        return null;
+    }
+
 }
