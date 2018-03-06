@@ -7,6 +7,7 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 
 android {
@@ -42,14 +43,15 @@ android {
 
 dependencies {
     compile project(':requery')
-    compile 'com.android.support:support-v4:25.3.0'
-    compile 'com.android.support:recyclerview-v7:25.3.0'
-    compile 'net.zetetic:android-database-sqlcipher:3.5.7'
+    compile 'com.android.support:support-v4:25.3.1'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
+    compile 'net.zetetic:android-database-sqlcipher:3.5.9'
     compile 'io.requery:sqlite-android:3.21.0'
     testCompile 'junit:junit:4.12'
     androidTestCompile project(':requery-test')
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test:rules:0.5'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 publish.dependsOn 'assembleRelease'
@@ -102,4 +104,7 @@ task javadoc(type: Javadoc) {
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
+}
+repositories {
+    mavenCentral()
 }
