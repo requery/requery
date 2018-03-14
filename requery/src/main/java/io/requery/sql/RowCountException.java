@@ -24,11 +24,13 @@ import io.requery.PersistenceException;
  */
 public class RowCountException extends PersistenceException {
 
+    private final String entityName;
     private final long expected;
     private final long actual;
 
-    RowCountException(long expected, long actual) {
-        super("Expected " + expected + " row affected actual " + actual);
+    RowCountException(String entityName, long expected, long actual) {
+        super(entityName + ": expected " + expected + " row affected actual " + actual);
+        this.entityName = entityName;
         this.expected = expected;
         this.actual = actual;
     }
@@ -45,5 +47,12 @@ public class RowCountException extends PersistenceException {
      */
     public long getActual() {
         return actual;
+    }
+
+    /**
+     * @return entity name affected
+     */
+    public String getEntityName() {
+        return entityName;
     }
 }
