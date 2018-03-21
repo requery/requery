@@ -178,7 +178,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
         if (proxy != null && versionAttribute != null && count == 0) {
             throw new OptimisticLockException(entity, proxy.get(versionAttribute));
         } else if (count != 1) {
-            throw new RowCountException(1, count);
+            throw new RowCountException(entity.getClass(), 1, count);
         }
     }
 
@@ -505,7 +505,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 }
                 int rows = upsert.evaluate(element).value();
                 if (rows <= 0) {
-                    throw new RowCountException(1, rows);
+                    throw new RowCountException(entity.getClass(), 1, rows);
                 }
                 proxy.link(context.read(entityClass));
                 updateAssociations(Cascade.UPSERT, entity, proxy, null);
@@ -773,7 +773,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                                 .and(uKey.equal(otherValue));
                         int count = query.get().value();
                         if (count != 1) {
-                            throw new RowCountException(1, count);
+                            throw new RowCountException(entity.getClass(), 1, count);
                         }
                     }
                     changes.clear();
@@ -953,7 +953,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                         // If this happens, it means that I'm updating the 'many' side of a
                         // one-to-many (where the foreign key is) to link it to the 'one' side of
                         // the relationship, but the 'many' side does not exist.
-                        throw new RowCountException(1, updated);
+                        throw new RowCountException(entity.getClass(), 1, updated);
                     }
                     break;
                 case UPSERT:
@@ -1022,7 +1022,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 }
                 int rows = deletion.get().value();
                 if (rows != ids.size()) {
-                    throw new RowCountException(ids.size(), rows);
+                    throw new RowCountException(entityClass, ids.size(), rows);
                 }
             }
         }
