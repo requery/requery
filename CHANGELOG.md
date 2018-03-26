@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+## 1.5.1
+
+- Add min/max to base expression functions
+- Add factory methods for creating different numeric type Named Expressions
+- EnumConverter uses name() for string conversion instead of toString()
+
 ## 1.5.0
 
 - Deprecates RxJava 1.0 support in order to bring improvements to RxJava 2.0 support in a future version
