@@ -144,8 +144,6 @@ public interface Person {
 
 **[RxJava](https://github.com/ReactiveX/RxJava) [Observables](http://reactivex.io/documentation/observable.html):**
 
-Supports both RxJava 1.0 and 2.0. (RxJava 2.0 examples shown)
-
 ```java
 Observable<Person> observable = data
     .select(Person.class)
@@ -274,9 +272,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.5.0'
-    compile 'io.requery:requery-android:1.5.0' // for android
-    annotationProcessor 'io.requery:requery-processor:1.5.0'
+    compile 'io.requery:requery:1.5.1'
+    compile 'io.requery:requery-android:1.5.1' // for android
+    annotationProcessor 'io.requery:requery-processor:1.5.1'
 }
 ```
 
@@ -285,7 +283,7 @@ For information on gradle and annotation processing & gradle see the [wiki](http
 License
 -------
 
-    Copyright (C) 2017 requery.io
+    Copyright (C) 2018 requery.io
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.

@@ -21,7 +21,6 @@ dependencies {
     testCompile project(':requery-jackson')
     apt project(':requery-processor')
     compile fileTree(include: ['*.jar'], dir: 'libs') // for Oracle JDBC drivers
-    compile "io.reactivex:rxjava:$rxjava_version"
     compile "io.reactivex.rxjava2:rxjava:$rxjava2_version"
     testCompile "io.projectreactor:reactor-core:$reactor_version"
     compile "org.eclipse.persistence:javax.persistence:$jpa_version"
