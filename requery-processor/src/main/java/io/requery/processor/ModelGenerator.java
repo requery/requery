@@ -39,49 +39,49 @@ import java.util.*;
  */
 class ModelGenerator implements SourceGenerator {
 
-  private final String packageName;
-  private final ProcessingEnvironment processingEnvironment;
-  private final Collection<? extends EntityDescriptor> entities;
+    private final String packageName;
+    private final ProcessingEnvironment processingEnvironment;
+    private final Collection<? extends EntityDescriptor> entities;
 
-  ModelGenerator(ProcessingEnvironment processingEnvironment,
-                 String packageName,
-                 Collection<? extends EntityDescriptor> entities) {
-    this.processingEnvironment = processingEnvironment;
-    this.packageName = packageName;
-    this.entities = entities;
-  }
-
-  @Override
-  public void generate() throws IOException {
-    ClassName typeName = ClassName.get(packageName, "Models");
-    TypeSpec.Builder type = TypeSpec.classBuilder(typeName)
-            .addModifiers(Modifier.PUBLIC)
-            .addMethod(MethodSpec.constructorBuilder()
-                    .addModifiers(Modifier.PRIVATE).build());
-    CodeGeneration.addGeneratedAnnotation(processingEnvironment, type);
-
-    Map<String, Set<EntityDescriptor>> models = new HashMap<>();
-    entities.forEach(entity ->
-            models.computeIfAbsent(entity.modelName(), key -> new HashSet<>()).add(entity));
-
-    for (String model : models.keySet()) {
-      List<EntityDescriptor> types = new ArrayList<>(models.get(model));
-      // Sort types by name to avoid arbitrary generation order, breaking incremental compilation
-      types.sort(Comparator.comparing(it -> it.typeName().toString()));
-
-      FieldSpec.Builder field = FieldSpec.builder(ClassName.get(EntityModel.class),
-              model.toUpperCase(), Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
-      CodeBlock.Builder fieldType = CodeBlock.builder();
-      fieldType.add("new $T($S)\n", ClassName.get(EntityModelBuilder.class), model);
-
-      types.forEach(e -> fieldType.add(".addType($T.$L)\n",
-              ClassName.bestGuess(e.typeName().toString()), EntityGenerator.TYPE_NAME));
-
-      fieldType.add(".build()");
-      field.initializer("$L", fieldType.build());
-      type.addField(field.build());
+    ModelGenerator(ProcessingEnvironment processingEnvironment,
+                   String packageName,
+                   Collection<? extends EntityDescriptor> entities) {
+        this.processingEnvironment = processingEnvironment;
+        this.packageName = packageName;
+        this.entities = entities;
     }
 
-    CodeGeneration.writeType(processingEnvironment, typeName.packageName(), type.build());
-  }
+    @Override
+    public void generate() throws IOException {
+        ClassName typeName = ClassName.get(packageName, "Models");
+        TypeSpec.Builder type = TypeSpec.classBuilder(typeName)
+                .addModifiers(Modifier.PUBLIC)
+                .addMethod(MethodSpec.constructorBuilder()
+                        .addModifiers(Modifier.PRIVATE).build());
+        CodeGeneration.addGeneratedAnnotation(processingEnvironment, type);
+
+        Map<String, Set<EntityDescriptor>> models = new HashMap<>();
+        entities.forEach(entity ->
+                models.computeIfAbsent(entity.modelName(), key -> new HashSet<>()).add(entity));
+
+        for (String model : models.keySet()) {
+            List<EntityDescriptor> types = new ArrayList<>(models.get(model));
+            // Sort types by name to avoid arbitrary generation order, breaking incremental compilation
+            types.sort(Comparator.comparing(it -> it.typeName().toString()));
+
+            FieldSpec.Builder field = FieldSpec.builder(ClassName.get(EntityModel.class),
+                    model.toUpperCase(), Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+            CodeBlock.Builder fieldType = CodeBlock.builder();
+            fieldType.add("new $T($S)\n", ClassName.get(EntityModelBuilder.class), model);
+
+            types.forEach(e -> fieldType.add(".addType($T.$L)\n",
+                    ClassName.bestGuess(e.typeName().toString()), EntityGenerator.TYPE_NAME));
+
+            fieldType.add(".build()");
+            field.initializer("$L", fieldType.build());
+            type.addField(field.build());
+        }
+
+        CodeGeneration.writeType(processingEnvironment, typeName.packageName(), type.build());
+    }
 }
