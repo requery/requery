@@ -95,6 +95,10 @@ configure([project(':requery'), project(':requery-processor'), project(':requery
 
 configure([project(':requery'), project(':requery-processor'), project(':requery-android'), project(':requery-kotlin'), project(':requery-jackson')]) {
     apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'maven'
+
+    group = project.rootProject.group
+    version = project.rootProject.version
 
     bintray {
         user = properties.getProperty('bintray.user')
