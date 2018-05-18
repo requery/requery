@@ -67,7 +67,7 @@ class LoggingListener @JvmOverloads constructor(private val tag: String = "reque
         Log.i(tag, String.format("preUpdate %s", entity))
     }
 
-    override fun beforeExecuteUpdate(statement: Statement, sql: String, parameters: BoundParameters) {
+    override fun beforeExecuteUpdate(statement: Statement, sql: String, parameters: BoundParameters?) {
         Log.i(tag, String.format("beforeExecuteUpdate sql: %s", sql))
     }
 
@@ -83,7 +83,7 @@ class LoggingListener @JvmOverloads constructor(private val tag: String = "reque
         Log.i(tag, "afterExecuteBatchUpdate")
     }
 
-    override fun beforeExecuteQuery(statement: Statement, sql: String, parameters: BoundParameters) {
+    override fun beforeExecuteQuery(statement: Statement, sql: String, parameters: BoundParameters?) {
         Log.i(tag, String.format("beforeExecuteQuery sql: %s", sql))
     }
 
