@@ -28,18 +28,13 @@ import io.requery.meta.EntityModelBuilder;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Generates a java class file containing one or more {@link EntityModel} information for classes
  * that were processed by the annotation processor. The models can be used to group together
  * persistable classes that may belong to different databases through the {@link Entity#model()}
  * field.
- *
  * @author Nikhil Purushe
  */
 class ModelGenerator implements SourceGenerator {
@@ -70,7 +65,9 @@ class ModelGenerator implements SourceGenerator {
                 models.computeIfAbsent(entity.modelName(), key -> new HashSet<>()).add(entity));
 
         for (String model : models.keySet()) {
-            Set<EntityDescriptor> types = models.get(model);
+            List<EntityDescriptor> types = new ArrayList<>(models.get(model));
+            // Sort types by name to avoid arbitrary generation order, breaking incremental compilation
+            types.sort(Comparator.comparing(it -> it.typeName().toString()));
 
             FieldSpec.Builder field = FieldSpec.builder(ClassName.get(EntityModel.class),
                     model.toUpperCase(), Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
