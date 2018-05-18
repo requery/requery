@@ -8,15 +8,16 @@ buildscript {
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'maven-publish'
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 27
     buildToolsVersion "$android_buildtools_version"
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 25
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -42,16 +43,16 @@ android {
 }
 
 dependencies {
-    compile project(':requery')
-    compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.android.support:recyclerview-v7:25.3.1'
-    compile 'net.zetetic:android-database-sqlcipher:3.5.9'
-    compile 'io.requery:sqlite-android:3.21.0'
-    testCompile 'junit:junit:4.12'
-    androidTestCompile project(':requery-test')
-    androidTestCompile 'com.android.support.test:runner:0.5'
-    androidTestCompile 'com.android.support.test:rules:0.5'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation project(':requery')
+    implementation "com.android.support:support-v4:$android_support"
+    implementation "com.android.support:recyclerview-v7:$android_support"
+    implementation 'net.zetetic:android-database-sqlcipher:3.5.9'
+    implementation 'io.requery:sqlite-android:3.21.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation project(':requery-test')
+    androidTestImplementation 'com.android.support.test:runner:0.5'
+    androidTestImplementation 'com.android.support.test:rules:0.5'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 publish.dependsOn 'assembleRelease'

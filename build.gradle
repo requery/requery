@@ -3,21 +3,24 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
 buildscript {
-    ext.android_buildtools_version = '26.0.2'
+    ext.android_buildtools_version = '27.0.3'
+    ext.android_support = '27.1.1'
     ext.jackson_version = '2.8.6'
     ext.jpa_version = '2.1.1'
-    ext.kotlin_version = '1.2.20'
-    ext.rxjava2_version = '2.1.9'
+    ext.kotlin_version = '1.2.41'
+    ext.rxjava_version = '1.3.0'
+    ext.rxjava2_version = '2.1.13'
     ext.reactor_version = '3.1.4.RELEASE'
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'com.android.tools.build:gradle:3.1.2'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.8"
+        classpath "com.github.dcendents:android-maven-gradle-plugin:2.1"
     }
 }
 
@@ -138,3 +141,9 @@ configure([project(':requery'), project(':requery-processor'), project(':requery
         }
     }
 }
+
+configure([project(":requery-android"), project(":requery-android:example"), project(":requery-android:example-kotlin")]) {
+    // Apply android-maven plugin for https://jitpack.io support
+    apply plugin: 'com.github.dcendents.android-maven'
+}
+
