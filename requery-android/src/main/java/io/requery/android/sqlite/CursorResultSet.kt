@@ -172,12 +172,12 @@ class CursorResultSet(private val statement: Statement?, private val cursor: Cur
         return getByte(findColumn(columnName))
     }
 
-    override fun getBytes(columnIndex: Int): ByteArray {
+    override fun getBytes(columnIndex: Int): ByteArray? {
         lastColumnIndex = columnIndex
         return cursor.getBlob(columnIndex - 1)
     }
 
-    override fun getBytes(columnName: String): ByteArray {
+    override fun getBytes(columnName: String): ByteArray? {
         return getBytes(findColumn(columnName))
     }
 
@@ -488,19 +488,19 @@ class CursorResultSet(private val statement: Statement?, private val cursor: Cur
         return cursor.isClosed
     }
 
-    override fun getNClob(columnIndex: Int): NClob {
+    override fun getNClob(columnIndex: Int): NClob? {
         throw SQLFeatureNotSupportedException()
     }
 
-    override fun getNClob(columnLabel: String): NClob {
+    override fun getNClob(columnLabel: String): NClob? {
         return getNClob(findColumn(columnLabel))
     }
 
-    override fun getSQLXML(columnIndex: Int): SQLXML {
+    override fun getSQLXML(columnIndex: Int): SQLXML? {
         throw SQLFeatureNotSupportedException()
     }
 
-    override fun getSQLXML(columnLabel: String): SQLXML {
+    override fun getSQLXML(columnLabel: String): SQLXML? {
         return getSQLXML(findColumn(columnLabel))
     }
 
@@ -546,7 +546,7 @@ class CursorResultSet(private val statement: Statement?, private val cursor: Cur
         return ""
     }
 
-    override fun getColumnName(column: Int): String {
+    override fun getColumnName(column: Int): String? {
         return cursor.getColumnName(column - 1)
     }
 
