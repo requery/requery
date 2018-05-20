@@ -40,38 +40,28 @@ constructor(private val cipherConnection: SqlCipherConnection, sql: String, auto
     override fun bindNullOrString(index: Int, value: Any?) {
         if (value == null) {
             statement.bindNull(index)
-            if (bindings != null) {
-                bindings.add(null)
-            }
+            bindings?.add(null)
         } else {
             val string = value.toString()
             statement.bindString(index, string)
-            if (bindings != null) {
-                bindings.add(string)
-            }
+            bindings?.add(string)
         }
     }
 
     override fun bindLong(index: Int, value: Long) {
         statement.bindLong(index, value)
-        if (bindings != null) {
-            bindings.add(value)
-        }
+        bindings?.add(value)
     }
 
     override fun bindDouble(index: Int, value: Double) {
         statement.bindDouble(index, value)
-        if (bindings != null) {
-            bindings.add(value)
-        }
+        bindings?.add(value)
     }
 
     override fun bindBlob(index: Int, value: ByteArray?) {
         if (value == null) {
             statement.bindNull(index)
-            if (bindings != null) {
-                bindings.add(null)
-            }
+            bindings?.add(null)
         } else {
             statement.bindBlob(index, value)
             if (bindings != null) {
@@ -102,9 +92,7 @@ constructor(private val cipherConnection: SqlCipherConnection, sql: String, auto
 
     override fun clearParameters() {
         statement.clearBindings()
-        if (bindings != null) {
-            bindings.clear()
-        }
+        bindings?.clear()
     }
 
     @Throws(SQLException::class)

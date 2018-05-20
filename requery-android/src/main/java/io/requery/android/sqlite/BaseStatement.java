@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ public abstract class BaseStatement implements Statement {
     }
 
     @Override
-    public void clearWarnings() throws SQLException {
+    public void clearWarnings() {
 
     }
 
@@ -125,27 +125,27 @@ public abstract class BaseStatement implements Statement {
     }
 
     @Override
-    public int getFetchDirection() throws SQLException {
+    public int getFetchDirection() {
         return ResultSet.FETCH_FORWARD;
     }
 
     @Override
-    public int getFetchSize() throws SQLException {
+    public int getFetchSize() {
         return fetchSize;
     }
 
     @Override
-    public ResultSet getGeneratedKeys() throws SQLException {
+    public ResultSet getGeneratedKeys() {
         return insertResult;
     }
 
     @Override
-    public int getMaxFieldSize() throws SQLException {
+    public int getMaxFieldSize() {
         return maxFieldSize;
     }
 
     @Override
-    public int getMaxRows() throws SQLException {
+    public int getMaxRows() {
         return maxRows;
     }
 
@@ -155,12 +155,12 @@ public abstract class BaseStatement implements Statement {
     }
 
     @Override
-    public boolean getMoreResults(int current) throws SQLException {
+    public boolean getMoreResults(int current) {
         return false;
     }
 
     @Override
-    public int getQueryTimeout() throws SQLException {
+    public int getQueryTimeout() {
         return timeout;
     }
 
@@ -171,36 +171,36 @@ public abstract class BaseStatement implements Statement {
     }
 
     @Override
-    public int getResultSetConcurrency() throws SQLException {
+    public int getResultSetConcurrency() {
         return ResultSet.CONCUR_READ_ONLY;
     }
 
     @Override
-    public int getResultSetHoldability() throws SQLException {
+    public int getResultSetHoldability() {
         return connection.getHoldability();
     }
 
     @Override
-    public int getResultSetType() throws SQLException {
+    public int getResultSetType() {
         return ResultSet.TYPE_SCROLL_INSENSITIVE;
     }
 
     @Override
-    public int getUpdateCount() throws SQLException {
+    public int getUpdateCount() {
         return updateCount;
     }
 
     @Override
-    public SQLWarning getWarnings() throws SQLException {
+    public SQLWarning getWarnings() {
         return null;
     }
 
     @Override
-    public void setCursorName(String name) throws SQLException {
+    public void setCursorName(String name) {
     }
 
     @Override
-    public void setEscapeProcessing(boolean enable) throws SQLException {
+    public void setEscapeProcessing(boolean enable) {
 
     }
 
@@ -212,27 +212,27 @@ public abstract class BaseStatement implements Statement {
     }
 
     @Override
-    public void setFetchSize(int rows) throws SQLException {
+    public void setFetchSize(int rows) {
         this.fetchSize = rows;
     }
 
     @Override
-    public void setMaxFieldSize(int max) throws SQLException {
+    public void setMaxFieldSize(int max) {
         this.maxFieldSize = max;
     }
 
     @Override
-    public void setMaxRows(int max) throws SQLException {
+    public void setMaxRows(int max) {
         this.maxRows = max;
     }
 
     @Override
-    public void setQueryTimeout(int seconds) throws SQLException {
+    public void setQueryTimeout(int seconds) {
         this.timeout = seconds;
     }
 
     @Override
-    public boolean isClosed() throws SQLException {
+    public boolean isClosed() {
         return closed;
     }
 
@@ -242,7 +242,7 @@ public abstract class BaseStatement implements Statement {
     }
 
     @Override
-    public boolean isPoolable() throws SQLException {
+    public boolean isPoolable() {
         return false;
     }
 
@@ -252,7 +252,7 @@ public abstract class BaseStatement implements Statement {
     }
 
     @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+    public boolean isWrapperFor(Class<?> iface) {
         return false;
     }
 }

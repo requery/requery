@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,12 +146,12 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public ResultSetMetaData getMetaData() throws SQLException {
+    public ResultSetMetaData getMetaData() {
         return null;
     }
 
     @Override
-    public ParameterMetaData getParameterMetaData() throws SQLException {
+    public ParameterMetaData getParameterMetaData() {
         return null;
     }
 
@@ -167,7 +167,7 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
+    public void setBigDecimal(int parameterIndex, BigDecimal x) {
         bindNullOrString(parameterIndex, x);
     }
 
@@ -182,18 +182,18 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setBoolean(int parameterIndex, boolean x) throws SQLException {
+    public void setBoolean(int parameterIndex, boolean x) {
         long value = x ? 1 : 0;
         bindLong(parameterIndex, value);
     }
 
     @Override
-    public void setByte(int parameterIndex, byte x) throws SQLException {
+    public void setByte(int parameterIndex, byte x) {
         bindLong(parameterIndex, (long) x);
     }
 
     @Override
-    public void setBytes(int parameterIndex, byte[] x) throws SQLException {
+    public void setBytes(int parameterIndex, byte[] x) {
         bindBlob(parameterIndex, x);
     }
 
@@ -208,42 +208,42 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setDate(int parameterIndex, Date x) throws SQLException {
+    public void setDate(int parameterIndex, Date x) {
         setDate(parameterIndex, x, null);
     }
 
     @Override
-    public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
+    public void setDate(int parameterIndex, Date x, Calendar cal) {
         bindNullOrString(parameterIndex, x == null ? null : ISO8601_FORMAT.get().format(x));
     }
 
     @Override
-    public void setDouble(int parameterIndex, double x) throws SQLException {
+    public void setDouble(int parameterIndex, double x) {
         bindDouble(parameterIndex, x);
     }
 
     @Override
-    public void setFloat(int parameterIndex, float x) throws SQLException {
+    public void setFloat(int parameterIndex, float x) {
         bindDouble(parameterIndex, (double) x);
     }
 
     @Override
-    public void setInt(int parameterIndex, int x) throws SQLException {
+    public void setInt(int parameterIndex, int x) {
         bindLong(parameterIndex, (long) x);
     }
 
     @Override
-    public void setLong(int parameterIndex, long x) throws SQLException {
+    public void setLong(int parameterIndex, long x) {
         bindLong(parameterIndex, x);
     }
 
     @Override
-    public void setNull(int parameterIndex, int sqlType) throws SQLException {
+    public void setNull(int parameterIndex, int sqlType) {
         bindNullOrString(parameterIndex, null);
     }
 
     @Override
-    public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException {
+    public void setNull(int paramIndex, int sqlType, String typeName) {
         bindNullOrString(paramIndex, null);
     }
 
@@ -373,17 +373,17 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setShort(int parameterIndex, short x) throws SQLException {
+    public void setShort(int parameterIndex, short x) {
         bindLong(parameterIndex, (long) x);
     }
 
     @Override
-    public void setString(int parameterIndex, String x) throws SQLException {
+    public void setString(int parameterIndex, String x) {
         bindNullOrString(parameterIndex, x);
     }
 
     @Override
-    public void setTime(int parameterIndex, Time x) throws SQLException {
+    public void setTime(int parameterIndex, Time x) {
         if (x == null) {
             bindNullOrString(parameterIndex, null);
         } else {
@@ -392,7 +392,7 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
+    public void setTime(int parameterIndex, Time x, Calendar cal) {
         if (x == null) {
             bindNullOrString(parameterIndex, null);
         } else {
@@ -401,7 +401,7 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
+    public void setTimestamp(int parameterIndex, Timestamp x) {
         if (x == null) {
             bindNullOrString(parameterIndex, null);
         } else {
@@ -410,8 +410,7 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal)
-        throws SQLException {
+    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) {
         if (x == null) {
             bindNullOrString(parameterIndex, null);
         } else {
@@ -426,7 +425,7 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setURL(int parameterIndex, URL x) throws SQLException {
+    public void setURL(int parameterIndex, URL x) {
         bindNullOrString(parameterIndex, x);
     }
 
@@ -436,7 +435,7 @@ public abstract class BasePreparedStatement extends BaseStatement implements Pre
     }
 
     @Override
-    public void setNString(int parameterIndex, String x) throws SQLException {
+    public void setNString(int parameterIndex, String x) {
         bindNullOrString(parameterIndex, x);
     }
 

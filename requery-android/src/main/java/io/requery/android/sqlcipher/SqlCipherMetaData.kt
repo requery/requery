@@ -22,6 +22,7 @@ import io.requery.android.sqlite.SqliteMetaData
 import io.requery.util.function.Function
 import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SQLiteException
+import java.io.Closeable
 
 import java.sql.SQLException
 
@@ -32,7 +33,7 @@ internal class SqlCipherMetaData(connection: BaseConnection) : SqliteMetaData(co
         try {
             val database = SQLiteDatabase.openOrCreateDatabase(":memory:", "", null)
             val cursor = database.rawQuery(query, null)
-            return function.apply(closeWithCursor({ database.close() }, cursor))
+            return function.apply(closeWithCursor(Closeable { database.close() }, cursor))
         } catch (e: SQLiteException) {
             throw SQLException(e)
         }

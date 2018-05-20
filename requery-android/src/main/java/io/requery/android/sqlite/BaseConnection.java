@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -83,11 +82,11 @@ public abstract class BaseConnection implements Connection {
     protected abstract void execSQL(String sql) throws SQLException;
 
     @Override
-    public void clearWarnings() throws SQLException {
+    public void clearWarnings() {
     }
 
     @Override
-    public void close() throws SQLException {
+    public void close() {
         // db must be closed outside of the connection
     }
 
@@ -104,37 +103,37 @@ public abstract class BaseConnection implements Connection {
     }
 
     @Override
-    public boolean getAutoCommit() throws SQLException {
+    public boolean getAutoCommit() {
         return autoCommit;
     }
 
     @Override
-    public String getCatalog() throws SQLException {
+    public String getCatalog() {
         return null;
     }
 
     @Override
-    public int getHoldability() throws SQLException {
+    public int getHoldability() {
         return holdability;
     }
 
     @Override
-    public int getTransactionIsolation() throws SQLException {
+    public int getTransactionIsolation() {
         return transactionIsolation;
     }
 
     @Override
-    public Map<String, Class<?>> getTypeMap() throws SQLException {
+    public Map<String, Class<?>> getTypeMap() {
         return null;
     }
 
     @Override
-    public SQLWarning getWarnings() throws SQLException {
+    public SQLWarning getWarnings() {
         return null;
     }
 
     @Override
-    public String nativeSQL(String sql) throws SQLException {
+    public String nativeSQL(String sql) {
         return sql;
     }
 
@@ -183,7 +182,7 @@ public abstract class BaseConnection implements Connection {
     }
 
     @Override
-    public void setAutoCommit(boolean autoCommit) throws SQLException {
+    public void setAutoCommit(boolean autoCommit) {
         this.autoCommit = autoCommit;
         ensureTransaction();
     }
@@ -194,7 +193,7 @@ public abstract class BaseConnection implements Connection {
     }
 
     @Override
-    public void setHoldability(int holdability) throws SQLException {
+    public void setHoldability(int holdability) {
         this.holdability = holdability;
     }
 
@@ -259,7 +258,7 @@ public abstract class BaseConnection implements Connection {
     }
 
     @Override
-    public SQLXML createSQLXML() throws SQLException {
+    public SQLXML createSQLXML() {
         throw new UnsupportedOperationException();
     }
 
@@ -269,24 +268,24 @@ public abstract class BaseConnection implements Connection {
     }
 
     @Override
-    public void setClientInfo(String name, String value) throws SQLClientInfoException {
+    public void setClientInfo(String name, String value) {
         clientInfo.setProperty(name, value);
     }
 
     @Override
-    public void setClientInfo(Properties properties) throws SQLClientInfoException {
+    public void setClientInfo(Properties properties) {
         if(properties != null) {
             this.clientInfo = properties;
         }
     }
 
     @Override
-    public String getClientInfo(String name) throws SQLException {
+    public String getClientInfo(String name) {
         return clientInfo.getProperty(name);
     }
 
     @Override
-    public Properties getClientInfo() throws SQLException {
+    public Properties getClientInfo() {
         return clientInfo;
     }
 
@@ -301,12 +300,12 @@ public abstract class BaseConnection implements Connection {
     }
 
     @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
+    public <T> T unwrap(Class<T> iface) {
         return null;
     }
 
     @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+    public boolean isWrapperFor(Class<?> iface) {
         return false;
     }
 
@@ -321,12 +320,12 @@ public abstract class BaseConnection implements Connection {
         }
 
         @Override
-        public int getSavepointId() throws SQLException {
+        public int getSavepointId() {
             return id;
         }
 
         @Override
-        public String getSavepointName() throws SQLException {
+        public String getSavepointName() {
             return name;
         }
     }
