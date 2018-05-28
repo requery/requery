@@ -20,10 +20,9 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 
-before_install:
-  - psql -c 'create database testdb;' -U postgres
-
 before_script:
+  - psql -c 'create database testdb;' -U postgres
+  - mysql -e "create database if not exists testdb;" -uroot
   - echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a
   - emulator -avd test -no-audio -no-window &
   - android-wait-for-emulator
