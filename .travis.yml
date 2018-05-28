@@ -1,4 +1,4 @@
-language: android
+language: generic
 dist: trusty
 jdk:
   - oraclejdk9
