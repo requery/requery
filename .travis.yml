@@ -2,13 +2,6 @@ language: android
 sudo: required
 jdk:
   - oraclejdk9
-addons:
-  apt:
-    sources:
-      - mysql-5.7-trusty
-    packages:
-      - mysql-server
-      - mysql-client
 android:
   components:
     - tools
@@ -28,10 +21,6 @@ cache:
     - $HOME/.gradle/wrapper/
 
 before_install:
-  - sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('new_password') where User='root'; update user set plugin='mysql_native_password';FLUSH PRIVILEGES;"
-  - sudo mysql_upgrade
-  - sudo service mysql restart
-  - mysql -e "create database if not exists testdb;" -h 127.0.0.1 -uroot
   - psql -c 'create database testdb;' -U postgres
 
 before_script:
