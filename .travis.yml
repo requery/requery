@@ -1,6 +1,5 @@
 language: android
 dist: trusty
-sudo: required
 jdk:
   - oraclejdk9
 android:
