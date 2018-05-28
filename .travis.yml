@@ -21,7 +21,7 @@ cache:
     - $HOME/.gradle/wrapper/
 
 before_install:
-  - mysql -e "create database if not exists testdb;" -utravis
+  - mysql -e "create database if not exists testdb;" -h 127.0.0.1 -utravis
   - psql -c 'create database testdb;' -U postgres
 
 before_script:
