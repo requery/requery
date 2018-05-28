@@ -22,6 +22,7 @@ cache:
     - $HOME/.gradle/wrapper/
 
 before_script:
+  - sleep 15
   - psql -c 'create database testdb;' -U postgres
   - mysql -e "create database if not exists testdb;" -uroot
   - echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a
