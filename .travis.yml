@@ -1,7 +1,13 @@
-language: generic
-dist: trusty
+language: android
+sudo: required
+dist: precise
+group: edge
 jdk:
-  - oraclejdk9
+  - oraclejdk8
+addons:
+  apt:
+    packages:
+      - oracle-java9-installer
 android:
   components:
     - tools
@@ -21,9 +27,8 @@ cache:
     - $HOME/.gradle/wrapper/
 
 before_script:
-  - sleep 15
-  - psql -c 'create database testdb;' -U postgres
   - mysql -e "create database if not exists testdb;" -uroot
+  - psql -c 'create database testdb;' -U postgres
   - echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a
   - emulator -avd test -no-audio -no-window &
   - android-wait-for-emulator
