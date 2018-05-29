@@ -4,10 +4,7 @@ dist: precise
 group: edge
 jdk:
   - oraclejdk8
-addons:
-  apt:
-    packages:
-      - oracle-java9-installer
+
 android:
   components:
     - tools
