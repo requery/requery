@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,15 +86,9 @@ public final class EntityProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         // types to generate in this round
         Map<TypeElement, EntityElement> entities = new HashMap<>();
-        SourceLanguage.map(processingEnv);
         Types types = processingEnv.getTypeUtils();
 
-        Set<TypeElement> annotationElements = new LinkedHashSet<>();
-        if (isEmptyKotlinAnnotationSet(annotations)) {
-            annotationElements.addAll(SourceLanguage.getAnnotations());
-        } else {
-            annotationElements.addAll(annotations);
-        }
+        Set<TypeElement> annotationElements = new LinkedHashSet<>(annotations);
 
         for (TypeElement annotation : annotationElements) {
             for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
@@ -302,16 +296,5 @@ public final class EntityProcessor extends AbstractProcessor {
             }
         }
         return packageName;
-    }
-
-    // Kotlin 1.0.4 the set of annotation elements is empty except for '__gen.KotlinAptAnnotation'
-    private boolean isEmptyKotlinAnnotationSet(Set<? extends TypeElement> annotations) {
-        if (annotations.size() == 1) {
-            TypeElement element = annotations.iterator().next();
-            if (element.getQualifiedName().contentEquals("__gen.KotlinAptAnnotation")) {
-                return true;
-            }
-        }
-        return false;
     }
 }
