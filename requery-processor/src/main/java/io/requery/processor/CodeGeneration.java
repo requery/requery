@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import io.requery.util.function.Supplier;
 
 import javax.annotation.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 import java.io.IOException;
@@ -39,9 +40,21 @@ class CodeGeneration {
     static void addGeneratedAnnotation(ProcessingEnvironment processingEnvironment,
                                        TypeSpec.Builder builder) {
         Elements elements = processingEnvironment.getElementUtils();
-        if (elements.getTypeElement(Generated.class.getCanonicalName()) != null) {
-            builder.addAnnotation(AnnotationSpec.builder(Generated.class)
-                .addMember("value", "$S", EntityProcessor.class.getCanonicalName()).build());
+        SourceVersion sourceVersion = processingEnvironment.getSourceVersion();
+        AnnotationSpec.Builder annotationBuilder = null;
+        if (sourceVersion.compareTo(SourceVersion.RELEASE_8) > 0) {
+            ClassName name = ClassName.bestGuess("javax.annotation.processing.Generated");
+            annotationBuilder = AnnotationSpec.builder(name);
+        } else {
+            if (elements.getTypeElement(Generated.class.getCanonicalName()) != null) {
+                annotationBuilder = AnnotationSpec.builder(Generated.class);
+            }
+        }
+
+        if (annotationBuilder != null) {
+            builder.addAnnotation(annotationBuilder
+                    .addMember("value", "$S",
+                            EntityProcessor.class.getCanonicalName()).build());
         }
     }
 
