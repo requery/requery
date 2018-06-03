@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,11 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Generates a java class file containing one or more {@link EntityModel} information for classes
@@ -66,8 +67,10 @@ class ModelGenerator implements SourceGenerator {
         CodeGeneration.addGeneratedAnnotation(processingEnvironment, type);
 
         Map<String, Set<EntityDescriptor>> models = new HashMap<>();
+        Comparator<EntityDescriptor> comparator =
+                Comparator.comparing(descriptor -> descriptor.typeName().toString());
         entities.forEach(entity ->
-                models.computeIfAbsent(entity.modelName(), key -> new HashSet<>()).add(entity));
+                models.computeIfAbsent(entity.modelName(), key -> new TreeSet<>(comparator)).add(entity));
 
         for (String model : models.keySet()) {
             Set<EntityDescriptor> types = models.get(model);
