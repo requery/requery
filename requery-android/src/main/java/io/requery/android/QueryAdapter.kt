@@ -43,19 +43,14 @@ import java.util.concurrent.Future
  * and [.getView].
  *
  * @param <E> entity element type
+ * @param type entity type
  *
  * @author Nikhil Purushe
-</E> */
-abstract class QueryAdapter<E>
-/**
- * Creates a new adapter instance mapped to the given type.
- *
- * @param type entity type
  */
-@JvmOverloads protected constructor(type: Type<E>? = null) : BaseAdapter(), Closeable {
+abstract class QueryAdapter<E> @JvmOverloads protected constructor(type: Type<E>? = null) : BaseAdapter(), Closeable {
 
-    private val handler: Handler
-    private val proxyProvider: Function<E, EntityProxy<E>>?
+    private val handler: Handler = Handler()
+    private val proxyProvider: Function<E, EntityProxy<E>>? = type?.proxyProvider
     private var iterator: ResultSetIterator<E>? = null
     private var createdExecutor: Boolean = false
     private var executor: ExecutorService? = null
@@ -68,11 +63,6 @@ abstract class QueryAdapter<E>
      * @param type entity class type
      */
     protected constructor(model: EntityModel, type: Class<E>) : this(model.typeOf<E>(type))
-
-    init {
-        proxyProvider = type?.proxyProvider
-        handler = Handler()
-    }
 
     /**
      * Call this to clean up the underlying result.

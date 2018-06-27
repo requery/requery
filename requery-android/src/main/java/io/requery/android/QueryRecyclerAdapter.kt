@@ -44,24 +44,20 @@ import java.util.concurrent.Future
  * @param <VH> view holder type
  *
  * @author Nikhil Purushe
-</VH></E> */
-abstract class QueryRecyclerAdapter<E, VH : RecyclerView.ViewHolder>
-/**
- * Creates a new adapter instance mapped to the given type.
- *
- * @param type entity type
  */
+abstract class QueryRecyclerAdapter<E, VH : RecyclerView.ViewHolder>
 @JvmOverloads protected constructor(type: Type<E>? = null) : RecyclerView.Adapter<VH>(), Closeable {
 
     private val handler: Handler
     private val proxyProvider: Function<E, EntityProxy<E>>?
+    private var createdExecutor: Boolean = false
+    private var executor: ExecutorService? = null
+    private var queryFuture: Future<Result<E>>? = null
+
     /**
      * @return the underlying iterator being used or null if none
      */
     protected var iterator: ResultSetIterator<E>? = null
-    private var createdExecutor: Boolean = false
-    private var executor: ExecutorService? = null
-    private var queryFuture: Future<Result<E>>? = null
 
     /**
      * Creates a new adapter instance.
