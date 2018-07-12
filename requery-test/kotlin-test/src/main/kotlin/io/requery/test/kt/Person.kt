@@ -10,7 +10,7 @@ interface Person {
 
     @get:Key
     @get:Generated
-    var id: Int
+    val id: Int
     var name: String
     var email: String
     var birthday: Date
@@ -21,7 +21,7 @@ interface Person {
     var address: Address
 
     @get:ManyToMany(mappedBy = "members")
-    var groups: Set<Group>
+    val groups: Set<Group>
 
     var about: String
 

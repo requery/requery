@@ -159,6 +159,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         isEmbedded = annotationOf(Embedded.class).isPresent() ||
             annotationOf(javax.persistence.Embedded.class).isPresent();
         indexNames.forEach(name -> checkReserved(name, validator));
+        if (isReadOnly)
+            checkForInvalidSetter(validator);
         return validators;
     }
 
@@ -654,6 +656,26 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         }
     }
 
+    private void checkForInvalidSetter(ElementValidator validator) {
+        boolean invalid = false;
+        if (!element().getKind().isField()) {
+            for (ExecutableElement element :
+                    ElementFilter.methodsIn(entity.element().getEnclosedElements())) {
+                List<? extends VariableElement> parameters = element.getParameters();
+                if (parameters.size() == 1) {
+                    String property =
+                            Names.removeMethodPrefixes(element.getSimpleName().toString());
+                    if (property.toLowerCase(Locale.ROOT).equalsIgnoreCase(name())) {
+                        invalid = true;
+                    }
+                }
+            }
+        } else
+            invalid = true;
+        if (invalid)
+            validator.error("Element \""+ fieldName() + "\" is read-only but has setter (Kotlin: change var to val)");
+    }
+
     private boolean useBeanStyleProperties() {
         return entity.propertyNameStyle() == PropertyNameStyle.BEAN ||
                entity.propertyNameStyle() == PropertyNameStyle.FLUENT_BEAN;
@@ -878,11 +900,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         CascadeAction[] cascade() {
             try {
                 return (CascadeAction[])
-                    annotation.getClass().getMethod("cascade").invoke(annotation);
+                        annotation.getClass().getMethod("cascade").invoke(annotation);
             } catch (Exception e) {
                 try {
                     CascadeType[] cascadeTypes = (CascadeType[])
-                        annotation.getClass().getMethod("cascade").invoke(annotation);
+                            annotation.getClass().getMethod("cascade").invoke(annotation);
                     return mapCascadeActions(cascadeTypes);
                 } catch (Exception ee) {
                     return null;
