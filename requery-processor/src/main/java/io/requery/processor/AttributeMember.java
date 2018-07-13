@@ -657,23 +657,18 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     }
 
     private void checkForInvalidSetter(ElementValidator validator) {
-        boolean invalid = false;
         if (!element().getKind().isField()) {
             for (ExecutableElement element :
                     ElementFilter.methodsIn(entity.element().getEnclosedElements())) {
                 List<? extends VariableElement> parameters = element.getParameters();
                 if (parameters.size() == 1) {
-                    String property =
-                            Names.removeMethodPrefixes(element.getSimpleName().toString());
+                    String property = Names.removeMethodPrefixes(element.getSimpleName().toString());
                     if (property.toLowerCase(Locale.ROOT).equalsIgnoreCase(name())) {
-                        invalid = true;
+                        validator.error("Element \""+ fieldName() + "\" is read-only but has setter (Kotlin: change var to val)");
                     }
                 }
             }
-        } else
-            invalid = true;
-        if (invalid)
-            validator.error("Element \""+ fieldName() + "\" is read-only but has setter (Kotlin: change var to val)");
+        }
     }
 
     private boolean useBeanStyleProperties() {
