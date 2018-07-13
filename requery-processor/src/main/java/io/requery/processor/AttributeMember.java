@@ -895,11 +895,11 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         CascadeAction[] cascade() {
             try {
                 return (CascadeAction[])
-                        annotation.getClass().getMethod("cascade").invoke(annotation);
+                    annotation.getClass().getMethod("cascade").invoke(annotation);
             } catch (Exception e) {
                 try {
                     CascadeType[] cascadeTypes = (CascadeType[])
-                            annotation.getClass().getMethod("cascade").invoke(annotation);
+                        annotation.getClass().getMethod("cascade").invoke(annotation);
                     return mapCascadeActions(cascadeTypes);
                 } catch (Exception ee) {
                     return null;
