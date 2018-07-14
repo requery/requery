@@ -19,17 +19,9 @@ package io.requery.sql.platform;
 import io.requery.query.Expression;
 import io.requery.query.element.LimitedElement;
 import io.requery.query.element.OrderByElement;
-import io.requery.sql.GeneratedColumnDefinition;
-import io.requery.sql.IdentityColumnDefinition;
-import io.requery.sql.Mapping;
-import io.requery.sql.Platform;
-import io.requery.sql.UserVersionColumnDefinition;
-import io.requery.sql.VersionColumnDefinition;
-import io.requery.sql.gen.Generator;
-import io.requery.sql.gen.LimitGenerator;
-import io.requery.sql.gen.OffsetFetchGenerator;
-import io.requery.sql.gen.OrderByGenerator;
-import io.requery.sql.gen.UpsertMergeGenerator;
+import io.requery.query.element.QueryElement;
+import io.requery.sql.*;
+import io.requery.sql.gen.*;
 
 import java.util.Map;
 
@@ -41,6 +33,8 @@ public class Generic implements Platform {
     private final GeneratedColumnDefinition generatedColumnDefinition;
     private final LimitGenerator limitDefinition;
     private final VersionColumnDefinition versionColumnDefinition;
+    private final Generator<QueryElement<?>> insertDefinition;
+    private final Generator<Map<Expression<?>, Object>> updateDefinition;
     private final Generator<Map<Expression<?>, Object>> upsertDefinition;
     private final Generator<OrderByElement> orderByDefinition;
 
@@ -48,6 +42,8 @@ public class Generic implements Platform {
         generatedColumnDefinition = new IdentityColumnDefinition();
         limitDefinition = new OffsetFetchGenerator();
         versionColumnDefinition = new UserVersionColumnDefinition();
+        insertDefinition = new InsertGenerator();
+        updateDefinition = new UpdateGenerator();
         upsertDefinition = new UpsertMergeGenerator();
         orderByDefinition = new OrderByGenerator();
     }
@@ -104,6 +100,16 @@ public class Generic implements Platform {
     @Override
     public VersionColumnDefinition versionColumnDefinition() {
         return versionColumnDefinition;
+    }
+
+    @Override
+    public Generator<QueryElement<?>> insertGenerator() {
+        return insertDefinition;
+    }
+
+    @Override
+    public Generator<Map<Expression<?>, Object>> updateGenerator() {
+        return updateDefinition;
     }
 
     @Override

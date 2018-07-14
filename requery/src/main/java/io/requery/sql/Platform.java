@@ -19,6 +19,7 @@ package io.requery.sql;
 import io.requery.query.Expression;
 import io.requery.query.element.LimitedElement;
 import io.requery.query.element.OrderByElement;
+import io.requery.query.element.QueryElement;
 import io.requery.sql.gen.Generator;
 
 import java.util.Map;
@@ -89,6 +90,16 @@ public interface Platform {
      * @return the limit generator for this database
      */
     Generator<LimitedElement> limitGenerator();
+
+    /**
+     * @return the insert generator for this database
+     */
+    Generator<QueryElement<?>> insertGenerator();
+
+    /**
+     * @return the update generator for this database
+     */
+    Generator<Map<Expression<?>, Object>> updateGenerator();
 
     /**
      * @return the upsert generator for this database
