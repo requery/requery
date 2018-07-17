@@ -20,8 +20,6 @@ import io.requery.query.Expression;
 import io.requery.query.element.LimitedElement;
 import io.requery.query.element.OrderByElement;
 import io.requery.query.element.QueryElement;
-import io.requery.sql.*;
-import io.requery.sql.gen.*;
 
 import java.util.Map;
 
