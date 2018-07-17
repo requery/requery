@@ -159,8 +159,9 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         isEmbedded = annotationOf(Embedded.class).isPresent() ||
             annotationOf(javax.persistence.Embedded.class).isPresent();
         indexNames.forEach(name -> checkReserved(name, validator));
-        if (isReadOnly)
+        if (isReadOnly) {
             checkForInvalidSetter(validator);
+        }
         return validators;
     }
 
