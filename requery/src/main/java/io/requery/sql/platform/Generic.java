@@ -20,6 +20,19 @@ import io.requery.query.Expression;
 import io.requery.query.element.LimitedElement;
 import io.requery.query.element.OrderByElement;
 import io.requery.query.element.QueryElement;
+import io.requery.sql.GeneratedColumnDefinition;
+import io.requery.sql.IdentityColumnDefinition;
+import io.requery.sql.Mapping;
+import io.requery.sql.Platform;
+import io.requery.sql.UserVersionColumnDefinition;
+import io.requery.sql.VersionColumnDefinition;
+import io.requery.sql.gen.Generator;
+import io.requery.sql.gen.InsertGenerator;
+import io.requery.sql.gen.LimitGenerator;
+import io.requery.sql.gen.OffsetFetchGenerator;
+import io.requery.sql.gen.OrderByGenerator;
+import io.requery.sql.gen.UpdateGenerator;
+import io.requery.sql.gen.UpsertMergeGenerator;
 
 import java.util.Map;
 
