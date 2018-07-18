@@ -12,7 +12,7 @@ import io.requery.Key
 interface Keywords {
     @get:Key
     @get:Generated
-    var id: Int
+    val id: Int
 
     var isNotAJvmKeyword: String
 

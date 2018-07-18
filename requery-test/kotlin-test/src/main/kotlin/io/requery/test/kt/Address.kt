@@ -11,7 +11,7 @@ interface Address {
 
     @get:Key
     @get:Generated
-    var id: Int
+    val id: Int
     var line1: String
     var line2: String
     var state: String
