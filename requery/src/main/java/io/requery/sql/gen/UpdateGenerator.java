@@ -25,7 +25,7 @@ import java.util.Map;
 import static io.requery.sql.Keyword.SET;
 import static io.requery.sql.Keyword.UPDATE;
 
-class UpdateGenerator implements Generator<Map<Expression<?>, Object>> {
+public class UpdateGenerator implements Generator<Map<Expression<?>, Object>> {
 
     @Override
     public void write(final Output output, Map<Expression<?>, Object> values) {

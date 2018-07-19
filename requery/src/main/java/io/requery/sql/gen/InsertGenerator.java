@@ -29,7 +29,7 @@ import static io.requery.sql.Keyword.INSERT;
 import static io.requery.sql.Keyword.INTO;
 import static io.requery.sql.Keyword.VALUES;
 
-class InsertGenerator implements Generator<QueryElement<?>> {
+public class InsertGenerator implements Generator<QueryElement<?>> {
 
     @Override
     public void write(final Output output, QueryElement<?> query) {

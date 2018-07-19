@@ -19,6 +19,7 @@ package io.requery.sql.platform;
 import io.requery.query.Expression;
 import io.requery.query.element.LimitedElement;
 import io.requery.query.element.OrderByElement;
+import io.requery.query.element.QueryElement;
 import io.requery.sql.GeneratedColumnDefinition;
 import io.requery.sql.Mapping;
 import io.requery.sql.Platform;
@@ -95,6 +96,16 @@ public class PlatformDelegate implements Platform {
     @Override
     public VersionColumnDefinition versionColumnDefinition() {
         return platform.versionColumnDefinition();
+    }
+
+    @Override
+    public Generator<QueryElement<?>> insertGenerator() {
+        return platform.insertGenerator();
+    }
+
+    @Override
+    public Generator<Map<Expression<?>, Object>> updateGenerator() {
+        return platform.updateGenerator();
     }
 
     @Override

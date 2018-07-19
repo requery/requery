@@ -48,8 +48,8 @@ public final class StatementGenerator implements Generator<QueryElement<?>> {
     public StatementGenerator(Platform platform) {
         // TODO eventually all parts will be overridable
         select = new SelectGenerator();
-        insert = new InsertGenerator();
-        update = new UpdateGenerator();
+        insert = platform.insertGenerator();
+        update = platform.updateGenerator();
         upsert = platform.upsertGenerator();
         where = new WhereGenerator();
         groupBy = new GroupByGenerator();
