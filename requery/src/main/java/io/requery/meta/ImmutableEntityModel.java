@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ final class ImmutableEntityModel implements EntityModel {
         @SuppressWarnings("unchecked")
         Type<T> type = (Type) map.get(entityClass);
         if (type == null) {
-            throw new NotMappedException();
+            throw new NotMappedException("No mapping for " + entityClass.getName());
         }
         return type;
     }

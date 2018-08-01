@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,4 +22,8 @@ import io.requery.PersistenceException;
  * Exception indicating there is not a {@link Type} associated for the given class.
  */
 public class NotMappedException extends PersistenceException {
+
+    NotMappedException(String message) {
+        super(message);
+    }
 }
