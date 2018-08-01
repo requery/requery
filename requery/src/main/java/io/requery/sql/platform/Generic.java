@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,21 +42,21 @@ import java.util.Map;
 public class Generic implements Platform {
 
     private final GeneratedColumnDefinition generatedColumnDefinition;
-    private final LimitGenerator limitDefinition;
+    private final LimitGenerator limitGenerator;
     private final VersionColumnDefinition versionColumnDefinition;
-    private final Generator<QueryElement<?>> insertDefinition;
-    private final Generator<Map<Expression<?>, Object>> updateDefinition;
-    private final Generator<Map<Expression<?>, Object>> upsertDefinition;
-    private final Generator<OrderByElement> orderByDefinition;
+    private final Generator<QueryElement<?>> insertGenerator;
+    private final Generator<Map<Expression<?>, Object>> updateGenerator;
+    private final Generator<Map<Expression<?>, Object>> upsertGenerator;
+    private final Generator<OrderByElement> orderByGenerator;
 
     public Generic() {
         generatedColumnDefinition = new IdentityColumnDefinition();
-        limitDefinition = new OffsetFetchGenerator();
+        limitGenerator = new OffsetFetchGenerator();
         versionColumnDefinition = new UserVersionColumnDefinition();
-        insertDefinition = new InsertGenerator();
-        updateDefinition = new UpdateGenerator();
-        upsertDefinition = new UpsertMergeGenerator();
-        orderByDefinition = new OrderByGenerator();
+        insertGenerator = new InsertGenerator();
+        updateGenerator = new UpdateGenerator();
+        upsertGenerator = new UpsertMergeGenerator();
+        orderByGenerator = new OrderByGenerator();
     }
 
     @Override
@@ -105,7 +105,7 @@ public class Generic implements Platform {
 
     @Override
     public Generator<LimitedElement> limitGenerator() {
-        return limitDefinition;
+        return limitGenerator;
     }
 
     @Override
@@ -115,22 +115,22 @@ public class Generic implements Platform {
 
     @Override
     public Generator<QueryElement<?>> insertGenerator() {
-        return insertDefinition;
+        return insertGenerator;
     }
 
     @Override
     public Generator<Map<Expression<?>, Object>> updateGenerator() {
-        return updateDefinition;
+        return updateGenerator;
     }
 
     @Override
     public Generator<Map<Expression<?>, Object>> upsertGenerator() {
-        return upsertDefinition;
+        return upsertGenerator;
     }
 
     @Override
     public Generator<OrderByElement> orderByGenerator() {
-        return orderByDefinition;
+        return orderByGenerator;
     }
 
     @Override
