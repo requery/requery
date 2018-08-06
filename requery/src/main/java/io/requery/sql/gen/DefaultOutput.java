@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ public class DefaultOutput implements Output {
     private final Aliases inheritedAliases;
     private final boolean parameterize;
     private final BoundParameters parameters;
-    private final StatementGenerator statementGenerator;
+    private final Generator<QueryElement<?>> statementGenerator;
     private final QueryBuilder qb;
     private Aliases aliases;
     private boolean autoAlias;

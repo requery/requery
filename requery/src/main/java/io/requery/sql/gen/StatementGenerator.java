@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ public final class StatementGenerator implements Generator<QueryElement<?>> {
     private Generator<SetOperationElement> setOperation;
 
     public StatementGenerator(Platform platform) {
-        // TODO eventually all parts will be overridable
+        // TODO eventually all parts will be overridable by the platform
         select = new SelectGenerator();
         insert = platform.insertGenerator();
         update = platform.updateGenerator();

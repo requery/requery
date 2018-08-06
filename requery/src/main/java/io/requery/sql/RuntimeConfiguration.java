@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@ import io.requery.EntityCache;
 import io.requery.TransactionIsolation;
 import io.requery.TransactionListener;
 import io.requery.meta.EntityModel;
-import io.requery.sql.gen.StatementGenerator;
+import io.requery.query.element.QueryElement;
+import io.requery.sql.gen.Generator;
 import io.requery.util.function.Supplier;
 
 import java.util.Set;
@@ -36,7 +37,7 @@ public interface RuntimeConfiguration extends ConnectionProvider {
 
     Platform getPlatform();
 
-    StatementGenerator getStatementGenerator();
+    Generator<QueryElement<?>> getStatementGenerator();
 
     boolean supportsBatchUpdates();
 

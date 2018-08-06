@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import io.requery.query.Tuple;
 import io.requery.query.Update;
 import io.requery.query.element.QueryElement;
 import io.requery.query.function.Count;
+import io.requery.sql.gen.Generator;
 import io.requery.sql.gen.StatementGenerator;
 import io.requery.sql.platform.PlatformDelegate;
 import io.requery.util.ClassMap;
@@ -99,7 +100,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     private PreparedStatementCache statementCache;
     private QueryBuilder.Options queryOptions;
     private Platform platform;
-    private StatementGenerator statementGenerator;
+    private Generator<QueryElement<?>> statementGenerator;
     private boolean metadataChecked;
     private boolean supportsBatchUpdates;
 
@@ -600,7 +601,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         return context;
     }
 
-    private class DataContext implements EntityContext<T>, ConnectionProvider {
+    protected class DataContext implements EntityContext<T>, ConnectionProvider {
 
         @Override
         public <E> EntityProxy<E> proxyOf(E entity, boolean forUpdate) {
@@ -719,7 +720,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
         }
 
         @Override
-        public StatementGenerator getStatementGenerator() {
+        public Generator<QueryElement<?>> getStatementGenerator() {
             if (statementGenerator == null) {
                 statementGenerator = new StatementGenerator(getPlatform());
             }
