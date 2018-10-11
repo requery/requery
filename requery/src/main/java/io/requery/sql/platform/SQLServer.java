@@ -58,6 +58,7 @@ public class SQLServer extends Generic {
     public void addMappings(Mapping mapping) {
         super.addMappings(mapping);
         mapping.replaceType(Types.BOOLEAN, new BitBooleanType());
+        mapping.replaceType(Types.TIMESTAMP, new DateTime2TimeStampType());
         mapping.aliasFunction(new Function.Name("getutcdate"), Now.class);
     }
 
@@ -181,6 +182,18 @@ public class SQLServer extends Generic {
         public void writeBoolean(PreparedStatement statement, int index, boolean value)
             throws SQLException {
             statement.setBoolean(index, value);
+        }
+    }
+    
+    private static class DateTime2TimeStampType extends BaseType<java.sql.Timestamp> {
+
+        DateTime2TimeStampType() {
+            super(java.sql.Timestamp.class, Types.TIMESTAMP);
+        }
+
+        @Override
+        public Object getIdentifier() {
+            return "datetime2";
         }
     }
 }

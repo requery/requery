@@ -17,10 +17,6 @@ android {
             proguardFiles 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
     lintOptions {
         abortOnError false
     }
@@ -30,11 +26,11 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:appcompat-v7:$android_support_version"
-    compile "com.android.support:recyclerview-v7:$android_support_version"
-    compile "io.reactivex.rxjava2:rxjava:$rxjava2_version"
-    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'io.requery:requery:1.3.0'
-    compile 'io.requery:requery-android:1.3.0'
+    implementation "com.android.support:appcompat-v7:$android_support_version"
+    implementation "com.android.support:recyclerview-v7:$android_support_version"
+    implementation "io.reactivex.rxjava2:rxjava:$rxjava2_version"
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'io.requery:requery:1.3.0'
+    implementation 'io.requery:requery-android:1.3.0'
     annotationProcessor 'io.requery:requery-processor:1.3.0'
 }

@@ -20,16 +20,13 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'proguard-rules.pro'
+        multiDexEnabled true
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
     }
     lintOptions {
         abortOnError false
@@ -41,16 +38,18 @@ android {
 }
 
 dependencies {
-    compile project(':requery')
-    compile "com.android.support:support-v4:$android_support_version"
-    compile "com.android.support:recyclerview-v7:$android_support_version"
-    compile 'net.zetetic:android-database-sqlcipher:3.5.9'
-    compile 'io.requery:sqlite-android:3.21.0'
-    testCompile 'junit:junit:4.12'
-    androidTestCompile project(':requery-test')
-    androidTestCompile 'com.android.support.test:runner:1.0.2'
-    androidTestCompile 'com.android.support.test:rules:1.0.2'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation project(':requery')
+    implementation 'android.arch.persistence:db:1.1.1'
+    implementation "com.android.support:support-v4:$android_support_version"
+    implementation "com.android.support:recyclerview-v7:$android_support_version"
+    implementation 'net.zetetic:android-database-sqlcipher:3.5.9'
+    implementation 'io.requery:sqlite-android:3.24.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation project(':requery-test')
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    androidTestImplementation 'com.android.support:multidex:1.0.3'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 publish.dependsOn 'assembleRelease'

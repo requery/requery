@@ -159,6 +159,9 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         isEmbedded = annotationOf(Embedded.class).isPresent() ||
             annotationOf(javax.persistence.Embedded.class).isPresent();
         indexNames.forEach(name -> checkReserved(name, validator));
+        if (isReadOnly) {
+            checkForInvalidSetter(validator);
+        }
         return validators;
     }
 
@@ -650,6 +653,21 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                 case NONE:
                 default:
                     return elementName;
+            }
+        }
+    }
+
+    private void checkForInvalidSetter(ElementValidator validator) {
+        if (!element().getKind().isField()) {
+            for (ExecutableElement element :
+                    ElementFilter.methodsIn(entity.element().getEnclosedElements())) {
+                List<? extends VariableElement> parameters = element.getParameters();
+                if (parameters.size() == 1) {
+                    String property = Names.removeMethodPrefixes(element.getSimpleName().toString());
+                    if (property.toLowerCase(Locale.ROOT).equalsIgnoreCase(name())) {
+                        validator.error("Element \""+ fieldName() + "\" is read-only but has setter (Kotlin: change var to val)");
+                    }
+                }
             }
         }
     }

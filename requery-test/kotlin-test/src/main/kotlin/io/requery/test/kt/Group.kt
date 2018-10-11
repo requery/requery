@@ -8,7 +8,7 @@ interface Group {
 
     @get:Key
     @get:Generated
-    var id: Int
+    val id: Int
     @get:Key
     @get:Column(unique = true)
     var name: String
