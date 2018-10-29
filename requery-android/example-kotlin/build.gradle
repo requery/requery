@@ -6,10 +6,6 @@ buildscript {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
-kapt {
-    generateStubs = true
-}
-
 android {
     compileSdkVersion 26
     buildToolsVersion "$android_buildtools_version"
