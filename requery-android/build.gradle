@@ -43,7 +43,7 @@ dependencies {
     implementation "com.android.support:support-v4:$android_support_version"
     implementation "com.android.support:recyclerview-v7:$android_support_version"
     implementation 'net.zetetic:android-database-sqlcipher:3.5.9'
-    implementation 'io.requery:sqlite-android:3.24.0'
+    implementation 'io.requery:sqlite-android:3.25.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation project(':requery-test')
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
