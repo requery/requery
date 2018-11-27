@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import java.util.Optional;
  */
 class AndroidObservableExtension implements TypeGenerationExtension, PropertyGenerationExtension {
 
-    private static final String BINDING_PACKAGE = "android.databinding";
+    private static final String BINDING_PACKAGE = "androidx.databinding";
     private static final String MODULE_PACKAGE_OPTION = "android.databinding.modulePackage";
 
     private final EntityDescriptor entity;

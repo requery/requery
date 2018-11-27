@@ -18,7 +18,7 @@ package io.requery.android
 
 import android.database.Cursor
 import android.os.Handler
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import io.requery.meta.EntityModel
 import io.requery.meta.Type
 import io.requery.proxy.EntityProxy
@@ -193,7 +193,7 @@ abstract class QueryRecyclerAdapter<E, VH : RecyclerView.ViewHolder>
         return 0
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView?) {
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
         close()
         setExecutor(null)

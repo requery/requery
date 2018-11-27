@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package io.requery.android.example.app.model;
 
-import android.databinding.Bindable;
-import android.databinding.Observable;
+import androidx.databinding.Bindable;
+import androidx.databinding.Observable;
 import android.os.Parcelable;
 import io.requery.Entity;
 import io.requery.Generated;
