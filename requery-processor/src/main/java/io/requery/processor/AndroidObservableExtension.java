@@ -27,6 +27,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -44,7 +45,7 @@ class AndroidObservableExtension implements TypeGenerationExtension, PropertyGen
     private final EntityDescriptor entity;
     private final ProcessingEnvironment processingEnvironment;
     private final boolean observable;
-    private final String modulePackage;
+    private String modulePackage;
 
     AndroidObservableExtension(EntityDescriptor entity,
                                ProcessingEnvironment processingEnvironment) {
@@ -52,6 +53,16 @@ class AndroidObservableExtension implements TypeGenerationExtension, PropertyGen
         this.processingEnvironment = processingEnvironment;
         this.observable = isObservable();
         this.modulePackage = processingEnvironment.getOptions().get(MODULE_PACKAGE_OPTION);
+
+        // this shouldn't be happening
+        if (modulePackage == null) {
+            for(Map.Entry<String, String> entry : processingEnvironment.getOptions().entrySet()) {
+                if (entry.getKey().endsWith("databinding.modulePackage")) {
+                    modulePackage = entry.getValue();
+                    break;
+                }
+            }
+        }
     }
 
     private boolean isObservable() {
