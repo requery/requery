@@ -7,7 +7,7 @@
 -dontwarn javax.transaction.**
 -dontwarn java.sql.**
 -dontwarn javax.sql.**
--dontwarn android.support.**
+-dontwarn androidx.**
 -dontwarn io.requery.cache.**
 -dontwarn io.requery.rx.**
 -dontwarn io.requery.reactivex.**
