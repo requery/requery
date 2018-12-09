@@ -30,6 +30,7 @@ import io.requery.query.Update;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -193,6 +194,19 @@ public interface Queryable<T> {
     Result<Tuple> raw(String query, Object... parameters);
 
     /**
+     * Executes a raw query against the data store.
+     *
+     * @param query      raw query to execute
+     * @param namedParameters query named arguments, the number of arguments must match the number of place
+     *                   holder values in the query or a {@link PersistenceException} will be
+     *                   thrown.
+     * @return the result of the query as a {@link Tuple}.
+     */
+    @CheckReturnValue
+    Result<Tuple> raw(String query, Map<String, Object> namedParameters);
+
+
+    /**
      * Executes a raw query against the data store mapping on to a specific entity type.
      *
      * @param type       entity type
@@ -205,4 +219,18 @@ public interface Queryable<T> {
      */
     @CheckReturnValue
     <E extends T> Result<E> raw(Class<E> type, String query, Object... parameters);
+
+    /**
+     * Executes a raw query against the data store mapping on to a specific entity type.
+     *
+     * @param type       entity type
+     * @param query      raw query to execute
+     * @param namedParameters query named arguments, the number of arguments must match the number of place
+     *                   holder values in the query or a {@link PersistenceException} will be
+     *                   thrown.
+     * @param <E>        entity type
+     * @return the result of the query.
+     */
+    @CheckReturnValue
+    <E extends T> Result<E> raw(Class<E> type, String query, Map<String, Object> namedParameters);
 }

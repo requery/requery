@@ -36,6 +36,7 @@ import io.requery.util.function.Function;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -286,8 +287,18 @@ public class ReactorEntityStore<T> implements EntityStore<T, Object>, ReactorQue
     }
 
     @Override
+    public Result<Tuple> raw(String query, Map<String, Object> namedParameters) {
+        return new ReactorResult<>(delegate.raw(query, namedParameters));
+    }
+
+    @Override
     public <E extends T> ReactorResult<E> raw(Class<E> type, String query, Object... parameters) {
         return new ReactorResult<>(delegate.raw(type, query, parameters));
+    }
+
+    @Override
+    public <E extends T> Result<E> raw(Class<E> type, String query, Map<String, Object> namedParameters) {
+        return new ReactorResult<>(delegate.raw(type, query, namedParameters));
     }
 
     @Override

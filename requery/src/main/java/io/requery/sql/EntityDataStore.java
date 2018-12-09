@@ -60,6 +60,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -532,9 +533,21 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     }
 
     @Override
+    public Result<Tuple> raw(String query, Map<String, Object> namedParameters) {
+        checkClosed();
+        return new RawTupleNamedQuery(context, query, namedParameters).get();
+    }
+
+    @Override
     public <E extends T> Result<E> raw(Class<E> type, String query, Object... parameters) {
         checkClosed();
         return new RawEntityQuery<>(context, type, query, parameters).get();
+    }
+
+    @Override
+    public <E extends T> Result<E> raw(Class<E> type, String query, Map<String, Object> namedParameters) {
+        checkClosed();
+        return new RawEntityNamedQuery<>(context, type, query, namedParameters).get();
     }
 
     @Override

@@ -127,12 +127,12 @@ public class Generic implements Platform {
 
     @Override
     public Generator<Map<Expression<?>, Object>> upsertGenerator() {
-        return upsertGenerator;
+        return upsertDefinition;
     }
 
     @Override
     public Generator<OrderByElement> orderByGenerator() {
-        return orderByGenerator;
+        return orderByDefinition;
     }
 
     @Override
