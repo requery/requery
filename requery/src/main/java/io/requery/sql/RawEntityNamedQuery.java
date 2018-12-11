@@ -16,13 +16,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * RawEntityNamedQuery
+ * Raw Query with Named parameters
  *
  * @author debop (Sunghyouk Bae)
  * @since 18. 12. 8
@@ -31,20 +30,17 @@ public class RawEntityNamedQuery<E extends S, S> extends PreparedQueryOperation 
 
     private final EntityReader<E, S> reader;
     private final Type<E> type;
-    private final BoundNamedParameters boundParameters;
+    private final BoundParameters boundParameters;
     private final String sql;
-
-    private final Map<String, List<Integer>> nameIndexMap = new HashMap<>();
 
     RawEntityNamedQuery(EntityContext<S> context, Class<E> cls, String sql, Map<String, Object> namedParameters) {
         super(context, null);
 
-        String parsedSql = parse(sql, nameIndexMap);
-        ParameterInliner inlined = new ParameterInliner(parsedSql, namedParameters.values().toArray()).apply();
+        NamedParameterParser inlined = new NamedParameterParser(sql, namedParameters).apply();
         this.type = configuration.getModel().typeOf(cls);
         this.sql = inlined.sql();
         this.reader = context.read(cls);
-        this.boundParameters = new BoundNamedParameters(namedParameters);
+        this.boundParameters = new BoundParameters(inlined.parameters());
     }
 
     @Override
@@ -53,7 +49,7 @@ public class RawEntityNamedQuery<E extends S, S> extends PreparedQueryOperation 
         try {
             Connection connection = configuration.getConnection();
             statement = prepare(sql, connection);
-            mapParameters(statement, boundParameters, nameIndexMap);
+            mapParameters(statement, boundParameters);
             return new EntityResult(statement);
         } catch (Exception e) {
             throw StatementExecutionException.closing(statement, e, sql);

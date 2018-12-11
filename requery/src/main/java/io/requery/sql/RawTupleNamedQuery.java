@@ -16,38 +16,29 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * RawTupleNamedQuery
+ * Raw Query with Named parameters
  *
  * @author debop (Sunghyouk Bae)
  * @since 18. 12. 8
  */
 public class RawTupleNamedQuery extends PreparedQueryOperation implements Supplier<Result<Tuple>> {
 
-    private final BoundNamedParameters boundParameters;
+    private final BoundParameters boundParameters;
     private final String sql;
     private final QueryType queryType;
-
-    private final Map<String, List<Integer>> nameIndexMap = new HashMap<>();
 
     RawTupleNamedQuery(RuntimeConfiguration configuration, String sql, Map<String, Object> namedParameters) {
         super(configuration, null);
 
-        String parsedSql = parse(sql, nameIndexMap);
-
-        // TODO: nameIndexMap의 모든 key는 namedParameters key에 존재해야 한다.
-        // checkProperNameParameters(nameIndexMap, namedParameters);
-
-        ParameterInliner inlined = new ParameterInliner(parsedSql, namedParameters.values().toArray()).apply();
+        NamedParameterParser inlined = new NamedParameterParser(sql, namedParameters).apply();
         this.sql = inlined.sql();
-        this.queryType = queryTypeOf(sql);
-        this.boundParameters = new BoundNamedParameters(namedParameters);
+        this.queryType = queryTypeOf(this.sql);
+        this.boundParameters = new BoundParameters(inlined.parameters());
     }
 
     private static QueryType queryTypeOf(String sql) {
@@ -69,7 +60,7 @@ public class RawTupleNamedQuery extends PreparedQueryOperation implements Suppli
         try {
             Connection connection = configuration.getConnection();
             statement = prepare(sql, connection);
-            mapParameters(statement, boundParameters, nameIndexMap);
+            mapParameters(statement, boundParameters);
             switch (queryType) {
                 case SELECT:
                 default:

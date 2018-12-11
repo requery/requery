@@ -1544,8 +1544,15 @@ public abstract class FunctionalTest extends RandomData {
         }
 
         Map<String, Object> idMap = new HashMap<>();
-        idMap.put("id", people.get(0));
+        idMap.put("id", people.get(0).getId());
         try (Result<Tuple> result = data.raw("select * from Person WHERE id = :id", idMap)) {
+            assertEquals(result.first().<Number>get("id").intValue(), people.get(0).getId());
+        }
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("id", people.get(0).getId());
+        parameters.put("name", people.get(0).getName());
+        try (Result<Tuple> result = data.raw("select * from Person WHERE id = :id and name = :name and id = :id", parameters)) {
             assertEquals(result.first().<Number>get("id").intValue(), people.get(0).getId());
         }
     }
@@ -1583,6 +1590,54 @@ public abstract class FunctionalTest extends RandomData {
         try (Result<Person> result =
                  data.raw(Person.class, "select * from Person WHERE id = ?", people.get(0))) {
             assertEquals(result.first().getId(), people.get(0).getId());
+        }
+    }
+
+    @Test
+    public void testQueryRawEntitiesWithNamedParameter() {
+        final int count = 5;
+        List<Person> people = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            Person person = randomPerson();
+            data.insert(person);
+            people.add(person);
+        }
+        List<Integer> resultIds = new ArrayList<>();
+        try (Result<Person> result = data.raw(Person.class, "select * from Person")) {
+            List<Person> list = result.toList();
+            assertEquals(count, list.size());
+            for (int i = 0; i < people.size(); i++) {
+                Person person = list.get(i);
+                String name = person.getName();
+                assertEquals(people.get(i).getName(), name);
+                assertEquals(people.get(i).getId(), person.getId());
+                resultIds.add(person.getId());
+            }
+        }
+        Map<String, Object> resultIdMap = new HashMap<>();
+        resultIdMap.put("ids", resultIds);
+        try (Result<Person> result =
+                 data.raw(Person.class, "select * from Person WHERE id IN :ids", resultIdMap)) {
+            List<Person> list = result.toList();
+            List<Integer> ids = new ArrayList<>(list.size());
+            for (Person tuple : list) {
+                ids.add(tuple.getId());
+            }
+            assertEquals(resultIds, ids);
+        }
+
+        Map<String, Object> idMap = new HashMap<>();
+        idMap.put("id", people.get(0).getId());
+        try (Result<Person> result =
+                 data.raw(Person.class, "select * from Person WHERE id = :id", idMap)) {
+            assertEquals(result.first().getId(), people.get(0).getId());
+        }
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("id", people.get(0).getId());
+        parameters.put("name", people.get(0).getName());
+        try (Result<Tuple> result = data.raw("select * from Person WHERE id = :id and name = :name and id = :id", parameters)) {
+            assertEquals(result.first().<Number>get("id").intValue(), people.get(0).getId());
         }
     }
 
