@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -38,13 +39,13 @@ import java.util.Optional;
  */
 class AndroidObservableExtension implements TypeGenerationExtension, PropertyGenerationExtension {
 
-    private static final String BINDING_PACKAGE = "android.databinding";
+    private static final String BINDING_PACKAGE = "androidx.databinding";
     private static final String MODULE_PACKAGE_OPTION = "android.databinding.modulePackage";
 
     private final EntityDescriptor entity;
     private final ProcessingEnvironment processingEnvironment;
     private final boolean observable;
-    private final String modulePackage;
+    private String modulePackage;
 
     AndroidObservableExtension(EntityDescriptor entity,
                                ProcessingEnvironment processingEnvironment) {
@@ -52,6 +53,16 @@ class AndroidObservableExtension implements TypeGenerationExtension, PropertyGen
         this.processingEnvironment = processingEnvironment;
         this.observable = isObservable();
         this.modulePackage = processingEnvironment.getOptions().get(MODULE_PACKAGE_OPTION);
+
+        // this shouldn't be happening
+        if (modulePackage == null) {
+            for(Map.Entry<String, String> entry : processingEnvironment.getOptions().entrySet()) {
+                if (entry.getKey().endsWith("databinding.modulePackage")) {
+                    modulePackage = entry.getValue();
+                    break;
+                }
+            }
+        }
     }
 
     private boolean isObservable() {

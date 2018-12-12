@@ -6,7 +6,7 @@ import java.util.Date
 import java.util.UUID
 
 @Entity(model = "ktdata")
-data class Person constructor (
+data class Person (
 
     @get:Key
     var id: Int,

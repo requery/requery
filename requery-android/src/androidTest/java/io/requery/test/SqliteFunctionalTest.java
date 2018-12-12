@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 requery.io
+ * Copyright 2018 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package io.requery.test;
 
 import android.content.Context;
-import android.support.test.InstrumentationRegistry;
+import androidx.test.InstrumentationRegistry;
 import io.requery.android.sqlcipher.SqlCipherDatabaseSource;
 import io.requery.android.sqlite.DatabaseProvider;
 import io.requery.android.sqlite.DatabaseSource;
@@ -28,7 +28,6 @@ import io.requery.test.model.Models;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -71,7 +70,7 @@ public class SqliteFunctionalTest extends FunctionalTest {
     }
 
     @Override
-    public void setup() throws SQLException {
+    public void setup() {
         dataSource.setLoggingEnabled(true);
         Context context = InstrumentationRegistry.getContext();
         context.deleteDatabase(dbName);

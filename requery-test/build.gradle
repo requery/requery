@@ -18,28 +18,28 @@ targetCompatibility = 1.7
 
 dependencies {
     compile project(':requery')
-    testCompile project(':requery-jackson')
+    testImplementation project(':requery-jackson')
     apt project(':requery-processor')
-    compile fileTree(include: ['*.jar'], dir: 'libs') // for Oracle JDBC drivers
+    //compile fileTree(include: ['*.jar'], dir: 'libs') // for Oracle JDBC drivers
     compile "io.reactivex.rxjava2:rxjava:$rxjava2_version"
-    testCompile "io.projectreactor:reactor-core:$reactor_version"
+    testImplementation "io.projectreactor:reactor-core:$reactor_version"
     compile "org.eclipse.persistence:javax.persistence:$jpa_version"
-    compileOnly 'com.google.auto.value:auto-value:1.2'
-    apt 'com.google.auto.value:auto-value:1.2'
+    compileOnly 'com.google.auto.value:auto-value:1.5.2'
+    apt 'com.google.auto.value:auto-value:1.5.2'
     compileOnly 'org.immutables:value:2.4.3'
     apt 'org.immutables:value:2.4.3'
-    testCompile fileTree(include: ['*.jar'], dir: 'test-libs')
-    testCompile 'org.openjdk.jmh:jmh-core:1.12'
+    //testImplementation fileTree(include: ['*.jar'], dir: 'test-libs')
+    testImplementation 'org.openjdk.jmh:jmh-core:1.12'
     testApt 'org.openjdk.jmh:jmh-generator-annprocess:1.12'
-    testCompile 'mysql:mysql-connector-java:6.0.3'
-    testCompile 'org.postgresql:postgresql:9.4.1209.jre7'
-    testCompile 'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8'
-    testCompile 'org.xerial:sqlite-jdbc:3.8.11.2'
-    testCompile 'org.apache.derby:derby:10.12.1.1'
-    testCompile 'com.h2database:h2:1.4.192'
-    testCompile 'org.hsqldb:hsqldb:2.3.4'
-    testCompile 'org.ehcache:ehcache:3.1.1'
-    testCompile 'javax.cache:cache-api:1.0.0'
+    testImplementation 'mysql:mysql-connector-java:6.0.3'
+    testImplementation 'org.postgresql:postgresql:9.4.1209.jre7'
+    testImplementation 'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8'
+    testImplementation 'org.xerial:sqlite-jdbc:3.8.11.2'
+    testImplementation 'org.apache.derby:derby:10.12.1.1'
+    testImplementation 'com.h2database:h2:1.4.197'
+    testImplementation 'org.hsqldb:hsqldb:2.3.4'
+    testImplementation 'org.ehcache:ehcache:3.1.1'
+    testImplementation 'javax.cache:cache-api:1.0.0'
     compile "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
     compile 'junit:junit:4.12'
 }
