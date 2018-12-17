@@ -38,8 +38,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "io.reactivex.rxjava2:rxjava:$rxjava2_version"
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
-    implementation project(':requery') // replace with 'io.requery:requery:<version>'
+    //implementation project(':requery') // replace with 'io.requery:requery:<version>'
     implementation project(':requery-android') // replace with 'io.requery:requery-android:<version>'
-    implementation 'io.requery:requery-kotlin:1.5.1'
-    kapt project(':requery-processor') // // replace with 'io.requery:requery-processor:<version>'
+    implementation project(':requery-kotlin') // replace with 'io.requery:requery-kotlin:<version>'
+    kapt project(':requery-processor') // replace with 'io.requery:requery-processor:<version>'
 }
