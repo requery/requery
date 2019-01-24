@@ -83,7 +83,7 @@ public class PostgresSQL extends Generic {
         mapping.replaceType(Types.VARBINARY, new ByteArrayType(Types.VARBINARY));
         mapping.replaceType(Types.NVARCHAR, new VarCharType());
         mapping.replaceType(Types.BLOB, new BlobType());
-        mapping.putType(UUID.class, new UUIDType());
+        mapping.replaceType(Types.JAVA_OBJECT, new UUIDType());
     }
 
     @Override
