@@ -928,7 +928,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                         break;
                 }
             }
-            return actions.toArray(new CascadeAction[actions.size()]);
+            return actions.toArray(new CascadeAction[0]);
         }
     }
 }

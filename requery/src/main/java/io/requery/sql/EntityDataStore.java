@@ -466,7 +466,7 @@ public class EntityDataStore<T> implements BlockingEntityStore<T> {
     @Override
     public <E extends T> Selection<? extends Result<E>>
     select(Class<E> type, Set<? extends QueryAttribute<E, ?>> attributes) {
-        QueryAttribute<?, ?>[] array = attributes.toArray(new QueryAttribute[attributes.size()]);
+        QueryAttribute<?, ?>[] array = attributes.toArray(new QueryAttribute[0]);
         return select(type, array);
     }
 

@@ -130,7 +130,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
                 generatedKeyNames.add(attribute.getName());
             }
         }
-        generatedColumnNames = generatedKeyNames.toArray(new String[generatedKeyNames.size()]);
+        generatedColumnNames = generatedKeyNames.toArray(new String[0]);
         entityClass = type.getClassType();
         proxyProvider = type.getProxyProvider();
         cacheable = !type.getKeyAttributes().isEmpty() && type.isCacheable();
