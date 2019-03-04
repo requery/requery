@@ -20,12 +20,11 @@ import io.requery.Converter;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 /**
- * Converts from a {@link LocalDateTime} to a {@link java.sql.Timestamp} for Java 8. Note that
+ * Converts from a {@link ZonedDateTime} to a {@link java.sql.Timestamp} for Java 8. Note that
  * when converting between the time type and the database type all times will be converted to the
  * System default zone offset.
  */
