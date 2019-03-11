@@ -41,7 +41,7 @@ dependencies {
     implementation project(':requery')
     implementation 'androidx.sqlite:sqlite:2.0.0'
     implementation "androidx.recyclerview:recyclerview:$androidx_version"
-    implementation 'net.zetetic:android-database-sqlcipher:3.5.9'
+    implementation 'net.zetetic:android-database-sqlcipher:4.0.1'
     implementation 'io.requery:sqlite-android:3.25.3'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation project(':requery-test')
