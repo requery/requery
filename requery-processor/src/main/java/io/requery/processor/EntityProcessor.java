@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -268,8 +269,9 @@ public final class EntityProcessor extends AbstractProcessor {
 
     private String findModelPackageName(EntityGraph graph) {
         String packageName = "";
-        Set<String> packageNames = graph.entities().stream().map(
-            entity -> entity.typeName().packageName()).collect(Collectors.toSet());
+        List<String> packageNames = graph.entities().stream().map(
+            entity -> entity.typeName().packageName()).collect(Collectors.toList());
+        packageNames.sort(null);
 
         if (packageNames.size() == 1) {
             // all the types are in the same package...
