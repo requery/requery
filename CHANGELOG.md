@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+## 1.6.0
+
+- Java 9 use new @Generated annotation
+- RxJava 1.0 support removed
+- Generate error if setter present for read-only field
+- SQLServer default map dates to datetime2 instead of timestamp
+- PostgresSQL fix default UUID type mapping
+- Android support AndroidX libraries
+- Add Spring boot example
+
 ## 1.5.1
 
 - Add min/max to base expression functions

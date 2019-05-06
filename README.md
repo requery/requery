@@ -272,9 +272,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.5.1'
-    compile 'io.requery:requery-android:1.5.1' // for android
-    annotationProcessor 'io.requery:requery-processor:1.5.1'
+    compile 'io.requery:requery:1.6.0'
+    compile 'io.requery:requery-android:1.6.0' // for android
+    annotationProcessor 'io.requery:requery-processor:1.6.0'
 }
 ```
 
@@ -283,7 +283,7 @@ For information on gradle and annotation processing & gradle see the [wiki](http
 License
 -------
 
-    Copyright (C) 2018 requery.io
+    Copyright (C) 2019 requery.io
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
