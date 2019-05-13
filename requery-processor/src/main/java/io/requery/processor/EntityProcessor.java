@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import static io.requery.processor.EntityProcessor.GENERATE_ALWAYS;
@@ -269,9 +270,8 @@ public final class EntityProcessor extends AbstractProcessor {
 
     private String findModelPackageName(EntityGraph graph) {
         String packageName = "";
-        List<String> packageNames = graph.entities().stream().map(
-            entity -> entity.typeName().packageName()).collect(Collectors.toList());
-        packageNames.sort(null);
+        Set<String> packageNames = graph.entities().stream().map(
+                entity -> entity.typeName().packageName()).collect(Collectors.toCollection(TreeSet::new));
 
         if (packageNames.size() == 1) {
             // all the types are in the same package...
