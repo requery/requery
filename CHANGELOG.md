@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+## 1.6.1
+
+- Fix Model file generated in wrong package in certain cases
+- Fix Android SqlCipherDatabaseSource not extendable
+
 ## 1.6.0
 
 - Java 9 use new @Generated annotation

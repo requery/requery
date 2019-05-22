@@ -272,9 +272,9 @@ repositories {
 }
 
 dependencies {
-    compile 'io.requery:requery:1.6.0'
-    compile 'io.requery:requery-android:1.6.0' // for android
-    annotationProcessor 'io.requery:requery-processor:1.6.0'
+    compile 'io.requery:requery:1.6.1'
+    compile 'io.requery:requery-android:1.6.1' // for android
+    annotationProcessor 'io.requery:requery-processor:1.6.1'
 }
 ```
 
