@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 requery.io
+ * Copyright 2019 requery.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +35,11 @@ import net.sqlcipher.database.SQLiteOpenHelper
 
 import java.sql.Connection
 
-class SqlCipherDatabaseSource(context: Context,
-                              private val model: EntityModel,
-                              name: String,
-                              private val password: String,
-                              version: Int)
+open class SqlCipherDatabaseSource(context: Context,
+                                   private val model: EntityModel,
+                                   name: String,
+                                   private val password: String,
+                                   version: Int)
     : SQLiteOpenHelper(context, name, null, version), DatabaseProvider<SQLiteDatabase> {
 
     private val platform: Platform
