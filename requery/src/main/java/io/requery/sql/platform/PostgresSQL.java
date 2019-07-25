@@ -230,7 +230,8 @@ public class PostgresSQL extends Generic {
                     @Override
                     public void append(QueryBuilder qb, Expression<?> value) {
                         qb.attribute((Attribute) value);
-                        qb.append("= EXCLUDED." + value.getName());
+                        qb.append("= EXCLUDED.");
+                        qb.attribute((Attribute) value);
                     }
                 });
         }
