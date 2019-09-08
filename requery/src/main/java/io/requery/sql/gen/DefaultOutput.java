@@ -94,7 +94,8 @@ public class DefaultOutput implements Output {
         aliases = inheritedAliases == null ? new Aliases() : inheritedAliases;
         Set<Expression<?>> from = query.fromExpressions();
         Set<?> joins = query.joinElements();
-        autoAlias = from.size() > 1 || (joins != null && joins.size() > 0);
+        autoAlias = inheritedAliases != null ||
+                from.size() > 1 || (joins != null && joins.size() > 0);
         statementGenerator.write(this, query);
         return qb.toString();
     }
