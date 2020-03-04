@@ -46,7 +46,7 @@ public class ClassMap<V> implements Map<Class<?>, V> {
         // normally the maps are created upfront and not modified so this is faster
         if (keys == null) {
             Set<Class<?>> keySet = keySet();
-            keys = keySet.toArray(new Class[keySet.size()]);
+            keys = keySet.toArray(new Class[0]);
         }
         for (Class<?> cls : keys) {
             if (cls == key) {

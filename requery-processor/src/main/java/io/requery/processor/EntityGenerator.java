@@ -150,7 +150,7 @@ class EntityGenerator extends EntityPartGenerator implements SourceGenerator {
             list.add(visibility);
         }
         Collections.addAll(list, modifiers);
-        return list.toArray(new Modifier[list.size()]);
+        return list.toArray(new Modifier[0]);
     }
 
     private void generateMembers(TypeSpec.Builder builder) {

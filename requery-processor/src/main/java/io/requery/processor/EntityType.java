@@ -370,7 +370,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
                     .orElse(new Index[0]);
             Set<String> names = Stream.of(indexes).filter(Index::unique)
                     .map(Index::name).collect(Collectors.toSet());
-            return names.toArray(new String[names.size()]);
+            return names.toArray(new String[0]);
         }
         return annotationOf(Table.class).map(Table::uniqueIndexes).orElse(new String[]{});
     }

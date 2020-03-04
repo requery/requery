@@ -394,7 +394,7 @@ class EntityReader<E extends S, S> implements PropertyLoader<E> {
                     }
                     selectedAttributes.add(attribute);
                 }
-                selectAttributes = selectedAttributes.toArray(new Attribute[selection.size()]);
+                selectAttributes = selectedAttributes.toArray(new Attribute[0]);
             }
             Map<Object, EntityProxy<E>> map = new HashMap<>();
             for (E entity : entities) {
