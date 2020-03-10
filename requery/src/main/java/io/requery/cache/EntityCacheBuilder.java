@@ -35,6 +35,7 @@ public class EntityCacheBuilder {
 
     /**
      * Creates a new {@link EntityCacheBuilder} instance.
+     *
      * @param model to use
      */
     public EntityCacheBuilder(EntityModel model) {
@@ -46,6 +47,7 @@ public class EntityCacheBuilder {
 
     /**
      * Enables or disables reference (memory) caching.
+     *
      * @param enable true to enable reference caching false otherwise.
      * @return builder instance
      */
@@ -56,6 +58,7 @@ public class EntityCacheBuilder {
 
     /**
      * Enables or disables serialization caching.
+     *
      * @param enable true to enable serialization caching false otherwise.
      * @return builder instance
      */
@@ -66,6 +69,7 @@ public class EntityCacheBuilder {
 
     /**
      * Sets the {@link CacheManager}. to use.
+     *
      * @param cacheManager instance
      * @return builder instance
      */

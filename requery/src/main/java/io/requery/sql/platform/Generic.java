@@ -44,19 +44,21 @@ public class Generic implements Platform {
     private final GeneratedColumnDefinition generatedColumnDefinition;
     private final LimitGenerator limitGenerator;
     private final VersionColumnDefinition versionColumnDefinition;
-    private final Generator<QueryElement<?>> insertGenerator;
-    private final Generator<Map<Expression<?>, Object>> updateGenerator;
-    private final Generator<Map<Expression<?>, Object>> upsertGenerator;
-    private final Generator<OrderByElement> orderByGenerator;
+
+    private final Generator<QueryElement<?>> insertDefinition;
+    private final Generator<Map<Expression<?>, Object>> updateDefinition;
+    private final Generator<Map<Expression<?>, Object>> upsertDefinition;
+    private final Generator<OrderByElement> orderByDefinition;
 
     public Generic() {
         generatedColumnDefinition = new IdentityColumnDefinition();
         limitGenerator = new OffsetFetchGenerator();
         versionColumnDefinition = new UserVersionColumnDefinition();
-        insertGenerator = new InsertGenerator();
-        updateGenerator = new UpdateGenerator();
-        upsertGenerator = new UpsertMergeGenerator();
-        orderByGenerator = new OrderByGenerator();
+
+        insertDefinition = new InsertGenerator();
+        updateDefinition = new UpdateGenerator();
+        upsertDefinition = new UpsertMergeGenerator();
+        orderByDefinition = new OrderByGenerator();
     }
 
     @Override
@@ -115,22 +117,22 @@ public class Generic implements Platform {
 
     @Override
     public Generator<QueryElement<?>> insertGenerator() {
-        return insertGenerator;
+        return insertDefinition;
     }
 
     @Override
     public Generator<Map<Expression<?>, Object>> updateGenerator() {
-        return updateGenerator;
+        return updateDefinition;
     }
 
     @Override
     public Generator<Map<Expression<?>, Object>> upsertGenerator() {
-        return upsertGenerator;
+        return upsertDefinition;
     }
 
     @Override
     public Generator<OrderByElement> orderByGenerator() {
-        return orderByGenerator;
+        return orderByDefinition;
     }
 
     @Override
