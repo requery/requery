@@ -1,9 +1,8 @@
 import java.util.Properties
 
 plugins {
-    id("java")
-    id("idea")
-    id("maven-publish")
+    java
+    `maven-publish`
 }
 
 buildscript {
@@ -23,12 +22,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-    }
-}
-
-idea {
-    project {
-        jdkName = "1.8"
     }
 }
 
@@ -55,13 +48,13 @@ configure(listOf(
         (options as StandardJavadocDocletOptions).links("http://docs.oracle.com/javase/8/docs/api/")
     }
 
-    val sourcesJar by tasks.creating(Jar::class) {
+    val sourcesJar by tasks.registering(Jar::class) {
         archiveClassifier.set("sources")
         from(sourceSets["main"].allSource)
         dependsOn(tasks.classes)
     }
 
-    val javadocJar by tasks.creating(Jar::class) {
+    val javadocJar by tasks.registering(Jar::class) {
         archiveClassifier.set("javadoc")
         from(tasks.javadoc)
         dependsOn(tasks.javadoc)
