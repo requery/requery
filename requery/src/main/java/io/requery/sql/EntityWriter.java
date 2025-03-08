@@ -198,7 +198,7 @@ class EntityWriter<E extends S, S> implements ParameterBinder<E> {
     private void cascadeBatch(Map<Class<? extends S>, List<S>> map) {
         for (Map.Entry<Class<? extends S>, List<S>> entry : map.entrySet()) {
             Class<? extends S> key = entry.getKey();
-            context.write(key).batchInsert((Iterable) entry.getValue(), false);
+            context.<S>write(key).batchInsert(entry.getValue(), false);
         }
     }
 
