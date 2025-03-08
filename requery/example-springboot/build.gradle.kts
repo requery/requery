@@ -20,6 +20,7 @@ dependencies {
     implementation(project(":requery"))
     implementation(project(":requery-jackson"))
     annotationProcessor(project(":requery-processor"))
+    implementation("junit:junit:4.12")
 }
 
 tasks.named<JavaCompile>("compileJava") {

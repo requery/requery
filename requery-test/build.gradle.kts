@@ -5,8 +5,8 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 dependencies {
@@ -16,10 +16,10 @@ dependencies {
     //implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar")))) // for Oracle JDBC drivers
     implementation("io.reactivex.rxjava2:rxjava:${libs.versions.rxjava2.get()}")
     testImplementation("io.projectreactor:reactor-core:${libs.versions.reactor.get()}")
-    implementation("org.eclipse.persistence:javax.persistence:${libs.versions.jpa.get()}")
-    runtimeOnly("com.google.auto.value:auto-value:1.5.2")
+    implementation("jakarta.persistence:jakarta.persistence-api:${libs.versions.jpa.get()}")
+    implementation("com.google.auto.value:auto-value:1.5.2")
     annotationProcessor("com.google.auto.value:auto-value:1.5.2")
-    runtimeOnly("org.immutables:value:2.4.3")
+    implementation("org.immutables:value:2.4.3")
     annotationProcessor("org.immutables:value:2.4.3")
     //testImplementation(fileTree(mapOf("dir" to "test-libs", "include" to listOf("*.jar"))))
     testImplementation("org.openjdk.jmh:jmh-core:1.12")
@@ -34,6 +34,7 @@ dependencies {
     testImplementation("org.ehcache:ehcache:3.1.1")
     testImplementation("javax.cache:cache-api:1.0.0")
     implementation("com.fasterxml.jackson.core:jackson-annotations:${libs.versions.jackson.get()}")
+    implementation("com.fasterxml.jackson.core:jackson-databind:${libs.versions.jackson.get()}")
     implementation("junit:junit:4.12")
 }
 
@@ -42,4 +43,8 @@ tasks.test {
         exceptionFormat = TestExceptionFormat.FULL
         showStackTraces = true
     }
+}
+
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn(":requery-processor:shadowJar")
 }

@@ -47,12 +47,11 @@ public class ExampleSpringbootApplicationTest {
         String userJson = objectMapper.writeValueAsString(testUser);
         mockMvc.perform(
                 post("/user")
-                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson));
 
-        mockMvc.perform(get("/user" + 1)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .content(userJson));
+        mockMvc.perform(get("/user").param("id", "1")
+                .contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
@@ -67,7 +66,7 @@ public class ExampleSpringbootApplicationTest {
     private void postUserAndExpectSame(String userJson) throws Exception {
         mockMvc.perform(
                 post("/user")
-                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson)
         ).andExpect(status().isCreated()).andExpect(content().json(userJson));
     }
