@@ -3,12 +3,12 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 dependencies {
-    compileOnly("javax.transaction:javax.transaction-api:1.2")
+    compileOnly("jakarta.transaction:jakarta.transaction-api:2.0.0")
     compileOnly("javax.cache:cache-api:1.0.0")
     compileOnly("io.reactivex.rxjava2:rxjava:${libs.versions.rxjava2.get()}")
     compileOnly("io.projectreactor:reactor-core:${libs.versions.reactor.get()}")

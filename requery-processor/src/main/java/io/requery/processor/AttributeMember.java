@@ -62,15 +62,15 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.ConstraintMode;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.JoinColumn;
+import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.JoinColumn;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collections;
@@ -157,7 +157,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             checkReserved(name(), validator);
         }
         isEmbedded = annotationOf(Embedded.class).isPresent() ||
-            annotationOf(javax.persistence.Embedded.class).isPresent();
+            annotationOf(jakarta.persistence.Embedded.class).isPresent();
         indexNames.forEach(name -> checkReserved(name, validator));
         if (isReadOnly) {
             checkForInvalidSetter(validator);
@@ -260,7 +260,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
     private void processFieldAccessAnnotations(ElementValidator validator) {
         if (annotationOf(Transient.class).isPresent() ||
             annotationOf(java.beans.Transient.class).isPresent() ||
-            annotationOf(javax.persistence.Transient.class).isPresent() ||
+            annotationOf(jakarta.persistence.Transient.class).isPresent() ||
                 element().getModifiers().contains(Modifier.TRANSIENT)) {
             isTransient = true;
         }
@@ -275,7 +275,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
 
     private void processBasicColumnAnnotations(ElementValidator validator) {
         if (annotationOf(Key.class).isPresent() ||
-            annotationOf(javax.persistence.Id.class).isPresent()) {
+            annotationOf(jakarta.persistence.Id.class).isPresent()) {
             isKey = true;
             if (isTransient) {
                 validator.error("Key field cannot be transient");
@@ -315,7 +315,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             }
         }
         if (annotationOf(Version.class).isPresent() ||
-            annotationOf(javax.persistence.Version.class).isPresent()) {
+            annotationOf(jakarta.persistence.Version.class).isPresent()) {
             isVersion = true;
             if (isKey) {
                 cannotCombine(validator, Key.class, Version.class);
@@ -360,13 +360,13 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             isLazy = basic.fetch() == FetchType.LAZY;
         });
 
-        annotationOf(javax.persistence.Index.class).ifPresent(index -> {
+        annotationOf(jakarta.persistence.Index.class).ifPresent(index -> {
             isIndexed = true;
             Collections.addAll(indexNames, index.name());
         });
 
         annotationOf(JoinColumn.class).ifPresent(joinColumn -> {
-            javax.persistence.ForeignKey joinForeignKey = joinColumn.foreignKey();
+            jakarta.persistence.ForeignKey joinForeignKey = joinColumn.foreignKey();
             this.isForeignKey = true;
             ConstraintMode constraintMode = joinForeignKey.value();
             switch (constraintMode) {
@@ -385,7 +385,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             this.referencedColumn = joinColumn.referencedColumnName();
         });
 
-        annotationOf(javax.persistence.Column.class).ifPresent(persistenceColumn -> {
+        annotationOf(jakarta.persistence.Column.class).ifPresent(persistenceColumn -> {
             name = "".equals(persistenceColumn.name()) ? null : persistenceColumn.name();
             isUnique = persistenceColumn.unique();
             isNullable = persistenceColumn.nullable();
@@ -410,13 +410,13 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
         Optional<Annotation> manyToMany = annotationOf(ManyToMany.class);
 
         oneToOne = oneToOne.isPresent() ? oneToOne :
-            annotationOf(javax.persistence.OneToOne.class);
+            annotationOf(jakarta.persistence.OneToOne.class);
         oneToMany = oneToMany.isPresent() ? oneToMany :
-            annotationOf(javax.persistence.OneToMany.class);
+            annotationOf(jakarta.persistence.OneToMany.class);
         manyToOne = manyToOne.isPresent() ? manyToOne :
-            annotationOf(javax.persistence.ManyToOne.class);
+            annotationOf(jakarta.persistence.ManyToOne.class);
         manyToMany = manyToMany.isPresent() ? manyToMany :
-            annotationOf(javax.persistence.ManyToMany.class);
+            annotationOf(jakarta.persistence.ManyToMany.class);
 
         if (Stream.of(oneToOne, oneToMany, manyToOne, manyToMany)
             .filter(Optional::isPresent).count() > 1) {
@@ -463,8 +463,8 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             mappedBy = reflect.mappedBy();
             cascadeActions = reflect.cascade();
             Optional<JunctionTable> junctionTable = annotationOf(JunctionTable.class);
-            Optional<javax.persistence.JoinTable> joinTable =
-                annotationOf(javax.persistence.JoinTable.class);
+            Optional<jakarta.persistence.JoinTable> joinTable =
+                annotationOf(jakarta.persistence.JoinTable.class);
 
             if (junctionTable.isPresent()) {
                 Elements elements = processingEnvironment.getElementUtils();
@@ -517,10 +517,10 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
                 .map(Optional::get)
                 .map(value -> value.getValue().toString()).orElse(null);
 
-        } else if (annotationOf(javax.persistence.Convert.class).isPresent()) {
+        } else if (annotationOf(jakarta.persistence.Convert.class).isPresent()) {
 
             Optional<? extends AnnotationMirror> mirror =
-                Mirrors.findAnnotationMirror(element(), javax.persistence.Convert.class);
+                Mirrors.findAnnotationMirror(element(), jakarta.persistence.Convert.class);
             converterType = mirror.map(m -> Mirrors.findAnnotationValue(m, "converter"))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -537,7 +537,7 @@ class AttributeMember extends BaseProcessableElement<Element> implements Attribu
             orderByColumn = orderBy.value();
             orderByDirection = orderBy.order();
         });
-        annotationOf(javax.persistence.OrderBy.class).ifPresent(orderBy -> {
+        annotationOf(jakarta.persistence.OrderBy.class).ifPresent(orderBy -> {
             String value = orderBy.value();
             String[] parts = value.split(" ");
             if (parts.length > 0) {

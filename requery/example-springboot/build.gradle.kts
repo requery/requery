@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.4.3"
+    id("org.springframework.boot") version "3.2.2"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -20,4 +20,8 @@ dependencies {
     implementation(project(":requery"))
     implementation(project(":requery-jackson"))
     annotationProcessor(project(":requery-processor"))
+}
+
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn(":requery-processor:shadowJar")
 }

@@ -12,7 +12,8 @@ java {
 
 dependencies {
     implementation(project(":requery"))
-    implementation("org.eclipse.persistence:javax.persistence:${libs.versions.jpa.get()}")
+    implementation("jakarta.persistence:jakarta.persistence-api:${libs.versions.jpa.get()}")
+    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
     implementation("com.squareup:javapoet:1.11.1")
 }
 

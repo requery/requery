@@ -31,8 +31,8 @@ public enum TransactionMode {
     /**
      * Managed transaction environment with JTA e.g. {@link Connection#commit()} and
      * {@link Connection#rollback()} are NOT used. Transaction is optionally started as a
-     * {@link javax.transaction.UserTransaction} status of the transaction is tracked with
-     * {@link javax.transaction.Synchronization}
+     * {@link jakarta.transaction.UserTransaction} status of the transaction is tracked with
+     * {@link jakarta.transaction.Synchronization}
      */
     MANAGED,
 

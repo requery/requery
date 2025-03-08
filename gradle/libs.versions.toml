@@ -6,7 +6,7 @@ android-gradle-plugin = "8.9.0"
 
 androidx = "1.0.0"
 jackson = "2.8.6"
-jpa = "2.1.1"
+jpa = "3.0.0"
 reactor = "3.2.2.RELEASE"
 
 rxjava2 = "2.2.3"

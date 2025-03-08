@@ -41,9 +41,9 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
-import javax.persistence.Cacheable;
-import javax.persistence.Embeddable;
-import javax.persistence.Index;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Index;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -286,7 +286,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
                     .filter(name -> !Names.isEmpty(name))
                     .orElse("default");
         } else if (Mirrors.findAnnotationMirror(element(),
-                javax.persistence.Entity.class).isPresent()) {
+                jakarta.persistence.Entity.class).isPresent()) {
             Elements elements = processingEnvironment.getElementUtils();
             Name packageName = elements.getPackageOf(element()).getQualifiedName();
             String[] parts = packageName.toString().split("\\.");
@@ -299,7 +299,7 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
     public QualifiedName typeName() {
         String entityName = Stream.of(
             Mirrors.findAnnotationMirror(element(), Entity.class),
-            Mirrors.findAnnotationMirror(element(), javax.persistence.Entity.class))
+            Mirrors.findAnnotationMirror(element(), jakarta.persistence.Entity.class))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .map(mirror -> Mirrors.findAnnotationValue(mirror, "name"))
@@ -349,8 +349,8 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
     @Override
     public String tableName() {
         return annotationOf(Table.class).map(Table::name)
-                .orElse( annotationOf(javax.persistence.Table.class)
-                         .map(javax.persistence.Table::name)
+                .orElse( annotationOf(jakarta.persistence.Table.class)
+                         .map(jakarta.persistence.Table::name)
                 .orElse( annotationOf(View.class).map(View::name)
                 .orElse( element().getKind().isInterface() || isImmutable() ?
                     element().getSimpleName().toString() :
@@ -364,9 +364,9 @@ class EntityType extends BaseProcessableElement<TypeElement> implements EntityEl
 
     @Override
     public String[] tableUniqueIndexes() {
-        if (annotationOf(javax.persistence.Table.class).isPresent()) {
-            Index[] indexes = annotationOf(javax.persistence.Table.class)
-                    .map(javax.persistence.Table::indexes)
+        if (annotationOf(jakarta.persistence.Table.class).isPresent()) {
+            Index[] indexes = annotationOf(jakarta.persistence.Table.class)
+                    .map(jakarta.persistence.Table::indexes)
                     .orElse(new Index[0]);
             Set<String> names = Stream.of(indexes).filter(Index::unique)
                     .map(Index::name).collect(Collectors.toSet());

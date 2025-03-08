@@ -19,10 +19,10 @@ package io.requery.processor;
 import io.requery.ReferentialAction;
 
 import javax.lang.model.type.TypeMirror;
-import javax.persistence.ConstraintMode;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
