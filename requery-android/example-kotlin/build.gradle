@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
     }
 }
 apply plugin: 'com.android.application'
@@ -8,7 +8,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 35
     buildToolsVersion "$android_buildtools_version"
 
     defaultConfig {
@@ -30,6 +30,7 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+    namespace 'io.requery.android.example.kotlinapp'
 }
 
 dependencies {

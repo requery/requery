@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '2.0.1.RELEASE'
+        springBootVersion = '3.4.3'
     }
     repositories {
         mavenCentral()
@@ -16,25 +16,23 @@ buildscript {
 
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin: "net.ltgt.apt"
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 group = 'io.requery.example'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = 1.7
+sourceCompatibility = 17
 
 repositories {
     mavenCentral()
 }
 
-
 dependencies {
-    compile('org.springframework.boot:spring-boot-starter-web')
-    runtime('com.h2database:h2')
-    testCompile('org.springframework.boot:spring-boot-starter-test')
-    testCompile('org.springframework.boot:spring-boot-starter-webflux')
-    compile project(':requery')
-    compile project(':requery-jackson')
-    apt project(':requery-processor')
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    runtimeOnly('com.h2database:h2')
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation('org.springframework.boot:spring-boot-starter-webflux')
+    implementation project(':requery')
+    implementation project(':requery-jackson')
+    annotationProcessor project(':requery-processor')
 }

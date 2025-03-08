@@ -1,17 +1,17 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '2.0.0'
+    id 'com.gradleup.shadow' version '8.3.6'
 }
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile project(':requery')
-    compile "org.eclipse.persistence:javax.persistence:$jpa_version"
-    compile 'com.squareup:javapoet:1.11.1'
+    implementation project(':requery')
+    implementation "org.eclipse.persistence:javax.persistence:$jpa_version"
+    implementation 'com.squareup:javapoet:1.11.1'
 }
 
 shadowJar {
@@ -19,7 +19,7 @@ shadowJar {
         include(dependency('com.squareup:javapoet:.*'))
     }
     relocate 'com.squareup', 'io.requery.com.squareup'
-    archiveName "${project.name}.jar"
+    archiveFileName.set("${project.name}.jar")
 }
 
 jar.finalizedBy shadowJar

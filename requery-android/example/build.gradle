@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 35
     buildToolsVersion "$android_buildtools_version"
 
     defaultConfig {
@@ -23,6 +23,7 @@ android {
     dataBinding {
         enabled = true
     }
+    namespace 'io.requery.android.example.app'
 }
 
 dependencies {

@@ -10,28 +10,11 @@ sourceSets {
 }
 
 dependencies {
-    compile project(':requery')
-    compile project(':requery-kotlin')
+    implementation project(':requery')
+    implementation project(':requery-kotlin')
     kapt project(':requery-processor')
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile 'junit:junit:4.12'
-    testCompile 'com.h2database:h2:1.4.191'
-    testCompile "io.reactivex.rxjava2:rxjava:$rxjava2_version"
-}
-
-idea {
-    module {
-        // https://youtrack.jetbrains.com/issue/IDEA-117540
-        excludeDirs -= file("$buildDir")
-        excludeDirs += file("$buildDir/dependency-cache")
-        excludeDirs += file("$buildDir/libs")
-        excludeDirs += file("$buildDir/tmp")
-        excludeDirs += file("$buildDir/reports")
-        excludeDirs += file("$buildDir/classes")
-        excludeDirs += file("$buildDir/kotlin-classes")
-        excludeDirs += file("$buildDir/libs")
-        excludeDirs += file("$buildDir/test-results")
-        sourceDirs += file("${buildDir}/generated/source/kapt/main/")
-        generatedSourceDirs += "${buildDir}/generated/source/kapt/main/"
-    }
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'junit:junit:4.12'
+    testImplementation 'com.h2database:h2:1.4.191'
+    testImplementation "io.reactivex.rxjava2:rxjava:$rxjava2_version"
 }

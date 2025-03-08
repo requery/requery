@@ -2,10 +2,10 @@ apply plugin: 'java'
 apply plugin: "kotlin"
 
 dependencies {
-    compile project(':requery')
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compileOnly "io.reactivex.rxjava2:rxjava:$rxjava2_version"
-    compileOnly "io.projectreactor:reactor-core:$reactor_version"
+    implementation project(':requery')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    runtimeOnly "io.reactivex.rxjava2:rxjava:$rxjava2_version"
+    runtimeOnly "io.projectreactor:reactor-core:$reactor_version"
 }
 
 sourceSets {

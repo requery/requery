@@ -10,7 +10,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'maven-publish'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 35
     buildToolsVersion "$android_buildtools_version"
 
     defaultConfig {
@@ -35,6 +35,7 @@ android {
     packagingOptions {
         exclude 'META-INF/rxjava.properties'
     }
+    namespace 'io.requery.android'
 }
 
 dependencies {
@@ -52,7 +53,6 @@ dependencies {
 }
 
 publish.dependsOn 'assembleRelease'
-bintrayUpload.dependsOn 'assembleRelease'
 
 android.libraryVariants
 publishing {
@@ -63,21 +63,9 @@ publishing {
             artifactId project.name
             version rootProject.version
             artifact getReleaseArtifact()
-            artifact sourcesJar
-            artifact javadocJar
             pom.withXml {
                 asNode().children().last() + project.pomXml
             }
-        }
-    }
-
-    repositories {
-        maven {
-            credentials {
-                username = bintray.user
-                password = bintray.key
-            }
-            url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
         }
     }
 }
@@ -86,20 +74,21 @@ def getReleaseArtifact() {
     return "build/outputs/aar/${project.name}-release.aar"
 }
 
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier.set('sources')
     from android.sourceSets.main.java.srcDirs
 }
 
-task javadoc(type: Javadoc) {
+tasks.register('javadoc', Javadoc) {
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.compile
+    classpath += configurations.implementation
     failOnError false
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    archiveClassifier.set('javadoc')
     from javadoc.destinationDir
 }
 repositories {
