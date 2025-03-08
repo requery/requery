@@ -9,7 +9,7 @@ repositories {
 
 dependencies {
     implementation project(':requery')
-    implementation "com.fasterxml.jackson.core:jackson-core:$jackson_version"
-    implementation "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
-    implementation "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
+    implementation "com.fasterxml.jackson.core:jackson-core:${libs.versions.jackson.get()}"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:${libs.versions.jackson.get()}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${libs.versions.jackson.get()}"
 }

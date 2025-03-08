@@ -1,0 +1,12 @@
+[versions]
+kotlin = "2.1.10"
+
+android-build-tools = "35.0.0"
+android-gradle-plugin = "8.9.0"
+
+androidx = "1.0.0"
+jackson = "2.8.6"
+jpa = "2.1.1"
+reactor = "3.2.2.RELEASE"
+
+rxjava2 = "2.2.3"

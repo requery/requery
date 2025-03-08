@@ -20,9 +20,9 @@ dependencies {
     testImplementation project(':requery-jackson')
     annotationProcessor project(':requery-processor')
     //compile fileTree(include: ['*.jar'], dir: 'libs') // for Oracle JDBC drivers
-    implementation "io.reactivex.rxjava2:rxjava:$rxjava2_version"
-    testImplementation "io.projectreactor:reactor-core:$reactor_version"
-    implementation "org.eclipse.persistence:javax.persistence:$jpa_version"
+    implementation "io.reactivex.rxjava2:rxjava:${libs.versions.rxjava2.get()}"
+    testImplementation "io.projectreactor:reactor-core:${libs.versions.reactor.get()}"
+    implementation "org.eclipse.persistence:javax.persistence:${libs.versions.jpa.get()}"
     runtimeOnly 'com.google.auto.value:auto-value:1.5.2'
     annotationProcessor 'com.google.auto.value:auto-value:1.5.2'
     runtimeOnly 'org.immutables:value:2.4.3'
@@ -39,7 +39,7 @@ dependencies {
     testImplementation 'org.hsqldb:hsqldb:2.3.4'
     testImplementation 'org.ehcache:ehcache:3.1.1'
     testImplementation 'javax.cache:cache-api:1.0.0'
-    implementation "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:${libs.versions.jackson.get()}"
     implementation 'junit:junit:4.12'
 }
 

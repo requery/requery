@@ -10,7 +10,7 @@ targetCompatibility = 1.8
 
 dependencies {
     implementation project(':requery')
-    implementation "org.eclipse.persistence:javax.persistence:$jpa_version"
+    implementation "org.eclipse.persistence:javax.persistence:${libs.versions.jpa.get()}"
     implementation 'com.squareup:javapoet:1.11.1'
 }
 
