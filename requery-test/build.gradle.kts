@@ -15,6 +15,7 @@ dependencies {
     annotationProcessor(project(":requery-processor"))
     //implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar")))) // for Oracle JDBC drivers
     implementation("io.reactivex.rxjava2:rxjava:${libs.versions.rxjava2.get()}")
+    implementation("io.reactivex.rxjava3:rxjava:${libs.versions.rxjava3.get()}")
     testImplementation("io.projectreactor:reactor-core:${libs.versions.reactor.get()}")
     implementation("jakarta.persistence:jakarta.persistence-api:${libs.versions.jpa.get()}")
     implementation("com.google.auto.value:auto-value:1.5.2")

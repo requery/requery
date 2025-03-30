@@ -18,4 +18,9 @@ dependencies {
     implementation("junit:junit:4.12")
     testImplementation("com.h2database:h2:1.4.191")
     testImplementation("io.reactivex.rxjava2:rxjava:${libs.versions.rxjava2.get()}")
+    testImplementation("io.reactivex.rxjava3:rxjava:${libs.versions.rxjava3.get()}")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.internal.KaptTask>().configureEach {
+    dependsOn(":requery-processor:shadowJar")
 }

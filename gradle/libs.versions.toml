@@ -10,3 +10,4 @@ jpa = "3.0.0"
 reactor = "3.2.2.RELEASE"
 
 rxjava2 = "2.2.3"
+rxjava3 = "3.1.8"

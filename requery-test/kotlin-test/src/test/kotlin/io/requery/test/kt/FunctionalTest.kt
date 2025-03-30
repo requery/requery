@@ -42,7 +42,7 @@ class FunctionalTest {
             val lastNames = arrayOf("Smith", "Lee", "Jones")
             person.name = (firstNames[random.nextInt(firstNames.size)] + " " +
                     lastNames[random.nextInt(lastNames.size)])
-            person.email = (person.name.replace(" ".toRegex(), "").toLowerCase() + "@example.com")
+            person.email = (person.name.replace(" ".toRegex(), "").lowercase() + "@example.com")
             person.uuid = (UUID.randomUUID())
             person.homepage = (URL("http://www.requery.io"))
             val calendar = Calendar.getInstance()
