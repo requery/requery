@@ -4,7 +4,7 @@
 -dontwarn javax.annotation.**
 -dontwarn javax.cache.**
 -dontwarn javax.naming.**
--dontwarn javax.transaction.**
+-dontwarn jakarta.transaction.**
 -dontwarn java.sql.**
 -dontwarn javax.sql.**
 -dontwarn androidx.**

@@ -51,7 +51,8 @@ interface Conditional<out Q, V> {
     fun between(start: V, end: V): Q
 }
 
-interface Logical<L, R> : Condition<L, R>, AndOr<Logical<*, *>>
+
+interface Logical<out L, out R> : Condition<@UnsafeVariance L, @UnsafeVariance R>, AndOr<Logical<*, *>>
 
 interface Aliasable<out T> {
     infix fun `as`(alias: String): T

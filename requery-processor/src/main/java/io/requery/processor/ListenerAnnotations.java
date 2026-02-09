@@ -37,13 +37,13 @@ class ListenerAnnotations {
 
     private static Stream<Class<? extends Annotation>> jpaAnnotationClasses() {
         return Stream.of(
-            javax.persistence.PostLoad.class,
-            javax.persistence.PostPersist.class,
-            javax.persistence.PostRemove.class,
-            javax.persistence.PostUpdate.class,
-            javax.persistence.PrePersist.class,
-            javax.persistence.PreRemove.class,
-            javax.persistence.PreUpdate.class);
+            jakarta.persistence.PostLoad.class,
+            jakarta.persistence.PostPersist.class,
+            jakarta.persistence.PostRemove.class,
+            jakarta.persistence.PostUpdate.class,
+            jakarta.persistence.PrePersist.class,
+            jakarta.persistence.PreRemove.class,
+            jakarta.persistence.PreUpdate.class);
     }
 
     private static Stream<Class<? extends Annotation>> annotationClasses() {

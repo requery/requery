@@ -19,8 +19,8 @@ package io.requery.test.autovalue;
 
 import com.google.auto.value.AutoValue;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 @AutoValue
 @Embeddable

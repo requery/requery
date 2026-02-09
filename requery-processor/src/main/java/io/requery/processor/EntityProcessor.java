@@ -57,7 +57,7 @@ import static io.requery.processor.EntityProcessor.GENERATE_MODEL;
  *
  * @author Nikhil Purushe
  */
-@SupportedAnnotationTypes({"io.requery.*", "javax.persistence.*"})
+@SupportedAnnotationTypes({"io.requery.*", "jakarta.persistence.*"})
 @SupportedOptions({GENERATE_MODEL, GENERATE_ALWAYS, GENERATE_JPA})
 public final class EntityProcessor extends AbstractProcessor {
 
@@ -230,19 +230,19 @@ public final class EntityProcessor extends AbstractProcessor {
     private boolean isEntity(TypeElement element) {
         return Mirrors.findAnnotationMirror(element, Entity.class).isPresent() ||
             (getOption(GENERATE_JPA, true) &&
-             Mirrors.findAnnotationMirror(element, javax.persistence.Entity.class).isPresent());
+             Mirrors.findAnnotationMirror(element, jakarta.persistence.Entity.class).isPresent());
     }
 
     private boolean isSuperclass(TypeElement element) {
         return Mirrors.findAnnotationMirror(element, Superclass.class).isPresent() ||
             (getOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
-                javax.persistence.MappedSuperclass.class).isPresent());
+                jakarta.persistence.MappedSuperclass.class).isPresent());
     }
 
     private boolean isEmbeddable(TypeElement element) {
         return Mirrors.findAnnotationMirror(element, Embedded.class).isPresent() ||
             (getOption(GENERATE_JPA, true) && Mirrors.findAnnotationMirror(element,
-                javax.persistence.Embeddable.class).isPresent());
+                jakarta.persistence.Embeddable.class).isPresent());
     }
 
     private Optional<TypeElement> typeElementOf(Element element) {

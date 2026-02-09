@@ -1,0 +1,11 @@
+rootProject.name = "requery-persistence"
+include(":requery")
+include(":requery-processor")
+include(":requery-test")
+include(":requery-android")
+include(":requery-android:example")
+include(":requery-android:example-kotlin")
+include(":requery-jackson")
+include(":requery-kotlin")
+include(":requery-test:kotlin-test")
+include(":requery:example-springboot")
