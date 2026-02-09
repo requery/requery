@@ -32,6 +32,7 @@ import io.requery.query.Update;
 import io.requery.util.Objects;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -45,7 +46,6 @@ import java.util.function.Supplier;
  * {@link BlockingEntityStore} instance. All operations are supplied via the given {@link Executor}.
  *
  * @param <T> entity base type. See {@link EntityStore}.
- *
  * @author Nikhil Purushe
  */
 @ParametersAreNonnullByDefault
@@ -265,7 +265,7 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
 
     @Override
     public <E extends T> Selection<? extends Result<E>> select(Class<E> type,
-                                                     QueryAttribute<?, ?>... attributes) {
+                                                               QueryAttribute<?, ?>... attributes) {
         return delegate.select(type, attributes);
     }
 
@@ -311,8 +311,18 @@ public class CompletableEntityStore<T> implements CompletionStageEntityStore<T> 
     }
 
     @Override
+    public Result<Tuple> raw(String query, Map<String, Object> namedParameters) {
+        return delegate.raw(query, namedParameters);
+    }
+
+    @Override
     public <E extends T> Result<E> raw(Class<E> type, String query, Object... parameters) {
         return delegate.raw(type, query, parameters);
+    }
+
+    @Override
+    public <E extends T> Result<E> raw(Class<E> type, String query, Map<String, Object> namedParameters) {
+        return delegate.raw(type, query, namedParameters);
     }
 
     @Override

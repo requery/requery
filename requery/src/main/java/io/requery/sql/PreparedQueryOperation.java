@@ -26,6 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Logger;
 
 /**
  * Base class for insert/update operations.
@@ -33,6 +34,8 @@ import java.sql.Statement;
  * @author Nikhil Purushe
  */
 abstract class PreparedQueryOperation {
+
+    private static Logger logger = Logger.getLogger("PreparedQueryOperation");
 
     final RuntimeConfiguration configuration;
     private final EntityModel model;
@@ -47,6 +50,7 @@ abstract class PreparedQueryOperation {
 
     PreparedStatement prepare(String sql, Connection connection) throws SQLException {
         PreparedStatement statement;
+
         if (generatedResultReader != null) {
             if (configuration.getPlatform().supportsGeneratedColumnsInPrepareStatement()) {
                 String[] generatedColumns = generatedResultReader.generatedColumns();
@@ -73,7 +77,7 @@ abstract class PreparedQueryOperation {
                     value = Attributes.replaceKeyReference(value, attribute);
                 }
             }
-            Class<?> type = value == null ? null: value.getClass();
+            Class<?> type = value == null ? null : value.getClass();
             if (type != null) {
                 // allows entity arguments with single keys to be remapped to their keys
                 if (model.containsTypeOf(type)) {
@@ -85,6 +89,7 @@ abstract class PreparedQueryOperation {
                     }
                 }
             }
+            // logger.log(Level.INFO, "Expression name={0}, index={1}, value={2}", new Object[] { expression.getName(), i, value });
             configuration.getMapping().write(expression, statement, i + 1, value);
         }
     }

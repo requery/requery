@@ -38,6 +38,7 @@ import io.requery.util.function.Function;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -47,7 +48,6 @@ import java.util.concurrent.Callable;
  * invoke the operation.
  *
  * @param <T> base type of all entities
- *
  * @author Nikhil Purushe
  */
 @ParametersAreNonnullByDefault
@@ -297,8 +297,18 @@ class WrappedEntityStore<T> extends ReactiveEntityStore<T> {
     }
 
     @Override
+    public Result<Tuple> raw(String query, Map<String, Object> namedParameters) {
+        return new ReactiveResult<>(delegate.raw(query, namedParameters));
+    }
+
+    @Override
     public <E extends T> ReactiveResult<E> raw(Class<E> type, String query, Object... parameters) {
         return new ReactiveResult<>(delegate.raw(type, query, parameters));
+    }
+
+    @Override
+    public <E extends T> Result<E> raw(Class<E> type, String query, Map<String, Object> namedParameters) {
+        return new ReactiveResult<>(delegate.raw(type, query, namedParameters));
     }
 
     @Override
